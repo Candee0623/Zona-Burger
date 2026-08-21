@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ producto.nombre }} - Zona Burger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'Index.css' %}">
+    <link rel="stylesheet" href="{% static 'Menu.css' %}">
+    <link rel="stylesheet" href="{% static 'detalleProducto.css' %}">
+</head>
+<body>
+
+    <!-- Navbar principal -->
+    <nav class="navbar">
+        <div class="logo-container">
+            <a href="{% url 'index' %}"><span class="logo-placeholder"></span></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{% url 'index' %}#info">Información</a></li>
+            <li><a href="{% url 'index' %}#consultas">Contacto</a></li>
+            <li><a href="{% url 'menu' %}">Menú</a></li>
+        </ul>
+    </nav>
+
+    <!-- Barra superior con el botón para volver al menú -->
+    <div class="detalle-header">
+        <h2>Personalizar Producto</h2>
+        <a href="{% url 'menu' %}" class="btn-volver">← Volver al Menú</a>
+    </div>
+
+    <!-- Contenido Principal de la Ficha -->
+    <main class="menu-container detalle-main-container">
+        <div class="producto-card detalle-producto-card">
+            
+            {% if producto.imagen %}
+                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="producto-imagen detalle-imagen">
+            {% else %}
+                <div class="producto-imagen-placeholder detalle-placeholder">🍔</div>
+            {% endif %}
+
+            <h1 class="detalle-titulo">{{ producto.nombre }}</h1>
+            <p class="detalle-descripcion">{{ producto.descripcion }}</p>
+            <h3 class="detalle-precio-base" data-precio-base="{{ producto.precio }}">${{ producto.precio }}</h3>
+
+            <hr class="detalle-divider">
+
+            <!-- FORMULARIO VISUAL -->
+            <form id="form-personalizar" method="POST" action="">
+                {% csrf_token %}
+                
+                {% for item in grupos_opciones %}
+                    <div class="grupo-opcion-seccion">
+                        <h3 class="grupo-titulo">{{ item.grupo.nombre|cut:producto.nombre }}</h3>
+                        <p class="grupo-estado">
+                            {% if item.grupo.min_selecciones > 0 %} (Obligatorio){% else %} (Opcional){% endif %}
+                        </p>
+
+                        <div class="opciones-lista">
+                            {% for opcion in item.opciones %}
+                                <div class="opcion-item">
+                                    <label class="opcion-label">
+                                        {% if item.grupo.max_selecciones == 1 %}
+                                            <input type="radio" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" {% if item.grupo.min_selecciones > 0 %}required{% endif %} class="opcion-input">
+                                        {% else %}
+                                            <input type="checkbox" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" class="opcion-input">
+                                        {% endif %}
+                                        
+                                        <span>{{ opcion.nombre }}</span>
+                                        {% if opcion.precio_adicional > 0 %}
+                                            <span class="opcion-precio-extra">(+${{ opcion.precio_adicional }})</span>
+                                        {% endif %}
+                                    </label>
+
+                                    <!-- MOSTRAR CANTIDAD SOLO SI EL GRUPO ES DE EXTRAS/ADICIONALES -->
+                                    {% if "extra" in item.grupo.nombre|lower or "adicional" in item.grupo.nombre|lower %}
+                                        <div class="cantidad-container">
+                                            <label class="cantidad-label">Cant:</label>
+                                            <input type="number" name="cantidad_opcion_{{ opcion.idopcion }}" value="1" min="1" max="5" class="cantidad-extra">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="sin-modificadores">Este producto no cuenta con modificadores adicionales.</p>
+                {% endfor %}
+
+                <!-- CUADRO RESUMEN DEL TOTAL -->
+                <div class="resumen-total-box">
+                    <span class="label">Total del producto:</span>
+                    <span class="monto">$<span id="precio-total">{{ producto.precio }}</span></span>
+                </div>
+
+                <!-- Botón de Confirmación -->
+                <button type="submit" class="btn-agregar btn-confirmar-pedido">
+                    Añadir al Pedido
+                </button>
+            </form>
+
+        </div>
+    </main>
+
+    <!-- SCRIPT EXTERNO -->
+    <script src="{% static 'detalleProducto.js' %}"></script>
+</body>
+</html>

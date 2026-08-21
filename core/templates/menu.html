@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú - Zona Burger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'Index.css' %}">
+    <link rel="stylesheet" href="{% static 'Menu.css' %}">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo-container">
+            <a href="{% url 'index' %}">
+                <span class="logo-placeholder"></span>
+            </a>
+        </div>
+        
+        <div class="menu-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+
+        <ul class="nav-links">
+            <li><a href="{% url 'index' %}#info">Información</a></li>
+            <li><a href="{% url 'index' %}#consultas">Contacto</a></li>
+            <li><a href="{% url 'menu' %}" class="active-link">Menú</a></li>
+        </ul>
+    </nav>
+
+    <!-- Barra de Categorías Deslizable -->
+    <div class="categorias-nav-container">
+        <div class="categorias-scroll">
+            {% for categoria in categorias %}
+                <!-- Usamos preventDefault o un enlace limpio para evitar saltos extraños al cargar -->
+                <a href="#cat-{{ categoria.idcategoria }}" class="categoria-chip">
+                    {{ categoria.nombre }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Contenido del Menú -->
+    <main class="menu-container">
+        <h1 class="menu-title">Nuestro Menú</h1>
+
+        {% for categoria in categorias %}
+            <!-- ID corregido para evitar conflictos de desplazamiento -->
+            <section id="cat-{{ categoria.idcategoria }}" class="categoria-seccion">
+                <h2 class="categoria-heading">{{ categoria.nombre }}</h2>
+
+                <div class="productos-grid">
+                    {% for producto in categoria.producto_set.all %}
+                        <div class="producto-card">
+                            {% if producto.imagen %}
+                                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="producto-imagen">
+                            {% else %}
+                                <div class="producto-imagen-placeholder">🍔</div>
+                            {% endif %}
+                            
+                            <div class="producto-info">
+                                <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+                                <p class="producto-descripcion">{{ producto.descripcion }}</p>
+                                
+                                <!-- Lo que incluye (Bebidas, Papas, Salsas, etc.) -->
+                                <div class="producto-incluye">
+                                    <ul class="incluye-lista">
+                                        {% for rel in producto.productogrupopcion_set.all %}
+                                            <li>Incluye: {{ rel.idgrupo.nombre }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+
+                                <div class="producto-footer">
+                                    <span class="producto-precio">${{ producto.precio }}</span>
+                                    <a href="{% url 'detalleProducto' producto.idproducto %}" class="btn-agregar">Agregar</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="no-productos">No hay productos disponibles en esta categoría por el momento.</p>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Zona Burger. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="{% static 'menu.js' %}"></script>
+</body>
+</html>

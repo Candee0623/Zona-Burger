@@ -1,0 +1,191 @@
+html { scroll-behavior: smooth; }
+
+body { 
+    margin: 0; 
+    font-family: 'Poppins', sans-serif; 
+    background-color: #f4f4f4; 
+    color: #333; 
+}
+
+.navbar { 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+    background-color: #1a1a1a; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 15px 40px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+}
+
+.logo-placeholder {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background-color: #d82505;
+    border-radius: 50%;
+}
+
+.nav-links { 
+    list-style: none; 
+    display: flex; 
+    gap: 20px; 
+    margin: 0; 
+    padding: 0; 
+}
+
+.nav-links a { 
+    color: white; 
+    text-decoration: none; 
+    font-weight: 600; 
+    transition: color 0.3s; 
+}
+
+.nav-links a:hover { 
+    color: #d82505; 
+}
+
+.menu-toggle {
+    display: none;
+    cursor: pointer;
+}
+
+.menu-toggle .bar {
+    display: block;
+    width: 25px;
+    height: 3px;
+    margin: 5px auto;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.hero-banner-content {
+    color: white;
+    text-align: center;
+    padding: 120px 20px;
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=2000&auto=format&fit=crop') no-repeat center center/cover;
+}
+
+.container { 
+    max-width: 900px; 
+    margin: 0 auto; 
+    padding: 0 20px; 
+}
+
+.info-section { 
+    padding: 60px 0; 
+}
+
+.info-grid { 
+    display: flex; 
+    gap: 20px; 
+    margin-top: 20px; 
+}
+
+.info-card { 
+    flex: 1; 
+    background: #ffffff; 
+    padding: 25px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+    border-top: 4px solid #d82505; 
+}
+
+.consultas-section {
+    padding: 80px 0;
+    background-color: #eaeaea;
+    text-align: center;
+    border-top: 1px solid #ccc;
+}
+
+.social-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+.btn-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #25D366;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+    transition: opacity 0.3s;
+}
+
+.btn-whatsapp:hover { 
+    opacity: 0.9; 
+}
+
+.btn-instagram {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(220, 39, 67, 0.3);
+    transition: opacity 0.3s;
+}
+
+.btn-instagram:hover { 
+    opacity: 0.9; 
+}
+
+footer { 
+    text-align: center; 
+    padding: 20px; 
+    background-color: #1a1a1a; 
+    color: white; 
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 15px 20px;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    .nav-links {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        flex-direction: column;
+        background-color: #1a1a1a;
+        width: 100%;
+        text-align: center;
+        padding: 0;
+        box-shadow: 0 10px 10px rgba(0,0,0,0.3);
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, padding 0.4s ease-in-out;
+    }
+
+    .nav-links.active {
+        max-height: 250px;
+        opacity: 1;
+        padding: 20px 0;
+    }
+
+    .nav-links li {
+        margin: 15px 0;
+    }
+
+    .info-grid { 
+        flex-direction: column; 
+    }
+}
