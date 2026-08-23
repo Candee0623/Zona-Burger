@@ -8,8 +8,19 @@ class Categoria(models.Model):
         return self.nombre
 
     class Meta:
-        managed = False
         db_table = 'Categoria'
+
+
+class Extras(models.Model):
+    idextra = models.AutoField(db_column='IdExtra', primary_key=True)
+    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
+    precio = models.DecimalField(db_column='Precio', max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return f"{self.nombre} (+${self.precio})"
+
+    class Meta:
+        db_table = 'Extras'
 
 
 class Producto(models.Model):
@@ -17,14 +28,31 @@ class Producto(models.Model):
     nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
     descripcion = models.CharField(db_column='Descripcion', max_length=255, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     precio = models.DecimalField(db_column='Precio', max_digits=10, decimal_places=2)
+    imagen = models.CharField(db_column='Imagen', max_length=255, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     idcategoria = models.ForeignKey(Categoria, models.DO_NOTHING, db_column='IdCategoria')
+
+    extras = models.ManyToManyField(
+        Extras,
+        through='ProductoExtras',
+        through_fields=('idproducto', 'idextra'),
+        related_name='productos'
+    )
 
     def __str__(self):
         return self.nombre
 
     class Meta:
-        managed = False
         db_table = 'Producto'
+
+
+class ProductoExtras(models.Model):
+    idProducto = models.AutoField(primary_key=True)
+    idproducto = models.ForeignKey(Producto, models.DO_NOTHING, db_column='IdProducto')
+    idextra = models.ForeignKey(Extras, models.DO_NOTHING, db_column='IdExtra')
+
+    class Meta:
+        db_table = 'ProductoExtras'
+        unique_together = (('idproducto', 'idextra'),)
 
 
 class GrupoOpcion(models.Model):
@@ -37,8 +65,7 @@ class GrupoOpcion(models.Model):
         return self.nombre
 
     class Meta:
-        managed = False
-        db_table='GrupoOpcion'
+        db_table = 'GrupoOpcion'
 
 
 class Opcion(models.Model):
@@ -48,16 +75,14 @@ class Opcion(models.Model):
     precio_adicional = models.DecimalField(db_column='PrecioAdicional', max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return f"{self.nombre} (+${self.precio_adicional})"
+        return f"{self.nombre}"
 
     class Meta:
-        managed = False
         db_table = 'Opcion'
 
 
 class ProductoGrupoOpcion(models.Model):
-    # Reemplaza 'IdRelacion' o 'id' por el nombre exacto de la columna autoincremental en tu base de datos SQL
-    id = models.AutoField(db_column='IdProductoGrupo', primary_key=True) 
+    id = models.AutoField(db_column='IdProductoGrupo', primary_key=True)
     idproducto = models.ForeignKey(Producto, models.DO_NOTHING, db_column='IdProducto')
     idgrupo = models.ForeignKey(GrupoOpcion, models.DO_NOTHING, db_column='IdGrupo')
 
@@ -65,6 +90,5 @@ class ProductoGrupoOpcion(models.Model):
         return f"{self.idgrupo.nombre} - {self.idproducto.nombre}"
 
     class Meta:
-        managed = False
         db_table = 'ProductoGrupoOpcion'
         unique_together = (('idproducto', 'idgrupo'),)

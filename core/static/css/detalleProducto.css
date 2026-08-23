@@ -1,3 +1,4 @@
+CSS DE DETALLEPRODUCTO
 .detalle-header {
     display: flex;
     justify-content: space-between;
@@ -7,11 +8,13 @@
     padding: 0 20px;
 }
 
+
 .detalle-header h2 {
-    font-size: 20px; 
+    font-size: 20px;
     color: #333;
     margin: 0;
 }
+
 
 .btn-volver {
     background-color: #f1f1f1;
@@ -24,74 +27,99 @@
     transition: background 0.3s;
 }
 
+
 .btn-volver:hover {
     background-color: #e0e0e0;
 }
 
+
 .detalle-main-container {
-    max-width: 700px; 
-    margin-top: 10px;
+    max-width: 700px;
+    margin: 10px auto 40px auto;
 }
+
 
 .detalle-producto-card {
-    padding: 20px; 
+    padding: 20px;
     display: block;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
+
 .detalle-imagen {
-    width: 100%; 
-    height: 250px; 
-    object-fit: cover; 
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
     border-radius: 8px;
 }
 
+
 .detalle-placeholder {
-    font-size: 50px; 
+    font-size: 50px;
     text-align: center;
+    background-color: #f5f5f5;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
 }
+
 
 .detalle-titulo {
-    margin-top: 20px; 
+    margin-top: 20px;
     font-size: 28px;
+    color: #1a1a1a;
 }
+
 
 .detalle-descripcion {
-    color: #666; 
+    color: #666;
     margin: 10px 0;
+    font-size: 15px;
 }
 
+
 .detalle-precio-base {
-    color: #e63946; 
+    color: #e63946;
     font-size: 22px;
 }
 
+
 .detalle-divider {
-    margin: 20px 0; 
-    border: 0; 
+    margin: 20px 0;
+    border: 0;
     border-top: 1px solid #ddd;
 }
+
 
 .grupo-opcion-seccion {
     margin-bottom: 25px;
 }
 
+
 .grupo-titulo {
-    font-size: 18px; 
+    font-size: 18px;
     color: #222;
     margin: 0 0 5px 0;
 }
 
+
 .grupo-estado {
-    font-size: 12px; 
-    color: #888; 
+    font-size: 12px;
+    color: #888;
     margin: 0 0 10px 0;
 }
 
+
 .opciones-lista {
-    display: flex; 
-    flex-direction: column; 
+    display: flex;
+    flex-direction: column;
     gap: 8px;
 }
+
 
 .opcion-item {
     display: flex;
@@ -103,34 +131,40 @@
     border: 1px solid #eee;
 }
 
+
 .opcion-label {
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-    cursor: pointer; 
-    font-size: 15px; 
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 15px;
     flex-grow: 1;
 }
+
 
 .opcion-input {
     accent-color: #e63946;
 }
 
+
 .opcion-precio-extra {
-    color: #2a9d8f; 
+    color: #2a9d8f;
     font-weight: 600;
 }
 
+
 .cantidad-container {
-    display: flex; 
-    align-items: center; 
+    display: flex;
+    align-items: center;
     gap: 5px;
 }
 
+
 .cantidad-label {
-    font-size: 12px; 
+    font-size: 12px;
     color: #666;
 }
+
 
 .cantidad-extra {
     width: 50px;
@@ -140,10 +174,12 @@
     border-radius: 4px;
 }
 
+
 .sin-modificadores {
-    color: #666; 
+    color: #666;
     font-style: italic;
 }
+
 
 .resumen-total-box {
     background-color: #f9f9f9;
@@ -156,11 +192,13 @@
     align-items: center;
 }
 
+
 .resumen-total-box span.label {
     font-size: 16px;
     font-weight: 600;
     color: #333;
 }
+
 
 .resumen-total-box span.monto {
     font-size: 22px;
@@ -168,15 +206,21 @@
     color: #e63946;
 }
 
+
 .btn-confirmar-pedido {
-    width: 100%; 
-    padding: 14px; 
-    font-size: 16px; 
-    margin-top: 10px; 
-    cursor: pointer; 
-    background-color: #e63946; 
-    color: white; 
-    border: none; 
-    border-radius: 8px; 
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
+    background-color: #e63946;
+    color: white;
+    border: none;
+    border-radius: 8px;
     font-weight: bold;
+}
+
+
+.btn-confirmar-pedido:hover {
+    background-color: #d62839;
 }

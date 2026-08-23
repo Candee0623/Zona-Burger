@@ -6,37 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menú - Zona Burger</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'Index.css' %}">
-    <link rel="stylesheet" href="{% static 'Menu.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Menu.css' %}">
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="logo-container">
-            <a href="{% url 'index' %}">
-                <span class="logo-placeholder"></span>
-            </a>
-        </div>
-        
-        <div class="menu-toggle" id="mobile-menu">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-        </div>
-
-        <ul class="nav-links">
-            <li><a href="{% url 'index' %}#info">Información</a></li>
-            <li><a href="{% url 'index' %}#consultas">Contacto</a></li>
-            <li><a href="{% url 'menu' %}" class="active-link">Menú</a></li>
-        </ul>
-    </nav>
+    <!-- Incluimos tu Header modularizado -->
+    {% include 'components/header.html' %}
 
     <!-- Barra de Categorías Deslizable -->
     <div class="categorias-nav-container">
         <div class="categorias-scroll">
             {% for categoria in categorias %}
-                <!-- Usamos preventDefault o un enlace limpio para evitar saltos extraños al cargar -->
                 <a href="#cat-{{ categoria.idcategoria }}" class="categoria-chip">
                     {{ categoria.nombre }}
                 </a>
@@ -49,7 +30,6 @@
         <h1 class="menu-title">Nuestro Menú</h1>
 
         {% for categoria in categorias %}
-            <!-- ID corregido para evitar conflictos de desplazamiento -->
             <section id="cat-{{ categoria.idcategoria }}" class="categoria-seccion">
                 <h2 class="categoria-heading">{{ categoria.nombre }}</h2>
 
@@ -89,10 +69,9 @@
         {% endfor %}
     </main>
 
-    <footer>
-        <p>&copy; 2026 Zona Burger. Todos los derechos reservados.</p>
-    </footer>
+    <!-- Incluimos tu Footer modularizado -->
+    {% include 'components/footer.html' %}
 
-    <script src="{% static 'menu.js' %}"></script>
+    <script src="{% static 'java/menu.js' %}"></script>
 </body>
 </html>

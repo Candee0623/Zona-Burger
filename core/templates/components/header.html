@@ -1,0 +1,21 @@
+{% load static %}
+<nav class="navbar">
+    <div class="logo-container">
+        <a href="{% url 'index' %}">
+            <img src="{% static 'img/logo.png' %}" alt="Zona Burger Logo" style="height: 45px; width: auto; border-radius: 50%;">
+        </a>
+    </div>
+    
+    <!-- Botón del menú hamburguesa -->
+    <div class="menu-toggle" id="mobile-menu">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </div>
+
+    <ul class="nav-links">
+        <li><a href="{% url 'index' %}#info">Información</a></li>
+        <li><a href="{% url 'index' %}#consultas">Contacto</a></li>
+        <li><a href="{% url 'menu' %}">Menú</a></li>
+    </ul>
+</nav>

@@ -1,17 +1,30 @@
-﻿venv/
+﻿# Entornos virtuales
+venv/
 env/
 ENV/
-.env/
+
+# Archivo de variables de entorno (¡Muy importante que esté sin barra para que lo ignore como archivo!)
+.env
+
+# Archivos de Python
 __pycache__/
 *.py[cod]
 *.class
 *.so
+
+# Bases de datos locales (si aplica)
 db.sqlite3
 *.sqlite3
+
+# Archivos de medios / uploads
 media/
+
+# Configuraciones de editores
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# Archivos del sistema operativo
 .DS_Store
 Thumbs.db
