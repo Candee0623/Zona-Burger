@@ -6,89 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zona Burger - Bienvenidos</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'Index.css' %}">
-</head>
-<body>
-
-    <!-- Incluimos el Header modular -->
-{% include 'components/header.html' %}
-...
-
-    <div class="hero-banner-content">
-        <h1>Zona Burger</h1>
-        <p>La calidad que te mereces</p>
-    </div>
-
-    <section id="info" class="info-section">
-        <div class="container">
-            <h2>Información del Local</h2>
-            <div class="info-grid">
-                <div class="info-card">
-                    <h3>🕒 Horarios</h3>
-                    <p>Lunes a Jueves: Cerrado </p>
-                    <p>Viernes a Domingo: 20 a 00hs</p>
-                </div>
-                <div class="info-card">
-                    <h3>🛵 Delivery</h3>
-                    <p>Envío disponible a toda la zona céntrica.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="consultas" class="consultas-section">
-        <div class="container">
-            <h2>¿Tenés dudas o querés hacer un pedido?</h2>
-            <p>Escribinos de forma directa por nuestros canales oficiales:</p>
-           
-            <div class="social-buttons">
-                <a href="https://wa.me/TU_NUMERO_DE_TELEFONO" target="_blank" class="btn-whatsapp">
-                    WhatsApp
-                </a>
-                <a href="https://instagram.com/TU_USUARIO" target="_blank" class="btn-instagram">
-                    Instagram
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Incluimos el Footer modular -->
-{% include 'components/footer.html' %}
-
-    <!-- Script para activar el menú hamburguesa -->
-    <script>
-        const mobileMenu = document.getElementById('mobile-menu');
-        const navLinks = document.querySelector('.nav-links');
-
-        if (mobileMenu && navLinks) {
-            mobileMenu.addEventListener('click', () => {
-                navLinks.classList.toggle('active');
-                mobileMenu.classList.toggle('is-active');
-            });
-
-            // Ocultar menú al hacer clic en un enlace (en celulares)
-            document.querySelectorAll('.nav-links a').forEach(link => {
-                link.addEventListener('click', () => {
-                    navLinks.classList.remove('active');
-                    mobileMenu.classList.remove('is-active');
-                });
-            });
-        }
-    </script>
-</body>
-</html>{% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zona Burger - Bienvenidos</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/Index.css' %}">
 </head>
 <body>
 
-    <!-- Incluimos el Header modular -->
     {% include 'components/header.html' %}
 
     <div class="hero-banner-content">
@@ -102,7 +23,7 @@
             <div class="info-grid">
                 <div class="info-card">
                     <h3>🕒 Horarios</h3>
-                    <p>Lunes a Jueves: Cerrado </p>
+                    <p>Lunes a Jueves: Cerrado</p>
                     <p>Viernes a Domingo: 20 a 00hs</p>
                 </div>
                 <div class="info-card">
@@ -117,7 +38,7 @@
         <div class="container">
             <h2>¿Tenés dudas o querés hacer un pedido?</h2>
             <p>Escribinos de forma directa por nuestros canales oficiales:</p>
-           
+            
             <div class="social-buttons">
                 <a href="https://wa.me/TU_NUMERO_DE_TELEFONO" target="_blank" class="btn-whatsapp">
                     WhatsApp
@@ -129,10 +50,8 @@
         </div>
     </section>
 
-    <!-- Incluimos el Footer modular -->
     {% include 'components/footer.html' %}
 
-    <!-- Script para activar el menú hamburguesa -->
     <script>
         const mobileMenu = document.getElementById('mobile-menu');
         const navLinks = document.querySelector('.nav-links');
@@ -143,7 +62,6 @@
                 mobileMenu.classList.toggle('is-active');
             });
 
-            // Ocultar menú al hacer clic en un enlace (en celulares)
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', () => {
                     navLinks.classList.remove('active');

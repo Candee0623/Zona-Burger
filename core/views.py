@@ -1,7 +1,5 @@
-from django.shortcuts import render
 from django.shortcuts import render, get_object_or_404
-from .models import Categoria
-from .models import Producto, ProductoGrupoOpcion
+from .models import Categoria, Producto, ProductoGrupoOpcion
 
 def bienvenida(request):
     return render(request, 'index.html')
@@ -14,8 +12,6 @@ def menu(request):
     return render(request, 'menu.html', contexto)
 
 def detalleProducto(request, idproducto):
-
-    
     producto = get_object_or_404(Producto, pk=idproducto)
     
     relaciones_grupos = ProductoGrupoOpcion.objects.filter(idproducto=producto)
@@ -28,9 +24,11 @@ def detalleProducto(request, idproducto):
             'opciones': opciones
         })
 
+    extras_producto = producto.extras.all()
+
     contexto = {
         'producto': producto,
-        'grupos_opciones': grupos_opciones
+        'grupos_opciones': grupos_opciones,
+        'extras_producto': extras_producto
     }
-    # Apuntamos al archivo con el nombre exacto
     return render(request, 'detalleProducto.html', contexto)

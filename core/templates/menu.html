@@ -11,10 +11,8 @@
 </head>
 <body>
 
-    <!-- Incluimos tu Header modularizado -->
     {% include 'components/header.html' %}
 
-    <!-- Barra de Categorías Deslizable -->
     <div class="categorias-nav-container">
         <div class="categorias-scroll">
             {% for categoria in categorias %}
@@ -25,7 +23,6 @@
         </div>
     </div>
 
-    <!-- Contenido del Menú -->
     <main class="menu-container">
         <h1 class="menu-title">Nuestro Menú</h1>
 
@@ -46,7 +43,6 @@
                                 <h3 class="producto-nombre">{{ producto.nombre }}</h3>
                                 <p class="producto-descripcion">{{ producto.descripcion }}</p>
                                 
-                                <!-- Lo que incluye (Bebidas, Papas, Salsas, etc.) -->
                                 <div class="producto-incluye">
                                     <ul class="incluye-lista">
                                         {% for rel in producto.productogrupopcion_set.all %}
@@ -69,7 +65,6 @@
         {% endfor %}
     </main>
 
-    <!-- Incluimos tu Footer modularizado -->
     {% include 'components/footer.html' %}
 
     <script src="{% static 'java/menu.js' %}"></script>

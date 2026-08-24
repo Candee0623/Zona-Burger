@@ -1,7 +1,3 @@
-/* ==========================================================
-   ZONA BURGER - UI GOURMET DARK & UNIFIED SIDEBAR/LOGIN LOGO
-   ========================================================== */
-
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 :root {
@@ -16,9 +12,6 @@
     --border-subtle:  #29221e !important; 
 }
 
-/* ==========================================================
-   1. FONDO DE TEXTURA GOURMET OSCURA
-   ========================================================== */
 html {
     background: #0a0807 url('https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed !important;
     background-size: cover !important;
@@ -32,9 +25,6 @@ body, .wrapper, .content-wrapper, .content, #content, .content-header, section {
     border: none !important;
 }
 
-/* ==========================================================
-   2. ELIMINACIÓN DE BASURA VISUAL
-   ========================================================== */
 .paginator, div.paginator, p.paginator, .card-footer, 
 #changelist .paginator, .small.float-left, 
 #changelist-form .row:last-child,
@@ -48,9 +38,6 @@ body, .wrapper, .content-wrapper, .content, #content, .content-header, section {
     padding: 0 !important;
 }
 
-/* ==========================================================
-   3. BARRA SUPERIOR Y TÍTULOS
-   ========================================================== */
 .main-header, .navbar {
     background-color: rgba(23, 19, 18, 0.9) !important;
     backdrop-filter: blur(10px) !important;
@@ -64,9 +51,6 @@ h1, h2, h3, h4, h5, h6, .content-header h1 {
     font-weight: 800 !important;
 }
 
-/* ==========================================================
-   4. MIGAS DE PAN (HOGAR / CENTRO)
-   ========================================================== */
 .content-header .breadcrumb, ol.breadcrumb {
     background: transparent !important;
     border: none !important;
@@ -83,9 +67,6 @@ h1, h2, h3, h4, h5, h6, .content-header h1 {
     color: var(--gold-accent) !important;
 }
 
-/* ==========================================================
-   5. MENÚ LATERAL Y LOGO IZQUIERDO REDONDO
-   ========================================================== */
 .main-sidebar, .app-sidebar {
     background-color: rgba(18, 14, 13, 0.95) !important;
     backdrop-filter: blur(10px) !important;
@@ -99,7 +80,6 @@ h1, h2, h3, h4, h5, h6, .content-header h1 {
     align-items: center !important;
 }
 
-/* Transformamos el logo del panel izquierdo en un círculo dorado perfecto */
 .brand-image {
     width: 42px !important;
     height: 42px !important;
@@ -127,9 +107,6 @@ h1, h2, h3, h4, h5, h6, .content-header h1 {
     font-weight: 700 !important;
 }
 
-/* ==========================================================
-   6. TARJETAS PRINCIPALES
-   ========================================================== */
 .card, .box, #changelist {
     background-color: var(--bg-card) !important;
     backdrop-filter: blur(12px) !important;
@@ -139,16 +116,11 @@ h1, h2, h3, h4, h5, h6, .content-header h1 {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7) !important;
 }
 
-/* ==========================================================
-   7. PESTAÑAS (TABS)
-   ========================================================== */
 .nav-tabs { border-bottom: 1px solid var(--border-subtle) !important; }
 .nav-tabs .nav-link { color: var(--text-muted) !important; font-weight: 600 !important; border: none !important; }
 .nav-tabs .nav-link.active { background-color: transparent !important; color: var(--gold-accent) !important; border-bottom: 2px solid var(--gold-accent) !important; }
 
-/* ==========================================================
-   8. INPUTS Y SELECTORES
-   ========================================================== */
+
 input[type="text"], input[type="password"], select, .form-control, .select2-container {
     min-width: 220px !important; 
     background-color: rgba(12, 10, 9, 0.85) !important;
@@ -173,9 +145,6 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus { border-co
 .select2-results__option { color: var(--text-muted) !important; padding: 10px 14px !important; }
 .select2-results__option--highlighted { background-color: var(--burgundy) !important; color: #ffffff !important; }
 
-/* ==========================================================
-   9. LOGO DE LOGIN SIN BORDES NEGROS
-   ========================================================== */
 .login-box .login-logo, .login-page .login-logo, .logout-logo {
     display: flex !important;
     visibility: visible !important;
@@ -230,9 +199,6 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus { border-co
     padding-top: 28px !important;
 }
 
-/* ==========================================================
-   10. MENÚ DESPLEGABLE DE USUARIO (Esquina Superior)
-   ========================================================== */
 .dropdown-menu {
     background-color: #171312 !important;
     border: 1px solid var(--border-subtle) !important;
@@ -255,9 +221,6 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus { border-co
     color: #f43f5e !important;
 }
 
-/* ==========================================================
-   11. BOTONES SÓLIDOS Y VISIBLES
-   ========================================================== */
 .btn:not(.dropdown-item), .addlink, input[type="submit"], button:not(.dropdown-item), .actions button, 
 .add-row a, .button, .submit-row input, a.add-handler {
     border-radius: 8px !important;
@@ -273,7 +236,6 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus { border-co
     opacity: 1 !important;
 }
 
-/* Botones Principales */
 .content-wrapper .addlink, .content-wrapper .btn-success, .content-wrapper .btn-primary, 
 #changelist-search input[type="submit"], input[value="Buscar"], input[name="_save"], 
 .submit-row input[type="submit"], .card-body button[type="submit"], .login-box button[type="submit"] {
@@ -288,7 +250,6 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus { border-co
     transform: translateY(-2px) !important;
 }
 
-/* Botón inferior dinámico "AGREGAR OTRA OPCIÓN" */
 .add-row a, a.add-handler, .add-row td a {
     background-color: var(--gold-accent) !important;
     background-image: none !important;
@@ -305,7 +266,6 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus { border-co
     transform: translateY(-2px) !important;
 }
 
-/* Botones secundarios */
 input[name="_addanother"], input[name="_continue"] {
     background-color: #29221e !important;
     border: 1px solid var(--gold-accent) !important;
@@ -316,16 +276,10 @@ input[name="_addanother"]:hover, input[name="_continue"]:hover {
     color: #000000 !important;
 }
 
-/* ==========================================================
-   12. TABLAS Y FILAS DINÁMICAS
-   ========================================================== */
 .table { border-collapse: separate !important; border-spacing: 0 6px !important; background: transparent !important; }
 .table thead th { background: transparent !important; color: var(--gold-accent) !important; text-transform: uppercase; font-size: 0.75rem !important; border: none !important; padding: 12px 20px !important; }
 .table tbody tr, .dynamic-form { background-color: rgba(15, 12, 11, 0.85) !important; border: 1px solid var(--border-subtle) !important; border-radius: 10px !important; }
 .table td, .table th { background: transparent !important; border: none !important; padding: 16px 20px !important; vertical-align: middle !important; }
 .table a { color: var(--gold-accent) !important; font-weight: 600 !important; text-decoration: none !important; }
 
-/* ==========================================================
-   OCULTAR FOOTER
-   ========================================================== */
 footer, .main-footer { display: none !important; }

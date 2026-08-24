@@ -12,7 +12,6 @@
 </head>
 <body>
 
-    <!-- Incluimos el Header modular -->
     {% include 'components/header.html' %}
 
     <div class="detalle-header">
@@ -22,8 +21,7 @@
 
     <main class="menu-container detalle-main-container">
         <div class="producto-card detalle-producto-card">
-           
-            <!-- Imagen del producto por URL -->
+            
             {% if producto.imagen %}
                 <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="producto-imagen detalle-imagen">
             {% else %}
@@ -38,8 +36,7 @@
 
             <form id="form-personalizar" method="POST" action="">
                 {% csrf_token %}
-               
-                <!-- 1. GRUPOS DE OPCIONES (Modificaciones / Ingredientes) -->
+                
                 {% for item in grupos_opciones %}
                     <div class="grupo-opcion-seccion">
                         <h3 class="grupo-titulo">Ingredientes</h3>
@@ -67,7 +64,6 @@
                     </div>
                 {% endfor %}
 
-                <!-- 2. SECCIÓN DE EXTRAS (Con cantidad independiente) -->
                 {% if extras_producto %}
                     <div class="grupo-opcion-seccion">
                         <h3 class="grupo-titulo">Agregá Extras</h3>
@@ -79,8 +75,7 @@
                                         <span>{{ extra.nombre }}</span>
                                         <span class="opcion-precio-extra">(+${{ extra.precio }})</span>
                                     </label>
-                                   
-                                    <!-- Selector de cantidad exclusivo para el extra -->
+                                    
                                     <div class="cantidad-container">
                                         <label class="cantidad-label">Cant:</label>
                                         <input type="number" name="cantidad_extra_{{ extra.idextra }}" value="1" min="1" max="5" class="cantidad-extra">
@@ -91,7 +86,6 @@
                     </div>
                 {% endif %}
 
-                <!-- TOTAL -->
                 <div class="resumen-total-box">
                     <span class="label">Total del producto:</span>
                     <span class="monto">$<span id="precio-total">{{ producto.precio }}</span></span>
@@ -105,13 +99,10 @@
         </div>
     </main>
 
-    <!-- Incluimos el Footer modular -->
     {% include 'components/footer.html' %}
 
-    <!-- SCRIPT DE CÁLCULO Y MENÚ MÓVIL -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Script para el menú hamburguesa móvil
             const mobileMenu = document.getElementById('mobile-menu');
             const navLinks = document.querySelector('.nav-links');
 
@@ -122,7 +113,6 @@
                 });
             }
 
-            // Cálculo dinámico del precio
             const elementoPrecioBase = document.querySelector('.detalle-precio-base');
             const precioBase = elementoPrecioBase ? (parseFloat(elementoPrecioBase.getAttribute('data-precio-base')) || 0) : 0;
             const spanTotal = document.getElementById('precio-total');
@@ -137,7 +127,7 @@
                         const precioAdicional = parseFloat(input.getAttribute('data-precio')) || 0;
                         const contenedorOpcion = input.closest('.opcion-item');
                         const inputCant = contenedorOpcion ? contenedorOpcion.querySelector('.cantidad-extra') : null;
-                       
+                        
                         const cantidad = inputCant ? (parseInt(inputCant.value) || 1) : 1;
 
                         totalActual += (precioAdicional * cantidad);

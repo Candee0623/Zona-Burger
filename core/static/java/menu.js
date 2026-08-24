@@ -1,7 +1,5 @@
-// core/static/menu.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Menú hamburguesa
     const mobileMenu = document.getElementById('mobile-menu');
     const navLinks = document.querySelector('.nav-links');
 
@@ -15,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const chips = document.querySelectorAll('.categoria-chip');
     const secciones = document.querySelectorAll('.categoria-seccion');
 
-    // 1. Permitir clic manual instantáneo con desplazamiento suave
     chips.forEach(chip => {
         chip.addEventListener('click', function(e) {
             e.preventDefault();
@@ -35,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 2. Detectar sección visible al hacer scroll (Scroll Spy)
     const observerOptions = {
         root: null,
         rootMargin: '-20% 0px -60% 0px',
