@@ -175,16 +175,23 @@ class GrupoOpcion(models.Model):
         db_table = 'GrupoOpcion'
 
 class Opcion(models.Model):
-    idopcion = models.AutoField(db_column='IdOpcion', primary_key=True)
-    idgrupo = models.ForeignKey(GrupoOpcion, models.DO_NOTHING, db_column='IdGrupo')
-    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
-    precio_adicional = models.DecimalField(db_column='PrecioAdicional', max_digits=10, decimal_places=2, default=0.00)
+  idopcion = models.AutoField(db_column='IdOpcion', primary_key=True)
+  idgrupo = models.ForeignKey(GrupoOpcion, models.DO_NOTHING, db_column='IdGrupo')
+  nombre = models.CharField(
+      db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS'
+  )
+  precio_adicional = models.DecimalField(
+      db_column='PrecioAdicional', max_digits=10, decimal_places=2, default=0.00
+  )
 
-    def __str__(self):
-        return self.nombre
+  def __str__(self):
+    return self.nombre
 
-    class Meta:
-        db_table = 'Opcion'
+  class Meta:
+    db_table = 'Opcion'
+    managed = (
+        False  
+    )
 
 class ProductoGrupoOpcion(models.Model):
     id = models.AutoField(db_column='IdProductoGrupo', primary_key=True)
@@ -271,21 +278,37 @@ class Direccion(models.Model):
         db_table = 'Direccion'
 
 class EstadoPedido(models.Model):
-    idestadopedido = models.AutoField(db_column='IdEstadoPedido', primary_key=True)
-    descripcion = models.CharField(db_column='Descripcion', max_length=100, db_collation='Modern_Spanish_CI_AS')
+  idestadopedido = models.AutoField(
+      db_column='IdEstado', primary_key=True
+  )
+  descripcion = models.CharField(
+      db_column='Descripcion',
+      max_length=100,
+      db_collation='Modern_Spanish_CI_AS',
+  )
 
-    def __str__(self):
-        return self.descripcion
+  def __str__(self):
+    return self.descripcion
 
-    class Meta:
-        db_table = 'EstadoPedido'
+  class Meta:
+    db_table = 'EstadoPedido'
 
 class Pedido(models.Model):
     idpedido = models.AutoField(db_column='IdPedido', primary_key=True)
     idcliente = models.ForeignKey(Cliente, models.DO_NOTHING, db_column='IdCliente')
     idmediopago = models.ForeignKey(MedioPago, models.DO_NOTHING, db_column='IdMedioPago')
-    idestadopedido = models.ForeignKey(EstadoPedido, models.DO_NOTHING, db_column='IdEstadoPedido', default=1)
-    producto = models.ForeignKey(Producto, models.DO_NOTHING, db_column='Producto')
+    
+    # Forzar el mapeo exacto de la columna física de SQL Server
+    idestadopedido = models.ForeignKey(
+        EstadoPedido, 
+        models.DO_NOTHING, 
+        db_column='IdEstadoPedido', 
+        to_field='idestadopedido',
+        default=1
+    )
+    
+    idpromocion = models.ForeignKey('Promocion', models.DO_NOTHING, db_column='IdPromocion', blank=True, null=True)
+    producto = models.ForeignKey(Producto, models.DO_NOTHING, db_column='IdProducto')
     horarioentregadeseado = models.DateTimeField(db_column='HorarioEntregaDeseado', blank=True, null=True)
     justificacioncancelacion = models.CharField(db_column='JustificacionCancelacion', max_length=255, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     cantidad = models.IntegerField(db_column='Cantidad', default=1)
@@ -295,6 +318,7 @@ class Pedido(models.Model):
 
     class Meta:
         db_table = 'Pedido'
+        managed = False
 
 class Promocion(models.Model):
     idpromocion = models.AutoField(db_column='IdPromocion', primary_key=True)

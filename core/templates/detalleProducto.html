@@ -18,7 +18,7 @@
 
     <main class="menu-container">
         <div class="detalle-header-links">
-            <h1 class="detalle-titulo" style="font-size: 1.8rem; margin: 0;">Personalizar</h1>
+            <h1 class="detalle-titulo" style="font-size: 1.8rem; margin: 0;">{% if edit_item_id %}Editar Producto{% else %}Personalizar{% endif %}</h1>
             <a href="{% url 'menu' %}" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Menú</a>
         </div>
 
@@ -38,8 +38,12 @@
 
             <hr class="detalle-divider">
 
-            <form id="form-personalizar" method="POST" action="">
+            <form id="form-personalizar" method="POST" action="{% url 'agregar_al_carrito' producto.idproducto %}">
                 {% csrf_token %}
+                
+                {% if edit_item_id %}
+                    <input type="hidden" name="edit_id" value="{{ edit_item_id }}">
+                {% endif %}
                 
                 {% for item in grupos_opciones %}
                     <div class="grupo-opcion-seccion">
@@ -53,9 +57,11 @@
                                 <div class="opcion-item">
                                     <label class="opcion-label">
                                         {% if item.grupo.max_selecciones == 1 %}
-                                            <input type="radio" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" {% if item.grupo.min_selecciones > 0 and forloop.first %}required{% endif %} class="opcion-input">
+                                            <input type="radio" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" 
+                                            {% if opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}checked{% elif item.grupo.min_selecciones > 0 and forloop.first and not edit_item_id %}required{% endif %} class="opcion-input">
                                         {% else %}
-                                            <input type="checkbox" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" class="opcion-input">
+                                            <input type="checkbox" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" 
+                                            {% if opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}checked{% endif %} class="opcion-input">
                                         {% endif %}
                                         <span>{{ opcion.nombre }}</span>
                                     </label>
@@ -76,14 +82,17 @@
                             {% for extra in extras_producto %}
                                 <div class="opcion-item">
                                     <label class="opcion-label">
-                                        <input type="checkbox" name="extra_{{ extra.idextra }}" value="{{ extra.idextra }}" data-precio="{{ extra.precio }}" class="opcion-input extra-checkbox">
+                                        <input type="checkbox" name="extra_{{ extra.idextra }}" value="{{ extra.idextra }}" data-precio="{{ extra.precio }}" 
+                                        {% if extra.idextra|stringformat:"s" in item_editando.extras_ids %}checked{% endif %} class="opcion-input extra-checkbox">
                                         <span>{{ extra.nombre }}</span>
                                     </label>
                                     <span class="opcion-precio-extra">+${{ extra.precio }}</span>
                                     
                                     <div class="cantidad-container">
                                         <label class="cantidad-label">Cant:</label>
-                                        <input type="number" name="cantidad_extra_{{ extra.idextra }}" value="1" min="1" max="5" class="cantidad-extra">
+                                        <input type="number" name="cantidad_extra_{{ extra.idextra }}" 
+                                        value="{% if extra.idextra|stringformat:"s" in item_editando.extras_ids %}{{ item_editando.extras_ids|stringformat:"s" }}{% else %}1{% endif %}" 
+                                        min="1" max="5" class="cantidad-extra">
                                     </div>
                                 </div>
                             {% endfor %}
@@ -97,7 +106,7 @@
                 </div>
 
                 <button type="submit" class="btn-confirmar-pedido">
-                    <i class="fa-solid fa-cart-shopping"></i> Añadir al Pedido
+                    <i class="fa-solid fa-cart-shopping"></i> {% if edit_item_id %}Guardar Cambios{% else %}Añadir al Pedido{% endif %}
                 </button>
             </form>
 

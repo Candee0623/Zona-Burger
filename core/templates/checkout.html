@@ -1,26 +1,182 @@
-<form method="POST" action="{% url 'checkout' %}">
-    {% csrf_token %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - {{ negocio.nombre|default:"Zona Burger" }}</title>
     
-    <h3>Datos del Cliente</h3>
-    <input type="text" name="nombre" placeholder="Nombre" required>
-    <input type="text" name="apellido" placeholder="Apellido" required>
-    <input type="text" name="telefono" placeholder="Teléfono" required>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="{% static 'css/Index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Checkout.css' %}">
+</head>
+<body>
+    {% include 'components/header.html' %}
 
-    <h3>Dirección de Envío</h3>
-    <input type="text" name="calle" placeholder="Calle" required>
-    <input type="text" name="numero" placeholder="Número" required>
-    <input type="text" name="piso" placeholder="Piso / Depto (Opcional)">
-    <input type="text" name="localidad" placeholder="Localidad" required>
+    <main class="checkout-container">
+        <h1 class="checkout-title">Finalizar Tu Pedido</h1>
 
-    <h3>Método de Pago</h3>
-    <select name="medio_pago" required>
-        {% for pago in medios_pago %}
-            <option value="{{ pago.idmediopago }}">{{ pago.nombremetodo }}</option>
-        {% endfor %}
-    </select>
+        <form class="checkout-form" method="POST" action="{% url 'checkout' %}" novalidate>
+            {% csrf_token %}
+            
+            <h3>Datos del Cliente</h3>
+            <input type="text" name="nombre" placeholder="Nombre" value="{{ datos_previos.nombre|default:'' }}" required>
+            <p class="form-error" data-for="nombre" style="display: none;"></p>
 
-    <h3>Comentarios (Opcional)</h3>
-    <textarea name="comentario" placeholder="Indicaciones adicionales para la entrega..."></textarea>
+            <input type="text" name="apellido" placeholder="Apellido" value="{{ datos_previos.apellido|default:'' }}" required>
+            <p class="form-error" data-for="apellido" style="display: none;"></p>
 
-    <button type="submit">Confirmar Pedido</button>
-</form>
+            <input type="tel" name="telefono" placeholder="Teléfono"
+                   value="{{ datos_previos.telefono|default:'' }}"
+                   class="{% if error_telefono %}input-error{% endif %}"
+                   required>
+            <p class="form-error" data-for="telefono" {% if error_telefono %}style="display:block;"{% else %}style="display:none;"{% endif %}>{{ error_telefono }}</p>
+
+            <h3>Dirección de Envío</h3>
+            <input type="text" name="calle" placeholder="Calle" value="{{ datos_previos.calle|default:'' }}" required>
+            <p class="form-error" data-for="calle" style="display: none;"></p>
+
+            <input type="text" name="numero" placeholder="Número" value="{{ datos_previos.numero|default:'' }}" required>
+            <p class="form-error" data-for="numero" style="display: none;"></p>
+
+            <input type="text" name="piso" placeholder="Piso / Depto (Opcional)" value="{{ datos_previos.piso|default:'' }}">
+
+            <input type="text" name="localidad" placeholder="Localidad" value="{{ datos_previos.localidad|default:'' }}" required>
+            <p class="form-error" data-for="localidad" style="display: none;"></p>
+
+            <h3>Método de Entrega</h3>
+            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Horario de entrega deseado (Opcional):</label>
+            <input type="time" name="horario_entrega" value="{{ datos_previos.horario_entrega|default:'' }}">
+
+            <h3>Promoción</h3>
+            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Palabra clave de promoción (Opcional):</label>
+            <input type="text" name="codigo_promocion" placeholder="Ej: PROMO10" value="{{ datos_previos.codigo_promocion|default:'' }}">
+
+            <h3>Método de Pago</h3>
+            <select name="medio_pago" required>
+                <option value="">Seleccioná una opción</option>
+                {% for pago in medios_pago %}
+                    <option value="{{ pago.idmediopago }}" {% if datos_previos.medio_pago == pago.idmediopago|stringformat:"s" %}selected{% endif %}>{{ pago.nombremetodo }}</option>
+                {% endfor %}
+            </select>
+            <p class="form-error" data-for="medio_pago" style="display: none;"></p>
+
+            <h3>Comentarios (Opcional)</h3>
+            <textarea name="comentario" placeholder="Indicaciones adicionales para la entrega...">{{ datos_previos.comentario|default:'' }}</textarea>
+
+            <button type="submit">Confirmar Pedido</button>
+        </form>
+    </main>
+
+    {% include 'components/footer.html' %}
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.querySelector('.checkout-form');
+      if (!form) return;
+
+      const mensajes = {
+        nombre: 'Ingresá tu nombre.',
+        apellido: 'Ingresá tu apellido.',
+        telefono_vacio: 'Ingresá tu número de teléfono.',
+        telefono_invalido: 'Ingresá un teléfono válido (solo números, entre 8 y 15 dígitos).',
+        calle: 'Ingresá la calle.',
+        numero: 'Ingresá el número de la calle.',
+        localidad: 'Ingresá tu localidad.',
+        medio_pago: 'Seleccioná un método de pago.',
+      };
+
+      const patronTelefono = /^[0-9\s\-()+]{8,15}$/;
+
+      function mostrarError(campo, mensaje) {
+        const errorEl = form.querySelector(`.form-error[data-for="${campo}"]`);
+        if (errorEl) {
+          errorEl.textContent = mensaje;
+          errorEl.style.display = 'block';
+        }
+        const inputEl = form.querySelector(`[name="${campo}"]`);
+        if (inputEl) inputEl.classList.add('input-error');
+      }
+
+      function ocultarError(campo) {
+        const errorEl = form.querySelector(`.form-error[data-for="${campo}"]`);
+        if (errorEl) {
+          errorEl.textContent = '';
+          errorEl.style.display = 'none';
+        }
+        const inputEl = form.querySelector(`[name="${campo}"]`);
+        if (inputEl) inputEl.classList.remove('input-error');
+      }
+
+      form.addEventListener('submit', function (e) {
+        let esValido = true;
+        let primerCampoInvalido = null;
+
+        // 1. Validar campos de texto requeridos
+        const camposTexto = ['nombre', 'apellido', 'calle', 'numero', 'localidad'];
+        camposTexto.forEach(function (campo) {
+          const input = form.querySelector(`[name="${campo}"]`);
+          if (input) {
+            if (!input.value.trim()) {
+              mostrarError(campo, mensajes[campo]);
+              esValido = false;
+              if (!primerCampoInvalido) primerCampoInvalido = input;
+            } else {
+              ocultarError(campo);
+            }
+          }
+        });
+
+        // 2. Validar teléfono
+        const telefonoInput = form.querySelector('[name="telefono"]');
+        if (telefonoInput) {
+          const telefonoValor = telefonoInput.value.trim();
+          if (!telefonoValor) {
+            mostrarError('telefono', mensajes.telefono_vacio);
+            esValido = false;
+            if (!primerCampoInvalido) primerCampoInvalido = telefonoInput;
+          } else if (!patronTelefono.test(telefonoValor)) {
+            mostrarError('telefono', mensajes.telefono_invalido);
+            esValido = false;
+            if (!primerCampoInvalido) primerCampoInvalido = telefonoInput;
+          } else {
+            ocultarError('telefono');
+          }
+        }
+
+        // 3. Validar medio de pago (select)
+        const medioPagoSelect = form.querySelector('[name="medio_pago"]');
+        if (medioPagoSelect) {
+          if (!medioPagoSelect.value) {
+            mostrarError('medio_pago', mensajes.medio_pago);
+            esValido = false;
+            if (!primerCampoInvalido) primerCampoInvalido = medioPagoSelect;
+          } else {
+            ocultarError('medio_pago');
+          }
+        }
+
+        // Si hay algún error, frenamos el envío y mandamos el foco al primero que falló
+        if (!esValido) {
+          e.preventDefault();
+          if (primerCampoInvalido) {
+            primerCampoInvalido.focus();
+          }
+        }
+      });
+
+      // Limpiar errores en tiempo real mientras el usuario tipea o cambia opciones
+      form.querySelectorAll('input, select, textarea').forEach(function (el) {
+        el.addEventListener('input', function () {
+          ocultarError(el.name);
+        });
+        el.addEventListener('change', function () {
+          ocultarError(el.name);
+        });
+      });
+    });
+    </script>
+</body>
+</html>

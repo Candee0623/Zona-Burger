@@ -1,0 +1,167 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Montserrat', sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+}
+
+main.checkout-container {
+    flex: 1;
+    padding: 40px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+h1.checkout-title {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #ffcc00;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.checkout-form {
+    background: #1e1e1e;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #333;
+    border-top: 4px solid #ffcc00;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+}
+
+.checkout-form h3 {
+    font-size: 1.2rem;
+    color: #ffcc00;
+    margin-top: 25px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #333;
+    padding-bottom: 6px;
+}
+
+.checkout-form h3:first-of-type {
+    margin-top: 0;
+}
+
+.checkout-form input[type="text"],
+.checkout-form input[type="tel"],
+.checkout-form input[type="time"],
+.checkout-form select,
+.checkout-form textarea {
+    width: 100%;
+    background: #121212;
+    border: 1px solid #333;
+    color: #ffffff;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.checkout-form input[type="text"]:focus,
+.checkout-form input[type="tel"]:focus,
+.checkout-form input[type="time"]:focus,
+.checkout-form select:focus,
+.checkout-form textarea:focus {
+    outline: none;
+    border-color: #ffcc00;
+    box-shadow: 0 0 8px rgba(255, 204, 0, 0.3);
+}
+
+.checkout-form input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+.checkout-form select {
+    cursor: pointer;
+}
+
+.checkout-form textarea {
+    resize: none;         
+    min-height: 80px;     
+    max-height: 120px;    
+}
+
+.checkout-form button[type="submit"] {
+    width: 100%;
+    background-color: #2ed573;
+    color: #121212;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.checkout-form button[type="submit"]:hover {
+    background-color: #ffcc00;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+}
+
+/* Anula el fondo blanco que impone el autocompletado del navegador */
+.checkout-form input[type="tel"]:-webkit-autofill,
+.checkout-form input[type="tel"]:-webkit-autofill:hover,
+.checkout-form input[type="tel"]:-webkit-autofill:focus,
+.checkout-form input[type="tel"]:-webkit-autofill:active,
+.checkout-form input[type="text"]:-webkit-autofill,
+.checkout-form input[type="text"]:-webkit-autofill:hover,
+.checkout-form input[type="text"]:-webkit-autofill:focus,
+.checkout-form input[type="text"]:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #121212 inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Mensaje de error de validación (ej. teléfono inválido) */
+.checkout-form .error-telefono {
+    display: block;
+    color: #ff6b6b;
+    background-color: rgba(231, 76, 60, 0.1);
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    margin-top: -8px;
+    margin-bottom: 15px;
+}
+
+/* Si el input tiene error, resalta el borde en rojo */
+.checkout-form input.input-error {
+    border-color: #e74c3c !important;
+}
+/* Mensajes de error de validación (uno por campo) */
+.checkout-form .form-error {
+    display: none;
+    color: #ff6b6b;
+    background-color: rgba(231, 76, 60, 0.1);
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    margin-top: -10px;
+    margin-bottom: 15px;
+}
+
+/* Si el input tiene error, resalta el borde en rojo */
+.checkout-form input.input-error,
+.checkout-form select.input-error {
+    border-color: #e74c3c !important;
+}
+.form-error {
+  display: none;
+}
