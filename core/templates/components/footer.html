@@ -1,3 +1,19 @@
 <footer>
-    <p>&copy; 2026 Zona Burger. Todos los derechos reservados.</p>
+    <h3>{{ negocio.nombre|default:"Zona Burger" }}</h3>
+    
+    <div class="socials" style="margin-top: 15px; display: flex; justify-content: center; gap: 20px; align-items: center;">
+        {% if negocio.telefono %}
+            <a href="https://wa.me/{{ negocio.telefono }}" target="_blank" style="color: #ffcc00; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> WhatsApp
+            </a>
+        {% endif %}
+
+        {% if instagram %}
+            <a href="{{ instagram.enlace }}" target="_blank" style="color: #ffcc00; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fab fa-instagram" style="font-size: 1.2rem;"></i> Instagram
+            </a>
+        {% endif %}
+    </div>
+    
+    <p style="margin-top: 20px; font-size: 0.8rem; color: #777;">&copy; 2026 {{ negocio.nombre|default:"Zona Burger" }}. Todos los derechos reservados.</p>
 </footer>

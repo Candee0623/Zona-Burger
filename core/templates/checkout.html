@@ -1,0 +1,26 @@
+<form method="POST" action="{% url 'checkout' %}">
+    {% csrf_token %}
+    
+    <h3>Datos del Cliente</h3>
+    <input type="text" name="nombre" placeholder="Nombre" required>
+    <input type="text" name="apellido" placeholder="Apellido" required>
+    <input type="text" name="telefono" placeholder="Teléfono" required>
+
+    <h3>Dirección de Envío</h3>
+    <input type="text" name="calle" placeholder="Calle" required>
+    <input type="text" name="numero" placeholder="Número" required>
+    <input type="text" name="piso" placeholder="Piso / Depto (Opcional)">
+    <input type="text" name="localidad" placeholder="Localidad" required>
+
+    <h3>Método de Pago</h3>
+    <select name="medio_pago" required>
+        {% for pago in medios_pago %}
+            <option value="{{ pago.idmediopago }}">{{ pago.nombremetodo }}</option>
+        {% endfor %}
+    </select>
+
+    <h3>Comentarios (Opcional)</h3>
+    <textarea name="comentario" placeholder="Indicaciones adicionales para la entrega..."></textarea>
+
+    <button type="submit">Confirmar Pedido</button>
+</form>

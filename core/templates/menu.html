@@ -4,22 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menú - Zona Burger</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Menú - {{ negocio.nombre|default:"Zona Burger" }}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="{% static 'css/Index.css' %}">
     <link rel="stylesheet" href="{% static 'css/Menu.css' %}">
 </head>
 <body>
 
-    {% include 'components/header.html' %}
+    <div class="header-fixed-wrapper">
+        {% include 'components/header.html' %}
 
-    <div class="categorias-nav-container">
-        <div class="categorias-scroll">
-            {% for categoria in categorias %}
-                <a href="#cat-{{ categoria.idcategoria }}" class="categoria-chip">
-                    {{ categoria.nombre }}
-                </a>
-            {% endfor %}
+        <div class="categorias-nav-container">
+            <div class="categorias-scroll">
+                {% for categoria in categorias %}
+                    <a href="#cat-{{ categoria.id|default:categoria.pk }}" class="categoria-chip">
+                        {{ categoria.nombre }}
+                    </a>
+                {% empty %}
+                    <span style="color: #aaa; font-size: 0.9rem; padding: 5px;">No hay categorías cargadas</span>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
@@ -27,7 +34,7 @@
         <h1 class="menu-title">Nuestro Menú</h1>
 
         {% for categoria in categorias %}
-            <section id="cat-{{ categoria.idcategoria }}" class="categoria-seccion">
+            <section id="cat-{{ categoria.id|default:categoria.pk }}" class="categoria-seccion">
                 <h2 class="categoria-heading">{{ categoria.nombre }}</h2>
 
                 <div class="productos-grid">
@@ -43,13 +50,15 @@
                                 <h3 class="producto-nombre">{{ producto.nombre }}</h3>
                                 <p class="producto-descripcion">{{ producto.descripcion }}</p>
                                 
+                                {% if producto.productogrupopcion_set.all %}
                                 <div class="producto-incluye">
                                     <ul class="incluye-lista">
                                         {% for rel in producto.productogrupopcion_set.all %}
-                                            <li>Incluye: {{ rel.idgrupo.nombre }}</li>
+                                            <li><i class="fa-solid fa-check"></i> Incluye: {{ rel.idgrupo.nombre }}</li>
                                         {% endfor %}
                                     </ul>
                                 </div>
+                                {% endif %}
 
                                 <div class="producto-footer">
                                     <span class="producto-precio">${{ producto.precio }}</span>
@@ -62,11 +71,14 @@
                     {% endfor %}
                 </div>
             </section>
+        {% empty %}
+            <p style="text-align: center; color: #888; font-size: 1.2rem;">No se encontraron categorías registradas.</p>
         {% endfor %}
     </main>
 
     {% include 'components/footer.html' %}
 
+    <script src="{% static 'java/header.js' %}"></script>
     <script src="{% static 'java/menu.js' %}"></script>
 </body>
 </html>

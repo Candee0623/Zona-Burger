@@ -4,33 +4,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ producto.nombre }} - Zona Burger</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>{{ producto.nombre }} - {{ negocio.nombre|default:"Zona Burger" }}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="{% static 'css/Index.css' %}">
-    <link rel="stylesheet" href="{% static 'css/Menu.css' %}">
     <link rel="stylesheet" href="{% static 'css/detalleProducto.css' %}">
 </head>
 <body>
 
     {% include 'components/header.html' %}
 
-    <div class="detalle-header">
-        <h2>Personalizar Producto</h2>
-        <a href="{% url 'menu' %}" class="btn-volver">← Volver al Menú</a>
-    </div>
+    <main class="menu-container">
+        <div class="detalle-header-links">
+            <h1 class="detalle-titulo" style="font-size: 1.8rem; margin: 0;">Personalizar</h1>
+            <a href="{% url 'menu' %}" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Menú</a>
+        </div>
 
-    <main class="menu-container detalle-main-container">
-        <div class="producto-card detalle-producto-card">
+        <div class="producto-card">
             
             {% if producto.imagen %}
-                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="producto-imagen detalle-imagen">
+                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="detalle-imagen">
             {% else %}
-                <div class="producto-imagen-placeholder detalle-placeholder">🍔</div>
+                <div class="producto-imagen-placeholder">🍔</div>
             {% endif %}
 
-            <h1 class="detalle-titulo">{{ producto.nombre }}</h1>
+            <h2 class="detalle-titulo">{{ producto.nombre }}</h2>
             <p class="detalle-descripcion">{{ producto.descripcion }}</p>
-            <h3 class="detalle-precio-base" data-precio-base="{{ producto.precio }}">${{ producto.precio }}</h3>
+            <div class="detalle-precio-base" data-precio-base="{{ producto.precio }}">
+                Precio Base: $<span id="base-val">{{ producto.precio }}</span>
+            </div>
 
             <hr class="detalle-divider">
 
@@ -39,9 +43,9 @@
                 
                 {% for item in grupos_opciones %}
                     <div class="grupo-opcion-seccion">
-                        <h3 class="grupo-titulo">Ingredientes</h3>
+                        <h3 class="grupo-titulo">{{ item.grupo.nombre }}</h3>
                         <p class="grupo-estado">
-                            {% if item.grupo.min_selecciones > 0 %}(Obligatorio){% else %}(Opcional){% endif %}
+                            {% if item.grupo.min_selecciones > 0 %}(Obligatorio - Seleccioná al menos {{ item.grupo.min_selecciones }}){% else %}(Opcional){% endif %}
                         </p>
 
                         <div class="opciones-lista">
@@ -49,15 +53,15 @@
                                 <div class="opcion-item">
                                     <label class="opcion-label">
                                         {% if item.grupo.max_selecciones == 1 %}
-                                            <input type="radio" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" {% if item.grupo.min_selecciones > 0 %}required{% endif %} class="opcion-input">
+                                            <input type="radio" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" {% if item.grupo.min_selecciones > 0 and forloop.first %}required{% endif %} class="opcion-input">
                                         {% else %}
                                             <input type="checkbox" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" class="opcion-input">
                                         {% endif %}
                                         <span>{{ opcion.nombre }}</span>
-                                        {% if opcion.precio_adicional > 0 %}
-                                            <span class="opcion-precio-extra">(+${{ opcion.precio_adicional }})</span>
-                                        {% endif %}
                                     </label>
+                                    {% if opcion.precio_adicional > 0 %}
+                                        <span class="opcion-precio-extra">+${{ opcion.precio_adicional }}</span>
+                                    {% endif %}
                                 </div>
                             {% endfor %}
                         </div>
@@ -67,14 +71,15 @@
                 {% if extras_producto %}
                     <div class="grupo-opcion-seccion">
                         <h3 class="grupo-titulo">Agregá Extras</h3>
+                        <p class="grupo-estado">(Opcional)</p>
                         <div class="opciones-lista">
                             {% for extra in extras_producto %}
                                 <div class="opcion-item">
                                     <label class="opcion-label">
                                         <input type="checkbox" name="extra_{{ extra.idextra }}" value="{{ extra.idextra }}" data-precio="{{ extra.precio }}" class="opcion-input extra-checkbox">
                                         <span>{{ extra.nombre }}</span>
-                                        <span class="opcion-precio-extra">(+${{ extra.precio }})</span>
                                     </label>
+                                    <span class="opcion-precio-extra">+${{ extra.precio }}</span>
                                     
                                     <div class="cantidad-container">
                                         <label class="cantidad-label">Cant:</label>
@@ -87,12 +92,12 @@
                 {% endif %}
 
                 <div class="resumen-total-box">
-                    <span class="label">Total del producto:</span>
+                    <span>Total del producto:</span>
                     <span class="monto">$<span id="precio-total">{{ producto.precio }}</span></span>
                 </div>
 
                 <button type="submit" class="btn-confirmar-pedido">
-                    Añadir al Pedido
+                    <i class="fa-solid fa-cart-shopping"></i> Añadir al Pedido
                 </button>
             </form>
 
@@ -101,18 +106,9 @@
 
     {% include 'components/footer.html' %}
 
+    <script src="{% static 'java/header.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            const navLinks = document.querySelector('.nav-links');
-
-            if (mobileMenu && navLinks) {
-                mobileMenu.addEventListener('click', () => {
-                    navLinks.classList.toggle('active');
-                    mobileMenu.classList.toggle('is-active');
-                });
-            }
-
             const elementoPrecioBase = document.querySelector('.detalle-precio-base');
             const precioBase = elementoPrecioBase ? (parseFloat(elementoPrecioBase.getAttribute('data-precio-base')) || 0) : 0;
             const spanTotal = document.getElementById('precio-total');

@@ -1,19 +1,22 @@
 {% load static %}
-<nav class="navbar">
-    <div class="logo-container">
-        <a href="{% url 'index' %}">
-            <img src="{% static 'img/logo.png' %}" alt="Zona Burger Logo" style="height: 45px; width: auto; border-radius: 50%;">
-        </a>
-    </div>
-    
-    <!-- Botón del menú hamburguesa -->
-    <div class="menu-toggle" id="mobile-menu">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-    </div>
+<div class="header-fixed-wrapper">
+    <header>
+        <nav class="navbar">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="{% static 'img/logo.png' %}" alt="Logo de {{ negocio.nombre|default:'Zona Burger' }}" style="width: 42px; height: 42px; object-fit: cover; border-radius: 50%;">
+                <h1 style="color: #ffffff; font-size: 1.25rem; margin: 0; font-weight: 700;">{{ negocio.nombre|default:"Zona Burger" }}</h1>
+            </div>
+            
+            <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
 
-    <ul class="nav-links">
-        <li><a href="{% url 'menu' %}">Menú</a></li>
-    </ul>
-</nav>
+            <ul class="nav-links" id="nav-menu">
+                <li><a href="{% url 'index' %}">Inicio</a></li>
+                <li><a href="{% url 'menu' %}">Menú</a></li>
+            </ul>
+        </nav>
+    </header>
+</div>

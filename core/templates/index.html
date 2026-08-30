@@ -4,71 +4,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zona Burger - Bienvenidos</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/Index.css' %}">
+    <title>{{ negocio.nombre|default:"Zona Burger" }}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
 </head>
 <body>
 
     {% include 'components/header.html' %}
 
-    <div class="hero-banner-content">
-        <h1>Zona Burger</h1>
-        <p>La calidad que te mereces</p>
+    <div class="hero">
+        <h2>Hamburguesas de Verdad</h2>
+        <div class="badge-estado">
+            <i class="fa-solid fa-circle"></i> 
+            {% if negocio.idestado %}
+                {{ negocio.idestado.descripcion }}
+            {% else %}
+                Abierto
+            {% endif %}
+        </div>
     </div>
 
-    <section id="info" class="info-section">
+    <section class="about-section" id="nosotros">
         <div class="container">
-            <h2>Información del Local</h2>
-            <div class="info-grid">
-                <div class="info-card">
-                    <h3>🕒 Horarios</h3>
-                    <p>Lunes a Jueves: Cerrado</p>
-                    <p>Viernes a Domingo: 20 a 00hs</p>
+            <h2 class="section-title">Sobre Nosotros</h2>
+            <div class="about-grid">
+                <div class="about-text">
+                    <p>En <strong>{{ negocio.nombre|default:"Zona Burger" }}</strong> nos apasiona hacer las cosas bien. Nacimos con el propósito de revolucionar el concepto de la comida rápida artesanal, ofreciendo burgers de autor preparadas con ingredientes frescos, locales y de primera calidad.</p>
+                    <p>Cada blend de carne es seleccionado con dedicación y nuestros medallones se cocinan al punto justo en la plancha para lograr esa costra crujiente y jugosa que tanto te gusta. ¡No es solo una hamburguesa, es una experiencia única en cada bocado!</p>
+                    
+                    <div class="about-features">
+                        <div class="feature-item">
+                            <i class="fa-solid fa-fire-flame-curved"></i>
+                            <span>Carne 100% Fresca</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-bread-slice"></i>
+                            <span>Panes Caseros del Día</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-utensils"></i>
+                            <span>Salsas Propias</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-heart"></i>
+                            <span>Hecho con Pasión</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="info-card">
-                    <h3>🛵 Delivery</h3>
-                    <p>Envío disponible a toda la zona céntrica.</p>
+                <div class="about-image">
+                    <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80" alt="Nuestras Hamburguesas">
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="consultas" class="consultas-section">
-        <div class="container">
-            <h2>¿Tenés dudas o querés hacer un pedido?</h2>
-            <p>Escribinos de forma directa por nuestros canales oficiales:</p>
+    <div class="container" id="info">
+        <h2 class="section-title">Información del Local</h2>
+        <div class="info-grid">
+            <div class="info-box">
+                <h3>Horarios de Atención</h3>
+                <ul>
+                    {% for h in horarios %}
+                        <li><span>{{ h.diasemana }}</span> <span style="color: #ffcc00;">{{ h.horaapertura|time:"H:i" }} - {{ h.horacierre|time:"H:i" }}</span></li>
+                    {% empty %}
+                        <li>No hay horarios configurados.</li>
+                    {% endfor %}
+                </ul>
+            </div>
             
-            <div class="social-buttons">
-                <a href="https://wa.me/TU_NUMERO_DE_TELEFONO" target="_blank" class="btn-whatsapp">
-                    WhatsApp
-                </a>
-                <a href="https://instagram.com/TU_USUARIO" target="_blank" class="btn-instagram">
-                    Instagram
-                </a>
+            <div class="info-box">
+                <h3>Zonas de Entrega</h3>
+                <ul>
+                    {% for zona in zonas %}
+                        <li><span>{{ zona.nombre }}</span> <span style="color: #ffcc00; font-weight: bold;">${{ zona.costoenvio }}</span></li>
+                    {% empty %}
+                        <li>No hay zonas de entrega configuradas.</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
-    </section>
+    </div>
 
-    {% include 'components/footer.html' %}
+    <div id="contacto">
+        {% include 'components/footer.html' %}
+    </div>
 
-    <script>
-        const mobileMenu = document.getElementById('mobile-menu');
-        const navLinks = document.querySelector('.nav-links');
-
-        if (mobileMenu && navLinks) {
-            mobileMenu.addEventListener('click', () => {
-                navLinks.classList.toggle('active');
-                mobileMenu.classList.toggle('is-active');
-            });
-
-            document.querySelectorAll('.nav-links a').forEach(link => {
-                link.addEventListener('click', () => {
-                    navLinks.classList.remove('active');
-                    mobileMenu.classList.remove('is-active');
-                });
-            });
-        }
-    </script>
+    <script src="{% static 'java/header.js' %}"></script>
 </body>
 </html>
