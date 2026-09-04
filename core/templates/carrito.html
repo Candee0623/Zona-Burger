@@ -5,244 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tu Carrito - {{ negocio.nombre|default:"Zona Burger" }}</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Enlaces a los CSS correctos del sistema -->
     <link rel="stylesheet" href="{% static 'css/Index.css' %}">
-    <style>
-        :root {
-            --primary: #ff4757;
-            --dark-bg: #121212;
-            --card-bg: #1e1e1e;
-            --border-color: #2c2c2c;
-            --text-main: #ffffff;
-            --text-muted: #b2b2b2;
-            --success: #2ed573;
-        }
-
-        html, body {
-            height: 100%;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            font-family: 'Montserrat', sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--text-main);
-        }
-
-        main.carrito-container {
-            flex: 1;
-            padding: 40px 20px;
-            max-width: 800px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        h1 {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            color: var(--text-main);
-        }
-
-        .carrito-card {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: 1px solid var(--border-color);
-            margin-top: 10px;
-        }
-
-        .carrito-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 1px solid var(--border-color);
-            padding: 20px 0;
-            gap: 15px;
-        }
-
-        .carrito-item:last-child {
-            border-bottom: none;
-        }
-
-        .carrito-info h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.1rem;
-            color: var(--text-main);
-        }
-
-        .carrito-detalles-lista {
-            margin: 0 0 12px 0;
-            padding-left: 18px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            list-style-type: disc;
-        }
-
-        .carrito-detalles-lista li {
-            margin-bottom: 3px;
-        }
-
-        .carrito-acciones {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .cantidad-control {
-            display: flex;
-            align-items: center;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            overflow: hidden;
-            background: #252525;
-        }
-
-        .btn-cant {
-            background: #2a2a2a;
-            border: none;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-weight: bold;
-            color: var(--text-main);
-            transition: background 0.2s;
-            text-decoration: none;
-        }
-
-        .btn-cant:hover {
-            background: #3a3a3a;
-        }
-
-        .cantidad-val {
-            padding: 0 10px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text-main);
-        }
-
-        .btn-editar-item {
-            color: #3b82f6;
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: opacity 0.2s;
-        }
-
-        .btn-editar-item:hover {
-            opacity: 0.8;
-        }
-
-        .btn-eliminar-item {
-            color: #ff4d4d;
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: opacity 0.2s;
-        }
-
-        .btn-eliminar-item:hover {
-            opacity: 0.8;
-        }
-
-        .carrito-precio-col {
-            text-align: right;
-            min-width: 140px;
-        }
-
-        .carrito-unitario-ref {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .carrito-subtotal-item {
-            font-weight: 700;
-            font-size: 1.15rem;
-            color: var(--text-main);
-            display: block;
-        }
-
-        .carrito-descuento-item {
-            font-size: 0.8rem;
-            color: var(--success);
-            display: block;
-        }
-
-        .carrito-resumen-totales {
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 2px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: flex-end;
-        }
-
-        .resumen-linea {
-            display: flex;
-            justify-content: space-between;
-            width: 300px;
-            font-size: 1rem;
-            color: var(--text-muted);
-        }
-
-        .resumen-linea.descuento {
-            color: var(--success);
-        }
-
-        .resumen-linea.total-final {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--text-main);
-            border-top: 1px dashed var(--border-color);
-            padding-top: 8px;
-            margin-top: 4px;
-        }
-
-        .carrito-botones-accion {
-            margin-top: 30px;
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-        }
-
-        .btn-seguir {
-            padding: 12px 20px;
-            background: #2a2a2a;
-            color: var(--text-main);
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background 0.2s;
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-seguir:hover {
-            background: #353535;
-        }
-
-        .btn-checkout {
-            padding: 12px 25px;
-            background: var(--success);
-            color: #121212;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 700;
-            transition: background 0.2s;
-        }
-
-        .btn-checkout:hover {
-            background: #26b962;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/carrito.css' %}">
 </head>
 <body>
     {% include 'components/header.html' %}
@@ -285,9 +54,6 @@
                         <div class="carrito-precio-col">
                             <span class="carrito-unitario-ref">${{ item.precio_unitario|floatformat:2 }} c/u</span>
                             <span class="carrito-subtotal-item">${{ item.subtotal|floatformat:2 }}</span>
-                            {% if item.descuento and item.descuento > 0 %}
-                                <span class="carrito-descuento-item">Promo: -${{ item.descuento|floatformat:2 }}</span>
-                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}
@@ -297,13 +63,6 @@
                         <span>Subtotal:</span>
                         <span>${{ total_carrito|floatformat:2 }}</span>
                     </div>
-                    
-                    {% if descuento_total and descuento_total > 0 %}
-                    <div class="resumen-linea descuento">
-                        <span>Descuento / Promo:</span>
-                        <span>-${{ descuento_total|floatformat:2 }}</span>
-                    </div>
-                    {% endif %}
 
                     <div class="resumen-linea total-final">
                         <span>A Pagar:</span>

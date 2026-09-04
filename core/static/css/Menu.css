@@ -305,6 +305,76 @@ footer {
     color: white;
 }
 
+/* --- BANNER FLOTANTE DEL CARRITO --- */
+.carrito-flotante-banner {
+    position: fixed;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 450px;
+    background: #1e1e1e !important;
+    border: 1px solid #333 !important;
+    border-top: 4px solid #ffcc00 !important;
+    color: #ffffff !important;
+    padding: 15px 22px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    z-index: 9999 !important;
+    box-sizing: border-box !important;
+}
+
+.carrito-flotante-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.carrito-flotante-info i {
+    font-size: 1.5rem !important;
+    color: #ffcc00 !important;
+}
+
+.carrito-flotante-texto {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.carrito-flotante-texto span {
+    font-size: 0.8rem !important;
+    color: #aaa !important;
+    margin: 0 !important;
+}
+
+.carrito-flotante-texto strong {
+    font-size: 0.95rem !important;
+    color: #fff !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+}
+
+.btn-ir-carrito-flotante {
+    background-color: #2ed573 !important;
+    color: #121212 !important;
+    padding: 10px 16px !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+}
+
+.btn-ir-carrito-flotante:hover {
+    background-color: #ffcc00 !important;
+}
+
 @media (max-width: 768px) {
     .header-fixed-wrapper .navbar {
         padding: 15px 20px !important;

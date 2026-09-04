@@ -6,28 +6,17 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-# Cargamos el archivo .env ubicado en la raíz del proyecto
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# ==========================================
-# VARIABLES DE ENTORNO (Seguridad y Entorno)
-# ==========================================
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Convierte una lista separada por comas en el .env a una lista de Python
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = allowed_hosts_env.split(',') if allowed_hosts_env else []
 
-
-# ==========================================
-# APLICACIONES Y MIDDLEWARES
-# ==========================================
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -36,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_ckeditor_5',
     'core',
 ]
 
@@ -68,10 +58,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ZonaBurger.wsgi.application'
 
-
-# ==========================================
-# BASE DE DATOS
-# ==========================================
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
@@ -85,10 +71,6 @@ DATABASES = {
     }
 }
 
-
-# ==========================================
-# VALIDACIÓN DE CONTRASEÑAS E INTERNACIONALIZACIÓN
-# ==========================================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -96,19 +78,19 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = 'es-ar' # Cambiado a español de Argentina (opcional, recomendado)
-TIME_ZONE = 'America/Argentina/Buenos_Aires' # Cambiado a zona horaria local (opcional)
+LANGUAGE_CODE = 'es-ar'
+TIME_ZONE = 'America/Argentina/Buenos_Aires'
 USE_I18N = True
 USE_TZ = True
 
-
-# ==========================================
-# ARCHIVOS ESTÁTICOS Y CORREO
-# ==========================================
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'core', 'static'),
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MAILERS = {
     'default': {
@@ -116,10 +98,6 @@ MAILERS = {
     },
 }
 
-
-# ==========================================
-# CONFIGURACIÓN DE JAZZMIN Y TU CSS
-# ==========================================
 JAZZMIN_SETTINGS = {
     "site_title": "Zona-Burger Admin",
     "site_header": "Zona-Burger",
@@ -131,11 +109,12 @@ JAZZMIN_SETTINGS = {
     "show_sidebar": True,
     "navigation_expanded": True,
     "custom_css": "css/admin_custom.css",
+    "custom_js": "java/admin_custom.js",
 }
 
 JAZZMIN_UI_TWEAKS = {
     "theme": "darkly",
-    "dark_mode_theme": "darkly",
+    "default_theme_mode": "dark",
     "navbar": "navbar-dark",
     "sidebar": "sidebar-dark-primary",
     "body_small_text": False,
@@ -154,4 +133,27 @@ JAZZMIN_UI_TWEAKS = {
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": False,
     "show_ui_builder": False,
+}
+
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/admin/'
+LOGOUT_REDIRECT_URL = '/admin/login/'
+
+# --- CONFIGURACIÓN DE CKEDITOR 5 ---
+CKEDITOR_5_CUSTOM_CSS = 'css/admin_custom.css'
+CKEDITOR_5_CONFIGS = {
+    'extends': {
+        'blockToolbar': [
+            'paragraph', 'heading1', 'heading2', 'heading3',
+            '|',
+            'bulletedList', 'numberedList',
+            '|',
+            'outdent', 'indent'
+        ],
+        'toolbar': [
+            'heading', '|', 'outdent', 'indent', '|', 'bold', 'italic', 
+            'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'
+        ],
+        'language': 'es',
+    }
 }

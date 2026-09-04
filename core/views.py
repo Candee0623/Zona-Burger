@@ -181,7 +181,7 @@ def agregar_al_carrito(request, idproducto):
             carrito[item_id] = {
                 'producto_id': producto.idproducto,
                 'nombre': producto.nombre,
-                'imagen': producto.imagen,
+                'imagen': producto.imagen.url if producto.imagen else '',  # Corregido aquí para serializar en JSON
                 'precio_unitario': precio_unitario,
                 'cantidad': 1,
                 'subtotal': precio_unitario,
@@ -316,7 +316,7 @@ def procesar_checkout(request):
 
         carrito = request.session.get('carrito', {})
 
-        # Corrección: Procesar correctamente la hora para evitar errores de validación con DateTimeField
+        # Procesar correctamente la hora para evitar errores de validación con DateTimeField
         horario_completo = None
         if horario_entrega:
             try:
@@ -383,16 +383,12 @@ def procesar_checkout(request):
         )
         numero_whatsapp = limpiar_numero_telefono(numero_whatsapp_raw)
 
-        # 5. Vaciar carrito de la sesión (el pedido ya quedó guardado en la
-        # base en el paso 3, así que lo vaciamos aunque el número de WhatsApp
-        # no sea válido)
+        # 5. Vaciar carrito de la sesión
         if 'carrito' in request.session:
             del request.session['carrito']
             request.session.modified = True
 
         if not es_numero_whatsapp_valido(numero_whatsapp):
-            # No mandamos al cliente a un link roto. El pedido ya está guardado;
-            # avisamos en el log para que se corrija el teléfono del negocio.
             logger.warning(
                 'Número de WhatsApp del negocio inválido o no configurado: %r '
                 '(limpio: %r). Revisar Negocio.telefono en el admin.',

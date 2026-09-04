@@ -1,10 +1,10 @@
 from django.contrib import admin
-from django.urls import path
-from core.views import index
+from django.urls import path, include
 from core import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('ckeditor5/', include('django_ckeditor_5.urls')), # <-- Ruta obligatoria para el editor
     path('', views.index, name='index'),
     path('menu/', views.menu, name='menu'),
     path('producto/<int:idproducto>/', views.detalleProducto, name='detalleProducto'),

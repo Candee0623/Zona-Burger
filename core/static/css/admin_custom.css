@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 :root {
-    --burgundy:       #9f1239; /* Rojo Vino / Borgoña Elegante */
+    --burgundy:         #9f1239; 
     --burgundy-hover: #be123c; 
-    --gold-accent:    #d97706; /* Dorado sutil */
+    --gold-accent:    #d97706; 
     
     --text-main:      #ffffff;
     --text-muted:     #94a3b8;
@@ -12,6 +12,9 @@
     --border-subtle:  #29221e !important; 
 }
 
+/* ==========================================
+   1. ESTRUCTURA Y FONDO GLOBAL
+   ================================---------- */
 html {
     background: #0a0807 url('https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed !important;
     background-size: cover !important;
@@ -25,46 +28,21 @@ body, .wrapper, .content-wrapper, .content, #content, .content-header, section {
     border: none !important;
 }
 
-.paginator, div.paginator, p.paginator, .card-footer, 
-#changelist .paginator, .small.float-left, 
-#changelist-form .row:last-child,
-.row:has(.paginator), .action-counter {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
+footer, .main-footer { 
+    display: none !important; 
 }
 
+/* ==========================================
+   2. HEADER, NAVEGACIÓN Y SIDEBAR
+   ================================---------- */
 .main-header, .navbar {
     background-color: rgba(23, 19, 18, 0.9) !important;
     backdrop-filter: blur(10px) !important;
     border-bottom: 1px solid var(--border-subtle) !important;
 }
 
-.main-header .nav-link, .main-header .fas, .fa-bars { color: var(--text-main) !important; }
-
-h1, h2, h3, h4, h5, h6, .content-header h1 {
-    color: #ffffff !important;
-    font-weight: 800 !important;
-}
-
-.content-header .breadcrumb, ol.breadcrumb {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-.content-header .breadcrumb li, .content-header .breadcrumb li a {
-    color: var(--text-muted) !important;
-    text-decoration: none !important;
-    font-weight: 500 !important;
-    font-size: 0.85rem;
-}
-.content-header .breadcrumb li a:hover {
-    color: var(--gold-accent) !important;
+.main-header .nav-link, .main-header .fas, .fa-bars { 
+    color: var(--text-main) !important; 
 }
 
 .main-sidebar, .app-sidebar {
@@ -97,16 +75,47 @@ h1, h2, h3, h4, h5, h6, .content-header h1 {
     margin: 6px 12px !important;
     font-weight: 500 !important;
 }
+
 .nav-sidebar .nav-link:hover {
     background-color: rgba(255, 255, 255, 0.05) !important;
     color: #ffffff !important;
 }
+
 .nav-sidebar .nav-item > .nav-link.active {
     background-color: var(--burgundy) !important;
     color: #ffffff !important;
     font-weight: 700 !important;
 }
 
+/* ==========================================
+   3. TIPOGRAFÍA Y BREADCRUMBS
+   ================================---------- */
+h1, h2, h3, h4, h5, h6, .content-header h1 {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+}
+
+.content-header .breadcrumb, ol.breadcrumb {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.content-header .breadcrumb li, .content-header .breadcrumb li a {
+    color: var(--text-muted) !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    font-size: 0.85rem;
+}
+
+.content-header .breadcrumb li a:hover {
+    color: var(--gold-accent) !important;
+}
+
+/* ==========================================
+   4. TARJETAS GENERALES Y LOGOTIPO LOGIN
+   ================================---------- */
 .card, .box, #changelist {
     background-color: var(--bg-card) !important;
     backdrop-filter: blur(12px) !important;
@@ -114,37 +123,98 @@ h1, h2, h3, h4, h5, h6, .content-header h1 {
     border-radius: 12px !important;
     padding: 28px !important;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.card-body {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
 }
 
 .nav-tabs { border-bottom: 1px solid var(--border-subtle) !important; }
 .nav-tabs .nav-link { color: var(--text-muted) !important; font-weight: 600 !important; border: none !important; }
 .nav-tabs .nav-link.active { background-color: transparent !important; color: var(--gold-accent) !important; border-bottom: 2px solid var(--gold-accent) !important; }
 
-
-input[type="text"], input[type="password"], select, .form-control, .select2-container {
-    min-width: 220px !important; 
+input[type="text"], 
+input[type="password"], 
+input[type="number"], 
+input[type="date"], 
+input[type="time"], 
+select, 
+textarea, 
+.form-control, 
+.select2-container {
     background-color: rgba(12, 10, 9, 0.85) !important;
     color: #ffffff !important;
     border: 1px solid var(--border-subtle) !important;
     border-radius: 8px !important;
     padding: 10px 14px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
     outline: none !important;
 }
-input[type="text"]:focus, input[type="password"]:focus, select:focus { border-color: var(--burgundy) !important; }
+
+input:focus, select:focus, textarea:focus, .form-control:focus {
+    border-color: var(--burgundy) !important;
+    box-shadow: 0 0 0 2px rgba(159, 18, 57, 0.3) !important;
+}
+
+.datetimeshortcuts {
+    color: var(--text-muted) !important;
+    font-size: 0.8rem !important;
+    margin-top: 6px !important;
+    display: block !important;
+}
+
+.datetimeshortcuts a {
+    color: var(--gold-accent) !important;
+    margin-right: 10px !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+}
+
+.datetimeshortcuts a:hover {
+    color: #ffffff !important;
+    text-decoration: underline !important;
+}
 
 .select2-container--default .select2-selection--single {
     background-color: rgba(12, 10, 9, 0.85) !important;
     border: 1px solid var(--border-subtle) !important;
     border-radius: 8px !important;
-    height: 40px !important;
+    height: 42px !important;
     display: flex !important;
     align-items: center !important;
 }
-.select2-container--default .select2-selection--single .select2-selection__rendered { color: #ffffff !important; padding-left: 10px !important; }
-.select2-dropdown { background-color: #171312 !important; border: 1px solid var(--border-subtle) !important; border-radius: 8px !important; }
-.select2-results__option { color: var(--text-muted) !important; padding: 10px 14px !important; }
-.select2-results__option--highlighted { background-color: var(--burgundy) !important; color: #ffffff !important; }
 
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+    padding-left: 10px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.select2-dropdown { 
+    background-color: #171312 !important; 
+    border: 1px solid var(--border-subtle) !important; 
+    border-radius: 8px !important; 
+}
+
+.select2-results__option { 
+    color: var(--text-muted) !important; 
+    padding: 10px 14px !important; 
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.select2-results__option--highlighted { 
+    background-color: var(--burgundy) !important; 
+    color: #ffffff !important; 
+}
+
+/* Logotipo Circular */
 .login-box .login-logo, .login-page .login-logo, .logout-logo {
     display: flex !important;
     visibility: visible !important;
@@ -199,6 +269,9 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus { border-co
     padding-top: 28px !important;
 }
 
+/* ==========================================
+   5. MENÚS DESPLEGABLES Y BOTONES GENERALES
+   ================================---------- */
 .dropdown-menu {
     background-color: #171312 !important;
     border: 1px solid var(--border-subtle) !important;
@@ -243,6 +316,7 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus { border-co
     color: #ffffff !important;
     box-shadow: 0 4px 15px rgba(159, 18, 57, 0.4) !important;
 }
+
 .content-wrapper .addlink:hover, .content-wrapper .btn-success:hover, .content-wrapper .btn-primary:hover, 
 #changelist-search input[type="submit"]:hover, input[value="Buscar"]:hover, input[name="_save"]:hover, 
 .submit-row input[type="submit"]:hover, .card-body button[type="submit"]:hover, .login-box button[type="submit"]:hover {
@@ -276,10 +350,362 @@ input[name="_addanother"]:hover, input[name="_continue"]:hover {
     color: #000000 !important;
 }
 
-.table { border-collapse: separate !important; border-spacing: 0 6px !important; background: transparent !important; }
-.table thead th { background: transparent !important; color: var(--gold-accent) !important; text-transform: uppercase; font-size: 0.75rem !important; border: none !important; padding: 12px 20px !important; }
-.table tbody tr, .dynamic-form { background-color: rgba(15, 12, 11, 0.85) !important; border: 1px solid var(--border-subtle) !important; border-radius: 10px !important; }
-.table td, .table th { background: transparent !important; border: none !important; padding: 16px 20px !important; vertical-align: middle !important; }
-.table a { color: var(--gold-accent) !important; font-weight: 600 !important; text-decoration: none !important; }
+/* ==========================================
+   6. TABLAS Y ESTRUCTURA DE CELDAS BLINDADA
+   ================================---------- */
+.table { 
+    border-collapse: separate !important; 
+    border-spacing: 0 6px !important; 
+    background: transparent !important; 
+    width: 100% !important; 
+}
 
-footer, .main-footer { display: none !important; }
+.table thead th { 
+    background: transparent !important; 
+    color: var(--gold-accent) !important; 
+    text-transform: uppercase !important; 
+    font-size: 0.75rem !important; 
+    border: none !important; 
+    padding: 12px 16px !important; 
+    text-align: left !important; 
+}
+
+.table tbody tr { 
+    background-color: rgba(15, 12, 11, 0.85) !important; 
+    border: 1px solid var(--border-subtle) !important; 
+    border-radius: 10px !important; 
+}
+
+.table td, .table th { 
+    background: transparent !important; 
+    border: none !important; 
+    padding: 16px !important; 
+    vertical-align: middle !important; 
+    text-align: left !important; 
+}
+
+#changelist table, 
+.card table, 
+table#result_list {
+    background-color: #1a1614 !important;
+    color: #ffffff !important;
+    border: 1px solid var(--border-subtle) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+}
+
+.table-responsive, 
+#changelist, 
+.card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+}
+
+#changelist table tbody td, 
+.card table tbody td,
+table#result_list tbody td,
+#changelist table tbody th, 
+.card table tbody th {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    vertical-align: middle !important;
+    padding: 14px 16px !important;
+    display: table-cell !important;
+    float: none !important;
+}
+
+#changelist table tbody tr:hover, 
+.card table tbody tr:hover,
+table#result_list tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+#changelist table thead th, 
+.card table thead th,
+table#result_list thead th {
+    background-color: #241f1c !important;
+    color: var(--gold-accent) !important;
+    border-bottom: 2px solid var(--burgundy) !important;
+    text-transform: uppercase !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.5px !important;
+    padding: 14px 16px !important;
+    display: table-cell !important;
+}
+
+#changelist table th.action-checkbox-column,
+#changelist table td.action-checkbox {
+    width: 40px !important;
+    text-align: center !important;
+    display: table-cell !important;
+}
+
+/* ==========================================
+   7. CKEDITOR 5 (MODO OSCURO)
+   ================================---------- */
+.ck.ck-editor__editable_inline {
+    background-color: #1a1614 !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.ck.ck-toolbar, 
+.ck.ck-dropdown__panel, 
+.ck.ck-list, 
+.ck.ck-balloon-panel {
+    background-color: #241f1c !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+}
+
+.ck.ck-button, 
+.ck.ck-button.ck-on, 
+.ck.ck-dropdown__button {
+    background-color: transparent !important;
+    color: #ffffff !important;
+}
+
+.ck.ck-button:hover, 
+.ck.ck-list__item:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.ck.ck-input {
+    background-color: #1a1614 !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ==========================================
+   8. OCULTAR HISTORIAL Y PAGINADORES
+   ================================---------- */
+#content-related, 
+.colM #content-related,
+div#content-related,
+.paginator, div.paginator, p.paginator, .card-footer, 
+#changelist .paginator, .small.float-left, 
+#changelist-form .row:last-child,
+.row:has(.paginator), .action-counter {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#content, .colM {
+    width: 100% !important;
+    float: none !important;
+}
+
+.related-widget-wrapper-link, a.add-related, a.change-related, a.delete-related, a.view-related, a.historylink {
+    display: none !important;
+}
+
+a.historylink,
+.historylink,
+a[href*="/history/"],
+.object-tools a[href*="history"],
+.submit-row a[href*="history"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+}
+
+/* ==========================================
+   9. BARRA DE BÚSQUEDA Y FILTROS SUPERIOR
+   ================================---------- */
+#changelist-search {
+    background: linear-gradient(145deg, rgba(28, 22, 20, 0.95), rgba(18, 14, 13, 0.95)) !important;
+    border: 1px solid rgba(217, 119, 6, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 16px 20px !important;
+    margin-bottom: 24px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#changelist-search::before {
+    content: "FILTROS" !important;
+    background: linear-gradient(135deg, var(--gold-accent), #b45309) !important;
+    color: #ffffff !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.8px !important;
+    padding: 10px 16px !important;
+    border-radius: 8px !important;
+    text-transform: uppercase !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    height: 42px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3) !important;
+}
+
+#changelist-search select,
+#changelist-search input[type="text"] {
+    background-color: rgba(12, 10, 9, 0.9) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(217, 119, 6, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 8px 14px !important;
+    height: 42px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    outline: none !important;
+    flex: 1 1 180px !important;
+    max-width: 260px !important;
+}
+
+#changelist-search input#searchbar {
+    flex: 2 1 220px !important;
+    max-width: none !important;
+}
+
+#changelist-search input[type="submit"] {
+    background: linear-gradient(135deg, var(--burgundy), var(--burgundy-hover)) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    height: 42px !important;
+    padding: 0 24px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 4px 15px rgba(159, 18, 57, 0.4) !important;
+    cursor: pointer !important;
+    border: none !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+}
+
+#changelist-search input[type="submit"]:hover {
+    background: linear-gradient(135deg, var(--burgundy-hover), #e11d48) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* ==========================================
+   10. BLOQUE DE ACCIONES INFERIOR
+   ================================---------- */
+.actions {
+    background: linear-gradient(145deg, rgba(28, 22, 20, 0.95), rgba(18, 14, 13, 0.95)) !important;
+    border: 1px solid rgba(217, 119, 6, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 16px 20px !important;
+    margin-bottom: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+.actions select {
+    background-color: rgba(12, 10, 9, 0.9) !important;
+    border: 1px solid rgba(217, 119, 6, 0.4) !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    height: 42px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: #ffffff !important;
+    outline: none !important;
+    flex-grow: 1 !important;
+}
+
+.actions button, 
+.actions input[type="submit"] {
+    background: linear-gradient(135deg, var(--burgundy), var(--burgundy-hover)) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    height: 42px !important;
+    padding: 0 24px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 4px 15px rgba(159, 18, 57, 0.4) !important;
+    cursor: pointer !important;
+    border: none !important;
+    flex-shrink: 0 !important;
+}
+
+.actions label {
+    color: var(--gold-accent) !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 0 !important;
+}
+
+/* ==========================================
+   11. BOTONES DEL PANEL PRINCIPAL (INDEX)
+   ================================---------- */
+#content-main .app-auth table tr td:nth-child(2), 
+#content-main .app-core table tr td:nth-child(2),
+#content-main .module table tr td:nth-child(2) {
+    display: flex !important;
+    gap: 16px !important;
+    align-items: center !important;
+    padding: 12px 18px !important;
+}
+
+#content-main .app-auth table tr td:nth-child(3), 
+#content-main .app-core table tr td:nth-child(3),
+#content-main .module table tr td:nth-child(3) {
+    display: none !important;
+}
+
+#content-main .app-auth table tr td a.addlink, 
+#content-main .app-core table tr td a.addlink,
+#content-main .module table tr td a.addlink,
+#content-main .app-auth table tr td a.btn-success, 
+#content-main .app-core table tr td a.btn-success {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    background-color: #059669 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4) !important;
+}
+
+#content-main .app-auth table tr td a.changelink, 
+#content-main .app-core table tr td a.changelink,
+#content-main .module table tr td a.changelink,
+#content-main .app-auth table tr td a.btn-info, 
+#content-main .app-core table tr td a.btn-info {
+    background: linear-gradient(135deg, #b45309, #92400e) !important;
+    background-color: #b45309 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 10px 10px 10px 20px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important;
+}
