@@ -61,6 +61,33 @@
         </div>
     </section>
 
+    <!-- Sección de Promociones Vigentes -->
+    {% if promociones_activas %}
+    <section class="promos-container" style="padding: 40px 20px; background-color: #121212; text-align: center; border-top: 2px solid #29221e; border-bottom: 2px solid #29221e; margin: 30px 0;">
+        <h2 style="color: #ffcc00; font-size: 2rem; margin-bottom: 10px; font-weight: 900; text-transform: uppercase;">¡Promociones y Descuentos!</h2>
+        <p style="color: #aaa; font-size: 1rem; margin-bottom: 30px;">Copiá la palabra clave y usala en el checkout para obtener tu beneficio.</p>
+        
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; max-width: 1100px; margin: 0 auto;">
+            {% for promo in promociones_activas %}
+                <div style="background: rgba(23, 19, 18, 0.9); border: 1px solid #333; border-top: 4px solid #ffcc00; padding: 25px; border-radius: 12px; width: 280px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <span style="background-color: rgba(255, 204, 0, 0.15); color: #ffcc00; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; display: inline-block; margin-bottom: 12px;">Beneficio Activo</span>
+                        <h3 style="color: #ffffff; font-size: 1.25rem; margin-bottom: 10px; font-weight: 700;">{{ promo.tipobeneficio }}</h3>
+                        <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 15px;">Valor del beneficio: <strong>${{ promo.valor }}</strong></p>
+                        {% if promo.minimocompra > 0 %}
+                            <p style="color: #888; font-size: 0.8rem; margin-bottom: 15px;">Mínimo de compra: ${{ promo.minimocompra }}</p>
+                        {% endif %}
+                    </div>
+                    <div style="background: #1a1a1a; padding: 12px; border-radius: 8px; border: 1px dashed #444; text-align: center; margin-top: 10px;">
+                        <span style="display: block; font-size: 0.75rem; color: #aaa; margin-bottom: 4px; text-transform: uppercase;">Palabra Clave:</span>
+                        <strong style="color: #ffcc00; font-size: 1.1rem; letter-spacing: 1px;">{{ promo.palabraclave }}</strong>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
     <div class="container" id="info">
         <h2 class="section-title">Información del Local</h2>
         <div class="info-grid">

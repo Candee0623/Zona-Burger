@@ -9,83 +9,269 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Leaflet CSS (Mapa Gratis) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <link rel="stylesheet" href="{% static 'css/Index.css' %}">
     <link rel="stylesheet" href="{% static 'css/Checkout.css' %}">
 </head>
 <body>
     {% include 'components/header.html' %}
 
-    <main class="checkout-container">
-        <h1 class="checkout-title">Finalizar Tu Pedido</h1>
+    <main class="checkout-container checkout-layout">
+        <!-- Formulario principal a la izquierda -->
+        <div class="checkout-form-container">
+            <h1 class="checkout-title">Finalizar Tu Pedido</h1>
 
-        <form class="checkout-form" method="POST" action="{% url 'checkout' %}" novalidate>
-            {% csrf_token %}
+            <form class="checkout-form" method="POST" action="{% url 'checkout' %}" novalidate>
+                {% csrf_token %}
+                
+                <input type="hidden" name="localidad" id="input-localidad-hidden" value="{{ datos_previos.localidad|default:'A coordinar con el vendedor' }}">
+
+                <h3>Datos del Cliente</h3>
+                <input type="text" name="nombre" placeholder="Nombre" value="{{ datos_previos.nombre|default:'' }}" required>
+                <p class="form-error" data-for="nombre" style="display: none;"></p>
+
+                <input type="text" name="apellido" placeholder="Apellido" value="{{ datos_previos.apellido|default:'' }}" required>
+                <p class="form-error" data-for="apellido" style="display: none;"></p>
+
+                <input type="tel" name="telefono" placeholder="Teléfono"
+                       value="{{ datos_previos.telefono|default:'' }}"
+                       class="{% if error_telefono %}input-error{% endif %}"
+                       required>
+                <p class="form-error" data-for="telefono" {% if error_telefono %}style="display:block;"{% else %}style="display:none;"{% endif %}>{{ error_telefono }}</p>
+
+                <h3>Dirección de Envío</h3>
+                <button type="button" class="btn-geo" id="btn-ubicacion"><i class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación actual</button>
+                
+                <div class="search-container">
+                    <input type="text" id="input-buscador" placeholder="Buscá tu calle y altura (ej: Av. Rista 2323)...">
+                    <button type="button" id="btn-buscar" class="btn-buscar-dir"><i class="fa-solid fa-search"></i></button>
+                </div>
+
+                <div id="map"></div>
+
+                <input type="text" id="id_calle" name="calle" placeholder="Calle" value="{{ datos_previos.calle|default:'' }}" required>
+                <p class="form-error" data-for="calle" style="display: none;"></p>
+
+                <input type="text" name="numero" placeholder="Número" value="{{ datos_previos.numero|default:'' }}" required>
+                <p class="form-error" data-for="numero" style="display: none;"></p>
+
+                <input type="text" name="piso" placeholder="Piso / Depto (Opcional)" value="{{ datos_previos.piso|default:'' }}">
+
+                <h3>Método de Entrega</h3>
+                <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Horario de entrega deseado (Opcional):</label>
+                <input type="time" name="horario_entrega" value="{{ datos_previos.horario_entrega|default:'' }}">
+
+                <h3>Promoción</h3>
+                <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Palabra clave de promoción (Opcional):</label>
+                <input type="text" name="codigo_promocion" placeholder="Ej: PROMO10" value="{{ datos_previos.codigo_promocion|default:'' }}">
+
+                <h3>Método de Pago</h3>
+                <select name="medio_pago" required>
+                    <option value="">Seleccioná una opción</option>
+                    {% for pago in medios_pago %}
+                        <option value="{{ pago.idmediopago }}" {% if datos_previos.medio_pago == pago.idmediopago|stringformat:"s" %}selected{% endif %}>{{ pago.nombremetodo }}</option>
+                    {% endfor %}
+                </select>
+                <p class="form-error" data-for="medio_pago" style="display: none;"></p>
+
+                <h3>Comentarios (Opcional)</h3>
+                <textarea name="comentario" placeholder="Indicaciones adicionales para la entrega...">{{ datos_previos.comentario|default:'' }}</textarea>
+
+                <button type="submit">Confirmar Pedido</button>
+            </form>
+        </div>
+
+        <!-- Resumen de compra a la derecha (sticky) -->
+        <div class="checkout-summary-container">
+            <h2>Resumen de Compra</h2>
             
-            <h3>Datos del Cliente</h3>
-            <input type="text" name="nombre" placeholder="Nombre" value="{{ datos_previos.nombre|default:'' }}" required>
-            <p class="form-error" data-for="nombre" style="display: none;"></p>
-
-            <input type="text" name="apellido" placeholder="Apellido" value="{{ datos_previos.apellido|default:'' }}" required>
-            <p class="form-error" data-for="apellido" style="display: none;"></p>
-
-            <input type="tel" name="telefono" placeholder="Teléfono"
-                   value="{{ datos_previos.telefono|default:'' }}"
-                   class="{% if error_telefono %}input-error{% endif %}"
-                   required>
-            <p class="form-error" data-for="telefono" {% if error_telefono %}style="display:block;"{% else %}style="display:none;"{% endif %}>{{ error_telefono }}</p>
-
-            <h3>Dirección de Envío</h3>
-            <input type="text" name="calle" placeholder="Calle" value="{{ datos_previos.calle|default:'' }}" required>
-            <p class="form-error" data-for="calle" style="display: none;"></p>
-
-            <input type="text" name="numero" placeholder="Número" value="{{ datos_previos.numero|default:'' }}" required>
-            <p class="form-error" data-for="numero" style="display: none;"></p>
-
-            <input type="text" name="piso" placeholder="Piso / Depto (Opcional)" value="{{ datos_previos.piso|default:'' }}">
-
-            <input type="text" name="localidad" placeholder="Localidad" value="{{ datos_previos.localidad|default:'' }}" required>
-            <p class="form-error" data-for="localidad" style="display: none;"></p>
-
-            <h3>Método de Entrega</h3>
-            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Horario de entrega deseado (Opcional):</label>
-            <input type="time" name="horario_entrega" value="{{ datos_previos.horario_entrega|default:'' }}">
-
-            <h3>Promoción</h3>
-            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Palabra clave de promoción (Opcional):</label>
-            <input type="text" name="codigo_promocion" placeholder="Ej: PROMO10" value="{{ datos_previos.codigo_promocion|default:'' }}">
-
-            <h3>Método de Pago</h3>
-            <select name="medio_pago" required>
-                <option value="">Seleccioná una opción</option>
-                {% for pago in medios_pago %}
-                    <option value="{{ pago.idmediopago }}" {% if datos_previos.medio_pago == pago.idmediopago|stringformat:"s" %}selected{% endif %}>{{ pago.nombremetodo }}</option>
-                {% endfor %}
-            </select>
-            <p class="form-error" data-for="medio_pago" style="display: none;"></p>
-
-            <h3>Comentarios (Opcional)</h3>
-            <textarea name="comentario" placeholder="Indicaciones adicionales para la entrega...">{{ datos_previos.comentario|default:'' }}</textarea>
-
-            <button type="submit">Confirmar Pedido</button>
-        </form>
+            <div class="summary-row">
+                <span>Subtotal Productos</span>
+                <span id="span-subtotal" style="color: #fff; font-weight: 600;">${{ total_carrito|floatformat:2 }}</span>
+            </div>
+            <div class="summary-row">
+                <span>Costo de envío</span>
+                <span id="span-costo-envio" style="color: #ffcc00; font-weight: 600; text-align: right;">A coordinar con el vendedor</span>
+            </div>
+            <div class="summary-total">
+                <span>Total Estimado</span>
+                <span id="span-total-estimado" style="color: #2ed573;">${{ total_carrito|floatformat:2 }} + envío</span>
+            </div>
+            
+            <div class="summary-info">
+                <p>
+                    <i class="fa-solid fa-circle-info" style="color: #ffcc00; margin-right: 5px;"></i> 
+                    Si tu ubicación no se encuentra dentro de nuestras zonas registradas, el envío quedará sujeto a coordinación directa.
+                </p>
+            </div>
+        </div>
     </main>
 
     {% include 'components/footer.html' %}
 
+    <!-- Leaflet JS (Mapa Gratis) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
       const form = document.querySelector('.checkout-form');
       if (!form) return;
 
+      const subtotalBase = parseFloat("{{ total_carrito|default:0 }}");
+
+      const zonasNegocio = [
+          {% for zona in zonas_entrega %}
+              { nombre: "{{ zona.nombre|escapejs }}", costo: parseFloat("{{ zona.costoEnvio|default:0 }}") },
+          {% endfor %}
+      ];
+
+      const map = L.map('map').setView([-34.6037, -58.3816], 13);
+      
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap, © CARTO'
+      }).addTo(map);
+
+      let marker = L.marker([-34.6037, -58.3816], {draggable: true}).addTo(map);
+
+      setTimeout(function() {
+          map.invalidateSize();
+      }, 300);
+
+      function autocompletarZona(dataAddress) {
+          const inputHidden = document.getElementById('input-localidad-hidden');
+          const spanEnvio = document.getElementById('span-costo-envio');
+          const spanTotalEst = document.getElementById('span-total-estimado');
+
+          const localidad = (dataAddress.city || dataAddress.town || dataAddress.village || dataAddress.suburb || dataAddress.county || dataAddress.municipality || '').toLowerCase();
+          const neighbourhood = (dataAddress.neighbourhood || dataAddress.residential || dataAddress.city_district || '').toLowerCase();
+          const displayName = (dataAddress.display_name || '').toLowerCase();
+
+          let zonaEncontrada = null;
+
+          for (let zona of zonasNegocio) {
+              const nombreZonaLower = zona.nombre.toLowerCase();
+              if (
+                  (localidad && (localidad.includes(nombreZonaLower) || nombreZonaLower.includes(localidad))) ||
+                  (neighbourhood && (neighbourhood.includes(nombreZonaLower) || nombreZonaLower.includes(neighbourhood))) ||
+                  (displayName && displayName.includes(nombreZonaLower))
+              ) {
+                  zonaEncontrada = zona;
+                  break;
+              }
+          }
+
+          if (zonaEncontrada) {
+              inputHidden.value = zonaEncontrada.nombre;
+              if (spanEnvio) {
+                  spanEnvio.textContent = zonaEncontrada.costo > 0 ? `$${zonaEncontrada.costo.toFixed(2)}` : 'A coordinar con el vendedor';
+              }
+              if (spanTotalEst) {
+                  const totalFinal = subtotalBase + zonaEncontrada.costo;
+                  spanTotalEst.textContent = `$${totalFinal.toFixed(2)}`;
+                  spanTotalEst.style.color = '#2ed573';
+              }
+          } else {
+              // Si la zona detectada no está registrada en el panel, fuerza "A coordinar con el vendedor"
+              inputHidden.value = "A coordinar con el vendedor";
+              if (spanEnvio) {
+                  spanEnvio.textContent = "A coordinar con el vendedor";
+              }
+              if (spanTotalEst) {
+                  spanTotalEst.textContent = `$${subtotalBase.toFixed(2)} + envío`;
+                  spanTotalEst.style.color = '#ffcc00';
+              }
+          }
+      }
+
+      function actualizarUbicacion(lat, lon) {
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
+              .then(response => response.json())
+              .then(data => {
+                  if (data && data.address) {
+                      const calle = data.address.road || data.address.pedestrian || data.address.residential || '';
+                      let numero = data.address.house_number || '';
+                      
+                      if (!numero && data.display_name) {
+                          const matchNum = data.display_name.match(/\b\d{2,5}\b/);
+                          if (matchNum) numero = matchNum[0];
+                      }
+
+                      if (calle) document.getElementById('id_calle').value = calle;
+                      if (numero) {
+                          const inputNum = form.querySelector('[name="numero"]');
+                          if (inputNum) inputNum.value = numero;
+                      }
+                      
+                      autocompletarZona(data.address);
+                  }
+              }).catch(err => console.log('Error de geolocalización inversa', err));
+      }
+
+      function buscarDireccion(query) {
+          if (!query.trim()) return;
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+              .then(response => response.json())
+              .then(results => {
+                  if (results && results.length > 0) {
+                      const lat = parseFloat(results[0].lat);
+                      const lon = parseFloat(results[0].lon);
+                      map.setView([lat, lon], 17);
+                      marker.setLatLng([lat, lon]);
+                      actualizarUbicacion(lat, lon);
+                  } else {
+                      alert('No se encontró la dirección ingresada.');
+                  }
+              })
+              .catch(err => console.log('Error en búsqueda', err));
+      }
+
+      document.getElementById('btn-buscar').addEventListener('click', function() {
+          buscarDireccion(document.getElementById('input-buscador').value);
+      });
+
+      document.getElementById('input-buscador').addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+              e.preventDefault();
+              buscarDireccion(this.value);
+          }
+      });
+
+      marker.on('dragend', function(e) {
+          const coord = marker.getLatLng();
+          actualizarUbicacion(coord.lat, coord.lng);
+      });
+
+      map.on('click', function(e) {
+          marker.setLatLng(e.latlng);
+          actualizarUbicacion(e.latlng.lat, e.latlng.lng);
+      });
+
+      document.getElementById('btn-ubicacion').addEventListener('click', function() {
+          if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(position => {
+                  const lat = position.coords.latitude;
+                  const lon = position.coords.longitude;
+                  map.setView([lat, lon], 16);
+                  marker.setLatLng([lat, lon]);
+                  actualizarUbicacion(lat, lon);
+              }, () => {
+                  alert('No se pudo obtener tu ubicación actual.');
+              });
+          } else {
+              alert('Tu navegador no soporta geolocalización.');
+          }
+      });
+
       const mensajes = {
-        nombre: 'Ingresá tu nombre.',
-        apellido: 'Ingresá tu apellido.',
-        telefono_vacio: 'Ingresá tu número de teléfono.',
-        telefono_invalido: 'Ingresá un teléfono válido (solo números, entre 8 y 15 dígitos).',
-        calle: 'Ingresá la calle.',
-        numero: 'Ingresá el número de la calle.',
-        localidad: 'Ingresá tu localidad.',
-        medio_pago: 'Seleccioná un método de pago.',
+          nombre: 'Ingresá tu nombre.',
+          apellido: 'Ingresá tu apellido.',
+          telefono_vacio: 'Ingresá tu número de teléfono.',
+          telefono_invalido: 'Ingresá un teléfono válido (solo números, entre 8 y 15 dígitos).',
+          calle: 'Ingresá la calle.',
+          numero: 'Ingresá el número de la calle.',
+          medio_pago: 'Seleccioná un método de pago.',
       };
 
       const patronTelefono = /^[0-9\s\-()+]{8,15}$/;
@@ -114,8 +300,7 @@
         let esValido = true;
         let primerCampoInvalido = null;
 
-        // 1. Validar campos de texto requeridos
-        const camposTexto = ['nombre', 'apellido', 'calle', 'numero', 'localidad'];
+        const camposTexto = ['nombre', 'apellido', 'calle', 'numero'];
         camposTexto.forEach(function (campo) {
           const input = form.querySelector(`[name="${campo}"]`);
           if (input) {
@@ -129,7 +314,6 @@
           }
         });
 
-        // 2. Validar teléfono
         const telefonoInput = form.querySelector('[name="telefono"]');
         if (telefonoInput) {
           const telefonoValor = telefonoInput.value.trim();
@@ -146,7 +330,6 @@
           }
         }
 
-        // 3. Validar medio de pago (select)
         const medioPagoSelect = form.querySelector('[name="medio_pago"]');
         if (medioPagoSelect) {
           if (!medioPagoSelect.value) {
@@ -158,7 +341,6 @@
           }
         }
 
-        // Si hay algún error, frenamos el envío y mandamos el foco al primero que falló
         if (!esValido) {
           e.preventDefault();
           if (primerCampoInvalido) {
@@ -167,7 +349,6 @@
         }
       });
 
-      // Limpiar errores en tiempo real mientras el usuario tipea o cambia opciones
       form.querySelectorAll('input, select, textarea').forEach(function (el) {
         el.addEventListener('input', function () {
           ocultarError(el.name);

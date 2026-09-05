@@ -4,7 +4,7 @@ from urllib.parse import quote
 from django.shortcuts import get_object_or_404, redirect, render
 from datetime import datetime, date
 from .models import (
-    CategoriaProducto,
+    Categoria,
     Cliente,
     Direccion,
     EstadoPedido,
@@ -15,7 +15,6 @@ from .models import (
     Opcion,
     Pedido,
     Producto,
-    ProductoExtras,
     ProductoGrupoOpcion,
     Promocion,
     RedesSociales,
@@ -24,51 +23,42 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
-# Formato esperado para un WhatsApp argentino: 54 (país) + 9 (móvil) +
-# código de área (2 a 4 dígitos) + número local (6 a 8 dígitos).
-# En total, entre 12 y 13 dígitos después del "54".
 PATRON_WHATSAPP_AR = re.compile(r'^549\d{9,10}$')
 
 
 def limpiar_numero_telefono(numero):
-    """Deja solo dígitos: saca +, espacios, guiones, paréntesis, etc."""
     return re.sub(r'\D', '', numero or '')
 
 
 def es_numero_whatsapp_valido(numero_limpio):
-    """Verifica que el número (solo dígitos) tenga forma de WhatsApp AR válido."""
     return bool(PATRON_WHATSAPP_AR.fullmatch(numero_limpio))
 
 
 def es_telefono_cliente_valido(numero_limpio):
-    """
-    Verifica que el teléfono que carga el cliente en el checkout tenga
-    entre 8 y 13 dígitos (sin letras ni símbolos). No exige el formato
-    estricto de WhatsApp (código de país, prefijo móvil), porque acá el
-    cliente puede escribir su número de forma más libre.
-    """
     return bool(re.fullmatch(r'\d{8,13}', numero_limpio))
+
 
 def index(request):
     negocio = Negocio.objects.first()
-    # Use negocio.pk instead of negocio object
-    horarios = Horario.objects.filter(idnegocio=negocio.pk) if negocio else []
-    zonas = ZonasEntrega.objects.filter(idnegocio=negocio.pk) if negocio else []
+    horarios = Horario.objects.filter(idnegocio=negocio) if negocio else []
+    zonas = ZonasEntrega.objects.filter(idnegocio=negocio) if negocio else []
     instagram = RedesSociales.objects.filter(
         plataforma__icontains='instagram'
     ).first()
+    promociones_activas = Promocion.objects.filter(activo=1)
 
     context = {
         'negocio': negocio,
         'horarios': horarios,
         'zonas': zonas,
         'instagram': instagram,
+        'promociones_activas': promociones_activas,
     }
     return render(request, 'index.html', context)
 
 
 def menu(request):
-    categorias = CategoriaProducto.objects.all()
+    categorias = Categoria.objects.all()
     negocio = Negocio.objects.first()
     instagram = RedesSociales.objects.filter(
         plataforma__icontains='instagram'
@@ -84,7 +74,6 @@ def menu(request):
 
 def detalleProducto(request, idproducto):
     producto = get_object_or_404(Producto, pk=idproducto)
-
     relaciones_grupos = ProductoGrupoOpcion.objects.filter(idproducto=producto)
     grupos_opciones = []
     for rel in relaciones_grupos:
@@ -92,10 +81,13 @@ def detalleProducto(request, idproducto):
         opciones = grupo.opcion_set.all()
         grupos_opciones.append({'grupo': grupo, 'opciones': opciones})
 
-    # Consulta directa al modelo intermediario para evitar problemas con _set
-    extras_producto = [
-        rel.idextra for rel in ProductoExtras.objects.filter(idproducto=producto)
-    ]
+    extras_producto = []
+    if hasattr(producto, 'productoextras_set'):
+        extras_producto = [
+            rel.idextra for rel in producto.productoextras_set.all()
+        ]
+    elif hasattr(producto, 'productextras_set'):
+        extras_producto = [rel.idextra for rel in producto.productextras_set.all()]
 
     edit_item_id = request.session.get('edit_item_id')
     item_editando = None
@@ -135,7 +127,7 @@ def agregar_al_carrito(request, idproducto):
                 id_opcion = value
                 opcion_obj = Opcion.objects.filter(pk=id_opcion).first()
                 if opcion_obj:
-                    precio_adicional = float(opcion_obj.precio_adicional or 0)
+                    precio_adicional = float(opcion_obj.precioadicional or 0)
                     precio_unitario += precio_adicional
                     detalle_opciones.append(opcion_obj.nombre)
                     opciones_seleccionadas.append(str(id_opcion))
@@ -154,7 +146,6 @@ def agregar_al_carrito(request, idproducto):
             request.session['carrito'] = {}
 
         carrito = request.session['carrito']
-
         edit_id = request.POST.get('edit_id')
         if edit_id and edit_id in carrito:
             del carrito[edit_id]
@@ -177,7 +168,7 @@ def agregar_al_carrito(request, idproducto):
             carrito[item_id] = {
                 'producto_id': producto.idproducto,
                 'nombre': producto.nombre,
-                'imagen': producto.imagen if producto.imagen else '',
+                'imagen': producto.imagen.url if producto.imagen else '',
                 'precio_unitario': precio_unitario,
                 'cantidad': 1,
                 'subtotal': precio_unitario,
@@ -225,7 +216,6 @@ def ver_carrito(request):
 
 def actualizar_cantidad_carrito(request, item_id, accion):
     carrito = request.session.get('carrito', {})
-
     if item_id in carrito:
         if accion == 'aumentar':
             carrito[item_id]['cantidad'] += 1
@@ -253,6 +243,9 @@ def eliminar_del_carrito(request, item_id):
 
 
 def procesar_checkout(request):
+    carrito = request.session.get('carrito', {})
+    total_carrito = sum(item['subtotal'] for item in carrito.values())
+
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
         apellido = request.POST.get('apellido')
@@ -261,38 +254,38 @@ def procesar_checkout(request):
         calle = request.POST.get('calle')
         numero = request.POST.get('numero')
         piso = request.POST.get('piso', '')
-        localidad = request.POST.get('localidad')
+        localidad = request.POST.get('localidad', 'A coordinar con el vendedor')
 
         horario_entrega = request.POST.get('horario_entrega', '')
         id_medio_pago = request.POST.get('medio_pago')
         codigo_promo = request.POST.get('codigo_promocion', '').strip()
         comentario = request.POST.get('comentario', '')
 
-        # 0. Validar el teléfono del cliente antes de guardar nada
         telefono_limpio = limpiar_numero_telefono(telefono)
         if not es_telefono_cliente_valido(telefono_limpio):
             medios_pago = MedioPago.objects.all()
+            zonas_entrega = ZonasEntrega.objects.all()
             return render(
                 request,
                 'checkout.html',
                 {
                     'medios_pago': medios_pago,
-                    'error_telefono': (
-                        'Ingresá un teléfono válido (solo números, sin letras, '
-                        'entre 8 y 13 dígitos).'
-                    ),
+                    'zonas_entrega': zonas_entrega,
+                    'total_carrito': total_carrito,
+                    'error_telefono': 'Ingresá un teléfono válido (solo números, entre 8 y 13 dígitos).',
                     'datos_previos': request.POST,
                 },
             )
-        # Guardamos el teléfono ya limpio, sin espacios/guiones/letras
         telefono = telefono_limpio
 
-        # 1. Guardar cliente en base de datos
+        # Buscar el costo de envío correspondiente a la zona detectada por el mapa
+        zona_obj = ZonasEntrega.objects.filter(nombre__iexact=localidad).first()
+        costo_envio = float(zona_obj.costoenvio) if zona_obj and zona_obj.costoenvio else 0.00
+
         cliente = Cliente.objects.create(
             nombre=nombre, apellido=apellido, telefono=telefono
         )
 
-        # 2. Guardar dirección vinculada al cliente
         Direccion.objects.create(
             idcliente=cliente,
             calle=calle,
@@ -307,12 +300,10 @@ def procesar_checkout(request):
         objeto_promocion = None
         if codigo_promo:
             objeto_promocion = Promocion.objects.filter(
-                palabraclave__iexact=codigo_promo
+                palabraclave__iexact=codigo_promo,
+                activo=1
             ).first()
 
-        carrito = request.session.get('carrito', {})
-
-        # Procesar correctamente la hora para evitar errores de validación con DateTimeField
         horario_completo = None
         if horario_entrega:
             try:
@@ -321,7 +312,6 @@ def procesar_checkout(request):
             except ValueError:
                 horario_completo = None
 
-        # 3. Guardar los pedidos correspondientes en la base de datos
         for item_id, item in carrito.items():
             producto_obj = Producto.objects.filter(
                 pk=item.get('producto_id')
@@ -338,7 +328,6 @@ def procesar_checkout(request):
                     justificacioncancelacion=comentario,
                 )
 
-        # 4. Generar el mensaje preformateado para WhatsApp
         mensaje = f'*¡Nuevo Pedido! 🍔*\n\n'
         mensaje += f'*Datos del Cliente:*\n'
         mensaje += f'• Nombre: {nombre} {apellido}\n'
@@ -348,26 +337,30 @@ def procesar_checkout(request):
         mensaje += f'• Calle: {calle} {numero}'
         if piso:
             mensaje += f' (Piso/Depto: {piso})'
-        mensaje += f'\n• Localidad: {localidad}\n'
+        mensaje += f'\n• Localidad / Zona: {localidad}\n'
 
         if horario_entrega:
             mensaje += f'• Horario Deseado: {horario_entrega}\n'
-        if codigo_promo:
-            mensaje += f'• Palabra Clave Promo: {codigo_promo}\n'
+        if codigo_promo and objeto_promocion:
+            mensaje += f'• Palabra Clave Promo: {codigo_promo} (Aplicada)\n'
         mensaje += '\n'
 
         mensaje += f'*Detalle del Pedido:*\n'
-        total_general = 0
+        subtotal_productos = 0
         for item_id, item in carrito.items():
             subtotal = item.get('subtotal', 0)
-            total_general += subtotal
+            subtotal_productos += subtotal
             mensaje += f'• {item.get("cantidad")}x {item.get("nombre")} (${subtotal})\n'
 
             detalles = item.get('detalles', [])
             for det in detalles:
                 mensaje += f'   - {det}\n'
 
-        mensaje += f'\n*Total a Pagar:* ${total_general}\n'
+        total_general = subtotal_productos + costo_envio
+
+        mensaje += f'\n• Subtotal Productos: ${subtotal_productos}\n'
+        mensaje += f'• Costo de Envío: ${costo_envio if zona_obj and zona_obj.costoenvio else "A coordinar"}\n'
+        mensaje += f'*Total a Pagar:* ${total_general}\n'
         mensaje += f'*Método de Pago:* {medio_pago.nombremetodo}\n'
 
         if comentario:
@@ -379,28 +372,33 @@ def procesar_checkout(request):
         )
         numero_whatsapp = limpiar_numero_telefono(numero_whatsapp_raw)
 
-        # 5. Vaciar carrito de la sesión
         if 'carrito' in request.session:
             del request.session['carrito']
             request.session.modified = True
 
-        if not es_numero_whatsapp_valido(numero_whatsapp):
-            logger.warning(
-                'Número de WhatsApp del negocio inválido o no configurado: %r '
-                '(limpio: %r). Revisar Negocio.telefono en el admin.',
-                numero_whatsapp_raw,
-                numero_whatsapp,
-            )
-            return redirect('pedido_exitoso')
+        if not numero_whatsapp:
+            logger.warning('El negocio no tiene un número de WhatsApp configurado.')
+            return redirect('menu')
 
-        # 6. Generar el mensaje preformateado y redirigir a WhatsApp
         mensaje_codificado = quote(mensaje)
         whatsapp_url = f'https://wa.me/{numero_whatsapp}?text={mensaje_codificado}'
-        return redirect(whatsapp_url)
+        
+        request.session['whatsapp_url'] = whatsapp_url
+        return redirect('pedido_exitoso')
 
     medios_pago = MedioPago.objects.all()
-    return render(request, 'checkout.html', {'medios_pago': medios_pago})
+    zonas_entrega = ZonasEntrega.objects.all()
+    return render(request, 'checkout.html', {
+        'medios_pago': medios_pago,
+        'zonas_entrega': zonas_entrega,
+        'total_carrito': total_carrito
+    })
 
 
 def pedido_exitoso(request):
-    return render(request, 'pedido_exitoso.html')
+    negocio = Negocio.objects.first()
+    whatsapp_url = request.session.get('whatsapp_url')
+    return render(request, 'pedido_exitoso.html', {
+        'negocio': negocio,
+        'whatsapp_url': whatsapp_url
+    })

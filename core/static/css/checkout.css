@@ -11,17 +11,91 @@ html, body {
 main.checkout-container {
     flex: 1;
     padding: 40px 20px;
-    max-width: 600px;
+    max-width: 1200px;
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Estructura en dos columnas */
+.checkout-layout {
+    display: flex;
+    gap: 30px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.checkout-form-container {
+    flex: 1;
+    max-width: 600px;
+}
+
+/* Contenedor del resumen lateral alineado con el formulario */
+.checkout-summary-container {
+    width: 380px;
+    background: #1e1e1e;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #333;
+    border-top: 4px solid #ffcc00;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: sticky;
+    top: 30px;
+    margin-top: 55px;
+    box-sizing: border-box;
+}
+
+.checkout-summary-container h2 {
+    font-size: 1.2rem;
+    color: #ffcc00;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #333;
+    padding-bottom: 12px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    color: #aaa;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+}
+
+.summary-total {
+    border-top: 1px solid #333;
+    margin-top: 15px;
+    padding-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.summary-info {
+    background: #121212;
+    border: 1px solid #333;
+    border-left: 3px solid #ffcc00;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 20px;
+}
+
+.summary-info p {
+    font-size: 0.82rem;
+    color: #aaa;
+    margin: 0;
+    line-height: 1.4;
 }
 
 h1.checkout-title {
     font-size: 1.8rem;
     margin-bottom: 20px;
     color: #ffcc00;
-    text-align: center;
+    text-align: left;
     text-transform: uppercase;
 }
 
@@ -87,8 +161,8 @@ h1.checkout-title {
 }
 
 .checkout-form textarea {
-    resize: none;         
-    min-height: 80px;     
+    resize: none;        
+    min-height: 80px;    
     max-height: 120px;    
 }
 
@@ -127,7 +201,7 @@ h1.checkout-title {
     transition: background-color 9999s ease-in-out 0s;
 }
 
-/* Mensaje de error de validación (ej. teléfono inválido) */
+/* Mensaje de error de validación */
 .checkout-form .error-telefono {
     display: block;
     color: #ff6b6b;
@@ -140,11 +214,10 @@ h1.checkout-title {
     margin-bottom: 15px;
 }
 
-/* Si el input tiene error, resalta el borde en rojo */
 .checkout-form input.input-error {
     border-color: #e74c3c !important;
 }
-/* Mensajes de error de validación (uno por campo) */
+
 .checkout-form .form-error {
     display: none;
     color: #ff6b6b;
@@ -157,11 +230,80 @@ h1.checkout-title {
     margin-bottom: 15px;
 }
 
-/* Si el input tiene error, resalta el borde en rojo */
-.checkout-form input.input-error,
 .checkout-form select.input-error {
     border-color: #e74c3c !important;
 }
+
 .form-error {
-  display: none;
+    display: none;
+}
+
+/* Estilos para el Mapa de OpenStreetMap y Geolocalización */
+#map { 
+    width: 100% !important; 
+    height: 300px !important; 
+    border-radius: 6px; 
+    margin-bottom: 15px; 
+    border: 1px solid #333; 
+    z-index: 1;
+}
+
+/* Botón de geolocalización con el tono rojo/granate original */
+.btn-geo { 
+    background-color: #9f1239; 
+    color: #ffffff; 
+    border: none; 
+    width: 100%; 
+    padding: 12px; 
+    border-radius: 6px; 
+    font-weight: 700; 
+    font-size: 0.85rem; 
+    cursor: pointer; 
+    margin-bottom: 15px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 8px; 
+    text-transform: uppercase; 
+    transition: background-color 0.3s ease;
+}
+
+.btn-geo:hover { 
+    background-color: #be123c; 
+}
+
+/* Buscador de direcciones */
+.search-container { 
+    display: flex; 
+    gap: 8px; 
+    margin-bottom: 10px; 
+}
+.search-container input { 
+    margin-bottom: 0 !important; 
+    flex: 1; 
+}
+.btn-buscar-dir { 
+    background-color: #ffcc00; 
+    color: #121212; 
+    border: none; 
+    padding: 0 16px; 
+    border-radius: 6px; 
+    font-weight: 700; 
+    cursor: pointer; 
+    transition: background-color 0.3s ease;
+}
+.btn-buscar-dir:hover { 
+    background-color: #e6b800; 
+}
+
+@media (max-width: 900px) {
+    .checkout-layout {
+        flex-wrap: wrap;
+    }
+    .checkout-summary-container {
+        width: 100%;
+        max-width: 600px;
+        margin-top: 0;
+        position: static;
+    }
 }

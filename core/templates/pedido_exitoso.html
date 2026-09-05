@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido Exitoso - {{ negocio.nombre|default:"Zona Burger" }}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="{% static 'css/Index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Checkout.css' %}">
+</head>
+<body>
+    {% include 'components/header.html' %}
+
+    <main class="checkout-container" style="text-align: center; padding: 60px 20px;">
+        <div style="background: rgba(23, 19, 18, 0.9); border: 1px solid #333; border-top: 4px solid #2ed573; border-radius: 12px; max-width: 500px; margin: 0 auto; padding: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.7);">
+            <i class="fa-solid fa-circle-check" style="font-size: 4rem; color: #2ed573; margin-bottom: 20px;"></i>
+            <h1 class="checkout-title" style="color: #2ed573; margin-bottom: 15px;">¡Compra Registrada!</h1>
+            <p style="color: #aaa; font-size: 1rem; margin-bottom: 25px;">Tu orden se guardó correctamente en la base de datos. Hacé clic en el botón verde para enviar el detalle al WhatsApp del negocio.</p>
+            
+            {% if whatsapp_url %}
+                <a href="{{ whatsapp_url }}" target="_blank" style="background-color: #25d366; color: #ffffff; padding: 14px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; width: 100%; box-sizing: border-box; font-size: 0.95rem;">
+                    <i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i> Enviar pedido por WhatsApp
+                </a>
+
+                <a href="{{ whatsapp_url }}" target="_blank" style="background-color: #1a1a1a; color: #2ed573; border: 1px solid #2ed573; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+                    <i class="fa-solid fa-rotate-right"></i> ¿Cerraste la pestaña? Volver a abrir WhatsApp
+                </a>
+            {% endif %}
+
+            <a href="{% url 'menu' %}" style="background-color: #333; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; text-transform: uppercase; display: inline-block; width: 100%; box-sizing: border-box; font-size: 0.9rem;">
+                Volver al Menú
+            </a>
+        </div>
+    </main>
+
+    {% include 'components/footer.html' %}
+</body>
+</html>
