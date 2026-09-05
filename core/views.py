@@ -3,6 +3,24 @@ import re
 from urllib.parse import quote
 from django.shortcuts import get_object_or_404, redirect, render
 from datetime import datetime, date
+from .models import (
+    CategoriaProducto,
+    Cliente,
+    Direccion,
+    EstadoPedido,
+    Extras,
+    Horario,
+    MedioPago,
+    Negocio,
+    Opcion,
+    Pedido,
+    Producto,
+    ProductoExtras,
+    ProductoGrupoOpcion,
+    Promocion,
+    RedesSociales,
+    ZonasEntrega,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,30 +49,11 @@ def es_telefono_cliente_valido(numero_limpio):
     """
     return bool(re.fullmatch(r'\d{8,13}', numero_limpio))
 
-
-from .models import (
-    Categoria,
-    Cliente,
-    Direccion,
-    EstadoPedido,
-    Extras,
-    Horario,
-    MedioPago,
-    Negocio,
-    Opcion,
-    Pedido,
-    Producto,
-    ProductoGrupoOpcion,
-    Promocion,
-    RedesSociales,
-    ZonasEntrega,
-)
-
-
 def index(request):
     negocio = Negocio.objects.first()
-    horarios = Horario.objects.filter(idnegocio=negocio) if negocio else []
-    zonas = ZonasEntrega.objects.filter(idnegocio=negocio) if negocio else []
+    # Use negocio.pk instead of negocio object
+    horarios = Horario.objects.filter(idnegocio=negocio.pk) if negocio else []
+    zonas = ZonasEntrega.objects.filter(idnegocio=negocio.pk) if negocio else []
     instagram = RedesSociales.objects.filter(
         plataforma__icontains='instagram'
     ).first()
@@ -69,7 +68,7 @@ def index(request):
 
 
 def menu(request):
-    categorias = Categoria.objects.all()
+    categorias = CategoriaProducto.objects.all()
     negocio = Negocio.objects.first()
     instagram = RedesSociales.objects.filter(
         plataforma__icontains='instagram'
@@ -93,13 +92,10 @@ def detalleProducto(request, idproducto):
         opciones = grupo.opcion_set.all()
         grupos_opciones.append({'grupo': grupo, 'opciones': opciones})
 
-    extras_producto = []
-    if hasattr(producto, 'productoextras_set'):
-        extras_producto = [
-            rel.idextra for rel in producto.productoextras_set.all()
-        ]
-    elif hasattr(producto, 'productextras_set'):
-        extras_producto = [rel.idextra for rel in producto.productextras_set.all()]
+    # Consulta directa al modelo intermediario para evitar problemas con _set
+    extras_producto = [
+        rel.idextra for rel in ProductoExtras.objects.filter(idproducto=producto)
+    ]
 
     edit_item_id = request.session.get('edit_item_id')
     item_editando = None
@@ -181,7 +177,7 @@ def agregar_al_carrito(request, idproducto):
             carrito[item_id] = {
                 'producto_id': producto.idproducto,
                 'nombre': producto.nombre,
-                'imagen': producto.imagen.url if producto.imagen else '',  # Corregido aquí para serializar en JSON
+                'imagen': producto.imagen if producto.imagen else '',
                 'precio_unitario': precio_unitario,
                 'cantidad': 1,
                 'subtotal': precio_unitario,
@@ -335,9 +331,9 @@ def procesar_checkout(request):
                     idcliente=cliente,
                     idmediopago=medio_pago,
                     idestadopedido=estado_inicial,
-                    idpromocion=objeto_promocion,
-                    horarioentregadeseado=horario_completo,
-                    producto=producto_obj,
+                    idpromocion=objeto_promocion.pk if objeto_promocion else None,
+                    horarioentregadeseado=horario_completo.time() if horario_completo else None,
+                    idproducto=producto_obj.idproducto,
                     cantidad=item.get('cantidad', 1),
                     justificacioncancelacion=comentario,
                 )

@@ -1,18 +1,18 @@
 from django.contrib import admin
 from .models import (
     Rol, Empleado, EstadoNegocio, UltimaModificacion, Negocio, Horario, 
-    ZonasEntrega, RedesSociales, Categoria, EstadoStock, EstadoProducto, 
+    ZonasEntrega, RedesSociales, CategoriaProducto, EstadoStock, EstadoProducto, 
     Producto, Extras, ProductoExtras, GrupoOpcion, Opcion, ProductoGrupoOpcion, 
     Insumo, Compras, Receta, MedioPago, Cliente, Direccion, EstadoPedido, 
-    Pedido, Promocion
+    Pedido, Promocion, 
 )
 
 # --- CONFIGURACIONES AVANZADAS DE PRODUCTOS Y OPCIONES ---
 
-@admin.register(Categoria)
+@admin.register(CategoriaProducto)
 class CategoriaAdmin(admin.ModelAdmin):
-    list_display = ('idcategoria', 'nombre')
-    list_display_links = ('idcategoria',)
+    list_display = ('idcategoria', 'nombre')  
+    list_display_links = ('idcategoria',)     
     search_fields = ('nombre',)
     list_filter = ('nombre',)
 
@@ -22,10 +22,10 @@ class OpcionInline(admin.TabularInline):
 
 @admin.register(GrupoOpcion)
 class GrupoOpcionAdmin(admin.ModelAdmin):
-    list_display = ('idgrupo', 'nombre', 'min_selecciones', 'max_selecciones')
+    list_display = ('idgrupo', 'nombre', 'minselecciones', 'maxselecciones')
     list_display_links = ('idgrupo',)
     search_fields = ('nombre',)
-    list_filter = ('min_selecciones', 'max_selecciones')
+    list_filter = ('minselecciones', 'maxselecciones')
     inlines = [OpcionInline]
 
 @admin.register(Extras)
@@ -65,10 +65,10 @@ class RolAdmin(admin.ModelAdmin):
 
 @admin.register(Empleado)
 class EmpleadoAdmin(admin.ModelAdmin):
-    list_display = ('idempleado', 'nombre', 'apellido', 'rol')
+    list_display = ('idempleado', 'nombre', 'apellido', 'idrol')
     list_display_links = ('idempleado',)
-    list_filter = ('rol',)
-    search_fields = ('nombre', 'apellido', 'rol__nombrerol')
+    list_filter = ('idrol',)
+    search_fields = ('nombre', 'apellido', 'idrol__nombrerol')
 
 @admin.register(EstadoNegocio)
 class EstadoNegocioAdmin(admin.ModelAdmin):
@@ -79,10 +79,10 @@ class EstadoNegocioAdmin(admin.ModelAdmin):
 
 @admin.register(UltimaModificacion)
 class UltimaModificacionAdmin(admin.ModelAdmin):
-    list_display = ('idmodificacion', 'fecha', 'empleado', 'idestado')
+    list_display = ('idmodificacion', 'fecha', 'idempleado', 'idnegocio')
     list_display_links = ('idmodificacion',)
-    list_filter = ('idestado', 'empleado', 'fecha')
-    search_fields = ('empleado__nombre', 'empleado__apellido')
+    list_filter = ('idempleado', 'fecha')
+    search_fields = ('idempleado__nombre', 'idempleado__apellido', 'descripcioncambio')
 
 @admin.register(Negocio)
 class NegocioAdmin(admin.ModelAdmin):
@@ -100,9 +100,9 @@ class HorarioAdmin(admin.ModelAdmin):
 
 @admin.register(ZonasEntrega)
 class ZonasEntregaAdmin(admin.ModelAdmin):
-    list_display = ('idzona', 'nombre', 'costoEnvio', 'idnegocio')
+    list_display = ('idzona', 'nombre', 'costoenvio', 'idnegocio')
     list_display_links = ('idzona',)
-    list_filter = ('idnegocio', 'costoEnvio')
+    list_filter = ('idnegocio', 'costoenvio')
     search_fields = ('nombre', 'idnegocio__nombre')
 
 @admin.register(RedesSociales)
@@ -128,24 +128,24 @@ class EstadoProductoAdmin(admin.ModelAdmin):
 
 @admin.register(Insumo)
 class InsumoAdmin(admin.ModelAdmin):
-    list_display = ('idinsumo', 'nombreinsumo', 'unidadmedida', 'stockactual')
+    list_display = ('idinsumo', 'nombreinsumo', 'unidadmedidaingreso', 'stockactual')
     list_display_links = ('idinsumo',)
-    list_filter = ('unidadmedida', 'stockactual')
-    search_fields = ('nombreinsumo', 'unidadmedida')
+    list_filter = ('unidadmedidaingreso', 'stockactual')
+    search_fields = ('nombreinsumo', 'unidadmedidaingreso')
 
 @admin.register(Compras)
 class ComprasAdmin(admin.ModelAdmin):
-    list_display = ('idcompra', 'insumo', 'fecha', 'cantidad', 'preciototal')
+    list_display = ('idcompra', 'fecha', 'preciototal', 'idempleado')
     list_display_links = ('idcompra',)
-    list_filter = ('insumo', 'fecha')
-    search_fields = ('insumo__nombreinsumo',)
+    list_filter = ('fecha', 'idempleado')
+    search_fields = ('idempleado__nombre',)
 
 @admin.register(Receta)
 class RecetaAdmin(admin.ModelAdmin):
-    list_display = ('idreceta', 'producto', 'insumo', 'cantidadinsumo')
+    list_display = ('idreceta', 'idproducto', 'idinsumo')
     list_display_links = ('idreceta',)
-    list_filter = ('producto', 'insumo')
-    search_fields = ('producto__nombre', 'insumo__nombreinsumo')
+    list_filter = ('idproducto',)
+    search_fields = ('idproducto__nombre',)
 
 @admin.register(MedioPago)
 class MedioPagoAdmin(admin.ModelAdmin):
@@ -170,8 +170,8 @@ class DireccionAdmin(admin.ModelAdmin):
 
 @admin.register(EstadoPedido)
 class EstadoPedidoAdmin(admin.ModelAdmin):
-    list_display = ('idestadopedido', 'descripcion')
-    list_display_links = ('idestadopedido',)
+    list_display = ('idestado', 'descripcion')
+    list_display_links = ('idestado',)
     search_fields = ('descripcion',)
     list_filter = ('descripcion',)
 
