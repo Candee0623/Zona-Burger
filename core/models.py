@@ -162,7 +162,7 @@ class Producto(models.Model):
         if not self.imagen:
             super().save(*args, **kwargs)
             return
- 
+
         try:
             img = Image.open(self.imagen)
             if img.mode in ('RGBA', 'P'):
@@ -172,12 +172,13 @@ class Producto(models.Model):
             buffer = io.BytesIO()
             img.save(buffer, format='WEBP', quality=80, method=6)
             buffer.seek(0)
-            file_name = os.path.basename(str(self.imagen))
-            file_name_without_ext = os.path.splitext(file_name)[0]
-            self.imagen.save(f"{file_name_without_ext}.webp", ContentFile(buffer.read()), save=False)
-        except Exception:
-            pass
- 
+            
+            # Nombre de archivo único y seguro
+            file_name = os.path.splitext(self.imagen.name)[0] + '.webp'
+            self.imagen.save(file_name, ContentFile(buffer.read()), save=False)
+        except Exception as e:
+            print(f"Error al procesar la imagen: {e}")
+            
         super().save(*args, **kwargs)
  
     class Meta:
@@ -375,26 +376,104 @@ class DetallePedido(models.Model):
  
  
 class Promocion(models.Model):
-    idpromocion = models.AutoField(db_column='IdPromocion', primary_key=True)
-    palabraclave = models.CharField(db_column='PalabraClave', max_length=50, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
-    tipobeneficio = models.CharField(db_column='TipoBeneficio', max_length=50, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
-    valor = models.DecimalField(db_column='Valor', max_digits=10, decimal_places=2, blank=True, null=True)
-    fechainicio = models.DateField(db_column='FechaInicio', blank=True, null=True)
-    fechafin = models.DateField(db_column='FechaFin', blank=True, null=True)
-    activo = models.IntegerField(db_column='Activo', blank=True, null=True)
- 
+
+    TIPOS_BENEFICIO = [
+        ('2x1', '2 x 1'),
+        ('3x2', '3 x 2'),
+        ('PRODUCTO_GRATIS', 'Producto gratis'),
+        ('DESCUENTO_PORCENTAJE', 'Descuento porcentual'),
+        ('DESCUENTO_FIJO', 'Descuento fijo'),
+    ]
+
+    idpromocion = models.AutoField(
+        db_column='IdPromocion',
+        primary_key=True
+    )
+
+    palabraclave = models.CharField(
+        db_column='PalabraClave',
+        max_length=50,
+        db_collation='Modern_Spanish_CI_AS',
+        blank=True,
+        null=True
+    )
+
+    tipobeneficio = models.CharField(
+        db_column='TipoBeneficio',
+        max_length=50,
+        db_collation='Modern_Spanish_CI_AS',
+        choices=TIPOS_BENEFICIO,
+        blank=True,
+        null=True
+    )
+
+    valor = models.DecimalField(
+        db_column='Valor',
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    fechainicio = models.DateField(
+        db_column='FechaInicio',
+        blank=True,
+        null=True
+    )
+
+    fechafin = models.DateField(
+        db_column='FechaFin',
+        blank=True,
+        null=True
+    )
+
+    activo = models.IntegerField(
+        db_column='Activo',
+        blank=True,
+        null=True,
+        default=1
+    )
+
     def __str__(self):
-        return f"{self.palabraclave} ({self.tipobeneficio})"
- 
+        return f"{self.palabraclave} ({self.get_tipobeneficio_display()})"
+
+    @property
+    def descripcion_amigable(self):
+        if self.tipobeneficio == 'DESCUENTO_PORCENTAJE':
+            return f"Descuento del {int(self.valor)}%" if self.valor else "Descuento porcentual"
+        elif self.tipobeneficio == 'DESCUENTO_FIJO':
+            return f"Descuento de ${self.valor}" if self.valor else "Descuento fijo"
+        elif self.tipobeneficio == 'PRODUCTO_GRATIS':
+            return "¡Llevá un Producto Gratis!"
+        return self.get_tipobeneficio_display()
+
     class Meta:
         db_table = 'Promocion'
  
  
 class ProductoPromocion(models.Model):
-    idproductopromocion = models.IntegerField(db_column='IdProductoPromocion', blank=True, null=True)
-    idproducto = models.ForeignKey(Producto, models.DO_NOTHING, db_column='IdProducto', blank=True, null=True)
-    idpromocion = models.ForeignKey(Promocion, models.DO_NOTHING, db_column='IdPromocion', blank=True, null=True)
- 
+
+    idproductopromocion = models.AutoField(
+        db_column='IdProductoPromocion',
+        primary_key=True
+    )
+
+    idproducto = models.ForeignKey(
+        Producto,
+        models.DO_NOTHING,
+        db_column='IdProducto',
+        blank=True,
+        null=True
+    )
+
+    idpromocion = models.ForeignKey(
+        Promocion,
+        models.DO_NOTHING,
+        db_column='IdPromocion',
+        blank=True,
+        null=True
+    )
+
     class Meta:
         db_table = 'ProductoPromocion'
  

@@ -18,6 +18,9 @@
 <body>
     {% include 'components/header.html' %}
 
+    <!-- Serialización limpia de zonas de entrega para evitar errores de linter en JS -->
+    {{ zonas_entrega|json_script:"zonas-data" }}
+
     <main class="checkout-container checkout-layout">
         <!-- Formulario principal a la izquierda -->
         <div class="checkout-form-container">
@@ -30,10 +33,10 @@
 
                 <h3>Datos del Cliente</h3>
                 <input type="text" name="nombre" placeholder="Nombre" value="{{ datos_previos.nombre|default:'' }}" required>
-                <p class="form-error" data-for="nombre" style="display: none;"></p>
+                <p class="form-error" data-for="nombre" {% if errores.nombre %}style="display:block;"{% else %}style="display:none;"{% endif %}>{{ errores.nombre }}</p>
 
                 <input type="text" name="apellido" placeholder="Apellido" value="{{ datos_previos.apellido|default:'' }}" required>
-                <p class="form-error" data-for="apellido" style="display: none;"></p>
+                <p class="form-error" data-for="apellido" {% if errores.apellido %}style="display:block;"{% else %}style="display:none;"{% endif %}>{{ errores.apellido }}</p>
 
                 <input type="tel" name="telefono" placeholder="Teléfono"
                        value="{{ datos_previos.telefono|default:'' }}"
@@ -52,20 +55,22 @@
                 <div id="map"></div>
 
                 <input type="text" id="id_calle" name="calle" placeholder="Calle" value="{{ datos_previos.calle|default:'' }}" required>
-                <p class="form-error" data-for="calle" style="display: none;"></p>
+                <p class="form-error" data-for="calle" {% if errores.calle %}style="display:block;"{% else %}style="display:none;"{% endif %}>{{ errores.calle }}</p>
 
                 <input type="text" name="numero" placeholder="Número" value="{{ datos_previos.numero|default:'' }}" required>
-                <p class="form-error" data-for="numero" style="display: none;"></p>
+                <p class="form-error" data-for="numero" {% if errores.numero %}style="display:block;"{% else %}style="display:none;"{% endif %}>{{ errores.numero }}</p>
 
                 <input type="text" name="piso" placeholder="Piso / Depto (Opcional)" value="{{ datos_previos.piso|default:'' }}">
 
                 <h3>Método de Entrega</h3>
                 <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Horario de entrega deseado (Opcional):</label>
-                <input type="time" name="horario_entrega" value="{{ datos_previos.horario_entrega|default:'' }}">
+                <input type="time" name="horario_entrega" value="{{ datos_previos.horario_entrega|default:'' }}" class="{% if errores.horario_entrega %}input-error{% endif %}">
+                <p class="form-error" data-for="horario_entrega" {% if errores.horario_entrega %}style="display:block;"{% else %}style="display:none;"{% endif %}>{{ errores.horario_entrega }}</p>
 
                 <h3>Promoción</h3>
                 <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Palabra clave de promoción (Opcional):</label>
-                <input type="text" name="codigo_promocion" placeholder="Ej: PROMO10" value="{{ datos_previos.codigo_promocion|default:'' }}">
+                <input type="text" name="codigo_promocion" placeholder="Ej: PROMO10" value="{{ datos_previos.codigo_promocion|default:'' }}" class="{% if error_promocion %}input-error{% endif %}">
+                <p class="form-error" data-for="codigo_promocion" {% if error_promocion %}style="display:block;"{% else %}style="display:none;"{% endif %}>{{ error_promocion }}</p>
 
                 <h3>Método de Pago</h3>
                 <select name="medio_pago" required>
@@ -91,6 +96,11 @@
                 <span>Subtotal Productos</span>
                 <span id="span-subtotal" style="color: #fff; font-weight: 600;">${{ total_carrito|floatformat:2 }}</span>
             </div>
+            <div class="summary-row" id="fila-descuento" {% if not descuento_promocion %}style="display:none;"{% else %}style="display:flex;"{% endif %}>
+                <span>Descuento promoción</span>
+                <span id="span-descuento" style="color: #2ed573; font-weight: 600;">-${{ descuento_promocion|default:0|floatformat:2 }}</span>
+            </div>
+
             <div class="summary-row">
                 <span>Costo de envío</span>
                 <span id="span-costo-envio" style="color: #ffcc00; font-weight: 600; text-align: right;">A coordinar con el vendedor</span>
@@ -115,248 +125,250 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-      const form = document.querySelector('.checkout-form');
-      if (!form) return;
+        const form = document.querySelector('.checkout-form');
+        if (!form) return;
 
-      const subtotalBase = parseFloat("{{ total_carrito|default:0 }}");
+        const subtotalBase = parseFloat("{{ total_carrito|default:0 }}");
 
-      const zonasNegocio = [
-          {% for zona in zonas_entrega %}
-              { nombre: "{{ zona.nombre|escapejs }}", costo: parseFloat("{{ zona.costoEnvio|default:0 }}") },
-          {% endfor %}
-      ];
+        // Lectura limpia y segura de zonas desde json_script para evitar errores de linter en VS Code
+        const zonasNegocioRaw = JSON.parse(document.getElementById('zonas-data').textContent || '[]');
+        const zonasNegocio = zonasNegocioRaw.map(zona => ({
+            nombre: zona.nombre || zona.fields?.nombre || '',
+            costo: parseFloat(zona.costoEnvio || zona.fields?.costoEnvio || 0)
+        }));
 
-      const map = L.map('map').setView([-34.6037, -58.3816], 13);
-      
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-          maxZoom: 19,
-          attribution: '© OpenStreetMap, © CARTO'
-      }).addTo(map);
+        const map = L.map('map').setView([-34.6037, -58.3816], 13);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap, © CARTO'
+        }).addTo(map);
 
-      let marker = L.marker([-34.6037, -58.3816], {draggable: true}).addTo(map);
+        let marker = L.marker([-34.6037, -58.3816], {draggable: true}).addTo(map);
 
-      setTimeout(function() {
-          map.invalidateSize();
-      }, 300);
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 300);
 
-      function autocompletarZona(dataAddress) {
-          const inputHidden = document.getElementById('input-localidad-hidden');
-          const spanEnvio = document.getElementById('span-costo-envio');
-          const spanTotalEst = document.getElementById('span-total-estimado');
+        function autocompletarZona(dataAddress) {
+            const inputHidden = document.getElementById('input-localidad-hidden');
+            const spanEnvio = document.getElementById('span-costo-envio');
+            const spanTotalEst = document.getElementById('span-total-estimado');
 
-          const localidad = (dataAddress.city || dataAddress.town || dataAddress.village || dataAddress.suburb || dataAddress.county || dataAddress.municipality || '').toLowerCase();
-          const neighbourhood = (dataAddress.neighbourhood || dataAddress.residential || dataAddress.city_district || '').toLowerCase();
-          const displayName = (dataAddress.display_name || '').toLowerCase();
+            const localidad = (dataAddress.city || dataAddress.town || dataAddress.village || dataAddress.suburb || dataAddress.county || dataAddress.municipality || '').toLowerCase();
+            const neighbourhood = (dataAddress.neighbourhood || dataAddress.residential || dataAddress.city_district || '').toLowerCase();
+            const displayName = (dataAddress.display_name || '').toLowerCase();
 
-          let zonaEncontrada = null;
+            let zonaEncontrada = null;
 
-          for (let zona of zonasNegocio) {
-              const nombreZonaLower = zona.nombre.toLowerCase();
-              if (
-                  (localidad && (localidad.includes(nombreZonaLower) || nombreZonaLower.includes(localidad))) ||
-                  (neighbourhood && (neighbourhood.includes(nombreZonaLower) || nombreZonaLower.includes(neighbourhood))) ||
-                  (displayName && displayName.includes(nombreZonaLower))
-              ) {
-                  zonaEncontrada = zona;
-                  break;
-              }
-          }
-
-          if (zonaEncontrada) {
-              inputHidden.value = zonaEncontrada.nombre;
-              if (spanEnvio) {
-                  spanEnvio.textContent = zonaEncontrada.costo > 0 ? `$${zonaEncontrada.costo.toFixed(2)}` : 'A coordinar con el vendedor';
-              }
-              if (spanTotalEst) {
-                  const totalFinal = subtotalBase + zonaEncontrada.costo;
-                  spanTotalEst.textContent = `$${totalFinal.toFixed(2)}`;
-                  spanTotalEst.style.color = '#2ed573';
-              }
-          } else {
-              // Si la zona detectada no está registrada en el panel, fuerza "A coordinar con el vendedor"
-              inputHidden.value = "A coordinar con el vendedor";
-              if (spanEnvio) {
-                  spanEnvio.textContent = "A coordinar con el vendedor";
-              }
-              if (spanTotalEst) {
-                  spanTotalEst.textContent = `$${subtotalBase.toFixed(2)} + envío`;
-                  spanTotalEst.style.color = '#ffcc00';
-              }
-          }
-      }
-
-      function actualizarUbicacion(lat, lon) {
-          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
-              .then(response => response.json())
-              .then(data => {
-                  if (data && data.address) {
-                      const calle = data.address.road || data.address.pedestrian || data.address.residential || '';
-                      let numero = data.address.house_number || '';
-                      
-                      if (!numero && data.display_name) {
-                          const matchNum = data.display_name.match(/\b\d{2,5}\b/);
-                          if (matchNum) numero = matchNum[0];
-                      }
-
-                      if (calle) document.getElementById('id_calle').value = calle;
-                      if (numero) {
-                          const inputNum = form.querySelector('[name="numero"]');
-                          if (inputNum) inputNum.value = numero;
-                      }
-                      
-                      autocompletarZona(data.address);
-                  }
-              }).catch(err => console.log('Error de geolocalización inversa', err));
-      }
-
-      function buscarDireccion(query) {
-          if (!query.trim()) return;
-          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-              .then(response => response.json())
-              .then(results => {
-                  if (results && results.length > 0) {
-                      const lat = parseFloat(results[0].lat);
-                      const lon = parseFloat(results[0].lon);
-                      map.setView([lat, lon], 17);
-                      marker.setLatLng([lat, lon]);
-                      actualizarUbicacion(lat, lon);
-                  } else {
-                      alert('No se encontró la dirección ingresada.');
-                  }
-              })
-              .catch(err => console.log('Error en búsqueda', err));
-      }
-
-      document.getElementById('btn-buscar').addEventListener('click', function() {
-          buscarDireccion(document.getElementById('input-buscador').value);
-      });
-
-      document.getElementById('input-buscador').addEventListener('keypress', function(e) {
-          if (e.key === 'Enter') {
-              e.preventDefault();
-              buscarDireccion(this.value);
-          }
-      });
-
-      marker.on('dragend', function(e) {
-          const coord = marker.getLatLng();
-          actualizarUbicacion(coord.lat, coord.lng);
-      });
-
-      map.on('click', function(e) {
-          marker.setLatLng(e.latlng);
-          actualizarUbicacion(e.latlng.lat, e.latlng.lng);
-      });
-
-      document.getElementById('btn-ubicacion').addEventListener('click', function() {
-          if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(position => {
-                  const lat = position.coords.latitude;
-                  const lon = position.coords.longitude;
-                  map.setView([lat, lon], 16);
-                  marker.setLatLng([lat, lon]);
-                  actualizarUbicacion(lat, lon);
-              }, () => {
-                  alert('No se pudo obtener tu ubicación actual.');
-              });
-          } else {
-              alert('Tu navegador no soporta geolocalización.');
-          }
-      });
-
-      const mensajes = {
-          nombre: 'Ingresá tu nombre.',
-          apellido: 'Ingresá tu apellido.',
-          telefono_vacio: 'Ingresá tu número de teléfono.',
-          telefono_invalido: 'Ingresá un teléfono válido (solo números, entre 8 y 15 dígitos).',
-          calle: 'Ingresá la calle.',
-          numero: 'Ingresá el número de la calle.',
-          medio_pago: 'Seleccioná un método de pago.',
-      };
-
-      const patronTelefono = /^[0-9\s\-()+]{8,15}$/;
-
-      function mostrarError(campo, mensaje) {
-        const errorEl = form.querySelector(`.form-error[data-for="${campo}"]`);
-        if (errorEl) {
-          errorEl.textContent = mensaje;
-          errorEl.style.display = 'block';
-        }
-        const inputEl = form.querySelector(`[name="${campo}"]`);
-        if (inputEl) inputEl.classList.add('input-error');
-      }
-
-      function ocultarError(campo) {
-        const errorEl = form.querySelector(`.form-error[data-for="${campo}"]`);
-        if (errorEl) {
-          errorEl.textContent = '';
-          errorEl.style.display = 'none';
-        }
-        const inputEl = form.querySelector(`[name="${campo}"]`);
-        if (inputEl) inputEl.classList.remove('input-error');
-      }
-
-      form.addEventListener('submit', function (e) {
-        let esValido = true;
-        let primerCampoInvalido = null;
-
-        const camposTexto = ['nombre', 'apellido', 'calle', 'numero'];
-        camposTexto.forEach(function (campo) {
-          const input = form.querySelector(`[name="${campo}"]`);
-          if (input) {
-            if (!input.value.trim()) {
-              mostrarError(campo, mensajes[campo]);
-              esValido = false;
-              if (!primerCampoInvalido) primerCampoInvalido = input;
-            } else {
-              ocultarError(campo);
+            for (let zona of zonasNegocio) {
+                const nombreZonaLower = zona.nombre.toLowerCase();
+                if (
+                    (localidad && (localidad.includes(nombreZonaLower) || nombreZonaLower.includes(localidad))) ||
+                    (neighbourhood && (neighbourhood.includes(nombreZonaLower) || nombreZonaLower.includes(neighbourhood))) ||
+                    (displayName && displayName.includes(nombreZonaLower))
+                ) {
+                    zonaEncontrada = zona;
+                    break;
+                }
             }
-          }
-        });
 
-        const telefonoInput = form.querySelector('[name="telefono"]');
-        if (telefonoInput) {
-          const telefonoValor = telefonoInput.value.trim();
-          if (!telefonoValor) {
-            mostrarError('telefono', mensajes.telefono_vacio);
-            esValido = false;
-            if (!primerCampoInvalido) primerCampoInvalido = telefonoInput;
-          } else if (!patronTelefono.test(telefonoValor)) {
-            mostrarError('telefono', mensajes.telefono_invalido);
-            esValido = false;
-            if (!primerCampoInvalido) primerCampoInvalido = telefonoInput;
-          } else {
-            ocultarError('telefono');
-          }
+            if (zonaEncontrada) {
+                inputHidden.value = zonaEncontrada.nombre;
+                if (spanEnvio) {
+                    spanEnvio.textContent = zonaEncontrada.costo > 0 ? `$${zonaEncontrada.costo.toFixed(2)}` : 'A coordinar con el vendedor';
+                }
+                if (spanTotalEst) {
+                    const totalFinal = subtotalBase + zonaEncontrada.costo;
+                    spanTotalEst.textContent = `$${totalFinal.toFixed(2)}`;
+                    spanTotalEst.style.color = '#2ed573';
+                }
+            } else {
+                inputHidden.value = "A coordinar con el vendedor";
+                if (spanEnvio) {
+                    spanEnvio.textContent = "A coordinar con el vendedor";
+                }
+                if (spanTotalEst) {
+                    spanTotalEst.textContent = `$${subtotalBase.toFixed(2)} + envío`;
+                    spanTotalEst.style.color = '#ffcc00';
+                }
+            }
         }
 
-        const medioPagoSelect = form.querySelector('[name="medio_pago"]');
-        if (medioPagoSelect) {
-          if (!medioPagoSelect.value) {
-            mostrarError('medio_pago', mensajes.medio_pago);
-            esValido = false;
-            if (!primerCampoInvalido) primerCampoInvalido = medioPagoSelect;
-          } else {
-            ocultarError('medio_pago');
-          }
+        function actualizarUbicacion(lat, lon) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.address) {
+                        const calle = data.address.road || data.address.pedestrian || data.address.residential || '';
+                        let numero = data.address.house_number || '';
+                        
+                        if (!numero && data.display_name) {
+                            const matchNum = data.display_name.match(/\b\d{2,5}\b/);
+                            if (matchNum) numero = matchNum[0];
+                        }
+
+                        if (calle) document.getElementById('id_calle').value = calle;
+                        if (numero) {
+                            const inputNum = form.querySelector('[name="numero"]');
+                            if (inputNum) inputNum.value = numero;
+                        }
+                        
+                        autocompletarZona(data.address);
+                    }
+                }).catch(err => console.log('Error de geolocalización inversa', err));
         }
 
-        if (!esValido) {
-          e.preventDefault();
-          if (primerCampoInvalido) {
-            primerCampoInvalido.focus();
-          }
+        function buscarDireccion(query) {
+            if (!query.trim()) return;
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(results => {
+                    if (results && results.length > 0) {
+                        const lat = parseFloat(results[0].lat);
+                        const lon = parseFloat(results[0].lon);
+                        map.setView([lat, lon], 17);
+                        marker.setLatLng([lat, lon]);
+                        actualizarUbicacion(lat, lon);
+                    } else {
+                        alert('No se encontró la dirección ingresada.');
+                    }
+                })
+                .catch(err => console.log('Error en búsqueda', err));
         }
-      });
 
-      form.querySelectorAll('input, select, textarea').forEach(function (el) {
-        el.addEventListener('input', function () {
-          ocultarError(el.name);
+        document.getElementById('btn-buscar').addEventListener('click', function() {
+            buscarDireccion(document.getElementById('input-buscador').value);
         });
-        el.addEventListener('change', function () {
-          ocultarError(el.name);
+
+        document.getElementById('input-buscador').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                buscarDireccion(this.value);
+            }
         });
-      });
+
+        marker.on('dragend', function(e) {
+            const coord = marker.getLatLng();
+            actualizarUbicacion(coord.lat, coord.lng);
+        });
+
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);
+            actualizarUbicacion(e.latlng.lat, e.latlng.lng);
+        });
+
+        document.getElementById('btn-ubicacion').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    map.setView([lat, lon], 16);
+                    marker.setLatLng([lat, lon]);
+                    actualizarUbicacion(lat, lon);
+                }, () => {
+                    alert('No se pudo obtener tu ubicación actual.');
+                });
+            } else {
+                alert('Tu navegador no soporta geolocalización.');
+            }
+        });
+
+        const mensajes = {
+            nombre: 'Ingresá tu nombre.',
+            apellido: 'Ingresá tu apellido.',
+            telefono_vacio: 'Ingresá tu número de teléfono.',
+            telefono_invalido: 'Ingresá un teléfono válido (solo números, entre 8 y 15 dígitos).',
+            calle: 'Ingresá la calle.',
+            numero: 'Ingresá el número de la calle.',
+            medio_pago: 'Seleccioná un método de pago.',
+            codigo_promocion: 'Revisá el código promocional.',
+            horario_entrega: 'Ingresá un horario válido.',
+        };
+
+        const patronTelefono = /^[0-9\s\-()+]{8,15}$/;
+
+        function mostrarError(campo, mensaje) {
+            const errorEl = form.querySelector(`.form-error[data-for="${campo}"]`);
+            if (errorEl) {
+                errorEl.textContent = mensaje;
+                errorEl.style.display = 'block';
+            }
+            const inputEl = form.querySelector(`[name="${campo}"]`);
+            if (inputEl) inputEl.classList.add('input-error');
+        }
+
+        function ocultarError(campo) {
+            const errorEl = form.querySelector(`.form-error[data-for="${campo}"]`);
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
+            }
+            const inputEl = form.querySelector(`[name="${campo}"]`);
+            if (inputEl) inputEl.classList.remove('input-error');
+        }
+
+        form.addEventListener('submit', function (e) {
+            let esValido = true;
+            let primerCampoInvalido = null;
+
+            const camposTexto = ['nombre', 'apellido', 'calle', 'numero'];
+            camposTexto.forEach(function (campo) {
+                const input = form.querySelector(`[name="${campo}"]`);
+                if (input) {
+                    if (!input.value.trim()) {
+                        mostrarError(campo, mensajes[campo]);
+                        esValido = false;
+                        if (!primerCampoInvalido) primerCampoInvalido = input;
+                    } else {
+                        ocultarError(campo);
+                    }
+                }
+            });
+
+            const telefonoInput = form.querySelector('[name="telefono"]');
+            if (telefonoInput) {
+                const telefonoValor = telefonoInput.value.trim();
+                if (!telefonoValor) {
+                    mostrarError('telefono', mensajes.telefono_vacio);
+                    esValido = false;
+                    if (!primerCampoInvalido) primerCampoInvalido = telefonoInput;
+                } else if (!patronTelefono.test(telefonoValor)) {
+                    mostrarError('telefono', mensajes.telefono_invalido);
+                    esValido = false;
+                    if (!primerCampoInvalido) primerCampoInvalido = telefonoInput;
+                } else {
+                    ocultarError('telefono');
+                }
+            }
+
+            const medioPagoSelect = form.querySelector('[name="medio_pago"]');
+            if (medioPagoSelect) {
+                if (!medioPagoSelect.value) {
+                    mostrarError('medio_pago', mensajes.medio_pago);
+                    esValido = false;
+                    if (!primerCampoInvalido) primerCampoInvalido = medioPagoSelect;
+                } else {
+                    ocultarError('medio_pago');
+                }
+            }
+
+            if (!esValido) {
+                e.preventDefault();
+                if (primerCampoInvalido) {
+                    primerCampoInvalido.focus();
+                }
+            }
+        });
+
+        form.querySelectorAll('input, select, textarea').forEach(function (el) {
+            el.addEventListener('input', function () {
+                ocultarError(el.name);
+            });
+            el.addEventListener('change', function () {
+                ocultarError(el.name);
+            });
+        });
     });
     </script>
 </body>
