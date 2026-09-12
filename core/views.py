@@ -1,10 +1,18 @@
+from datetime import date, datetime
 import logging
 import re
 from urllib.parse import quote
+
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from datetime import datetime, date
+from decimal import Decimal
+
 from .models import (
     CategoriaProducto,
     Cliente,
@@ -23,8 +31,6 @@ from .models import (
     RedesSociales,
     ZonasEntrega,
 )
-from django.contrib import messages
-from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +48,10 @@ def es_numero_whatsapp_valido(numero_limpio):
 def es_telefono_cliente_valido(numero_limpio):
     return bool(re.fullmatch(r'\d{8,13}', numero_limpio))
 
+
+# ==========================================
+# VISTAS DE LA TIENDA PÚBLICA (CLIENTES)
+# ==========================================
 
 def index(request):
     negocio = Negocio.objects.first()
@@ -254,11 +264,9 @@ def procesar_checkout(request):
         Decimal('0.00'),
     )
 
-    # Consultas base para templates
     medios_pago_qs = MedioPago.objects.all()
     zonas_entrega_qs = ZonasEntrega.objects.all()
 
-    # Manejo seguro de solicitudes AJAX / Fetch (convertido estrictamente a listas de diccionarios)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or (
         request.method == 'GET' and 'application/json' in request.META.get('HTTP_ACCEPT', '')
     ):
@@ -343,6 +351,7 @@ def procesar_checkout(request):
         mensaje_promocion = ''
         error_promocion = ''
 
+        # VALIDACIÓN ESTRICTA: La promoción solo se procesa si el usuario ingresa una palabra clave.
         if codigo_promo:
             objeto_promocion = Promocion.objects.filter(
                 palabraclave__iexact=codigo_promo
@@ -363,6 +372,8 @@ def procesar_checkout(request):
 
             if error_promocion:
                 errores['codigo_promocion'] = error_promocion
+        else:
+            descuento_promocion = Decimal('0.00')
 
         if errores:
             return render(
@@ -412,7 +423,7 @@ def procesar_checkout(request):
                         idestadopedido=estado_inicial,
                         idpromocion=objeto_promocion.idpromocion if objeto_promocion else None,
                         horarioentregadeseado=horario_completo.time() if horario_completo else None,
-                        idproducto=producto_obj.pk,  # <-- CORREGIDO AQUÍ (pasando el ID numérico)
+                        idproducto=producto_obj.pk,
                         cantidad=item.get('cantidad', 1),
                         justificacioncancelacion=comentario,
                     )
@@ -430,7 +441,7 @@ def procesar_checkout(request):
 
         if horario_entrega:
             mensaje += f'• Horario Deseado: {horario_entrega}\n'
-        if codigo_promo and objeto_promocion:
+        if codigo_promo and objeto_promocion and descuento_promocion > 0:
             mensaje += f'• Palabra Clave Promo: {codigo_promo} (Aplicada)\n'
         mensaje += '\n'
 
@@ -487,6 +498,7 @@ def procesar_checkout(request):
         },
     )
 
+
 def pedido_exitoso(request):
     negocio = Negocio.objects.first()
     whatsapp_url = request.session.get('whatsapp_url')
@@ -495,6 +507,10 @@ def pedido_exitoso(request):
         'whatsapp_url': whatsapp_url
     })
 
+
+# ==========================================
+# GESTIÓN DE PROMOCIONES (PÚBLICA / ADMIN)
+# ==========================================
 
 def lista_promociones(request):
     promociones = Promocion.objects.all().order_by('-idpromocion')
@@ -507,125 +523,122 @@ def lista_promociones(request):
     )
 
 
-from django.shortcuts import get_object_or_404, redirect, render
-
-
 def crear_promocion(request):
-  productos = Producto.objects.all()
+    productos = Producto.objects.all()
 
-  if request.method == 'POST':
-    palabraclave = request.POST.get('palabraclave')
-    tipobeneficio = request.POST.get('tipobeneficio')
-    valor = request.POST.get('descuento') or None
-    fechainicio = request.POST.get('fechainicio')
-    fechafin = request.POST.get('fechafin')
-    producto_id = request.POST.get('producto')
-    activo = 1 if request.POST.get('activo') == 'on' else 0
+    if request.method == 'POST':
+        palabraclave = request.POST.get('palabraclave')
+        tipobeneficio = request.POST.get('tipobeneficio')
+        valor = request.POST.get('descuento') or None
+        fechainicio = request.POST.get('fechainicio')
+        fechafin = request.POST.get('fechafin')
+        producto_id = request.POST.get('producto')
+        activo = 1 if request.POST.get('activo') == 'on' else 0
 
-    # VALIDACIONES DE BACKEND
-    if fechainicio and fechafin and fechafin < fechainicio:
-      return render(
-          request,
-          'promociones/formPromocion.html',
-          {
-              'productos': productos,
-              'titulo': 'Nueva promoción',
-              'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
-              'promocion': request.POST,
-              'error': (
-                  'La fecha de fin no puede ser anterior a la fecha de inicio.'
-              ),
-          },
-      )
+        if fechainicio and fechafin and fechafin < fechainicio:
+            return render(
+                request,
+                'promociones/formPromocion.html',
+                {
+                    'productos': productos,
+                    'titulo': 'Nueva promoción',
+                    'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
+                    'promocion': request.POST,
+                    'error': (
+                        'La fecha de fin no puede ser anterior a la fecha de inicio.'
+                    ),
+                },
+            )
 
-    # Crear la promoción
-    promocion = Promocion.objects.create(
-        palabraclave=palabraclave,
-        tipobeneficio=tipobeneficio,
-        valor=valor,
-        fechainicio=fechainicio,
-        fechafin=fechafin,
-        activo=activo,
+        promocion = Promocion.objects.create(
+            palabraclave=palabraclave,
+            tipobeneficio=tipobeneficio,
+            valor=valor,
+            fechainicio=fechainicio,
+            fechafin=fechafin,
+            activo=activo,
+        )
+
+        producto_obj = get_object_or_404(Producto, pk=producto_id)
+        ProductoPromocion.objects.create(idpromocion=promocion, idproducto=producto_obj)
+
+        return redirect('lista_promociones')
+
+    return render(
+        request,
+        'promociones/formPromocion.html',
+        {
+            'productos': productos,
+            'titulo': 'Nueva promoción',
+            'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
+            'promocion': {},
+        },
     )
-
-    producto_obj = get_object_or_404(Producto, pk=producto_id)
-    ProductoPromocion.objects.create(idpromocion=promocion, idproducto=producto_obj)
-
-    return redirect('lista_promociones')
-
-  return render(
-      request,
-      'promociones/formPromocion.html',
-      {
-          'productos': productos,
-          'titulo': 'Nueva promoción',
-          'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
-          'promocion': {},
-      },
-  )
 
 
 def editar_promocion(request, idpromocion):
-  productos = Producto.objects.all()
-  promocion = get_object_or_404(Promocion, pk=idpromocion)
-  relacion_pp = ProductoPromocion.objects.filter(idpromocion=promocion).first()
+    productos = Producto.objects.all()
+    promocion = get_object_or_404(Promocion, pk=idpromocion)
+    relacion_pp = ProductoPromocion.objects.filter(idpromocion=promocion).first()
 
-  if request.method == 'POST':
-    fechainicio = request.POST.get('fechainicio')
-    fechafin = request.POST.get('fechafin')
+    if request.method == 'POST':
+        fechainicio = request.POST.get('fechainicio')
+        fechafin = request.POST.get('fechafin')
 
-    if fechainicio and fechafin and fechafin < fechainicio:
-      return render(
-          request,
-          'promociones/formPromocion.html',
-          {
-              'productos': productos,
-              'titulo': 'Modificar promoción',
-              'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
-              'promocion': request.POST,
-              'producto_seleccionado': int(request.POST.get('producto', 0)),
-              'error': (
-                  'La fecha de fin no puede ser anterior a la fecha de inicio.'
-              ),
-          },
-      )
+        if fechainicio and fechafin and fechafin < fechainicio:
+            return render(
+                request,
+                'promociones/formPromocion.html',
+                {
+                    'productos': productos,
+                    'titulo': 'Modificar promoción',
+                    'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
+                    'promocion': request.POST,
+                    'producto_seleccionado': int(request.POST.get('producto', 0)),
+                    'error': (
+                        'La fecha de fin no puede ser anterior a la fecha de inicio.'
+                    ),
+                },
+            )
 
-    promocion.palabraclave = request.POST.get('palabraclave')
-    promocion.tipobeneficio = request.POST.get('tipobeneficio')
-    promocion.valor = request.POST.get('descuento') or None
-    promocion.fechainicio = fechainicio
-    promocion.fechafin = fechafin
-    promocion.activo = 1 if request.POST.get('activo') == 'on' else 0
-    promocion.save()
+        promocion.palabraclave = request.POST.get('palabraclave')
+        promocion.tipobeneficio = request.POST.get('tipobeneficio')
+        promocion.valor = request.POST.get('descuento') or None
+        promocion.fechainicio = fechainicio
+        promocion.fechafin = fechafin
+        promocion.activo = 1 if request.POST.get('activo') == 'on' else 0
+        promocion.save()
 
-    producto_id = request.POST.get('producto')
-    producto_obj = get_object_or_404(Producto, pk=producto_id)
+        producto_id = request.POST.get('producto')
+        producto_obj = get_object_or_404(Producto, pk=producto_id)
 
-    if relacion_pp:
-      relacion_pp.idproducto = producto_obj
-      relacion_pp.save()
-    else:
-      ProductoPromocion.objects.create(
-          idpromocion=promocion, idproducto=producto_obj
-      )
+        if relacion_pp:
+            relacion_pp.idproducto = producto_obj
+            relacion_pp.save()
+        else:
+            ProductoPromocion.objects.create(
+                idpromocion=promocion, idproducto=producto_obj
+            )
 
-    return redirect('lista_promociones')
+        return redirect('lista_promociones')
 
-  return render(
-      request,
-      'promociones/formPromocion.html',
-      {
-          'productos': productos,
-          'titulo': 'Modificar promoción',
-          'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
-          'promocion': promocion,
-          'producto_seleccionado': (
-              relacion_pp.idproducto.pk
-              if relacion_pp and relacion_pp.idproducto
-              else None
-          ),
-      },
-  )
+    return render(
+        request,
+        'promociones/formPromocion.html',
+        {
+            'productos': productos,
+            'titulo': 'Modificar promoción',
+            'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
+            'promocion': promocion,
+            'producto_seleccionado': (
+                relacion_pp.idproducto.pk
+                if relacion_pp and relacion_pp.idproducto
+                else None
+            ),
+        },
+    )
+
+
 def eliminar_promocion(request, idpromocion):
     promocion = get_object_or_404(Promocion, pk=idpromocion)
 
@@ -671,7 +684,7 @@ def calcular_descuento_promocion(carrito, promocion):
         return Decimal('0.00'), ''
 
     if not promocion_es_valida(promocion):
-        return Decimal('0.00'), 'La promoción no está vigente.'  # Corregido error tipográfico (não -> no)
+        return Decimal('0.00'), 'La promoción no está vigente.'
 
     productos_validos = obtener_productos_promocion(promocion)
 
@@ -718,7 +731,7 @@ def calcular_descuento_promocion(carrito, promocion):
         mensaje = 'Promoción 3 x 2 aplicada.'
 
     elif tipo == 'PRODUCTO_GRATIS':
-        descuento = min(unidades)  # Optimizado usando min() en lugar de ordenar toda la lista
+        descuento = min(unidades)
         mensaje = 'Producto gratis aplicado.'
 
     elif tipo == 'DESCUENTO_PORCENTAJE':
@@ -736,3 +749,46 @@ def calcular_descuento_promocion(carrito, promocion):
     descuento = max(Decimal('0.00'), min(descuento, subtotal_elegible))
 
     return descuento.quantize(Decimal('0.01')), mensaje
+
+
+# ==========================================
+# PANEL DE CONTROL PERSONALIZADO (ADMIN)
+# ==========================================
+
+@login_required(login_url='/panel/')
+def dashboard_home(request):
+    if request.method == 'POST' and 'logout' in request.POST:
+        logout(request)
+        return redirect('core:dashboard_home')
+
+    context = {
+        'total_pedidos': Pedido.objects.count(),
+        'total_productos': Producto.objects.count(),
+        'total_clientes': Cliente.objects.count(),
+    }
+    return render(request, 'dashboard/home.html', context)
+
+
+@login_required(login_url='/panel/')
+def panel_productos(request):
+    productos = Producto.objects.all()
+    return render(request, 'dashboard/productos_lista.html', {'productos': productos})
+
+
+@login_required(login_url='/panel/')
+def panel_crear_producto(request):
+    form = ProductoForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        form.save()
+        return redirect('core:panel_productos')
+    return render(request, 'dashboard/producto_form.html', {'form': form})
+
+
+@login_required(login_url='/panel/')
+def panel_editar_producto(request, idproducto):
+    producto = get_object_or_404(Producto, pk=idproducto)
+    form = ProductoForm(request.POST or None, request.FILES or None, instance=producto)
+    if form.is_valid():
+        form.save()
+        return redirect('core:panel_productos')
+    return render(request, 'dashboard/producto_form.html', {'form': form})
