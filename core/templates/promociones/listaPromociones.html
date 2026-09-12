@@ -1,56 +1,60 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>{{ titulo }}</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 40px; }
-        .contenedor { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
-        th { background: #222; color: white; }
-        .btn { padding: 8px 12px; border-radius: 4px; text-decoration: none; color: white; font-size: 14px; }
-        .btn-crear { background: #28a745; display: inline-block; margin-bottom: 15px; }
-        .btn-editar { background: #ffc107; color: #222; }
-        .btn-eliminar { background: #dc3545; }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/promociones/listaPromociones.css' %}">
 </head>
 <body>
-<div class="contenedor">
-    <h1>{{ titulo }}</h1>
-    <a href="{% url 'crear_promocion' %}" class="btn btn-crear">+ Nueva Promoción</a>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Beneficio</th>
-                <th>Inicio</th>
-                <th>Fin</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for promo in promociones %}
-            <tr>
-                <td>{{ promo.palabraclave }}</td>
-                <td>{{ promo.tipobeneficio }}</td>
-                <td>{{ promo.fechainicio|date:"d/m/Y" }}</td>
-                <td>{{ promo.fechafin|date:"d/m/Y" }}</td>
-                <td>{% if promo.activo %}Activa{% else %}Inactiva{% endif %}</td>
-                <td>
-                    <a href="{% url 'editar_promocion' promo.idpromocion %}" class="btn btn-editar">Editar</a>
-                    <a href="{% url 'eliminar_promocion' promo.idpromocion %}" class="btn btn-eliminar">Eliminar</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" style="text-align: center;">No hay promociones registradas.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+<div class="page-wrapper" style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 1000px;">
+    <!-- Título colocado arriba del contenedor principal -->
+    <div style="width: 100%; margin-bottom: 15px; text-align: left; padding-left: 5px;">
+        <h1 style="font-size: 1.4rem; font-weight: 800; text-transform: uppercase; margin: 0; background: linear-gradient(90deg, #ffcc00, #ff7a1a); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: 0.5px;">
+            Panel de Promociones
+        </h1>
+        <span style="color: #b8b8b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Gestión y control de descuentos</span>
+    </div>
+
+    <div class="contenedor" style="margin: 0; width: 100%;">
+        <a href="{% url 'crear_promocion' %}" class="btn btn-crear">+ Nueva Promoción</a>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Beneficio</th>
+                        <th>Inicio</th>
+                        <th>Fin</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for promo in promociones %}
+                    <tr>
+                        <td>{{ promo.palabraclave }}</td>
+                        <td>{{ promo.tipobeneficio }}</td>
+                        <td>{{ promo.fechainicio|date:"d/m/Y" }}</td>
+                        <td>{{ promo.fechafin|date:"d/m/Y" }}</td>
+                        <td>{% if promo.activo %}Activa{% else %}Inactiva{% endif %}</td>
+                        <td>
+                            <a href="{% url 'editar_promocion' promo.idpromocion %}" class="btn btn-editar">Editar</a>
+                            <a href="{% url 'eliminar_promocion' promo.idpromocion %}" class="btn btn-eliminar">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">No hay promociones registradas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
 </body>
 </html>

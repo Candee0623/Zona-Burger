@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <link rel="stylesheet" href="{% static 'css/Index.css' %}">
-    <link rel="stylesheet" href="{% static 'css/Checkout.css' %}">
+    <link rel="stylesheet" href="{% static 'css/productos/Checkout.css' %}">
 </head>
 <body>
     {% include 'components/header.html' %}
@@ -24,6 +24,9 @@
     <main class="checkout-container checkout-layout">
         <!-- Formulario principal a la izquierda -->
         <div class="checkout-form-container">
+            <a href="{% url 'ver_carrito' %}" class="btn-volver-carrito" style="display:inline-flex; align-items:center; gap:8px; color:#ccc; text-decoration:none; font-size:0.9rem; margin-bottom:14px;">
+                <i class="fa-solid fa-arrow-left"></i> Volver al carrito
+            </a>
             <h1 class="checkout-title">Finalizar Tu Pedido</h1>
 
             <form class="checkout-form" method="POST" action="{% url 'checkout' %}" novalidate>
@@ -68,7 +71,7 @@
                     <input type="text" name="codigo_promocion" id="id_codigo_promocion" placeholder="Ej: PROMO10" value="{{ datos_previos.codigo_promocion|default:'' }}" class="{% if error_promocion or errores.codigo_promocion %}input-error{% endif %}" style="flex: 1; margin-bottom: 0;">
                     <button type="button" id="btn-aplicar-promo" style="padding: 0 15px; background: #ff4757; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">Aplicar</button>
                 </div>
-                <p class="form-error" data-for="codigo_promocion" {% if error_promocion or errores.codigo_promocion %}style="display:block; margin-top: 6px;"{% else %}style="display:none;"{% endif %}>{{ error_promocion|default:errores.codigo_promocion }}</p>
+                <p class="form-error" data-for="codigo_promocion" {% if error_promocion or errores.codigo_promocion %}style="display:block; margin-top: 6px;"{% else %}style="display:none;"{% endif %}>{% if error_promocion %}{{ error_promocion }}{% else %}{{ errores.codigo_promocion }}{% endif %}</p>
 
                 <h3>Método de Pago</h3>
                 <select name="medio_pago" required>
@@ -89,6 +92,23 @@
         <!-- Resumen de compra a la derecha (sticky) -->
         <div class="checkout-summary-container">
             <h2>Resumen de Compra</h2>
+
+            <!-- Detalle de productos: cantidad, nombre, precio unitario y subtotal por línea -->
+            <div class="summary-detalle-productos" style="margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                {% for item in carrito_items %}
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; font-size:0.85rem; color:#ddd; margin-bottom:6px;">
+                        <span>{{ item.cantidad }}x {{ item.nombre }}<br>
+                            <span style="font-size:0.75rem; color:#999;">(${{ item.precio_unitario|floatformat:2 }} c/u)</span>
+                        </span>
+                        <span style="font-weight:600; white-space: nowrap; margin-left: 10px;">${{ item.subtotal|floatformat:2 }}</span>
+                    </div>
+                    {% for det in item.detalles %}
+                        <div style="font-size:0.75rem; color:#888; margin-left:10px; margin-bottom:4px;">- {{ det }}</div>
+                    {% endfor %}
+                {% empty %}
+                    <p style="font-size:0.85rem; color:#888;">No hay productos en el carrito.</p>
+                {% endfor %}
+            </div>
             
             <div class="summary-row">
                 <span>Subtotal Productos</span>
@@ -106,7 +126,7 @@
             </div>
             <div class="summary-total">
                 <span>Total Estimado</span>
-                <span id="span-total-estimado" style="color: #2ed573;">${{ total_carrito|floatformat:2 }} + envío</span>
+                <span id="span-total-estimado" style="color: #2ed573;">${{ total_estimado|default:total_carrito|floatformat:2 }} + envío</span>
             </div>
             
             <div class="summary-info">
@@ -127,8 +147,9 @@
         const form = document.querySelector('.checkout-form');
         if (!form) return;
 
-        const subtotalBase = parseFloat("{{ total_carrito|default:0 }}");
-        const descuentoServidor = parseFloat("{{ descuento_promocion|default:0 }}");
+        // subtotalBase ya viene con el descuento de promoción restado desde el
+        // servidor (total_estimado), así el JS no tiene que reconstruir esa cuenta.
+        const subtotalConDescuento = parseFloat("{{ total_estimado|default:total_carrito|default:0 }}");
 
         const zonasNegocioRaw = JSON.parse(document.getElementById('zonas-data').textContent || '[]');
         const zonasNegocio = zonasNegocioRaw.map(zona => ({
@@ -172,16 +193,20 @@
                 }
             }
 
-            const subtotalConDescuento = subtotalBase - descuentoServidor;
-
             if (zonaEncontrada) {
                 inputHidden.value = zonaEncontrada.nombre;
                 if (spanEnvio) {
-                    spanEnvio.textContent = zonaEncontrada.costo > 0 ? `$${zonaEncontrada.costo.toFixed(2)}` : 'A coordinar con el vendedor';
+                    // Distinguimos "envío gratis" (costo exactamente 0 en una zona
+                    // reconocida) de "a coordinar" (zona no encontrada, más abajo).
+                    spanEnvio.textContent = zonaEncontrada.costo === 0
+                        ? 'Envío gratis'
+                        : `$${zonaEncontrada.costo.toFixed(2)}`;
                 }
                 if (spanTotalEst) {
                     const totalFinal = subtotalConDescuento + zonaEncontrada.costo;
-                    spanTotalEst.textContent = `$${totalFinal.toFixed(2)}`;
+                    spanTotalEst.textContent = zonaEncontrada.costo === 0
+                        ? `$${totalFinal.toFixed(2)} (envío gratis)`
+                        : `$${totalFinal.toFixed(2)}`;
                     spanTotalEst.style.color = '#2ed573';
                 }
             } else {

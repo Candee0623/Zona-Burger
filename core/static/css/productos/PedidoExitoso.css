@@ -1,0 +1,272 @@
+:root {
+    --exito-black: #121212;
+    --exito-card: #1b1b1b;
+    --exito-red: #d82505;
+    --exito-orange: #ff7a1a;
+    --exito-yellow: #ffcc00;
+    --exito-white: #f5f5f5;
+    --exito-success: #2ed573;
+    --exito-whatsapp: #25d366;
+    --exito-border: #2c2c2c;
+}
+
+/* Fijamos la pantalla completa a 100vh sin scroll */
+html, body.page-exito {
+    background-color: var(--exito-black);
+    color: var(--exito-white);
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(216, 37, 5, 0.15), transparent 40%),
+        radial-gradient(circle at 80% 30%, rgba(255, 122, 26, 0.12), transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(255, 204, 0, 0.08), transparent 50%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+body.page-exito header {
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+/* Ocultar específicamente el enlace de Menú en el header */
+body.page-exito header nav a:not([href*="inicio"]):not([href*="/"]):not([href*="index"]),
+body.page-exito header a[href*="menu"],
+body.page-exito header li:has(a[href*="menu"]) {
+    display: none !important;
+}
+
+body.page-exito footer {
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+/* Contenedor central flexible */
+main.exito-container {
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 20px 45px 20px; /* Ajusta los 45px para moverlo más o menos hacia abajo */
+    display: flex;
+    align-items: flex-end; /* Empuja el contenido hacia la parte inferior del espacio libre */
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    overflow: visible;
+}
+
+.exito-chispa {
+    position: absolute;
+    bottom: -10px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--exito-orange);
+    box-shadow: 0 0 6px 2px rgba(255, 122, 26, 0.8);
+    opacity: 0;
+    animation: exito-flotar 4s ease-in infinite;
+    z-index: 1;
+}
+
+@keyframes exito-flotar {
+    0%   { transform: translateY(0) translateX(0); opacity: 0; }
+    10%  { opacity: 1; }
+    100% { transform: translateY(-300px) translateX(15px); opacity: 0; }
+}
+
+/* Tarjeta con un poco más de cuerpo (padding) y bien centrada */
+.exito-card {
+    position: relative;
+    z-index: 3;
+    background: linear-gradient(180deg, #1e1e1e 0%, #171717 100%);
+    border: 1px solid var(--exito-border);
+    border-top: 4px solid var(--exito-success);
+    border-radius: 12px;
+    max-width: 400px;
+    width: 100%;
+    padding: 16px 22px; /* Ligeramente más alta y espaciosa */
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    transform: translateY(32px);
+    animation: exito-aparecer 0.4s ease-out forwards;
+}
+
+@keyframes exito-aparecer {
+    from { opacity: 0; transform: translateY(42px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(32px) scale(1); }
+}
+
+.exito-card::after {
+    content: "";
+    display: block;
+    height: 0;
+    border-bottom: 2px dashed #3a3a3a;
+    margin: 10px -22px 0;
+}
+
+.exito-icono-wrapper {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    margin: 0 auto 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.exito-icono-anillo {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--exito-success);
+    opacity: 0.5;
+    animation: exito-pulso 1.8s ease-out infinite;
+}
+
+@keyframes exito-pulso {
+    0%   { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+.exito-icono {
+    position: relative;
+    font-size: 1.05rem;
+    color: var(--exito-success);
+    background: rgba(46, 213, 115, 0.12);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(46, 213, 115, 0.4);
+}
+
+.exito-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 122, 26, 0.12);
+    border: 1px solid rgba(255, 122, 26, 0.4);
+    color: var(--exito-orange);
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-bottom: 5px;
+}
+
+.exito-titulo {
+    font-size: 1.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin: 0 0 5px;
+    background: linear-gradient(90deg, var(--exito-yellow), var(--exito-orange));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.exito-texto {
+    color: #b8b8b8;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    margin: 0 0 10px;
+}
+
+.exito-texto strong {
+    color: var(--exito-white);
+}
+
+.exito-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.exito-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.exito-btn:active {
+    transform: scale(0.98);
+}
+
+.exito-btn-whatsapp {
+    background-color: var(--exito-whatsapp);
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(37, 211, 102, 0.25);
+}
+
+.exito-btn-whatsapp:hover {
+    background-color: #21bd5a;
+}
+
+.exito-btn-whatsapp i {
+    font-size: 0.95rem;
+}
+
+.exito-btn-reintentar {
+    background-color: transparent;
+    color: var(--exito-success);
+    border: 1.2px solid var(--exito-success);
+    font-size: 0.72rem;
+    padding: 7px 10px;
+}
+
+.exito-btn-reintentar:hover {
+    background-color: rgba(46, 213, 115, 0.1);
+}
+
+.exito-btn-menu {
+    background: linear-gradient(90deg, var(--exito-red), #b81f04);
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(216, 37, 5, 0.25);
+    margin-top: 2px;
+}
+
+.exito-footer-nota {
+    margin-top: 8px;
+    font-size: 0.66rem;
+    color: #777;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.exito-footer-nota i {
+    color: var(--exito-orange);
+}
+
+/* Ocultar completamente el bloque de WhatsApp del footer en esta página */
+body.page-exito footer a[href*="whatsapp"],
+body.page-exito footer a[href*="wa.me"],
+body.page-exito footer .fa-whatsapp,
+body.page-exito footer *:has(> .fa-whatsapp),
+body.page-exito footer p:has(.fa-whatsapp),
+body.page-exito footer div:has(.fa-whatsapp) {
+    display: none !important;
+}

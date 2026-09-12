@@ -1,0 +1,161 @@
+:root {
+    --zb-black: #121212;
+    --zb-card: #1b1b1b;
+    --zb-red: #d82505;
+    --zb-orange: #ff7a1a;
+    --zb-yellow: #ffcc00;
+    --zb-white: #f5f5f5;
+    --zb-gray: #b8b8b8;
+    --zb-border: #2c2c2c;
+    --zb-success-bg: rgba(46, 213, 115, 0.12);
+    --zb-success-text: #2ed573;
+    --zb-danger-bg: rgba(216, 37, 5, 0.12);
+    --zb-danger-text: #ff4757;
+}
+
+body {
+    font-family: 'Montserrat', Arial, sans-serif;
+    background-color: var(--zb-black);
+    color: var(--zb-white);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(216, 37, 5, 0.12), transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(255, 122, 26, 0.1), transparent 45%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.contenedor {
+    width: 100%;
+    max-width: 1000px;
+    background: linear-gradient(180deg, #1e1e1e 0%, #171717 100%);
+    border: 1px solid var(--zb-border);
+    border-top: 4px solid var(--zb-orange);
+    border-radius: 12px;
+    padding: 25px 30px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 40px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+}
+
+h1 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin: 0 0 20px 0;
+    background: linear-gradient(90deg, var(--zb-yellow), var(--zb-orange));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 0.5px;
+}
+
+.btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn-crear {
+    background: linear-gradient(90deg, var(--zb-red), #b81f04);
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(216, 37, 5, 0.3);
+}
+
+.btn-crear:hover {
+    background: linear-gradient(90deg, #e62a06, #c92205);
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+    text-align: left;
+}
+
+th, td {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+}
+
+th {
+    background: #141414;
+    color: var(--zb-orange);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--zb-border);
+}
+
+td {
+    border-bottom: 1px solid var(--zb-border);
+    color: var(--zb-gray);
+}
+
+tr:hover td {
+    color: var(--zb-white);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Estilo para Estado Activa / Inactiva */
+td:nth-child(5) {
+    font-weight: 700;
+}
+
+/* Botones de acción dentro de la tabla */
+.btn-editar {
+    background-color: rgba(255, 204, 0, 0.15);
+    color: var(--zb-yellow);
+    border: 1px solid rgba(255, 204, 0, 0.4);
+    padding: 5px 10px;
+    font-size: 0.7rem;
+}
+
+.btn-editar:hover {
+    background-color: rgba(255, 204, 0, 0.25);
+}
+
+.btn-eliminar {
+    background-color: var(--zb-danger-bg);
+    color: var(--zb-danger-text);
+    border: 1px solid rgba(255, 71, 87, 0.4);
+    padding: 5px 10px;
+    font-size: 0.7rem;
+}
+
+.btn-eliminar:hover {
+    background-color: rgba(255, 71, 87, 0.25);
+}
+
+/* Fila cuando no hay registros */
+tr td[colspan] {
+    text-align: center;
+    padding: 30px;
+    color: #777;
+    font-style: italic;
+}

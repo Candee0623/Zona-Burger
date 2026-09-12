@@ -1,0 +1,252 @@
+/* ==========================================================================
+   ESTILOS DE LA VISTA DE CARRITO - ZONA BURGER
+   ========================================================================== */
+
+/* --- 1. CONTENEDOR GENERAL --- */
+.carrito-container {
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 120px 20px 80px 20px;
+    box-sizing: border-box;
+}
+
+.carrito-container h1 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #ffffff;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+    border-left: 4px solid #ff7a1a;
+    padding-left: 12px;
+}
+
+/* --- 2. TARJETA PRINCIPAL Y ITEMS DEL CARRITO --- */
+.carrito-card {
+    background: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
+    border: 1px solid #262626;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+    box-sizing: border-box;
+}
+
+.carrito-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 18px 0;
+    border-bottom: 1px solid #222222;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.carrito-item:last-of-type {
+    border-bottom: 2px solid #2a2a2a;
+}
+
+.carrito-info {
+    flex-grow: 1;
+    min-width: 250px;
+}
+
+.carrito-info h3 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+}
+
+.carrito-detalles-lista {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 14px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.carrito-detalles-lista li {
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.carrito-detalles-lista li::before {
+    content: "•";
+    color: #ff7a1a;
+    font-weight: bold;
+}
+
+/* --- 3. ACCIONES Y CONTROLES DE CANTIDAD --- */
+.carrito-acciones {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.cantidad-control {
+    display: flex;
+    align-items: center;
+    background-color: #111111;
+    border: 1px solid #333333;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.btn-cant {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 4px 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.btn-cant:hover {
+    background-color: #ff7a1a;
+    color: #ffffff;
+}
+
+.cantidad-val {
+    padding: 0 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.btn-editar-item, .btn-eliminar-item {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.btn-editar-item {
+    background-color: #1f1f1f;
+    color: #3498db;
+    border: 1px solid #2a4365;
+}
+
+.btn-editar-item:hover {
+    background-color: #2a4365;
+    color: #ffffff;
+}
+
+.btn-eliminar-item {
+    background-color: #1f1f1f;
+    color: #e74c3c;
+    border: 1px solid #55211c;
+}
+
+.btn-eliminar-item:hover {
+    background-color: #55211c;
+    color: #ffffff;
+}
+
+/* --- 4. PRECIOS Y TOTALES --- */
+.carrito-precio-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 100px;
+}
+
+.carrito-unitario-ref {
+    font-size: 0.75rem;
+    color: #888888;
+    margin-bottom: 2px;
+}
+
+.carrito-subtotal-item {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #ffcc00;
+}
+
+.carrito-resumen-totales {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 10px;
+}
+
+.resumen-linea {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #b0b0b0;
+}
+
+.resumen-linea.total-final {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #ffffff;
+    border-top: 1px dashed #333333;
+    padding-top: 12px;
+    margin-top: 4px;
+}
+
+.resumen-linea.total-final span:last-child {
+    color: #ffcc00;
+    font-size: 1.4rem;
+}
+
+/* --- 5. BOTONES DE NAVEGACIÓN (CHECKOUT / SEGUIR) --- */
+.carrito-botones-accion {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+.btn-seguir, .btn-checkout {
+    flex: 1;
+    min-width: 200px;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.btn-seguir {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border: 1px solid #333333;
+}
+
+.btn-seguir:hover {
+    background-color: #262626;
+    border-color: #555555;
+}
+
+.btn-checkout {
+    background: linear-gradient(90deg, #d82505, #b81f04);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 15px rgba(216, 37, 5, 0.4);
+}
+
+.btn-checkout:hover {
+    background: linear-gradient(90deg, #e62a06, #c92205);
+}

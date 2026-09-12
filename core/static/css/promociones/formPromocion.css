@@ -1,0 +1,189 @@
+:root {
+    --zb-black: #121212;
+    --zb-card: #1b1b1b;
+    --zb-red: #d82505;
+    --zb-orange: #ff7a1a;
+    --zb-yellow: #ffcc00;
+    --zb-white: #f5f5f5;
+    --zb-gray: #b8b8b8;
+    --zb-border: #2c2c2c;
+    --zb-danger-bg: rgba(216, 37, 5, 0.12);
+    --zb-danger-text: #ff4757;
+}
+
+body {
+    font-family: 'Montserrat', Arial, sans-serif;
+    background-color: var(--zb-black);
+    color: var(--zb-white);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(216, 37, 5, 0.12), transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(255, 122, 26, 0.1), transparent 45%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 650px;
+}
+
+.page-header {
+    width: 100%;
+    margin-bottom: 15px;
+    text-align: left;
+    padding-left: 5px;
+}
+
+.page-header h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin: 0;
+    background: linear-gradient(90deg, var(--zb-yellow), var(--zb-orange));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 0.5px;
+}
+
+.page-header span {
+    color: var(--zb-gray);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.contenedor {
+    width: 100%;
+    background: linear-gradient(180deg, #1e1e1e 0%, #171717 100%);
+    border: 1px solid var(--zb-border);
+    border-top: 4px solid var(--zb-orange);
+    border-radius: 12px;
+    padding: 25px 30px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 40px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+}
+
+.mb-3 {
+    margin-bottom: 18px;
+}
+
+label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--zb-gray);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    width: 100%;
+    background-color: #141414;
+    border: 1px solid var(--zb-border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: var(--zb-white);
+    font-size: 0.85rem;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--zb-orange);
+    box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.15);
+    color: var(--zb-white);
+    background-color: #141414;
+}
+
+select.form-control option {
+    background-color: #1b1b1b;
+    color: var(--zb-white);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--zb-orange);
+    cursor: pointer;
+    background-color: #141414;
+    border: 1px solid var(--zb-border);
+}
+
+.form-check-label {
+    margin-bottom: 0;
+    color: var(--zb-white);
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.alert-danger {
+    background-color: var(--zb-danger-bg);
+    border: 1px solid rgba(255, 71, 87, 0.4);
+    color: var(--zb-danger-text);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+}
+
+.btn {
+    padding: 9px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn-success {
+    background: linear-gradient(90deg, var(--zb-red), #b81f04);
+    color: white;
+    box-shadow: 0 4px 12px rgba(216, 37, 5, 0.3);
+}
+
+.btn-success:hover {
+    background: linear-gradient(90deg, #e62a06, #c92205);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #2c2c2c;
+    color: var(--zb-gray);
+    border: 1px solid #383838;
+}
+
+.btn-secondary:hover {
+    background-color: #383838;
+    color: var(--zb-white);
+}

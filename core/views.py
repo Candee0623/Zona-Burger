@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from decimal import Decimal
 
+
 from .models import (
     CategoriaProducto,
     Cliente,
@@ -84,7 +85,7 @@ def menu(request):
         'negocio': negocio,
         'instagram': instagram,
     }
-    return render(request, 'menu.html', contexto)
+    return render(request, 'productos/menu.html', contexto)
 
 
 def detalleProducto(request, idproducto):
@@ -125,7 +126,7 @@ def detalleProducto(request, idproducto):
         'item_editando': item_editando,
         'edit_item_id': edit_item_id,
     }
-    return render(request, 'detalleProducto.html', contexto)
+    return render(request, 'productos/detalleProducto.html', contexto)
 
 
 def agregar_al_carrito(request, idproducto):
@@ -226,7 +227,7 @@ def ver_carrito(request):
         'negocio': negocio,
         'instagram': instagram,
     }
-    return render(request, 'carrito.html', contexto)
+    return render(request, 'productos/carrito.html', contexto)
 
 
 def actualizar_cantidad_carrito(request, item_id, accion):
@@ -277,6 +278,21 @@ def procesar_checkout(request):
             'zonas_entrega': list(zonas_entrega_qs.values('idzona', 'nombre', 'costoenvio')),
         })
 
+    def construir_carrito_items(carrito_dict):
+        """Arma la lista de items del carrito con precio unitario calculado,
+        lista para mostrar en el resumen del template."""
+        items = []
+        for item in carrito_dict.values():
+            cantidad = item.get('cantidad', 1) or 1
+            subtotal_item = Decimal(str(item.get('subtotal', 0)))
+            precio_unitario = subtotal_item / cantidad if cantidad else subtotal_item
+            items.append({
+                **item,
+                'subtotal': subtotal_item,
+                'precio_unitario': precio_unitario,
+            })
+        return items
+
     if request.method == 'POST':
         nombre = (request.POST.get('nombre') or '').strip()
         apellido = (request.POST.get('apellido') or '').strip()
@@ -296,7 +312,11 @@ def procesar_checkout(request):
             messages.error(request, 'Tu carrito está vacío.')
             return redirect('ver_carrito')
 
-        errores = {}
+        # Inicializamos 'errores' garantizando que las claves usadas en el
+        # template siempre existan, aunque no haya error real para ellas.
+        # Esto evita VariableDoesNotExist cuando el template usa la clave
+        # como argumento de un filtro (ej. |default:) en vez de en un {% if %}.
+        errores = {'codigo_promocion': ''}
 
         if not nombre:
             errores['nombre'] = 'Ingresá tu nombre.'
@@ -341,7 +361,7 @@ def procesar_checkout(request):
         zona_obj = ZonasEntrega.objects.filter(nombre__iexact=localidad).first()
         if zona_obj and zona_obj.costoenvio is not None:
             costo_envio = Decimal(str(zona_obj.costoenvio))
-            costo_envio_texto = f'${costo_envio:.2f}'
+            costo_envio_texto = 'Envío gratis' if costo_envio == 0 else f'${costo_envio:.2f}'
         else:
             costo_envio = Decimal('0.00')
             costo_envio_texto = 'A coordinar'
@@ -375,20 +395,29 @@ def procesar_checkout(request):
         else:
             descuento_promocion = Decimal('0.00')
 
-        if errores:
+        # Total ya considerando el descuento (usado en el resumen del template,
+        # todavía sin sumar el costo de envío que puede depender de geolocalización JS).
+        total_estimado = max(Decimal('0.00'), total_carrito - descuento_promocion)
+
+        if errores.get('nombre') or errores.get('apellido') or errores.get('telefono') \
+           or errores.get('calle') or errores.get('numero') or errores.get('medio_pago') \
+           or errores.get('horario_entrega') or errores.get('codigo_promocion'):
             return render(
                 request,
-                'checkout.html',
+                'productos/checkout.html',
                 {
                     'medios_pago': list(medios_pago_qs.values('idmediopago', 'nombremetodo')),
                     'zonas_entrega': list(zonas_entrega_qs.values('idzona', 'nombre', 'costoenvio')),
                     'total_carrito': total_carrito,
+                    'total_estimado': total_estimado,
+                    'carrito_items': construir_carrito_items(carrito),
                     'datos_previos': datos_previos,
                     'errores': errores,
                     'error_telefono': errores.get('telefono', ''),
                     'error_medio_pago': errores.get('medio_pago', ''),
                     'error_promocion': error_promocion,
                     'descuento_promocion': descuento_promocion,
+                    'objeto_promocion': objeto_promocion,
                 },
             )
 
@@ -488,13 +517,35 @@ def procesar_checkout(request):
         request.session['whatsapp_url'] = whatsapp_url
         return redirect('pedido_exitoso')
 
+    # GET
     return render(
         request,
-        'checkout.html',
+        'productos/checkout.html',
         {
             'medios_pago': list(medios_pago_qs.values('idmediopago', 'nombremetodo')),
             'zonas_entrega': list(zonas_entrega_qs.values('idzona', 'nombre', 'costoenvio')),
             'total_carrito': total_carrito,
+            'total_estimado': total_carrito,
+            'carrito_items': construir_carrito_items(carrito),
+            'errores': {'codigo_promocion': ''},
+            'codigo_promocion': '',
+            'datos_previos': {
+                'nombre': '',
+                'apellido': '',
+                'telefono': '',
+                'calle': '',
+                'numero': '',
+                'piso': '',
+                'localidad': '',
+                'horario_entrega': '',
+                'codigo_promocion': '',
+                'comentario': '',
+            },
+            'error_telefono': '',
+            'error_medio_pago': '',
+            'error_promocion': '',
+            'descuento_promocion': Decimal('0.00'),
+            'objeto_promocion': None,
         },
     )
 
@@ -502,7 +553,7 @@ def procesar_checkout(request):
 def pedido_exitoso(request):
     negocio = Negocio.objects.first()
     whatsapp_url = request.session.get('whatsapp_url')
-    return render(request, 'pedido_exitoso.html', {
+    return render(request, 'productos/pedidoExitoso.html', {
         'negocio': negocio,
         'whatsapp_url': whatsapp_url
     })
@@ -609,13 +660,13 @@ def editar_promocion(request, idpromocion):
         promocion.activo = 1 if request.POST.get('activo') == 'on' else 0
         promocion.save()
 
-        producto_id = request.POST.get('producto')
-        producto_obj = get_object_or_404(Producto, pk=producto_id)
+        # Borramos todas las relaciones previas de esta promoción para evitar duplicados acumulados
+        ProductoPromocion.objects.filter(idpromocion=promocion).delete()
 
-        if relacion_pp:
-            relacion_pp.idproducto = producto_obj
-            relacion_pp.save()
-        else:
+        # Obtenemos el producto seleccionado y creamos el registro nuevo limpio
+        producto_id = request.POST.get('producto')
+        if producto_id:
+            producto_obj = get_object_or_404(Producto, pk=producto_id)
             ProductoPromocion.objects.create(
                 idpromocion=promocion, idproducto=producto_obj
             )
