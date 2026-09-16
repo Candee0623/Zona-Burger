@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import (
     Rol, Empleado, EstadoNegocio, UltimaModificacion, Negocio, Horario, 
     ZonasEntrega, RedesSociales, CategoriaProducto, EstadoStock, EstadoProducto, 
@@ -7,11 +8,23 @@ from .models import (
     Pedido, Promocion, 
 )
 
+# --- CLASE BASE DE ACCIONES PARA LOS MODELADMIN ---
+class AccionesAdminMixin:
+    """Mixin para agregar la columna de acciones con el botón de Editar estilizado."""
+    def acciones(self, obj):
+        # Utiliza la clave primaria (pk) del objeto para generar la URL de cambio
+        return format_html(
+            '<a class="btn-editar-tabla" href="{}/change/">Editar</a>',
+            obj.pk
+        )
+    acciones.short_description = 'Acciones'
+
+
 # --- CONFIGURACIONES AVANZADAS DE PRODUCTOS Y OPCIONES ---
 
 @admin.register(CategoriaProducto)
-class CategoriaAdmin(admin.ModelAdmin):
-    list_display = ('idcategoria', 'nombre')  
+class CategoriaAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idcategoria', 'nombre', 'acciones')  
     list_display_links = ('idcategoria',)     
     search_fields = ('nombre',)
     list_filter = ('nombre',)
@@ -21,16 +34,16 @@ class OpcionInline(admin.TabularInline):
     extra = 1
 
 @admin.register(GrupoOpcion)
-class GrupoOpcionAdmin(admin.ModelAdmin):
-    list_display = ('idgrupo', 'nombre', 'minselecciones', 'maxselecciones')
+class GrupoOpcionAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idgrupo', 'nombre', 'minselecciones', 'maxselecciones', 'acciones')
     list_display_links = ('idgrupo',)
     search_fields = ('nombre',)
     list_filter = ('minselecciones', 'maxselecciones')
     inlines = [OpcionInline]
 
 @admin.register(Extras)
-class ExtrasAdmin(admin.ModelAdmin):
-    list_display = ('idextra', 'nombre', 'precio')
+class ExtrasAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idextra', 'nombre', 'precio', 'acciones')
     list_display_links = ('idextra',)
     search_fields = ('nombre',)
     list_filter = ('precio',)
@@ -46,8 +59,8 @@ class ProductoExtrasInline(admin.TabularInline):
     autocomplete_fields = ['idextra']
 
 @admin.register(Producto)
-class ProductoAdmin(admin.ModelAdmin):
-    list_display = ('idproducto', 'nombre', 'precio', 'idcategoria')
+class ProductoAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idproducto', 'nombre', 'precio', 'idcategoria', 'acciones')
     list_display_links = ('idproducto',)
     list_filter = ('idcategoria', 'precio')
     search_fields = ('nombre', 'descripcion')
@@ -57,134 +70,134 @@ class ProductoAdmin(admin.ModelAdmin):
 # --- REGISTRO DEL RESTO DE LAS TABLAS DEL SISTEMA ---
 
 @admin.register(Rol)
-class RolAdmin(admin.ModelAdmin):
-    list_display = ('idrol', 'nombrerol')
+class RolAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idrol', 'nombrerol', 'acciones')
     list_display_links = ('idrol',)
     search_fields = ('nombrerol',)
     list_filter = ('nombrerol',)
 
 @admin.register(Empleado)
-class EmpleadoAdmin(admin.ModelAdmin):
-    list_display = ('idempleado', 'nombre', 'apellido', 'idrol')
+class EmpleadoAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idempleado', 'nombre', 'apellido', 'idrol', 'acciones')
     list_display_links = ('idempleado',)
     list_filter = ('idrol',)
     search_fields = ('nombre', 'apellido', 'idrol__nombrerol')
 
 @admin.register(EstadoNegocio)
-class EstadoNegocioAdmin(admin.ModelAdmin):
-    list_display = ('idestado', 'descripcion')
+class EstadoNegocioAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idestado', 'descripcion', 'acciones')
     list_display_links = ('idestado',)
     search_fields = ('descripcion',)
     list_filter = ('descripcion',)
 
 @admin.register(UltimaModificacion)
-class UltimaModificacionAdmin(admin.ModelAdmin):
-    list_display = ('idmodificacion', 'fecha', 'idempleado', 'idnegocio')
+class UltimaModificacionAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idmodificacion', 'fecha', 'idempleado', 'idnegocio', 'acciones')
     list_display_links = ('idmodificacion',)
     list_filter = ('idempleado', 'fecha')
     search_fields = ('idempleado__nombre', 'idempleado__apellido', 'descripcioncambio')
 
 @admin.register(Negocio)
-class NegocioAdmin(admin.ModelAdmin):
-    list_display = ('idnegocio', 'nombre', 'telefono', 'idestado')
+class NegocioAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idnegocio', 'nombre', 'telefono', 'idestado', 'acciones')
     list_display_links = ('idnegocio',)
     list_filter = ('idestado',)
     search_fields = ('nombre', 'telefono')
 
 @admin.register(Horario)
-class HorarioAdmin(admin.ModelAdmin):
-    list_display = ('idhorario', 'idnegocio', 'diasemana', 'horaapertura', 'horacierre')
+class HorarioAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idhorario', 'idnegocio', 'diasemana', 'horaapertura', 'horacierre', 'acciones')
     list_display_links = ('idhorario',)
     list_filter = ('idnegocio', 'diasemana')
     search_fields = ('diasemana', 'idnegocio__nombre')
 
 @admin.register(ZonasEntrega)
-class ZonasEntregaAdmin(admin.ModelAdmin):
-    list_display = ('idzona', 'nombre', 'costoenvio', 'idnegocio')
+class ZonasEntregaAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idzona', 'nombre', 'costoenvio', 'idnegocio', 'acciones')
     list_display_links = ('idzona',)
     list_filter = ('idnegocio', 'costoenvio')
     search_fields = ('nombre', 'idnegocio__nombre')
 
 @admin.register(RedesSociales)
-class RedesSocialesAdmin(admin.ModelAdmin):
-    list_display = ('idredsocial', 'plataforma', 'enlace', 'idnegocio')
+class RedesSocialesAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idredsocial', 'plataforma', 'enlace', 'idnegocio', 'acciones')
     list_display_links = ('idredsocial',)
     list_filter = ('idnegocio', 'plataforma')
     search_fields = ('plataforma', 'enlace')
 
 @admin.register(EstadoStock)
-class EstadoStockAdmin(admin.ModelAdmin):
-    list_display = ('idestado', 'descripcion', 'nivelcritico')
+class EstadoStockAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idestado', 'descripcion', 'nivelcritico', 'acciones')
     list_display_links = ('idestado',)
     list_filter = ('nivelcritico',)
     search_fields = ('descripcion', 'nivelcritico')
 
 @admin.register(EstadoProducto)
-class EstadoProductoAdmin(admin.ModelAdmin):
-    list_display = ('idestado', 'descripcion')
+class EstadoProductoAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idestado', 'descripcion', 'acciones')
     list_display_links = ('idestado',)
     search_fields = ('descripcion',)
     list_filter = ('descripcion',)
 
 @admin.register(Insumo)
-class InsumoAdmin(admin.ModelAdmin):
-    list_display = ('idinsumo', 'nombreinsumo', 'unidadmedidaingreso', 'stockactual')
+class InsumoAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idinsumo', 'nombreinsumo', 'unidadmedidaingreso', 'stockactual', 'acciones')
     list_display_links = ('idinsumo',)
     list_filter = ('unidadmedidaingreso', 'stockactual')
     search_fields = ('nombreinsumo', 'unidadmedidaingreso')
 
 @admin.register(Compras)
-class ComprasAdmin(admin.ModelAdmin):
-    list_display = ('idcompra', 'fecha', 'preciototal', 'idempleado')
+class ComprasAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idcompra', 'fecha', 'preciototal', 'idempleado', 'acciones')
     list_display_links = ('idcompra',)
     list_filter = ('fecha', 'idempleado')
     search_fields = ('idempleado__nombre',)
 
 @admin.register(Receta)
-class RecetaAdmin(admin.ModelAdmin):
-    list_display = ('idreceta', 'idproducto', 'idinsumo')
+class RecetaAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idreceta', 'idproducto', 'idinsumo', 'acciones')
     list_display_links = ('idreceta',)
     list_filter = ('idproducto',)
     search_fields = ('idproducto__nombre',)
 
 @admin.register(MedioPago)
-class MedioPagoAdmin(admin.ModelAdmin):
-    list_display = ('idmediopago', 'nombremetodo')
+class MedioPagoAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idmediopago', 'nombremetodo', 'acciones')
     list_display_links = ('idmediopago',)
     search_fields = ('nombremetodo',)
     list_filter = ('nombremetodo',)
 
 @admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
-    list_display = ('idcliente', 'nombre', 'apellido', 'telefono')
+class ClienteAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idcliente', 'nombre', 'apellido', 'telefono', 'acciones')
     list_display_links = ('idcliente',)
     search_fields = ('nombre', 'apellido', 'telefono')
     list_filter = ('apellido',)
 
 @admin.register(Direccion)
-class DireccionAdmin(admin.ModelAdmin):
-    list_display = ('iddireccion', 'idcliente', 'calle', 'numero', 'localidad')
+class DireccionAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('iddireccion', 'idcliente', 'calle', 'numero', 'localidad', 'acciones')
     list_display_links = ('iddireccion',)
     list_filter = ('localidad', 'idcliente')
     search_fields = ('calle', 'localidad', 'idcliente__nombre', 'idcliente__apellido')
 
 @admin.register(EstadoPedido)
-class EstadoPedidoAdmin(admin.ModelAdmin):
-    list_display = ('idestado', 'descripcion')
+class EstadoPedidoAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idestado', 'descripcion', 'acciones')
     list_display_links = ('idestado',)
     search_fields = ('descripcion',)
     list_filter = ('descripcion',)
 
 @admin.register(Pedido)
-class PedidoAdmin(admin.ModelAdmin):
-    list_display = ('idpedido', 'idcliente', 'idmediopago', 'idestadopedido', 'cantidad')
+class PedidoAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idpedido', 'idcliente', 'idmediopago', 'idestadopedido', 'cantidad', 'acciones')
     list_display_links = ('idpedido',)
     list_filter = ('idestadopedido', 'idmediopago', 'idcliente')
     search_fields = ('idcliente__nombre', 'idcliente__apellido')
 
 @admin.register(Promocion)
-class PromocionAdmin(admin.ModelAdmin):
-    list_display = ('idpromocion', 'palabraclave', 'tipobeneficio', 'valor', 'activo')
+class PromocionAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idpromocion', 'palabraclave', 'tipobeneficio', 'valor', 'activo', 'acciones')
     list_display_links = ('idpromocion',)
     list_filter = ('activo', 'tipobeneficio')
     search_fields = ('palabraclave', 'tipobeneficio')

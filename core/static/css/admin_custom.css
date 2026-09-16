@@ -2,27 +2,27 @@
 
 :root {
     --burgundy:         #9f1239; 
-    --burgundy-hover: #be123c; 
-    --gold-accent:    #d97706; 
+    --burgundy-hover:   #be123c; 
+    --gold-accent:      #d97706; 
     
-    --text-main:      #ffffff;
-    --text-muted:     #94a3b8;
+    --text-main:        #ffffff;
+    --text-muted:       #94a3b8;
     
-    --bg-card:        rgba(23, 19, 18, 0.9) !important; 
-    --border-subtle:  #29221e !important; 
+    --bg-card:          rgba(23, 19, 18, 0.9) !important; 
+    --border-subtle:    #29221e !important; 
 }
 
 /* ==========================================
    1. ESTRUCTURA Y FONDO GLOBAL
    ================================---------- */
 html {
-    background: #0a0807 url('https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed !important;
+    background: #0a0807 url('https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed !important;
     background-size: cover !important;
 }
 
 body, .wrapper, .content-wrapper, .content, #content, .content-header, section {
     background: linear-gradient(rgba(10, 8, 7, 0.88), rgba(10, 8, 7, 0.95)), 
-                url('https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=1920&auto=format&fit=crop') center/cover fixed !important;
+                url('https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1920&auto=format&fit=crop') center/cover fixed !important;
     color: var(--text-main) !important;
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     border: none !important;
@@ -351,101 +351,7 @@ input[name="_addanother"]:hover, input[name="_continue"]:hover {
 }
 
 /* ==========================================
-   6. TABLAS Y ESTRUCTURA DE CELDAS BLINDADA
-   ================================---------- */
-.table { 
-    border-collapse: separate !important; 
-    border-spacing: 0 6px !important; 
-    background: transparent !important; 
-    width: 100% !important; 
-}
-
-.table thead th { 
-    background: transparent !important; 
-    color: var(--gold-accent) !important; 
-    text-transform: uppercase !important; 
-    font-size: 0.75rem !important; 
-    border: none !important; 
-    padding: 12px 16px !important; 
-    text-align: left !important; 
-}
-
-.table tbody tr { 
-    background-color: rgba(15, 12, 11, 0.85) !important; 
-    border: 1px solid var(--border-subtle) !important; 
-    border-radius: 10px !important; 
-}
-
-.table td, .table th { 
-    background: transparent !important; 
-    border: none !important; 
-    padding: 16px !important; 
-    vertical-align: middle !important; 
-    text-align: left !important; 
-}
-
-#changelist table, 
-.card table, 
-table#result_list {
-    background-color: #1a1614 !important;
-    color: #ffffff !important;
-    border: 1px solid var(--border-subtle) !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    table-layout: auto !important;
-}
-
-.table-responsive, 
-#changelist, 
-.card {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    overflow-x: auto !important;
-}
-
-#changelist table tbody td, 
-.card table tbody td,
-table#result_list tbody td,
-#changelist table tbody th, 
-.card table tbody th {
-    background-color: transparent !important;
-    color: #ffffff !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-    vertical-align: middle !important;
-    padding: 14px 16px !important;
-    display: table-cell !important;
-    float: none !important;
-}
-
-#changelist table tbody tr:hover, 
-.card table tbody tr:hover,
-table#result_list tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.04) !important;
-}
-
-#changelist table thead th, 
-.card table thead th,
-table#result_list thead th {
-    background-color: #241f1c !important;
-    color: var(--gold-accent) !important;
-    border-bottom: 2px solid var(--burgundy) !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.5px !important;
-    padding: 14px 16px !important;
-    display: table-cell !important;
-}
-
-#changelist table th.action-checkbox-column,
-#changelist table td.action-checkbox {
-    width: 40px !important;
-    text-align: center !important;
-    display: table-cell !important;
-}
-
-/* ==========================================
-   7. CKEDITOR 5 (MODO OSCURO)
+   6. CKEDITOR 5 (MODO OSCURO)
    ================================---------- */
 .ck.ck-editor__editable_inline {
     background-color: #1a1614 !important;
@@ -481,131 +387,96 @@ table#result_list thead th {
 }
 
 /* ==========================================
-   8. OCULTAR HISTORIAL Y PAGINADORES
+   7. ZONA DE FILTROS SUPERIOR (BOTÓN "FILTROS" SÓLIDO Y CAMPOS AMPLIOS)
    ================================---------- */
-#content-related, 
-.colM #content-related,
-div#content-related,
-.paginator, div.paginator, p.paginator, .card-footer, 
-#changelist .paginator, .small.float-left, 
-#changelist-form .row:last-child,
-.row:has(.paginator), .action-counter {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
 
-#content, .colM {
-    width: 100% !important;
-    float: none !important;
-}
-
-.related-widget-wrapper-link, a.add-related, a.change-related, a.delete-related, a.view-related, a.historylink {
+/* Ocultar la barra de texto larga */
+#changelist-search input#searchbar {
     display: none !important;
 }
 
-a.historylink,
-.historylink,
-a[href*="/history/"],
-.object-tools a[href*="history"],
-.submit-row a[href*="history"] {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    pointer-events: none !important;
-}
-
-/* ==========================================
-   9. BARRA DE BÚSQUEDA Y FILTROS SUPERIOR
-   ================================---------- */
 #changelist-search {
     background: linear-gradient(145deg, rgba(28, 22, 20, 0.95), rgba(18, 14, 13, 0.95)) !important;
     border: 1px solid rgba(217, 119, 6, 0.3) !important;
     border-radius: 12px !important;
-    padding: 16px 20px !important;
+    padding: 20px 24px !important;
     margin-bottom: 24px !important;
     display: flex !important;
-    flex-wrap: wrap !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 16px !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5) !important;
 }
 
+/* Botón "FILTROS" con fondo sólido, elegante y destacado a la izquierda */
 #changelist-search::before {
     content: "FILTROS" !important;
-    background: linear-gradient(135deg, var(--gold-accent), #b45309) !important;
+    background: linear-gradient(135deg, #b45309, var(--gold-accent)) !important;
     color: #ffffff !important;
-    font-size: 0.75rem !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.8px !important;
-    padding: 10px 16px !important;
+    border: 1px solid var(--gold-accent) !important;
     border-radius: 8px !important;
+    padding: 12px 24px !important;
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px !important;
     text-transform: uppercase !important;
     display: inline-flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    height: 42px !important;
-    box-sizing: border-box !important;
+    height: 48px !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4) !important;
     flex-shrink: 0 !important;
-    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3) !important;
 }
 
-#changelist-search select,
-#changelist-search input[type="text"] {
-    background-color: rgba(12, 10, 9, 0.9) !important;
+/* Selector de filtro grande y cómodo */
+#changelist-search select {
+    background-color: rgba(12, 10, 9, 0.95) !important;
     color: #ffffff !important;
-    border: 1px solid rgba(217, 119, 6, 0.3) !important;
+    border: 1px solid rgba(217, 119, 6, 0.4) !important;
     border-radius: 8px !important;
-    padding: 8px 14px !important;
-    height: 42px !important;
+    padding: 10px 16px !important;
+    height: 48px !important;
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     font-size: 0.9rem !important;
-    font-weight: 500 !important;
+    font-weight: 700 !important;
     outline: none !important;
-    flex: 1 1 180px !important;
-    max-width: 260px !important;
+    flex: 1 1 auto !important;
+    max-width: 320px !important;
 }
 
-#changelist-search input#searchbar {
-    flex: 2 1 220px !important;
-    max-width: none !important;
+#changelist-search select:focus {
+    border-color: var(--gold-accent) !important;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2) !important;
 }
 
+/* Botón BUSCAR estilizado y empujado a la derecha */
 #changelist-search input[type="submit"] {
-    background: linear-gradient(135deg, var(--burgundy), var(--burgundy-hover)) !important;
+    background: linear-gradient(135deg, #b45309, var(--gold-accent)) !important;
     color: #ffffff !important;
     border-radius: 8px !important;
-    height: 42px !important;
-    padding: 0 24px !important;
+    height: 48px !important;
+    padding: 0 30px !important;
     font-size: 0.8rem !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    box-shadow: 0 4px 15px rgba(159, 18, 57, 0.4) !important;
+    letter-spacing: 0.8px !important;
+    box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3) !important;
     cursor: pointer !important;
     border: none !important;
     flex-shrink: 0 !important;
     margin-left: auto !important;
+    transition: all 0.2s ease !important;
 }
 
 #changelist-search input[type="submit"]:hover {
-    background: linear-gradient(135deg, var(--burgundy-hover), #e11d48) !important;
-    transform: translateY(-2px) !important;
+    background: linear-gradient(135deg, var(--gold-accent), #f59e0b) !important;
+    color: #000000 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4) !important;
 }
 
 /* ==========================================
-   10. BLOQUE DE ACCIONES INFERIOR
+   8. BLOQUE DE ACCIONES INFERIOR
    ================================---------- */
 .actions {
     background: linear-gradient(145deg, rgba(28, 22, 20, 0.95), rgba(18, 14, 13, 0.95)) !important;
@@ -627,7 +498,6 @@ a[href*="/history/"],
     height: 42px !important;
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     font-size: 0.9rem !important;
-    font-weight: 500 !important;
     color: #ffffff !important;
     outline: none !important;
     flex-grow: 1 !important;
@@ -654,26 +524,207 @@ a[href*="/history/"],
     font-weight: 700 !important;
     font-size: 0.85rem !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
     margin-bottom: 0 !important;
 }
 
 /* ==========================================
-   11. BOTONES DEL PANEL PRINCIPAL (INDEX)
+   9. ELIMINAR DEFINITIVAMENTE EL BOTÓN HISTORIA
+   ================================---------- */
+a.historylink,
+.historylink,
+.object-tools a.historylink,
+.submit-row a.historylink,
+a[href*="history"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+}
+
+/* ==========================================
+   10. ELIMINAR GLOBALMENTE EL HISTORIAL (ACCIONES RECIENTES)
+   ================================---------- */
+#content-related, 
+.colM #content-related,
+div#content-related,
+.card:has(.card-title),
+.col-md-3 {
+    display: none !important;
+}
+
+#content, .colM, .col-md-9 {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+}
+
+/* ==========================================
+   11. ELIMINAR BOTONES DE RELACIÓN (LÁPIZ, MÁS, CRUZ, ETC.)
+   ================================---------- */
+.related-widget-wrapper-link,
+a.add-related,
+a.change-related,
+a.delete-related,
+a.view-related,
+.related-widget-wrapper-link img,
+.related-widget-wrapper-link i {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+}
+
+/* ==========================================
+   12. MEJORA VISUAL PARA CALENDARIOS Y RELOJES
+   ================================---------- */
+.calendarbox, .clockbox {
+    background-color: #1a1614 !important;
+    border: 1px solid var(--gold-accent) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9) !important;
+    padding: 16px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.calendarbox h2, .clockbox h2 {
+    background: linear-gradient(135deg, var(--burgundy), #700d28) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    padding: 10px !important;
+    text-align: center !important;
+    margin-bottom: 12px !important;
+    border: none !important;
+}
+
+.calendarbox table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 4px !important;
+}
+
+.calendarbox th {
+    color: var(--gold-accent) !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    text-align: center !important;
+    padding: 6px !important;
+}
+
+.calendarbox td {
+    text-align: center !important;
+    padding: 2px !important;
+}
+
+.calendarbox td a, .calendarbox td span {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0 auto !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.calendarbox td a:hover {
+    background-color: var(--burgundy) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(159, 18, 57, 0.4) !important;
+}
+
+.calendarbox td.selected a, .calendarbox td.today a {
+    background: linear-gradient(135deg, var(--gold-accent), #b45309) !important;
+    color: #000000 !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4) !important;
+}
+
+.calendarbox .calendar-cancel, 
+.calendarbox p.calendershortcuts a,
+.clockbox a {
+    background-color: #241f1c !important;
+    color: var(--gold-accent) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    display: inline-block !important;
+    margin: 4px 2px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.calendarbox .calendar-cancel:hover, 
+.calendarbox p.calendershortcuts a:hover,
+.clockbox a:hover {
+    background-color: var(--burgundy) !important;
+    color: #ffffff !important;
+    border-color: var(--burgundy) !important;
+}
+
+.clockbox ul {
+    background-color: #120e0d !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    list-style: none !important;
+}
+
+.clockbox ul li a {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 4px !important;
+    display: block !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+}
+
+.clockbox ul li a:hover {
+    background-color: var(--burgundy) !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================
+   13. SEPARACIÓN Y ESTILIZACIÓN DE BOTONES (PANEL PRINCIPAL)
    ================================---------- */
 #content-main .app-auth table tr td:nth-child(2), 
 #content-main .app-core table tr td:nth-child(2),
 #content-main .module table tr td:nth-child(2) {
     display: flex !important;
-    gap: 16px !important;
+    gap: 20px !important;
     align-items: center !important;
-    padding: 12px 18px !important;
+    justify-content: space-between !important;
+    padding: 14px 20px !important;
 }
 
-#content-main .app-auth table tr td:nth-child(3), 
-#content-main .app-core table tr td:nth-child(3),
-#content-main .module table tr td:nth-child(3) {
-    display: none !important;
+#content-main .app-auth table tr td, 
+#content-main .app-core table tr td,
+#content-main .module table tr td {
+    padding: 8px 12px !important;
 }
 
 #content-main .app-auth table tr td a.addlink, 
@@ -681,16 +732,25 @@ a[href*="/history/"],
 #content-main .module table tr td a.addlink,
 #content-main .app-auth table tr td a.btn-success, 
 #content-main .app-core table tr td a.btn-success {
-    background: linear-gradient(135deg, #059669, #047857) !important;
-    background-color: #059669 !important;
+    background: linear-gradient(135deg, var(--burgundy), var(--burgundy-hover)) !important;
+    background-color: var(--burgundy) !important;
     color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 8px !important;
-    padding: 10px 20px !important;
+    padding: 10px 24px !important;
     font-size: 0.75rem !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(159, 18, 57, 0.4) !important;
+    flex: 1 !important;
+    text-align: center !important;
+    margin-right: 10px !important;
+}
+
+#content-main .app-auth table tr td a.addlink:hover, 
+#content-main .app-core table tr td a.addlink:hover {
+    background: linear-gradient(135deg, var(--burgundy-hover), #e11d48) !important;
+    transform: translateY(-2px) !important;
 }
 
 #content-main .app-auth table tr td a.changelink, 
@@ -698,14 +758,114 @@ a[href*="/history/"],
 #content-main .module table tr td a.changelink,
 #content-main .app-auth table tr td a.btn-info, 
 #content-main .app-core table tr td a.btn-info {
-    background: linear-gradient(135deg, #b45309, #92400e) !important;
-    background-color: #b45309 !important;
+    background: linear-gradient(135deg, #b45309, var(--gold-accent)) !important;
+    background-color: var(--gold-accent) !important;
     color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 8px !important;
-    padding: 10px 10px 10px 20px !important;
+    padding: 10px 24px !important;
     font-size: 0.75rem !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    box-shadow: 0 4px 12px rgba(180, 83, 9, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3) !important;
+    flex: 1 !important;
+    text-align: center !important;
+    margin-left: 10px !important;
+}
+
+#content-main .app-auth table tr td a.changelink:hover, 
+#content-main .app-core table tr td a.changelink:hover {
+    background: linear-gradient(135deg, var(--gold-accent), #f59e0b) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* ==========================================
+   14. CORRECCIÓN DE TABLAS Y MINI TARJETA CONTADOR
+   ================================---------- */
+#changelist, .card, .card-body {
+    background-color: var(--bg-card) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#changelist > span:not([class]),
+#changelist > p:not([class]),
+#changelist-form ~ span,
+#changelist-form ~ p {
+    display: inline-block !important;
+    background-color: #171312 !important;
+    color: var(--gold-accent) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 8px !important;
+    padding: 10px 18px !important;
+    margin-top: 20px !important;
+    margin-bottom: 10px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ==========================================
+   15. TABLAS Y BOTÓN EDITAR (ESTILO UNIFICADO)
+   ================================---------- */
+table#result_list {
+    background-color: #1a1614 !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+table#result_list th {
+    background-color: #241f1c !important;
+    color: var(--text-muted) !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    padding: 14px 16px !important;
+    border-bottom: 2px solid var(--border-subtle) !important;
+}
+
+table#result_list td {
+    padding: 14px 16px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+    vertical-align: middle !important;
+    color: #ffffff !important;
+    font-size: 0.9rem !important;
+}
+
+table#result_list tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+table#result_list td:last-child, 
+table#result_list th:last-child {
+    text-align: center !important;
+    white-space: nowrap !important;
+    width: 130px !important;
+}
+
+table#result_list a.btn-editar-tabla {
+    background: transparent !important;
+    color: var(--gold-accent) !important;
+    border: 1px solid var(--gold-accent) !important;
+    border-radius: 6px !important;
+    padding: 5px 16px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    transition: all 0.2s ease !important;
+}
+
+table#result_list a.btn-editar-tabla:hover {
+    background-color: var(--gold-accent) !important;
+    color: #000000 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3) !important;
 }
