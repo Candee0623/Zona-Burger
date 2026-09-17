@@ -1,0 +1,193 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .dashboard-wrapper {
+        background-color: #000000;
+        color: #ffffff;
+        padding: 1.5rem;
+    }
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    @media (max-width: 768px) {
+        .metrics-grid { grid-template-columns: 1fr; }
+    }
+    .metric-card {
+        background-color: #121212;
+        border: 1px solid #2e2e2e;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+    .metric-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.2rem; }
+    .metric-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #a0a0a0; font-weight: 600; }
+    .status-container { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 2rem; }
+    .btn-status {
+        background-color: #121212; border: 1px solid #2e2e2e; color: #ffffff;
+        padding: 0.6rem 1.2rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;
+    }
+    .btn-status:hover { background-color: #1c1c1c; border-color: #555555; color: #ffffff; }
+    .table-card {
+        background-color: #121212; border: 1px solid #2e2e2e; border-radius: 8px;
+        overflow: hidden; 
+    }
+    .table-card-header {
+        background-color: #181818; border-bottom: 1px solid #2e2e2e;
+        padding: 1rem 1.25rem; border-top-left-radius: 8px; border-top-right-radius: 8px;
+    }
+    .custom-table { width: 100%; border-collapse: collapse; color: #e0e0e0; }
+    .custom-table th {
+        background-color: #1a1a1a; color: #888888; text-transform: uppercase;
+        font-size: 0.75rem; letter-spacing: 0.5px; padding: 0.85rem 1rem;
+        border-bottom: 2px solid #2e2e2e; text-align: left;
+    }
+    .custom-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #222222; font-size: 0.9rem; vertical-align: middle; }
+    .custom-table tbody tr:hover { background-color: #1a1a1a; }
+</style>
+
+<div class="dashboard-wrapper">
+    <div class="mb-4">
+        <h1 class="h3 text-light fw-bold">Panel de Control - Zona Burger</h1>
+        <p class="text-muted mb-0">Resumen de operaciones y pedidos del día.</p>
+    </div>
+
+    <!-- MÉTRICAS -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-value text-primary">{{ total_pedidos_hoy }}</div>
+            <div class="metric-label">📦 Total Pedidos Hoy</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value text-success" id="val-efectivo">${{ total_efectivo|floatformat:2 }}</div>
+            <div class="metric-label">💵 Ingresos Efectivo</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value text-warning" id="val-transferencia">${{ total_transferencia|floatformat:2 }}</div>
+            <div class="metric-label">💳 Ingresos Transferencia</div>
+        </div>
+    </div>
+
+    <!-- BOTONES DE ESTADO -->
+    <div class="status-container">
+        <a href="#" class="btn-status"><span>Pendientes:</span> <span class="badge bg-warning text-dark">{{ resumen.pendiente }}</span></a>
+        <a href="#" class="btn-status"><span>En Preparación:</span> <span class="badge bg-info text-dark">{{ resumen.en_preparacion }}</span></a>
+        <a href="#" class="btn-status"><span>Enviados:</span> <span class="badge bg-primary">{{ resumen.enviado }}</span></a>
+        <a href="#" class="btn-status"><span>Entregados:</span> <span class="badge bg-success">{{ resumen.entregado }}</span></a>
+        <a href="#" class="btn-status"><span>Cancelados:</span> <span class="badge bg-danger">{{ resumen.cancelado }}</span></a>
+    </div>
+
+    <!-- TABLA DE PEDIDOS -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <h5 class="mb-0 text-light fw-bold">Pedidos Registrados Hoy</h5>
+        </div>
+        <div class="p-0">
+            {% if pedidos_hoy %}
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">ID</th>
+                            <th>Cliente</th>
+                            <th>Hora Deseada</th>
+                            <th>Medio de Pago</th>
+                            <th>Estado Pago</th>
+                            <th>Estado Pedido</th>
+                            <th>Total</th>
+                            <th class="text-end pe-3">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pedido in pedidos_hoy %}
+                        <tr>
+                            <td class="ps-3"><strong>#{{ pedido.idpedido }}</strong></td>
+                            <td>{{ pedido.idcliente|default:"Cliente General" }}</td>
+                            <td>{{ pedido.horarioentregadeseado|time:"H:i"|default:"Sin hora" }}</td>
+                            <td>{{ pedido.idmediopago|default:"No especificado" }}</td>
+                            
+                            <!-- BOTÓN DE PAGO DIRECTO CON COLOR FORZADO -->
+                            <td>
+                                <button type="button" 
+                                        id="btn-pago-{{ pedido.idpedido }}" 
+                                        class="btn btn-sm fw-bold text-white btn-toggle-pago {% if pedido.pagado %}btn-pago-pagado{% else %}btn-pago-debe{% endif %}" 
+                                        data-url="{% url 'toggle_pagado' pedido.idpedido %}" 
+                                        data-id="{{ pedido.idpedido }}" 
+                                        title="Hacer clic para cambiar estado">
+                                    {% if pedido.pagado %}Pagado{% else %}Debe{% endif %}
+                                </button>
+                            </td>
+
+                            <td><span class="badge bg-secondary">{{ pedido.idestadopedido|default:"Sin estado" }}</span></td>
+                            <td><strong class="text-success">${{ pedido.total|default:"0.00"|floatformat:2 }}</strong></td>
+                            <td class="text-end pe-3">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'ver_ticket' pedido.idpedido %}" class="btn btn-outline-light btn-sm" title="Visualizar ticket">🧾</a>
+                                    <a href="{% url 'imprimir_ticket' pedido.idpedido %}" target="_blank" class="btn btn-outline-light btn-sm" title="Imprimir ticket">🖨️</a>
+                                    <a href="{% url 'cambiar_estado_pedido' pedido.idpedido %}" class="btn btn-outline-warning btn-sm" title="Modificar estado">🔄</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <div class="fs-1 mb-2">📭</div>
+                <h5>No hay pedidos registrados para hoy</h5>
+                <p class="small text-muted">Los nuevos pedidos aparecerán automáticamente aquí.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS: Bootstrap + JavaScript AJAX Actualizado -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".btn-toggle-pago").forEach(function(button) {
+            button.addEventListener("click", function() {
+                const url = this.getAttribute("data-url");
+                const idPedido = this.getAttribute("data-id");
+                const btn = document.getElementById("btn-pago-" + idPedido);
+
+                fetch(url, {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Accept": "application/json"
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 1. Cambiar aspecto visual del botón del pedido individual
+                        if (data.pagado) {
+                            btn.classList.remove("btn-pago-debe");
+                            btn.classList.add("btn-pago-pagado");
+                            btn.innerHTML = "Pagado";
+                        } else {
+                            btn.classList.remove("btn-pago-pagado");
+                            btn.classList.add("btn-pago-debe");
+                            btn.innerHTML = "Debe";
+                        }
+
+                        // 2. ACTUALIZAR AL INSTANTE LOS TOTALES DE INGRESOS DE ARRIBA
+                        document.getElementById("val-efectivo").innerText = "$" + data.total_efectivo.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        document.getElementById("val-transferencia").innerText = "$" + data.total_transferencia.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            });
+        });
+    });
+</script>
+{% endblock %}

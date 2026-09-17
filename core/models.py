@@ -242,18 +242,64 @@ class ProductoGrupoOpcion(models.Model):
  
  
 class Insumo(models.Model):
-    idinsumo = models.AutoField(db_column='IdInsumo', primary_key=True)
-    nombreinsumo = models.CharField(db_column='NombreInsumo', max_length=100, db_collation='Modern_Spanish_CI_AS')
-    # La base real marca estos dos campos como NOT NULL: se quita blank/null.
-    unidadmedidaingreso = models.CharField(db_column='UnidadMedidaIngreso', max_length=30, db_collation='Modern_Spanish_CI_AS')
-    unidadmedidaegreso = models.CharField(db_column='UnidadMedidaEgreso', max_length=30, db_collation='Modern_Spanish_CI_AS')
-    stockactual = models.DecimalField(db_column='StockActual', max_digits=10, decimal_places=2, default=0.00)
- 
-    def __str__(self):
-        return self.nombreinsumo
- 
-    class Meta:
-        db_table = 'Insumo'
+  idinsumo = models.AutoField(db_column='IdInsumo', primary_key=True)
+  codigo = models.CharField(max_length=50, unique=True, blank=True, null=True)
+  nombreinsumo = models.CharField(
+      db_column='NombreInsumo',
+      max_length=100,
+      db_collation='Modern_Spanish_CI_AS',
+  )
+  unidadmedidaingreso = models.CharField(
+      db_column='UnidadMedidaIngreso',
+      max_length=30,
+      db_collation='Modern_Spanish_CI_AS',
+  )
+  unidadmedidaegreso = models.CharField(
+      db_column='UnidadMedidaEgreso',
+      max_length=30,
+      db_collation='Modern_Spanish_CI_AS',
+  )
+  stockactual = models.DecimalField(
+      db_column='StockActual',
+      max_digits=10,
+      decimal_places=2,
+      default=0.00,
+  )
+  stockminimo = models.DecimalField(  # ¡Nuevo! Para las alertas de stock bajo
+      max_digits=10, decimal_places=2, default=5.00
+  )
+
+  def __str__(self):
+    return self.nombreinsumo
+
+  class Meta:
+    db_table = 'Insumo'
+
+class AjusteStock(models.Model):
+  idajuste = models.AutoField(db_column='IdAjuste', primary_key=True)
+  idinsumo = models.ForeignKey(
+      Insumo, models.DO_NOTHING, db_column='IdInsumo'
+  )
+  cantidadanterior = models.DecimalField(
+      db_column='CantidadAnterior', max_digits=10, decimal_places=2
+  )
+  cantidadnueva = models.DecimalField(
+      db_column='CantidadNueva', max_digits=10, decimal_places=2
+  )
+  motivo = models.CharField(
+      db_column='Motivo',
+      max_length=250,
+      db_collation='Modern_Spanish_CI_AS',
+  )  # Motivo obligatorio
+  fecha = models.DateTimeField(db_column='Fecha', auto_now_add=True)
+
+  def __str__(self):
+    return (
+        f'Ajuste en {self.idinsumo.nombreinsumo} - Motivo: {self.motivo[:30]}'
+    )
+
+  class Meta:
+    db_table = 'AjusteStock'
  
  
 class Compras(models.Model):
@@ -291,7 +337,8 @@ class RecetaInsumo(models.Model):
     idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo', blank=True, null=True)
     idreceta = models.ForeignKey(Receta, models.DO_NOTHING, db_column='IdReceta', blank=True, null=True)
     cantidadinsumo = models.IntegerField(db_column='CantidadInsumo')
- 
+    es_removible = models.BooleanField(default=False)
+
     class Meta:
         db_table = 'RecetaInsumo'
  
@@ -348,18 +395,19 @@ class EstadoPedido(models.Model):
  
 class Pedido(models.Model):
     idpedido = models.AutoField(db_column='IdPedido', primary_key=True)
-    idcliente = models.ForeignKey(Cliente, models.DO_NOTHING, db_column='IdCliente', blank=True, null=True)
-    idmediopago = models.ForeignKey(MedioPago, models.DO_NOTHING, db_column='IdMedioPago', blank=True, null=True)
-    idestadopedido = models.ForeignKey(EstadoPedido, models.DO_NOTHING, db_column='IdEstadoPedido', blank=True, null=True)
+    idcliente = models.ForeignKey('Cliente', models.DO_NOTHING, db_column='IdCliente', blank=True, null=True)
+    idmediopago = models.ForeignKey('MedioPago', models.DO_NOTHING, db_column='IdMedioPago', blank=True, null=True)
+    idestadopedido = models.ForeignKey('EstadoPedido', models.DO_NOTHING, db_column='IdEstadoPedido', blank=True, null=True)
     horarioentregadeseado = models.TimeField(db_column='HorarioEntregaDeseado', blank=True, null=True)
     justificacioncancelacion = models.CharField(db_column='JustificacionCancelacion', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     idpromocion = models.IntegerField(db_column='IdPromocion', blank=True, null=True)
-    idproducto = models.IntegerField(db_column='IdProducto', blank=True, null=True)
-    cantidad = models.IntegerField(db_column='Cantidad')
- 
+    total = models.DecimalField(db_column='Total', max_digits=10, decimal_places=2, blank=True, null=True)
+    fecha_creacion = models.DateTimeField(db_column='FechaCreacion', auto_now_add=True, blank=True, null=True)
+    pagado = models.BooleanField(db_column='Pagado', default=False)
+
     def __str__(self):
         return f"Pedido #{self.idpedido}"
- 
+
     class Meta:
         db_table = 'Pedido'
  
@@ -367,10 +415,10 @@ class Pedido(models.Model):
 class DetallePedido(models.Model):
     iddetallepedido = models.AutoField(db_column='IdDetallePedido', primary_key=True)
     idpedido = models.ForeignKey(Pedido, models.DO_NOTHING, db_column='IdPedido', blank=True, null=True)
-    idproducto = models.ForeignKey(Producto, models.DO_NOTHING, db_column='IdProducto', blank=True, null=True)
+    idproducto = models.ForeignKey('Producto', models.DO_NOTHING, db_column='IdProducto', blank=True, null=True)
     cantidad = models.IntegerField(db_column='Cantidad')
     preciounitario = models.DecimalField(db_column='PrecioUnitario', max_digits=10, decimal_places=2)
- 
+  
     class Meta:
         db_table = 'DetallePedido'
  

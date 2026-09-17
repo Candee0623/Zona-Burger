@@ -190,7 +190,7 @@ class EstadoPedidoAdmin(AccionesAdminMixin, admin.ModelAdmin):
 
 @admin.register(Pedido)
 class PedidoAdmin(AccionesAdminMixin, admin.ModelAdmin):
-    list_display = ('idpedido', 'idcliente', 'idmediopago', 'idestadopedido', 'cantidad', 'acciones')
+    list_display = ('idpedido', 'idcliente', 'idmediopago', 'idestadopedido', 'total', 'fecha_creacion', 'pagado')
     list_display_links = ('idpedido',)
     list_filter = ('idestadopedido', 'idmediopago', 'idcliente')
     search_fields = ('idcliente__nombre', 'idcliente__apellido')

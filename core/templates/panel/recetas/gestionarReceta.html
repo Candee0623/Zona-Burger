@@ -1,0 +1,76 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Receta de {{ producto.nombre }} - Zona-Burger{% endblock %}
+
+{% block content %}
+<div class="admin-container" style="padding: 20px; color: #fff; max-width: 900px;">
+    <a href="{% url 'lista_recetas' %}" style="color: #3498db; text-decoration: none; display: inline-block; margin-bottom: 15px;">← Volver a la lista de recetas</a>
+    
+    <h1>Receta para: <span style="color: #f39c12;">{{ producto.nombre }}</span></h1>
+
+    <!-- Formulario para agregar un insumo a la receta -->
+    <form method="POST" style="background: #1e1e1e; padding: 20px; border-radius: 6px; margin-top: 20px;">
+        {% csrf_token %}
+        <h3 style="margin-top: 0; color: #2ecc71;">➕ Agregar Insumo del Stock</h3>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; color: #ccc;">Seleccionar Insumo:</label>
+            <select name="id_insumo" required style="width: 100%; padding: 10px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;">
+                <option value="">-- Elegí un ingrediente del stock --</option>
+                {% for insumo in todos_los_insumos %}
+                    <option value="{{ insumo.idinsumo }}">{{ insumo.nombre }} (Stock: {{ insumo.stock_actual }} {{ insumo.unidadmedida }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; color: #ccc;">Cantidad que lleva el producto:</label>
+            <input type="number" step="0.01" name="cantidadinsumo" placeholder="Ej: 1 o 50" required style="width: 100%; padding: 10px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;">
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <input type="checkbox" name="es_removible" id="es_removible" style="width: 18px; height: 18px; cursor: pointer;">
+            <label for="es_removible" style="cursor: pointer; color: #fff; margin: 0;">¿Es removible por el cliente en la tienda web? (Ej: Permite quitar cebolla)</label>
+        </div>
+
+        <button type="submit" style="background: #27ae60; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">Añadir a la Receta</button>
+    </form>
+
+    <h3 style="margin-top: 40px;">📜 Ingredientes actuales de la receta</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; background: #1e1e1e;">
+        <thead>
+            <tr style="background: #2a2a2a; text-align: left;">
+                <th style="padding: 12px;">Insumo</th>
+                <th style="padding: 12px;">Cantidad</th>
+                <th style="padding: 12px;">¿Removible en Web?</th>
+                <th style="padding: 12px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles_receta %}
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 12px;"><strong>{{ detalle.idinsumo.nombre }}</strong></td>
+                <td style="padding: 12px;">{{ detalle.cantidadinsumo }} {{ detalle.idinsumo.unidadmedida }}</td>
+                <td style="padding: 12px;">
+                    {% if detalle.es_removible %}
+                        <span style="color: #2ecc71; font-weight: bold;">Sí (Permitido)</span>
+                    {% else %}
+                        <span style="color: #e74c3c;">No (Fijo)</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px;">
+                    <a href="{% url 'eliminar_insumo_receta' detalle.idrecetainsumo %}" style="background: #c0392b; color: #fff; padding: 6px 10px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;" onclick="return confirm('¿Seguro querés quitar este insumo?');">
+                        🗑️ Quitar
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #888; padding: 30px;">Este producto todavía no tiene insumos configurados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

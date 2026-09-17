@@ -1,0 +1,34 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Lista de Recetas - Zona-Burger{% endblock %}
+
+{% block content %}
+<div class="admin-container" style="padding: 20px; color: #fff;">
+    <h1>Gestión de Recetas</h1>
+    <p style="color: #aaa;">Seleccioná un producto para configurar sus ingredientes y cuáles son removibles por el cliente.</p>
+
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e1e1e;">
+        <thead>
+            <tr style="background: #2a2a2a; text-align: left;">
+                <th style="padding: 12px;">Producto</th>
+                <th style="padding: 12px;">Precio</th>
+                <th style="padding: 12px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 12px;"><strong>{{ producto.nombre }}</strong></td>
+                <td style="padding: 12px;">${{ producto.precio }}</td>
+                <td style="padding: 12px;">
+                    <a href="{% url 'gestionar_receta' producto.idproducto %}" class="btn-accion" style="background: #f39c12; color: #000; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold;">
+                        🍔 Gestionar Receta
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

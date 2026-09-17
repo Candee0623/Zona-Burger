@@ -1,0 +1,48 @@
+{% extends 'panel/base.html' %}
+{% block title %}Zona-Burger | Categorías{% endblock %}
+
+{% block content %}
+<div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <h1 style="font-size: 1.8rem; font-weight: 600; color: #fff; margin: 0;">Categorías</h1>
+    <!-- Botón principal estilizado -->
+    <a href="{% url 'categoria_crear' %}" class="btn btn-primary" style="background-color: #00d26a; color: #000; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s;">
+        + Nueva categoría
+    </a>
+</div>
+
+<div class="table-responsive" style="background: #181818; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+    <table class="tabla-panel" style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #222; border-bottom: 2px solid #333; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                <th style="padding: 14px 16px;">ID</th>
+                <th style="padding: 14px 16px;">Nombre</th>
+                <th style="padding: 14px 16px; text-align: right;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for categoria in categorias %}
+            <tr style="border-bottom: 1px solid #252525; transition: background 0.2s;">
+                <td style="padding: 14px 16px; color: #888; font-weight: 500;">#{{ categoria.idcategoria }}</td>
+                <td style="padding: 14px 16px; color: #fff; font-weight: 500;">{{ categoria.nombre }}</td>
+                <td style="padding: 14px 16px; text-align: right;">
+                    <!-- Botón Editar formal -->
+                    <a href="{% url 'categoria_editar' categoria.idcategoria %}" style="background: #2b2b2b; color: #3498db; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-right: 6px; border: 1px solid #444; display: inline-block;">
+                        ✏️ Editar
+                    </a>
+                    <!-- Botón Eliminar formal -->
+                    <a href="{% url 'categoria_eliminar' categoria.idcategoria %}" style="background: #2b2b2b; color: #ff6b6b; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; border: 1px solid #444; display: inline-block;">
+                        🗑️ Eliminar
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" style="padding: 30px; text-align: center; color: #777; font-style: italic;">
+                    No hay categorías cargadas actualmente.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,385 @@
+/* =====================================================
+   PROMOCIONES - ZONA BURGER
+   ===================================================== */
+
+.promociones-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+
+/* =====================================================
+   ENCABEZADO
+   ===================================================== */
+
+.promociones-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+.promociones-header h2 {
+    margin: 0 0 7px;
+
+    font-size: 28px;
+    font-weight: 700;
+
+    color: #f5f5f5;
+}
+
+.promociones-header p {
+    margin: 0;
+
+    color: #a9a9a9;
+    font-size: 15px;
+}
+
+
+/* =====================================================
+   BOTÓN NUEVA PROMOCIÓN
+   ===================================================== */
+
+.btn-nueva-promocion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 11px 18px;
+
+    border-radius: 8px;
+
+    background: #d71919;
+    color: white;
+
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    border: 1px solid #e02a2a;
+
+    transition: 0.2s ease;
+}
+
+.btn-nueva-promocion span {
+    font-size: 19px;
+    line-height: 1;
+}
+
+.btn-nueva-promocion:hover {
+    background: #b91414;
+    transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   TARJETA
+   ===================================================== */
+
+.promociones-card {
+    width: 100%;
+
+    background: #151313;
+
+    border: 1px solid #292626;
+    border-radius: 12px;
+
+    overflow: hidden;
+}
+
+
+/* =====================================================
+   HEADER DE LA TARJETA
+   ===================================================== */
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 20px 22px;
+
+    border-bottom: 1px solid #292626;
+}
+
+.card-header h3 {
+    margin: 0 0 5px;
+
+    color: #f1f1f1;
+
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.card-header span {
+    color: #888;
+    font-size: 13px;
+}
+
+
+/* =====================================================
+   TABLA
+   ===================================================== */
+
+.tabla-contenedor {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.tabla-promociones {
+    width: 100%;
+    border-collapse: collapse;
+
+    min-width: 850px;
+}
+
+
+/* Encabezados */
+
+.tabla-promociones thead {
+    background: #1b1919;
+}
+
+.tabla-promociones th {
+    padding: 15px 18px;
+
+    text-align: left;
+
+    color: #a9a9a9;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+
+    border-bottom: 1px solid #302d2d;
+}
+
+
+/* Filas */
+
+.tabla-promociones tbody tr {
+    transition: background 0.2s ease;
+}
+
+.tabla-promociones tbody tr:hover {
+    background: #1d1a1a;
+}
+
+.tabla-promociones td {
+    padding: 17px 18px;
+
+    color: #d8d8d8;
+
+    font-size: 14px;
+
+    border-bottom: 1px solid #272424;
+}
+
+.tabla-promociones tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* =====================================================
+   PALABRA CLAVE
+   ===================================================== */
+
+.palabra-clave {
+    display: inline-block;
+
+    padding: 5px 9px;
+
+    background: #211e1e;
+
+    border: 1px solid #343030;
+    border-radius: 6px;
+
+    color: #f1f1f1;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   BENEFICIO
+   ===================================================== */
+
+.beneficio {
+    color: #d7d7d7;
+}
+
+
+/* =====================================================
+   ESTADOS
+   ===================================================== */
+
+.estado {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.estado-activa {
+    background: rgba(40, 167, 69, 0.15);
+    color: #63d77b;
+
+    border: 1px solid rgba(40, 167, 69, 0.25);
+}
+
+.estado-inactiva {
+    background: rgba(150, 150, 150, 0.12);
+    color: #aaa;
+
+    border: 1px solid rgba(150, 150, 150, 0.2);
+}
+
+
+/* =====================================================
+   ACCIONES
+   ===================================================== */
+
+.acciones {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.acciones a {
+    text-decoration: none;
+
+    padding: 7px 11px;
+
+    border-radius: 6px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    transition: 0.2s ease;
+}
+
+
+/* Editar */
+
+.btn-editar {
+    color: #d8d8d8;
+
+    background: #242121;
+
+    border: 1px solid #383333;
+}
+
+.btn-editar:hover {
+    background: #302c2c;
+}
+
+
+/* Eliminar */
+
+.btn-eliminar {
+    color: #ff6b6b;
+
+    background: rgba(215, 25, 25, 0.08);
+
+    border: 1px solid rgba(215, 25, 25, 0.2);
+}
+
+.btn-eliminar:hover {
+    background: rgba(215, 25, 25, 0.18);
+}
+
+
+/* =====================================================
+   SIN PROMOCIONES
+   ===================================================== */
+
+.sin-promociones {
+    display: flex;
+
+    flex-direction: column;
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 70px 20px;
+
+    text-align: center;
+}
+
+.sin-promociones-icono {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 65px;
+    height: 65px;
+
+    margin-bottom: 18px;
+
+    border-radius: 50%;
+
+    background: #211e1e;
+
+    font-size: 28px;
+}
+
+.sin-promociones h3 {
+    margin: 0 0 7px;
+
+    color: #eee;
+
+    font-size: 18px;
+}
+
+.sin-promociones p {
+    margin: 0 0 22px;
+
+    color: #888;
+
+    font-size: 14px;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+    .promociones-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .btn-nueva-promocion {
+        width: 100%;
+    }
+
+    .promociones-header h2 {
+        font-size: 24px;
+    }
+
+    .promociones-card {
+        border-radius: 9px;
+    }
+
+    .tabla-promociones {
+        min-width: 800px;
+    }
+
+}

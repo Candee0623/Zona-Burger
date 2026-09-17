@@ -238,6 +238,285 @@
 .btn-seguir:hover {
     background-color: #262626;
     border-color: #555555;
+}html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--brand-black);
+    color: var(--brand-white);
+}
+
+main.carrito-container {
+    flex: 1;
+    /* OJO: antes esto era "padding: 40px 20px;" sin compensar el header
+       fijo (.navbar, position:fixed, ~76px de alto real) — por eso el
+       carrito tenía el mismo problema de superposición que tuvimos en
+       checkout y pedido_exitoso, solo que todavía no se había notado.
+       Mismo criterio ya usado en el resto del sitio: padding-top: 110px. */
+    padding: 110px 20px 40px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+main.carrito-container h1 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: var(--brand-white);
+}
+
+.carrito-card {
+    position: relative;
+    background: var(--brand-card);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 1px solid var(--brand-border);
+    border-top: 4px solid transparent;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.carrito-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--brand-red), var(--brand-orange), var(--brand-yellow), var(--brand-orange), var(--brand-red));
+    background-size: 200% 100%;
+    animation: bordeFuegoCarrito 3s linear infinite;
+}
+
+@keyframes bordeFuegoCarrito {
+    0% { background-position: 0% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.carrito-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--brand-border);
+    padding: 20px 0;
+    gap: 15px;
+    transition: background-color 0.2s ease;
+}
+
+.carrito-item:last-child {
+    border-bottom: none;
+}
+
+.carrito-item:hover {
+    background-color: rgba(255, 122, 26, 0.03);
+}
+
+.carrito-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    color: var(--brand-white);
+}
+
+.carrito-detalles-lista {
+    margin: 0 0 12px 0;
+    padding-left: 18px;
+    font-size: 0.9rem;
+    color: var(--brand-muted);
+    list-style-type: disc;
+}
+
+.carrito-detalles-lista li {
+    margin-bottom: 3px;
+}
+
+.carrito-acciones {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.cantidad-control {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--brand-border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #252525;
+}
+
+.btn-cant {
+    background: #2a2a2a;
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--brand-white);
+    transition: background 0.2s;
+    text-decoration: none;
+}
+
+.btn-cant:hover {
+    background-color: var(--brand-orange);
+    color: var(--brand-black);
+}
+
+.cantidad-val {
+    padding: 0 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--brand-white);
+}
+
+.btn-editar-item {
+    color: #3b82f6;
+    font-size: 0.9rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.2s;
+}
+
+.btn-editar-item:hover {
+    opacity: 0.8;
+}
+
+.btn-eliminar-item {
+    color: #ff4d4d;
+    font-size: 0.9rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.2s;
+}
+
+.btn-eliminar-item:hover {
+    opacity: 0.8;
+}
+
+.carrito-precio-col {
+    text-align: right;
+    min-width: 140px;
+}
+
+.carrito-unitario-ref {
+    font-size: 0.85rem;
+    color: var(--brand-muted);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.carrito-subtotal-item {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--brand-white);
+    display: block;
+}
+
+.carrito-descuento-item {
+    font-size: 0.8rem;
+    color: var(--brand-success);
+    display: block;
+}
+
+.carrito-resumen-totales {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid var(--brand-border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.resumen-linea {
+    display: flex;
+    justify-content: space-between;
+    width: 300px;
+    font-size: 1rem;
+    color: var(--brand-muted);
+}
+
+.resumen-linea.descuento {
+    color: var(--brand-success);
+}
+
+.resumen-linea.total-final {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--brand-white);
+    border-top: 1px dashed var(--brand-border);
+    padding-top: 8px;
+    margin-top: 4px;
+}
+
+.carrito-botones-accion {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.btn-seguir {
+    padding: 12px 20px;
+    background: #2a2a2a;
+    color: var(--brand-white);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.2s;
+    border: 1px solid var(--brand-border);
+}
+
+.btn-seguir:hover {
+    background: #353535;
+    transform: translateY(-2px);
+}
+
+.btn-checkout {
+    position: relative;
+    overflow: hidden;
+    padding: 12px 25px;
+    background: linear-gradient(90deg, var(--brand-success), #26b962);
+    color: #121212;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: checkoutPulso 2.4s ease-in-out infinite;
+}
+
+.btn-checkout::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -75%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.5), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+}
+
+.btn-checkout:hover::after {
+    left: 130%;
+}
+
+.btn-checkout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(46, 213, 115, 0.35);
+}
+
+@keyframes checkoutPulso {
+    0%, 100% { box-shadow: 0 0 6px rgba(46, 213, 115, 0.25); }
+    50% { box-shadow: 0 0 16px rgba(46, 213, 115, 0.55); }
 }
 
 .btn-checkout {

@@ -1,0 +1,165 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Zona-Burger | Promociones{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos responsivos adicionales para la cabecera en pantallas pequeñas */
+    @media (max-width: 768px) {
+        .content-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 15px;
+        }
+        .content-header a {
+            width: 100%;
+            text-align: center;
+        }
+        .acciones-tabla {
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            gap: 4px !important;
+        }
+    }
+
+    /* Scrollbar horizontal sutil para la tabla (solo aparece cuando hace falta) */
+    .table-responsive {
+        scrollbar-width: thin; /* Firefox */
+        scrollbar-color: #444 transparent;
+    }
+    .table-responsive::-webkit-scrollbar {
+        height: 6px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background-color: #444;
+        border-radius: 10px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background-color: #555;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 600; color: #fff; margin: 0 0 5px 0;">Promociones</h1>
+        <p style="margin: 0; color: #898383; font-size: 0.9rem;">Gestiona los beneficios y descuentos para tus clientes.</p>
+    </div>
+    <!-- Botón principal estilizado -->
+    <a href="{% url 'crear_promocion' %}" class="btn btn-primary" style="background-color: #00d26a; color: #000; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s;">
+        + Nueva promoción
+    </a>
+</div>
+
+<div class="table-responsive" style="background: #181818; border: 1px solid #333; border-radius: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    <table class="tabla-panel" style="width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap;">
+        <thead>
+            <tr style="background: #222; border-bottom: 2px solid #333; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                <th style="padding: 14px 16px;">ID</th>
+                <th style="padding: 14px 16px;">Palabra clave</th>
+                <th style="padding: 14px 16px;">Beneficio</th>
+                <th style="padding: 14px 16px;">Valor</th>
+                <th style="padding: 14px 16px;">Inicio</th>
+                <th style="padding: 14px 16px;">Fin</th>
+                <th style="padding: 14px 16px;">Estado</th>
+                <th style="padding: 14px 16px; text-align: right;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for promocion in promociones %}
+            <tr style="border-bottom: 1px solid #252525; transition: background 0.2s;">
+                <!-- ID -->
+                <td style="padding: 14px 16px; color: #888; font-weight: 500;">#{{ promocion.idpromocion }}</td>
+                
+                <!-- Palabra clave -->
+                <td style="padding: 14px 16px; color: #fff; font-weight: 500;">{{ promocion.palabraclave }}</td>
+                
+                <!-- Beneficio -->
+                <td style="padding: 14px 16px; color: #ccc;">
+                    {% if promocion.tipobeneficio == '2x1' %}
+                        2 x 1
+                    {% elif promocion.tipobeneficio == '3x2' %}
+                        3 x 2
+                    {% elif promocion.tipobeneficio == 'PRODUCTO_GRATIS' %}
+                        Producto gratis
+                    {% elif promocion.tipobeneficio == 'DESCUENTO_PORCENTAJE' %}
+                        Descuento %
+                    {% elif promocion.tipobeneficio == 'DESCUENTO_FIJO' %}
+                        Descuento fijo
+                    {% else %}
+                        {{ promocion.tipobeneficio }}
+                    {% endif %}
+                </td>
+                
+                <!-- Valor -->
+                <td style="padding: 14px 16px; color: #fff; font-weight: 500;">
+                    {% if promocion.tipobeneficio == 'DESCUENTO_PORCENTAJE' %}
+                        {{ promocion.valor }}%
+                    {% elif promocion.tipobeneficio == 'DESCUENTO_FIJO' %}
+                        ${{ promocion.valor }}
+                    {% else %}
+                        <span style="color: #666;">—</span>
+                    {% endif %}
+                </td>
+                
+                <!-- Inicio -->
+                <td style="padding: 14px 16px; color: #aaa; font-size: 0.85rem;">
+                    {% if promocion.fechainicio %}
+                        {{ promocion.fechainicio|date:"d/m/Y" }}
+                    {% else %}
+                        <span style="color: #666;">—</span>
+                    {% endif %}
+                </td>
+                
+                <!-- Fin -->
+                <td style="padding: 14px 16px; color: #aaa; font-size: 0.85rem;">
+                    {% if promocion.fechafin %}
+                        {{ promocion.fechafin|date:"d/m/Y" }}
+                    {% else %}
+                        <span style="color: #666;">—</span>
+                    {% endif %}
+                </td>
+                
+                <!-- Estado -->
+                <td style="padding: 14px 16px;">
+                    {% if promocion.activo == 1 %}
+                        <span style="background: rgba(0, 210, 106, 0.12); color: #00d26a; border: 1px solid rgba(0, 210, 106, 0.25); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                            <span style="width: 6px; height: 6px; background: #00d26a; border-radius: 50%;"></span> Activa
+                        </span>
+                    {% else %}
+                        <span style="background: rgba(255, 107, 107, 0.1); color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                            <span style="width: 6px; height: 6px; background: #ff6b6b; border-radius: 50%;"></span> Inactiva
+                        </span>
+                    {% endif %}
+                </td>
+
+                <!-- Acciones con contenedor flex para separación limpia y diseño responsivo -->
+                <td style="padding: 14px 16px; text-align: right;">
+                    <div class="acciones-tabla" style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                        <!-- Botón Editar formal -->
+                        <a href="{% url 'editar_promocion' promocion.idpromocion %}" style="background: #2b2b2b; color: #3498db; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; border: 1px solid #444; display: inline-block;">
+                            ✏️ Editar
+                        </a>
+                        <!-- Botón Eliminar formal -->
+                        <a href="{% url 'eliminar_promocion' promocion.idpromocion %}" style="background: #2b2b2b; color: #ff6b6b; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; border: 1px solid #444; display: inline-block;">
+                            🗑️ Eliminar
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="padding: 30px; text-align: center; color: #777; font-style: italic;">
+                    No hay promociones cargadas actualmente.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

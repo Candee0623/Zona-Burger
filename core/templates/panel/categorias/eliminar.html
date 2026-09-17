@@ -1,0 +1,20 @@
+{% extends 'panel/base.html' %}
+{% block title %}Zona-Burger | Eliminar categoría{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 600px; background: #181818; padding: 25px; border-radius: 8px; border: 1px solid #333; text-align: center;">
+    <h1 style="margin-bottom: 15px; font-size: 1.5rem; color: #ff6b6b;">Eliminar categoría</h1>
+    
+    <p style="margin-bottom: 25px; color: #ccc; font-size: 1.1rem;">
+        ¿Estás seguro de que deseas eliminar la categoría <strong>"{{ categoria.nombre }}"</strong>?
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; justify-content: center; gap: 15px;">
+            <button type="submit" class="btn btn-danger" style="padding: 10px 20px; background: #ff4757; border: none; color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer;">Sí, eliminar</button>
+            <a href="{% url 'categoria_lista' %}" class="btn" style="padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -29,7 +29,7 @@
             </a>
             <h1 class="checkout-title">Finalizar Tu Pedido</h1>
 
-            <form class="checkout-form" method="POST" action="{% url 'checkout' %}" novalidate>
+            <form class="checkout-form" method="POST" action="{% url 'procesar_checkout' %}" novalidate>
                 {% csrf_token %}
                 
                 <input type="hidden" name="localidad" id="input-localidad-hidden" value="{{ datos_previos.localidad|default:'A coordinar con el vendedor' }}">

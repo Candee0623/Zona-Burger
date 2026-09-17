@@ -45,6 +45,7 @@
                     <input type="hidden" name="edit_id" value="{{ edit_item_id }}">
                 {% endif %}
                 
+                <!-- 1. GRUPOS DE OPCIONES (Ej: Puntos de carne, Bebidas) -->
                 {% for item in grupos_opciones %}
                     <div class="grupo-opcion-seccion">
                         <h3 class="grupo-titulo">{{ item.grupo.nombre }}</h3>
@@ -74,6 +75,26 @@
                     </div>
                 {% endfor %}
 
+                <!-- 2. INSUMOS REMOVIBLES DE LA RECETA (Ej: Sin lechuga, Sin cebolla) -->
+                {% if insumos_removibles %}
+                    <div class="grupo-opcion-seccion">
+                        <h3 class="grupo-titulo">Quitar ingredientes</h3>
+                        <p class="grupo-estado">(Opcional)</p>
+                        <div class="opciones-lista">
+                            {% for item in insumos_removibles %}
+                                <div class="opcion-item">
+                                    <label class="opcion-label">
+                                        <input type="checkbox" name="sin_insumo_{{ item.idinsumo.idinsumo }}" value="{{ item.idinsumo.idinsumo }}" 
+                                        {% if item.idinsumo.idinsumo|stringformat:"s" in item_editando.insumos_quitados_ids %}checked{% endif %} class="opcion-input">
+                                        <span>Sin {{ item.idinsumo.nombre }}</span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- 3. EXTRAS DEL PRODUCTO (Ej: Cheddar extra, Bacon extra) -->
                 {% if extras_producto %}
                     <div class="grupo-opcion-seccion">
                         <h3 class="grupo-titulo">Agregá Extras</h3>

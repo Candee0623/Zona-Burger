@@ -1,63 +1,79 @@
 /* ==========================================
+   0. VARIABLES DE MARCA (compartidas en todo el sitio)
+   ========================================== */
+:root {
+    --brand-black: #121212;
+    --brand-card: #1e1e1e;
+    --brand-red: #d82505;
+    --brand-orange: #ff7a1a;
+    --brand-yellow: #ffcc00;
+    --brand-white: #f5f5f5;
+    --brand-muted: #aaaaaa;
+    --brand-border: #2c2c2c;
+    --brand-success: #2ed573;
+    --brand-whatsapp: #25d366;
+}
+
+/* ==========================================
    1. ESTILOS GENERALES Y RESET
    ========================================== */
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
-    font-family: 'Montserrat', sans-serif; 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
 }
 
-html { 
-    scroll-behavior: smooth; 
+html {
+    scroll-behavior: smooth;
 }
 
-body { 
-    background-color: #121212; 
-    color: #f5f5f5; 
+body {
+    background-color: var(--brand-black);
+    color: var(--brand-white);
 }
 
 /* ==========================================
    2. NAVBAR
    ========================================== */
-.navbar { 
-    position: fixed; 
-    top: 0; 
+.navbar {
+    position: fixed;
+    top: 0;
     left: 0;
     width: 100%;
-    z-index: 1000; 
-    background-color: rgba(26, 26, 26, 0.95); 
+    z-index: 1000;
+    background-color: rgba(26, 26, 26, 0.95);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 16px 40px; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4); 
-    border-bottom: 2px solid #d82505; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    border-bottom: 2px solid var(--brand-red);
 }
 
 .logo-placeholder {
     display: inline-block;
     width: 42px;
     height: 42px;
-    background-color: #d82505;
+    background: linear-gradient(135deg, var(--brand-red), var(--brand-orange));
     border-radius: 50%;
-    box-shadow: 0 0 10px rgba(216, 37, 5, 0.5);
+    box-shadow: 0 0 12px rgba(255, 122, 26, 0.55);
 }
 
-.nav-links { 
-    list-style: none; 
-    display: flex; 
-    gap: 15px; 
-    margin: 0; 
-    padding: 0; 
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 15px;
+    margin: 0;
+    padding: 0;
     align-items: center;
 }
 
-.nav-links a { 
-    color: #ffffff; 
-    text-decoration: none; 
+.nav-links a {
+    color: var(--brand-white);
+    text-decoration: none;
     font-weight: 600;
     font-size: 0.95rem;
     padding: 8px 16px;
@@ -65,10 +81,10 @@ body {
     transition: all 0.3s ease;
 }
 
-.nav-links a:hover { 
-    color: #121212; 
-    background-color: #ffcc00;
-    box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
+.nav-links a:hover {
+    color: var(--brand-black);
+    background: linear-gradient(90deg, var(--brand-yellow), var(--brand-orange));
+    box-shadow: 0 4px 14px rgba(255, 122, 26, 0.4);
 }
 
 .menu-toggle {
@@ -84,7 +100,7 @@ body {
     width: 28px;
     height: 3px;
     margin: 6px auto;
-    background-color: #ffcc00;
+    background-color: var(--brand-yellow);
     border-radius: 2px;
     transition: all 0.3s ease;
 }
@@ -92,29 +108,47 @@ body {
 /* ==========================================
    3. HERO SECTION
    ========================================== */
-.hero { 
-    background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1350&q=80') center/cover; 
-    height: 65vh; 
-    margin-top: 85px; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    text-align: center; 
-    padding: 20px; 
-    border-bottom: 4px solid #d82505; 
+.hero {
+    position: relative;
+    background: linear-gradient(rgba(0,0,0,0.78), rgba(0,0,0,0.78)), url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1350&q=80') center/cover;
+    height: 65vh;
+    margin-top: 85px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    border-bottom: 4px solid var(--brand-red);
+    overflow: hidden;
 }
 
-.hero h2 { 
-    font-size: 3.5rem; 
-    color: #ffcc00; 
-    margin-bottom: 10px; 
-    font-weight: 900; 
-    text-transform: uppercase; 
-    text-shadow: 0 2px 10px rgba(216, 37, 5, 0.4); 
+/* Resplandor de brasa detrás del título, sutil */
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 30% 60%, rgba(255, 122, 26, 0.18), transparent 45%),
+        radial-gradient(circle at 70% 40%, rgba(216, 37, 5, 0.15), transparent 45%);
+    pointer-events: none;
+}
+
+.hero h2 {
+    position: relative;
+    font-size: 3.5rem;
+    margin-bottom: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--brand-yellow), var(--brand-orange));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 20px rgba(216, 37, 5, 0.35);
 }
 
 .badge-estado {
+    position: relative;
     background-color: #2e7d32;
     color: #fff;
     padding: 6px 16px;
@@ -148,7 +182,7 @@ body {
    ========================================== */
 .about-section {
     background-color: #181818;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--brand-border);
 }
 
 .about-grid {
@@ -173,17 +207,24 @@ body {
 }
 
 .feature-item {
-    background: #1e1e1e;
+    background: var(--brand-card);
     padding: 15px;
     border-radius: 6px;
-    border-left: 3px solid #ffcc00;
+    border-left: 3px solid var(--brand-yellow);
     display: flex;
     align-items: center;
     gap: 12px;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.feature-item:hover {
+    transform: translateX(4px);
+    border-left-color: var(--brand-orange);
+    box-shadow: -4px 0 14px rgba(255, 122, 26, 0.2);
 }
 
 .feature-item i {
-    color: #ffcc00;
+    color: var(--brand-yellow);
     font-size: 1.2rem;
 }
 
@@ -198,7 +239,7 @@ body {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 2px solid #333;
+    border: 2px solid var(--brand-border);
 }
 
 .about-image img {
@@ -212,61 +253,72 @@ body {
 /* ==========================================
    5. CONTENEDORES Y GRILLAS GENERALES
    ========================================== */
-.container { 
-    max-width: 1200px; 
-    margin: 0 auto; 
-    padding: 60px 20px; 
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px;
 }
 
-.section-title { 
-    text-align: center; 
-    font-size: 2.5rem; 
-    margin-bottom: 40px; 
-    color: #ffcc00; 
-    text-transform: uppercase; 
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--brand-yellow), var(--brand-orange));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+    width: 100%;
 }
 
-.info-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-    gap: 30px; 
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
 }
 
-.info-box { 
-    background: #1e1e1e; 
-    padding: 30px; 
-    border-radius: 8px; 
-    border: 1px solid #333; 
-    border-top: 4px solid #d82505; 
+.info-box {
+    background: var(--brand-card);
+    padding: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--brand-border);
+    border-top: 4px solid var(--brand-red);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.info-box h3 { 
-    color: #ffcc00; 
-    margin-bottom: 20px; 
-    font-size: 1.5rem; 
-    text-transform: uppercase; 
-    border-bottom: 1px solid #333; 
-    padding-bottom: 10px; 
+.info-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(216, 37, 5, 0.25);
 }
 
-.info-box ul { 
-    list-style: none; 
+.info-box h3 {
+    color: var(--brand-yellow);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--brand-border);
+    padding-bottom: 10px;
 }
 
-.info-box li { 
-    margin-bottom: 12px; 
-    color: #ccc; 
-    font-size: 1.05rem; 
-    display: flex; 
-    justify-content: space-between; 
+.info-box ul {
+    list-style: none;
+}
+
+.info-box li {
+    margin-bottom: 12px;
+    color: #ccc;
+    font-size: 1.05rem;
+    display: flex;
+    justify-content: space-between;
 }
 
 /* ==========================================
-   6. SECCIÓN DE PROMOCIONES (DARK THEME)
+   6. SECCIÓN DE PROMOCIONES
    ========================================== */
 .promos-section {
     padding: 40px 20px;
-    background-color: #121212;
+    background-color: var(--brand-black);
 }
 
 .promos-header {
@@ -277,14 +329,17 @@ body {
 .promos-title {
     font-size: 2.5rem;
     font-weight: 900;
-    color: #ffcc00;
     text-transform: uppercase;
     margin-bottom: 8px;
+    background: linear-gradient(90deg, var(--brand-yellow), var(--brand-orange));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .promos-subtitle {
     font-size: 1.05rem;
-    color: #aaa;
+    color: var(--brand-muted);
 }
 
 .promos-grid {
@@ -296,24 +351,24 @@ body {
 }
 
 .promo-card {
-    background: #1e1e1e;
+    background: var(--brand-card);
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     padding: 24px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid #333;
-    border-top: 4px solid #ffcc00;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    border: 1px solid var(--brand-border);
+    border-top: 4px solid var(--brand-orange);
     position: relative;
     overflow: hidden;
 }
 
 .promo-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(216, 37, 5, 0.2);
-    border-color: #d82505;
+    box-shadow: 0 15px 35px rgba(255, 122, 26, 0.25);
+    border-color: var(--brand-orange);
 }
 
 .promo-card-header {
@@ -324,7 +379,7 @@ body {
 }
 
 .promo-badge {
-    background-color: #d82505;
+    background: linear-gradient(90deg, var(--brand-red), var(--brand-orange));
     color: #ffffff;
     font-weight: 700;
     font-size: 0.85rem;
@@ -354,7 +409,7 @@ body {
 
 .promo-validity {
     font-size: 0.85rem;
-    color: #aaa;
+    color: var(--brand-muted);
     margin-bottom: 20px;
     display: flex;
     align-items: center;
@@ -362,7 +417,7 @@ body {
 }
 
 .promo-products-section {
-    border-top: 1px dashed #333;
+    border-top: 1px dashed var(--brand-border);
     padding-top: 16px;
     margin-top: auto;
 }
@@ -410,20 +465,31 @@ body {
 /* ==========================================
    7. FOOTER
    ========================================== */
-footer { 
-    background: #1a1a1a; 
-    text-align: center; 
-    padding: 30px; 
-    border-top: 1px solid #333; 
-    margin-top: 50px; 
+footer {
+    position: relative;
+    background: #1a1a1a;
+    text-align: center;
+    padding: 30px;
+    border-top: 1px solid var(--brand-border);
+    margin-top: 50px;
     color: white;
 }
 
-.socials a { 
-    color: #ffcc00; 
-    margin: 0 10px; 
-    text-decoration: none; 
-    font-weight: bold; 
+footer::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--brand-red), var(--brand-orange), var(--brand-yellow));
+}
+
+.socials a {
+    color: var(--brand-yellow);
+    margin: 0 10px;
+    text-decoration: none;
+    font-weight: bold;
     transition: opacity 0.2s;
 }
 
@@ -435,14 +501,14 @@ footer {
    8. MEDIA QUERIES (RESPONSIVE)
    ========================================== */
 @media (max-width: 768px) {
-    .navbar { 
-        padding: 15px 20px; 
+    .navbar {
+        padding: 15px 20px;
     }
-    
-    .menu-toggle { 
-        display: block; 
+
+    .menu-toggle {
+        display: block;
     }
-    
+
     .nav-links {
         position: absolute;
         top: 100%;
@@ -458,19 +524,19 @@ footer {
         overflow: hidden;
         opacity: 0;
         transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-in-out, padding 0.4s ease-in-out;
-        border-bottom: 2px solid #d82505;
+        border-bottom: 2px solid var(--brand-red);
         gap: 5px;
         align-items: stretch;
     }
-    
+
     .nav-links.active {
         max-height: 350px;
         opacity: 1;
         padding: 20px;
     }
-    
-    .nav-links li { 
-        margin: 5px 0; 
+
+    .nav-links li {
+        margin: 5px 0;
     }
 
     .nav-links a {
@@ -481,16 +547,16 @@ footer {
     }
 
     .nav-links a:hover {
-        background-color: #ffcc00;
-        color: #121212;
+        background: linear-gradient(90deg, var(--brand-yellow), var(--brand-orange));
+        color: var(--brand-black);
     }
 
     .hero {
         margin-top: 75px;
     }
 
-    .hero h2 { 
-        font-size: 2.5rem; 
+    .hero h2 {
+        font-size: 2.5rem;
     }
 
     .about-grid {

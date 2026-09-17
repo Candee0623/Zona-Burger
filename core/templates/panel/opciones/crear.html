@@ -1,0 +1,82 @@
+{% extends 'panel/base.html' %}
+{% block title %}Zona-Burger | Nuevo grupo de opciones{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 750px; background: #181818; padding: 30px; border-radius: 8px; border: 1px solid #333; margin: auto;">
+    <h1 style="margin-bottom: 20px; font-size: 1.5rem; color: #fff;">Nuevo grupo de opciones</h1>
+
+    {% if errores %}
+        <ul class="errores" style="color: #ff6b6b; margin-bottom: 15px; list-style: inside;">
+            {% for error in errores %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="nombre" style="display: block; margin-bottom: 6px; color: #ccc;">Nombre del grupo</label>
+            <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Ej: Bebida" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;" required>
+        </div>
+
+        <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <div class="form-group" style="flex: 1;">
+                <label for="minselecciones" style="display: block; margin-bottom: 6px; color: #ccc;">Mín. selecciones</label>
+                <input type="number" id="minselecciones" name="minselecciones" class="form-control" min="0" value="0" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="maxselecciones" style="display: block; margin-bottom: 6px; color: #ccc;">Máx. selecciones</label>
+                <input type="number" id="maxselecciones" name="maxselecciones" class="form-control" min="1" value="1" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #333; margin: 25px 0;">
+        <h3 style="font-size: 1.1rem; color: #ddd; margin-bottom: 15px;">Opciones (ej: Coca-Cola, Sprite...)</h3>
+
+        <table id="tabla-opciones" class="tabla-panel" style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <thead>
+                <tr style="text-align: left; color: #888; font-size: 0.85rem; border-bottom: 1px solid #333;">
+                    <th style="padding: 10px;">Nombre</th>
+                    <th style="padding: 10px;">Precio adicional</th>
+                </tr>
+            </thead>
+            <tbody id="filas-opciones">
+                <tr style="border-bottom: 1px solid #222;">
+                    <td style="padding: 10px;">
+                        <input type="text" name="opcion_nombre[]" class="form-control" placeholder="Ej: Coca-Cola" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+                    </td>
+                    <td style="padding: 10px;">
+                        <input type="number" step="0.01" name="opcion_precio[]" class="form-control" value="0" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button type="button" id="btn-agregar-opcion" class="btn" style="background: #2b2b2b; color: #3498db; border: 1px solid #444; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-bottom: 25px;">+ Agregar opción</button>
+
+        <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 20px;">
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 20px; background: #00d26a; border: none; color: #000; font-weight: bold; border-radius: 4px; cursor: pointer;">Guardar grupo</button>
+            <a href="{% url 'grupo_lista' %}" class="btn" style="padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('btn-agregar-opcion').addEventListener('click', function () {
+    const tbody = document.getElementById('filas-opciones');
+    const fila = document.createElement('tr');
+    fila.style.borderBottom = "1px solid #222";
+    fila.innerHTML = `
+        <td style="padding: 10px;">
+            <input type="text" name="opcion_nombre[]" class="form-control" placeholder="Ej: Sprite" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+        </td>
+        <td style="padding: 10px;">
+            <input type="number" step="0.01" name="opcion_precio[]" class="form-control" value="0" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+        </td>
+    `;
+    tbody.appendChild(fila);
+});
+</script>
+{% endblock %}
