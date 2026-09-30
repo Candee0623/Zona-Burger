@@ -100,7 +100,7 @@
 
             <a
                 href="{% url 'menu_panel' %}"
-                class="menu-item {% if 'menu' in request.resolver_match.url_name or 'categoria' in request.resolver_match.url_name or 'grupo' in request.resolver_match.url_name or 'producto' in request.resolver_match.url_name %}active{% endif %}"
+                class="menu-item {% if 'menu' in request.resolver_match.url_name or 'categoria' in request.resolver_match.url_name or 'grupo' in request.resolver_match.url_name or 'producto' in request.resolver_match.url_name or 'extra' in request.resolver_match.url_name %}active{% endif %}"
             >
                 <span class="menu-icon">🍔</span>
                 <span class="menu-text">Menú</span>

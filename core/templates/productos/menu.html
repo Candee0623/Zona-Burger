@@ -41,22 +41,30 @@
                     {% for producto in categoria.producto_set.all %}
                         <div class="producto-card">
                             {% if producto.imagen %}
-                                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="producto-imagen">
+                                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="producto-imagen">
                             {% else %}
                                 <div class="producto-imagen-placeholder">🍔</div>
                             {% endif %}
                             
                             <div class="producto-info">
                                 <h3 class="producto-nombre">{{ producto.nombre }}</h3>
-                                <p class="producto-descripcion">{{ producto.descripcion }}</p>
+                                <p class="producto-descripcion">{{ producto.descripcion|striptags }}</p>
                                 
-                                {% if producto.productogrupopcion_set.all %}
+                                {% if producto.productogrupoopcion_set.all %}
                                 <div class="producto-incluye">
                                     <ul class="incluye-lista">
-                                        {% for rel in producto.productogrupopcion_set.all %}
-                                            <li><i class="fa-solid fa-check"></i> Incluye: {{ rel.idgrupo.nombre }}</li>
+                                        {% for rel in producto.productogrupoopcion_set.all %}
+                                            {% if rel.idgrupo %}
+                                                <li><i class="fa-solid fa-check"></i> Incluye: {{ rel.idgrupo.nombre }}</li>
+                                            {% endif %}
                                         {% endfor %}
                                     </ul>
+                                </div>
+                                {% endif %}
+
+                                {% if producto.productoextras_set.all %}
+                                <div class="producto-extras-disponibles" style="margin-top: 5px; font-size: 0.8rem; color: #ffb703;">
+                                    <i class="fa-solid fa-circle-plus"></i> Admite extras personalizados
                                 </div>
                                 {% endif %}
 

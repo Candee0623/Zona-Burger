@@ -21,10 +21,12 @@ from .models import (
     DetalleCompra, DetallePedido, Direccion, EstadoPedido,
     EstadoProducto, EstadoStock, Extras, GrupoOpcion,
     Horario, Insumo, MedioPago, Negocio, Opcion, Pedido,
-    Producto, ProductoGrupoOpcion, ProductoPromocion,
+    Producto, ProductoExtras, ProductoGrupoOpcion, ProductoPromocion,
     Promocion, Receta, RecetaInsumo, RedesSociales,
     TipoBeneficio, ZonasEntrega
 )
+from .forms import ExtraForm, ProductoForm
+
 
 logger = logging.getLogger(__name__)
 
@@ -83,20 +85,23 @@ def menu(request):
 
 def detalleProducto(request, idproducto):
     producto = get_object_or_404(Producto, pk=idproducto)
-    relaciones_grupos = ProductoGrupoOpcion.objects.filter(idproducto=producto)
+    relaciones_grupos = ProductoGrupoOpcion.objects.filter(idproducto=producto).select_related('idgrupo')
     grupos_opciones = []
     for rel in relaciones_grupos:
         grupo = rel.idgrupo
-        opciones = grupo.opcion_set.all()
-        grupos_opciones.append({'grupo': grupo, 'opciones': opciones})
+        if grupo:
+            opciones = grupo.opcion_set.all()
+            grupos_opciones.append({'grupo': grupo, 'opciones': opciones})
 
     extras_producto = []
     if hasattr(producto, 'productoextras_set'):
         extras_producto = [
-            rel.idextra for rel in producto.productoextras_set.all()
+            rel.idextra for rel in producto.productoextras_set.select_related('idextra').all() if rel.idextra
         ]
     elif hasattr(producto, 'productextras_set'):
-        extras_producto = [rel.idextra for rel in producto.productextras_set.all()]
+        extras_producto = [
+            rel.idextra for rel in producto.productextras_set.select_related('idextra').all() if rel.idextra
+        ]
 
     insumos_removibles = []
     receta = Receta.objects.filter(idproducto=producto).first()
@@ -1647,8 +1652,10 @@ def grupo_eliminar(request, idgrupo):
 # ==========================================
 
 def producto_lista(request):
-
-    productos = Producto.objects.all()
+    productos = Producto.objects.select_related('idcategoria').prefetch_related(
+        'productogrupoopcion_set__idgrupo',
+        'productoextras_set__idextra'
+    ).all().order_by('-idproducto')
 
     return render(
         request,
@@ -1660,140 +1667,363 @@ def producto_lista(request):
 
 
 def producto_crear(request):
-
     categorias = CategoriaProducto.objects.all()
+    grupos = GrupoOpcion.objects.prefetch_related('opcion_set').all()
+    extras = Extras.objects.all()
+    errores = []
 
     if request.method == 'POST':
-
-        nombre = request.POST.get('nombre')
-        descripcion = request.POST.get('descripcion')
-        precio = request.POST.get('precio')
+        nombre = (request.POST.get('nombre') or '').strip()
+        descripcion = request.POST.get('descripcion', '')
+        precio_raw = (request.POST.get('precio') or '').strip()
         idcategoria = request.POST.get('idcategoria')
         imagen = request.FILES.get('imagen')
+        grupos_ids = [int(g) for g in request.POST.getlist('grupos') if g.isdigit()]
+        extras_ids = [int(e) for e in request.POST.getlist('extras') if e.isdigit()]
+
+        if not nombre:
+            errores.append('El nombre del producto es obligatorio.')
+
+        precio = None
+        try:
+            precio = Decimal(precio_raw)
+            if precio < Decimal('0.00'):
+                errores.append('El precio no puede ser negativo.')
+        except Exception:
+            errores.append('El precio debe ser un número válido.')
 
         cat_obj = (
-            CategoriaProducto.objects.filter(
-                pk=idcategoria
-            ).first()
+            CategoriaProducto.objects.filter(pk=idcategoria).first()
             if idcategoria
             else None
         )
 
-        Producto.objects.create(
-            nombre=nombre,
-            descripcion=descripcion,
-            precio=precio,
-            idcategoria=cat_obj,
-            imagen=imagen
-        )
+        if not errores:
+            with transaction.atomic():
+                negocio = Negocio.objects.first()
+                producto = Producto.objects.create(
+                    nombre=nombre,
+                    descripcion=descripcion,
+                    precio=precio,
+                    idcategoria=cat_obj,
+                    idnegocio=negocio,
+                    imagen=imagen
+                )
 
-        messages.success(
+                # Guardar grupos de opciones asociados
+                for gid in grupos_ids:
+                    grupo_obj = GrupoOpcion.objects.filter(pk=gid).first()
+                    if grupo_obj:
+                        ProductoGrupoOpcion.objects.create(
+                            idproducto=producto,
+                            idgrupo=grupo_obj
+                        )
+
+                # Guardar extras asociados
+                for eid in extras_ids:
+                    extra_obj = Extras.objects.filter(pk=eid).first()
+                    if extra_obj:
+                        ProductoExtras.objects.create(
+                            idproducto=producto,
+                            idextra=extra_obj
+                        )
+
+            messages.success(
+                request,
+                f'Producto "{producto.nombre}" creado exitosamente.'
+            )
+            return redirect('producto_lista')
+
+        return render(
             request,
-            'Producto creado exitosamente.'
+            'panel/menu/productos/crearProducto.html',
+            {
+                'categorias': categorias,
+                'grupos': grupos,
+                'extras': extras,
+                'errores': errores,
+                'datos_previos': request.POST,
+                'grupos_seleccionados': grupos_ids,
+                'extras_seleccionados': extras_ids,
+            }
         )
-
-        return redirect('producto_lista')
 
     return render(
         request,
         'panel/menu/productos/crearProducto.html',
         {
-            'categorias': categorias
+            'categorias': categorias,
+            'grupos': grupos,
+            'extras': extras,
+            'errores': [],
+            'datos_previos': {},
+            'grupos_seleccionados': [],
+            'extras_seleccionados': [],
         }
     )
 
 
 def producto_editar(request, idproducto):
-
     producto = get_object_or_404(
         Producto,
         pk=idproducto
     )
 
     categorias = CategoriaProducto.objects.all()
+    grupos = GrupoOpcion.objects.prefetch_related('opcion_set').all()
+    extras = Extras.objects.all()
+    errores = []
 
     if request.method == 'POST':
+        nombre = (request.POST.get('nombre') or '').strip()
+        descripcion = request.POST.get('descripcion', '')
+        precio_raw = (request.POST.get('precio') or '').strip()
+        idcategoria = request.POST.get('idcategoria')
+        grupos_ids = [int(g) for g in request.POST.getlist('grupos') if g.isdigit()]
+        extras_ids = [int(e) for e in request.POST.getlist('extras') if e.isdigit()]
 
-        producto.nombre = request.POST.get(
-            'nombre'
-        )
+        if not nombre:
+            errores.append('El nombre del producto es obligatorio.')
 
-        producto.descripcion = request.POST.get(
-            'descripcion'
-        )
+        try:
+            precio = Decimal(precio_raw)
+            if precio < Decimal('0.00'):
+                errores.append('El precio no puede ser negativo.')
+        except Exception:
+            errores.append('El precio debe ser un número válido.')
 
-        producto.precio = request.POST.get(
-            'precio'
-        )
+        if not errores:
+            with transaction.atomic():
+                producto.nombre = nombre
+                producto.descripcion = descripcion
+                producto.precio = precio
+                producto.idcategoria = (
+                    CategoriaProducto.objects.filter(pk=idcategoria).first()
+                    if idcategoria
+                    else None
+                )
 
-        idcategoria = request.POST.get(
-            'idcategoria'
-        )
+                if request.FILES.get('imagen'):
+                    producto.imagen = request.FILES.get('imagen')
 
-        producto.idcategoria = (
-            CategoriaProducto.objects.filter(
-                pk=idcategoria
-            ).first()
-            if idcategoria
-            else None
-        )
+                producto.save()
 
-        if request.FILES.get('imagen'):
+                # Actualizar grupos de opciones relacionados
+                ProductoGrupoOpcion.objects.filter(idproducto=producto).delete()
+                for gid in grupos_ids:
+                    grupo_obj = GrupoOpcion.objects.filter(pk=gid).first()
+                    if grupo_obj:
+                        ProductoGrupoOpcion.objects.create(
+                            idproducto=producto,
+                            idgrupo=grupo_obj
+                        )
 
-            producto.imagen = request.FILES.get(
-                'imagen'
+                # Actualizar extras relacionados
+                ProductoExtras.objects.filter(idproducto=producto).delete()
+                for eid in extras_ids:
+                    extra_obj = Extras.objects.filter(pk=eid).first()
+                    if extra_obj:
+                        ProductoExtras.objects.create(
+                            idproducto=producto,
+                            idextra=extra_obj
+                        )
+
+            messages.success(
+                request,
+                f'Producto "{producto.nombre}" actualizado correctamente.'
             )
+            return redirect('producto_lista')
 
-        producto.save()
-
-        messages.success(
+        return render(
             request,
-            'Producto actualizado correctamente.'
+            'panel/menu/productos/editarProducto.html',
+            {
+                'producto': producto,
+                'categorias': categorias,
+                'grupos': grupos,
+                'extras': extras,
+                'errores': errores,
+                'grupos_seleccionados': grupos_ids,
+                'extras_seleccionados': extras_ids,
+            }
         )
 
-        return redirect('producto_lista')
+    # GET
+    grupos_actuales = list(producto.productogrupoopcion_set.values_list('idgrupo_id', flat=True))
+    extras_actuales = list(producto.productoextras_set.values_list('idextra_id', flat=True))
 
     return render(
         request,
         'panel/menu/productos/editarProducto.html',
         {
             'producto': producto,
-            'categorias': categorias
+            'categorias': categorias,
+            'grupos': grupos,
+            'extras': extras,
+            'errores': [],
+            'grupos_seleccionados': grupos_actuales,
+            'extras_seleccionados': extras_actuales,
         }
     )
 
 
 def producto_eliminar(request, idproducto):
-
     producto = get_object_or_404(
         Producto,
         pk=idproducto
     )
 
     if request.method == 'POST':
-
-        producto.delete()
+        with transaction.atomic():
+            ProductoGrupoOpcion.objects.filter(idproducto=producto).delete()
+            ProductoExtras.objects.filter(idproducto=producto).delete()
+            nombre_producto = producto.nombre
+            producto.delete()
 
         messages.success(
             request,
-            'Producto eliminado.'
+            f'Producto "{nombre_producto}" eliminado.'
         )
-
         return redirect('producto_lista')
 
     return render(
         request,
         'panel/menu/productos/eliminarProducto.html',
         {
-            'titulo': 'producto',
-            'objeto': producto,
+            'producto': producto,
             'cancel_url': 'producto_lista',
         }
     )
 
 
 # ==========================================
-# 10. GESTIÓN DE RECETAS
+# 10. GESTIÓN DE EXTRAS
+# ==========================================
+
+def extra_lista(request):
+    extras = Extras.objects.all().order_by('idextra')
+    extras_con_conteo = []
+
+    for extra in extras:
+        cant = ProductoExtras.objects.filter(idextra=extra).count()
+        extras_con_conteo.append({
+            'extra': extra,
+            'cant_productos': cant
+        })
+
+    return render(
+        request,
+        'panel/menu/extras/listaExtras.html',
+        {
+            'extras_con_conteo': extras_con_conteo
+        }
+    )
+
+
+def extra_crear(request):
+    errores = []
+
+    if request.method == 'POST':
+        form = ExtraForm(request.POST)
+        if form.is_valid():
+            extra = form.save()
+            messages.success(
+                request,
+                f'Extra "{extra.nombre}" creado exitosamente.'
+            )
+            return redirect('extra_lista')
+        else:
+            return render(
+                request,
+                'panel/menu/extras/crearExtra.html',
+                {
+                    'form': form,
+                    'errores': errores
+                }
+            )
+
+    form = ExtraForm()
+    return render(
+        request,
+        'panel/menu/extras/crearExtra.html',
+        {
+            'form': form,
+            'errores': errores
+        }
+    )
+
+
+def extra_editar(request, idextra):
+    extra = get_object_or_404(
+        Extras,
+        pk=idextra
+    )
+    errores = []
+
+    if request.method == 'POST':
+        form = ExtraForm(request.POST, instance=extra)
+        if form.is_valid():
+            extra = form.save()
+            messages.success(
+                request,
+                f'Extra "{extra.nombre}" actualizado correctamente.'
+            )
+            return redirect('extra_lista')
+        else:
+            return render(
+                request,
+                'panel/menu/extras/editarExtra.html',
+                {
+                    'extra': extra,
+                    'form': form,
+                    'errores': errores
+                }
+            )
+
+    form = ExtraForm(instance=extra)
+    return render(
+        request,
+        'panel/menu/extras/editarExtra.html',
+        {
+            'extra': extra,
+            'form': form,
+            'errores': errores
+        }
+    )
+
+
+def extra_eliminar(request, idextra):
+    extra = get_object_or_404(
+        Extras,
+        pk=idextra
+    )
+    cant_productos = ProductoExtras.objects.filter(idextra=extra).count()
+
+    if request.method == 'POST':
+        with transaction.atomic():
+            ProductoExtras.objects.filter(idextra=extra).delete()
+            nombre_extra = extra.nombre
+            extra.delete()
+
+        messages.success(
+            request,
+            f'Extra "{nombre_extra}" eliminado.'
+        )
+        return redirect('extra_lista')
+
+    return render(
+        request,
+        'panel/menu/extras/eliminarExtra.html',
+        {
+            'extra': extra,
+            'cant_productos': cant_productos,
+            'cancel_url': 'extra_lista',
+        }
+    )
+
+
+# ==========================================
+# 11. GESTIÓN DE RECETAS
 # ==========================================
 
 def lista_recetas(request):

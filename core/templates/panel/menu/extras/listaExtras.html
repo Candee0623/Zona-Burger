@@ -1,0 +1,101 @@
+{% extends 'panel/base.html' %}
+{% block title %}Zona-Burger | Extras{% endblock %}
+
+{% block content %}
+
+<div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 600; color: #fff; margin: 0;">
+            Extras
+        </h1>
+
+        <p style="margin: 5px 0 0; color: #888; font-size: 0.9rem;">
+            Gestioná los extras y adicionales del menú: creá, editá precios y asignalos a los productos.
+        </p>
+    </div>
+
+    <!-- Botón Crear Extra -->
+    <a href="{% url 'extra_crear' %}" class="btn btn-primary" style="background-color: #00d26a; color: #000; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s;">
+        + Nuevo extra
+    </a>
+
+</div>
+
+{% if messages %}
+    <div style="margin-bottom: 20px;">
+        {% for message in messages %}
+            <div style="padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; font-size: 0.9rem; {% if message.tags == 'success' %}background: rgba(0, 210, 106, 0.15); border: 1px solid #00d26a; color: #00d26a;{% else %}background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ff6b6b;{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="table-responsive" style="background: #181818; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+
+    <table class="tabla-panel" style="width: 100%; border-collapse: collapse; text-align: left;">
+
+        <thead>
+            <tr style="background: #222; border-bottom: 2px solid #333; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                <th style="padding: 14px 16px;">ID</th>
+                <th style="padding: 14px 16px;">Nombre del Extra</th>
+                <th style="padding: 14px 16px;">Precio Adicional</th>
+                <th style="padding: 14px 16px;">Productos Asociados</th>
+                <th style="padding: 14px 16px; text-align: right;">Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in extras_con_conteo %}
+            <tr style="border-bottom: 1px solid #252525; transition: background 0.2s;">
+                <td style="padding: 14px 16px; color: #888; font-weight: 500;">
+                    #{{ item.extra.idextra }}
+                </td>
+
+                <td style="padding: 14px 16px; color: #fff; font-weight: 600;">
+                    🥓 {{ item.extra.nombre }}
+                </td>
+
+                <td style="padding: 14px 16px; color: #00d26a; font-weight: 600; font-size: 1rem;">
+                    ${{ item.extra.precio }}
+                </td>
+
+                <td style="padding: 14px 16px; color: #bbb; font-size: 0.9rem;">
+                    {% if item.cant_productos > 0 %}
+                        <span style="background: #2a2a2a; color: #f1c40f; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; border: 1px solid #444;">
+                            🍔 {{ item.cant_productos }} producto{{ item.cant_productos|pluralize }}
+                        </span>
+                    {% else %}
+                        <span style="color: #666; font-style: italic;">
+                            Sin asignar
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td style="padding: 14px 16px; text-align: right;">
+                    <!-- Botón Editar -->
+                    <a href="{% url 'extra_editar' item.extra.idextra %}" style="background: #2b2b2b; color: #3498db; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-right: 6px; border: 1px solid #444; display: inline-block;">
+                        ✏️ Editar
+                    </a>
+
+                    <!-- Botón Eliminar -->
+                    <a href="{% url 'extra_eliminar' item.extra.idextra %}" style="background: #2b2b2b; color: #ff6b6b; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; border: 1px solid #444; display: inline-block;">
+                        🗑️ Eliminar
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 35px; text-align: center; color: #777; font-style: italic;">
+                    No hay extras registrados actualmente. ¡Hacé clic en "+ Nuevo extra" para comenzar!
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

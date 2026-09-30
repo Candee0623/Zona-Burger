@@ -64,6 +64,12 @@ path('panel/promociones/tipos-beneficio/<int:pk>/eliminar/', views.eliminar_tipo
     path('panel/productos/<int:idproducto>/editar/', views.producto_editar, name='producto_editar'),
     path('panel/productos/<int:idproducto>/eliminar/', views.producto_eliminar, name='producto_eliminar'),
 
+    # Menú - Extras
+    path('panel/extras/', views.extra_lista, name='extra_lista'),
+    path('panel/extras/crear/', views.extra_crear, name='extra_crear'),
+    path('panel/extras/<int:idextra>/editar/', views.extra_editar, name='extra_editar'),
+    path('panel/extras/<int:idextra>/eliminar/', views.extra_eliminar, name='extra_eliminar'),
+
     # Panel - Recetas e Insumos de la Receta
     path('panel/recetas/', views.lista_recetas, name='lista_recetas'),
     path('panel/recetas/producto/<int:idproducto>/', views.gestionar_receta, name='gestionar_receta'),
