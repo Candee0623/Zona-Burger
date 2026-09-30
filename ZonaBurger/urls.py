@@ -25,28 +25,40 @@ urlpatterns = [
     path('pedido-exitoso/', views.pedido_exitoso, name='pedido_exitoso'),
 
     # Promociones 
-    path('promociones/', views.lista_promociones, name='lista_promociones'),
-    path('promociones/crear/', views.crear_promocion, name='crear_promocion'),
-    path('promociones/editar/<int:idpromocion>/', views.editar_promocion, name='editar_promocion'),
-    path('promociones/eliminar/<int:idpromocion>/', views.eliminar_promocion, name='eliminar_promocion'),
+    path('panel/promociones/', views.promociones_panel, name='promociones_panel'),
+    path('panel/promociones/lista/', views.lista_promociones, name='panel_lista_promociones'),
+    path('panel/promociones/crear/', views.crear_promocion, name='panel_crear_promocion'),
+    path('panel/promociones/<int:idpromocion>/editar/', views.editar_promocion, name='panel_editar_promocion'),
+    path('panel/promociones/<int:idpromocion>/eliminar/', views.eliminar_promocion, name='panel_eliminar_promocion'),
+
+    # Tipos de beneficio
+    path('panel/promociones/tipos-beneficio/', views.lista_tipos_beneficio, name='panel_lista_tipos_beneficio'),
+path('panel/promociones/tipos-beneficio/crear/', views.crear_tipo_beneficio, name='panel_crear_tipo_beneficio'),
+path('panel/promociones/tipos-beneficio/<int:pk>/editar/', views.editar_tipo_beneficio, name='panel_editar_tipo_beneficio'),
+path('panel/promociones/tipos-beneficio/<int:pk>/eliminar/', views.eliminar_tipo_beneficio, name='panel_eliminar_tipo_beneficio'),
 
     # Panel de Administración - Inicio
     path('panel/', panel_inicio, name='panel_inicio'),
-    path('pedido/<int:idpedido>/toggle_pagado/', views.toggle_pagado, name='toggle_pagado'),
+    path('pedido/<int:idpedido>/ticket-modal/', views.obtener_ticket_modal, name='obtener_ticket_modal'),
+    path('pedido/<int:idpedido>/toggle-pagado/', views.toggle_pagado, name='toggle_pagado'),
+    path('pedido/<int:idpedido>/cambiar-estado/', views.actualizar_estado_pedido, name='cambiar_estado'),
 
-    # Panel - Categorías
+    # Panel - Menú
+    path('panel/menu/', views.menu_panel, name='menu_panel'),
+
+    # Menú - Categorías
     path('panel/categorias/', views.categoria_lista, name='categoria_lista'),
     path('panel/categorias/crear/', views.categoria_crear, name='categoria_crear'),
     path('panel/categorias/<int:idcategoria>/editar/', views.categoria_editar, name='categoria_editar'),
     path('panel/categorias/<int:idcategoria>/eliminar/', views.categoria_eliminar, name='categoria_eliminar'),
 
-    # Panel - Opciones (Grupos + sus opciones inline)
+    # Menú - Opciones (Grupos + sus opciones inline)
     path('panel/opciones/', views.grupo_lista, name='grupo_lista'),
     path('panel/opciones/crear/', views.grupo_crear, name='grupo_crear'),
     path('panel/opciones/<int:idgrupo>/editar/', views.grupo_editar, name='grupo_editar'),
     path('panel/opciones/<int:idgrupo>/eliminar/', views.grupo_eliminar, name='grupo_eliminar'),
 
-    # Panel - Productos
+    # Menú - Productos
     path('panel/productos/', views.producto_lista, name='producto_lista'),
     path('panel/productos/crear/', views.producto_crear, name='producto_crear'),
     path('panel/productos/<int:idproducto>/editar/', views.producto_editar, name='producto_editar'),

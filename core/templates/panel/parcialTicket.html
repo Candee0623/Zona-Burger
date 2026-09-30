@@ -1,0 +1,103 @@
+<div class="ticket-termico" style="font-family: 'Courier New', Courier, monospace; color: #000; width: 100%; max-width: 300px; margin: 0 auto; background: #fff; padding: 10px;">
+    <!-- ENCABEZADO -->
+    <div style="text-align: center;">
+        <h3 style="margin: 0; font-size: 1.2rem;">🍔 ZONA BURGER 🍔</h3>
+        <p style="font-size: 0.75rem; margin: 2px 0;">Comidas & Hamburguesas</p>
+        <p style="font-size: 0.7rem; color: #555; margin: 0;">Fecha: {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
+
+    <!-- DATOS DEL PEDIDO Y CLIENTE -->
+    <div style="font-size: 0.8rem;">
+        <p style="margin: 2px 0;"><strong>Pedido N°:</strong> #{{ pedido.idpedido }}</p>
+        <p style="margin: 2px 0;"><strong>Cliente:</strong> {{ pedido.idcliente.nombre|default:"General" }} {{ pedido.idcliente.apellido|default:"" }}</p>
+        
+        {% if pedido.idcliente.telefono %}
+        <p style="margin: 2px 0;"><strong>Teléfono:</strong> {{ pedido.idcliente.telefono }}</p>
+        {% endif %}
+        
+        <!-- DIRECCIÓN LIMPIA -->
+        <p style="margin: 2px 0;"><strong>Dirección:</strong> 
+            {% if direccion_cliente and direccion_cliente.calle %}
+                {{ direccion_cliente.calle }} {{ direccion_cliente.numero }}{% if direccion_cliente.piso %}{% if direccion_cliente.piso != 'None' %}, Piso {{ direccion_cliente.piso }}{% endif %}{% endif %}{% if direccion_cliente.localidad and direccion_cliente.localidad != 'A coordinar con el vendedor' %} - {{ direccion_cliente.localidad }}{% endif %}
+            {% else %}
+                Retira en local
+            {% endif %}
+        </p>
+
+        <p style="margin: 2px 0;"><strong>Medio de Pago:</strong> {{ pedido.idmediopago|default:"No especificado" }}</p>
+        
+        {% if pedido.horarioentregadeseado %}
+        <p style="margin: 2px 0;"><strong>Hora Deseada:</strong> {{ pedido.horarioentregadeseado|time:"H:i" }}</p>
+        {% endif %}
+
+        {% if pedido.comentarios %}
+        <p style="margin: 2px 0;"><strong>Comentarios:</strong> {{ pedido.comentarios }}</p>
+        {% endif %}
+    </div>
+
+    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
+
+    <!-- DETALLE DE PRODUCTOS Y OPCIONES -->
+    <div style="font-size: 0.8rem; font-weight: bold; margin-bottom: 4px;">DETALLE DE PRODUCTOS:</div>
+
+    <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
+        <tbody>
+            {% for detalle in detalles %}
+            <tr>
+                <td colspan="2" style="padding: 6px 0; border-bottom: 1px dotted #ccc;">
+                    <strong>{{ detalle.cantidad }}x {{ detalle.idproducto.nombre|default:"Producto" }}</strong>
+                    
+                    <!-- Opciones o extras guardados -->
+                    {% if detalle.observaciones %}
+                        <div style="font-size: 0.75rem; color: #333; padding-left: 10px; margin-top: 2px;">
+                            • {{ detalle.observaciones }}
+                        </div>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td style="font-size: 0.75rem; color: #555; padding: 2px 0;">Subtotal ítem:</td>
+                <td style="text-align: right; padding: 2px 0; font-weight: bold;">
+                    ${{ detalle.preciounitario|floatformat:2 }}
+                </td>
+            </tr>
+            <tr><td colspan="2" style="border-bottom: 1px solid #eee; padding-bottom: 2px;"></td></tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" style="text-align: center; padding: 5px 0;">Sin detalles registrados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
+
+    <!-- DESCUENTOS O PALABRA CLAVE -->
+    {% if pedido.palabra_clave or pedido.cupon or pedido.descuento %}
+    <div style="font-size: 0.8rem; margin-bottom: 6px;">
+        {% if pedido.palabra_clave or pedido.cupon %}
+        <p style="margin: 2px 0;"><strong>Palabra Clave:</strong> {{ pedido.palabra_clave|default:pedido.cupon }}</p>
+        {% endif %}
+        {% if pedido.descuento %}
+        <p style="margin: 2px 0; color: #c0392b;"><strong>Descuento:</strong> -${{ pedido.descuento|floatformat:2 }}</p>
+        {% endif %}
+    </div>
+    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
+    {% endif %}
+
+    <!-- TOTAL FINAL -->
+    <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold;">
+        <span>TOTAL:</span>
+        <span>${{ pedido.total|default:"0.00"|floatformat:2 }}</span>
+    </div>
+
+    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
+
+    <!-- PIE DE TICKET -->
+    <div style="text-align: center; font-size: 0.7rem; color: #555;">
+        <p style="margin: 2px 0;">¡Gracias por tu compra!</p>
+        <p style="margin: 2px 0;">zona-burger.com</p>
+    </div>
+</div>

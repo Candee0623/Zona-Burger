@@ -1,0 +1,163 @@
+ html
+{% extends 'panel/base.html' %}
+
+{% block title %}Zona-Burger | Menú{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: 30px;">
+
+    <h1 style="
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0;
+    ">
+        Menú
+    </h1>
+
+    <p style="
+        margin: 6px 0 0;
+        color: #888;
+        font-size: 0.9rem;
+    ">
+        Seleccioná qué querés administrar.
+    </p>
+
+</div>
+
+
+<div style="
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+">
+
+
+    <!-- PRODUCTOS -->
+
+    <a href="#" style="
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 25px;
+        text-decoration: none;
+        display: block;
+        transition: 0.2s;
+    "
+    onmouseover="this.style.borderColor='#00d26a'"
+    onmouseout="this.style.borderColor='#333'">
+
+        <div style="
+            font-size: 2rem;
+            margin-bottom: 12px;
+        ">
+            🍕
+        </div>
+
+        <h2 style="
+            margin: 0;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 600;
+        ">
+            Productos
+        </h2>
+
+        <p style="
+            margin: 8px 0 0;
+            color: #888;
+            font-size: 0.9rem;
+        ">
+            Administrar productos
+        </p>
+
+    </a>
+
+
+    <!-- CATEGORÍAS -->
+
+    <a href="{% url 'categoria_lista' %}" style="
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 25px;
+        text-decoration: none;
+        display: block;
+        transition: 0.2s;
+    "
+    onmouseover="this.style.borderColor='#00d26a'"
+    onmouseout="this.style.borderColor='#333'">
+
+        <div style="
+            font-size: 2rem;
+            margin-bottom: 12px;
+        ">
+            🏷️
+        </div>
+
+        <h2 style="
+            margin: 0;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 600;
+        ">
+            Categorías
+        </h2>
+
+        <p style="
+            margin: 8px 0 0;
+            color: #888;
+            font-size: 0.9rem;
+        ">
+            Administrar categorías
+        </p>
+
+    </a>
+
+
+    <!-- GRUPOS DE OPCIONES -->
+
+    <a href="{% url 'grupo_lista' %}" style="
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 25px;
+        text-decoration: none;
+        display: block;
+        transition: 0.2s;
+    "
+    onmouseover="this.style.borderColor='#00d26a'"
+    onmouseout="this.style.borderColor='#333'">
+
+        <div style="
+            font-size: 2rem;
+            margin-bottom: 12px;
+        ">
+            ➕
+        </div>
+
+        <h2 style="
+            margin: 0;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 600;
+        ">
+            Grupos de opciones
+        </h2>
+
+        <p style="
+            margin: 8px 0 0;
+            color: #888;
+            font-size: 0.9rem;
+        ">
+            Administrar opciones y adicionales
+        </p>
+
+    </a>
+
+
+</div>
+
+{% endblock %}
+

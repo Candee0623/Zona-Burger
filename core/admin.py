@@ -5,7 +5,7 @@ from .models import (
     ZonasEntrega, RedesSociales, CategoriaProducto, EstadoStock, EstadoProducto, 
     Producto, Extras, ProductoExtras, GrupoOpcion, Opcion, ProductoGrupoOpcion, 
     Insumo, Compras, Receta, MedioPago, Cliente, Direccion, EstadoPedido, 
-    Pedido, Promocion, 
+    Pedido, Promocion, TipoBeneficio
 )
 
 # --- CLASE BASE DE ACCIONES PARA LOS MODELADMIN ---
@@ -195,9 +195,18 @@ class PedidoAdmin(AccionesAdminMixin, admin.ModelAdmin):
     list_filter = ('idestadopedido', 'idmediopago', 'idcliente')
     search_fields = ('idcliente__nombre', 'idcliente__apellido')
 
+@admin.register(TipoBeneficio)
+class TipoBeneficioAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'comportamiento')  # Quitamos el campo con ID para evitar errores
+    search_fields = ('nombre',)
+
 @admin.register(Promocion)
-class PromocionAdmin(AccionesAdminMixin, admin.ModelAdmin):
-    list_display = ('idpromocion', 'palabraclave', 'tipobeneficio', 'valor', 'activo', 'acciones')
-    list_display_links = ('idpromocion',)
-    list_filter = ('activo', 'tipobeneficio')
-    search_fields = ('palabraclave', 'tipobeneficio')
+class PromocionAdmin(admin.ModelAdmin):
+    list_display = ('idpromocion', 'palabraclave', 'get_tipo_beneficio', 'valor', 'fechainicio', 'fechafin', 'activo')
+    list_filter = ('activo', 'fechainicio')
+    search_fields = ('palabraclave',)
+
+    def get_tipo_beneficio(self, obj):
+        # Intenta obtener el valor de la relación de forma segura
+        return getattr(obj, 'tipobeneficio', None) or "Sin asignar"
+    get_tipo_beneficio.short_description = 'Tipo de Beneficio'

@@ -1,0 +1,38 @@
+{% extends 'panel/base.html' %}
+{% block title %}Zona-Burger | Grupos de opciones{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Grupos de opciones</h1>
+    <a href="{% url 'grupo_crear' %}" class="btn btn-primary">+ Nuevo grupo</a>
+</div>
+
+<table class="tabla-panel">
+    <thead>
+        <tr><th>ID</th><th>Nombre</th><th>Min</th><th>Max</th><th>Opciones</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+        {% for grupo in grupos %}
+        <tr>
+            <td>{{ grupo.idgrupo }}</td>
+            <td>{{ grupo.nombre }}</td>
+            <td>{{ grupo.minselecciones }}</td>
+            <td>{{ grupo.maxselecciones }}</td>
+            <td>
+                {% for opcion in grupo.opcion_set.all %}
+                    {{ opcion.nombre }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    <em>Sin opciones</em>
+                {% endfor %}
+            </td>
+            <td>
+                <a href="{% url 'grupo_editar' grupo.idgrupo %}">✏️ Editar</a>
+                <a href="{% url 'grupo_eliminar' grupo.idgrupo %}">🗑️ Eliminar</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No hay grupos cargados.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

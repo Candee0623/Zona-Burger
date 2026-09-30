@@ -418,20 +418,44 @@ class DetallePedido(models.Model):
     idproducto = models.ForeignKey('Producto', models.DO_NOTHING, db_column='IdProducto', blank=True, null=True)
     cantidad = models.IntegerField(db_column='Cantidad')
     preciounitario = models.DecimalField(db_column='PrecioUnitario', max_digits=10, decimal_places=2)
-  
+    observaciones = models.CharField(db_column='Observaciones', max_length=255, blank=True, null=True) # <-- Nuevo campo
+
     class Meta:
+        managed = False # O true dependiendo de si manejas migraciones
         db_table = 'DetallePedido'
  
  
-class Promocion(models.Model):
+class TipoBeneficio(models.Model):
+    TIPO_PORCENTAJE = 'PORCENTAJE'
+    TIPO_MONTO_FIJO = 'MONTO_FIJO'
+    TIPO_SIN_VALOR = 'SIN_VALOR'
 
-    TIPOS_BENEFICIO = [
-        ('2x1', '2 x 1'),
-        ('3x2', '3 x 2'),
-        ('PRODUCTO_GRATIS', 'Producto gratis'),
-        ('DESCUENTO_PORCENTAJE', 'Descuento porcentual'),
-        ('DESCUENTO_FIJO', 'Descuento fijo'),
+    OPCIONES_COMPORTAMIENTO = [
+        (TIPO_PORCENTAJE, 'Descuento porcentual (%)'),
+        (TIPO_MONTO_FIJO, 'Descuento en dinero fijo ($)'),
+        (TIPO_SIN_VALOR, 'Sin valor (Ej: 2x1, Producto de regalo)'),
     ]
+
+    idtipobeneficio = models.AutoField(primary_key=True, db_column='IdTipoBeneficio')
+    codigo = models.CharField(max_length=50, null=True, blank=True, db_column='Codigo')
+    nombre = models.CharField(max_length=100, db_column='Nombre')
+    descripcion = models.CharField(max_length=255, blank=True, null=True, db_column='Descripcion')
+    comportamiento = models.CharField(
+        max_length=50,
+        choices=OPCIONES_COMPORTAMIENTO,
+        default=TIPO_SIN_VALOR,
+        verbose_name="Comportamiento",
+        db_column='comportamiento' # Asegúrate de que en SQL Server la columna se llame así (o 'Comportamiento')
+    )
+
+    def __str__(self):
+        return self.nombre
+
+    class Meta:
+        managed = False  # Evita que Django intente recrear la tabla o modificarla
+        db_table = 'TipoBeneficio'  # Fuerza a usar la tabla oficial de SQL Server donde apunta la FK
+
+class Promocion(models.Model):
 
     idpromocion = models.AutoField(
         db_column='IdPromocion',
@@ -446,12 +470,11 @@ class Promocion(models.Model):
         null=True
     )
 
-    tipobeneficio = models.CharField(
-        db_column='TipoBeneficio',
-        max_length=50,
-        db_collation='Modern_Spanish_CI_AS',
-        choices=TIPOS_BENEFICIO,
-        blank=True,
+    tipobeneficio = models.ForeignKey(
+        'TipoBeneficio', 
+        on_delete=models.DO_NOTHING, 
+        db_column='IdTipoBeneficio',  
+        blank=True, 
         null=True
     )
 
@@ -483,20 +506,27 @@ class Promocion(models.Model):
     )
 
     def __str__(self):
-        return f"{self.palabraclave} ({self.get_tipobeneficio_display()})"
-
-    @property
-    def descripcion_amigable(self):
-        if self.tipobeneficio == 'DESCUENTO_PORCENTAJE':
-            return f"Descuento del {int(self.valor)}%" if self.valor else "Descuento porcentual"
-        elif self.tipobeneficio == 'DESCUENTO_FIJO':
-            return f"Descuento de ${self.valor}" if self.valor else "Descuento fijo"
-        elif self.tipobeneficio == 'PRODUCTO_GRATIS':
-            return "¡Llevá un Producto Gratis!"
-        return self.get_tipobeneficio_display()
+        return f"{self.palabraclave} ({self.tipo_beneficio})"
 
     class Meta:
         db_table = 'Promocion'
+        managed = False
+
+@property
+def descripcion_amigable(self):
+    tipo = self.tipo_beneficio.nombre  # ajustá al campo real de TipoBeneficio
+
+    if tipo == 'DESCUENTO_PORCENTAJE':
+        return f"Descuento del {int(self.valor)}%" if self.valor else "Descuento porcentual"
+    elif tipo == 'DESCUENTO_FIJO':
+        return f"Descuento de ${self.valor}" if self.valor else "Descuento fijo"
+    elif tipo == 'PRODUCTO_GRATIS':
+        return "¡Llevá un Producto Gratis!"
+    return str(self.tipo_beneficio)
+
+class Meta:
+    db_table = 'Promocion'
+    managed = False
  
  
 class ProductoPromocion(models.Model):

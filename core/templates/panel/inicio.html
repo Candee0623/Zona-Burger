@@ -3,53 +3,105 @@
 
 {% block content %}
 <style>
-    .dashboard-wrapper {
-        background-color: #000000;
-        color: #ffffff;
-        padding: 1.5rem;
-    }
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-    @media (max-width: 768px) {
-        .metrics-grid { grid-template-columns: 1fr; }
-    }
-    .metric-card {
-        background-color: #121212;
-        border: 1px solid #2e2e2e;
-        border-radius: 8px;
-        padding: 1rem;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    }
+    .dashboard-wrapper { background-color: #000000; color: #ffffff; padding: 1.5rem; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 768px) { .metrics-grid { grid-template-columns: 1fr; } }
+    .metric-card { background-color: #121212; border: 1px solid #2e2e2e; border-radius: 8px; padding: 1rem; text-align: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
     .metric-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.2rem; }
     .metric-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #a0a0a0; font-weight: 600; }
-    .status-container { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 2rem; }
-    .btn-status {
-        background-color: #121212; border: 1px solid #2e2e2e; color: #ffffff;
-        padding: 0.6rem 1.2rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600;
-        display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;
-    }
+    
+    .filter-card { background-color: #121212; border: 1px solid #2e2e2e; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+    .filter-group { flex: 1; min-width: 250px; }
+    .filter-group label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #a0a0a0; margin-bottom: 0.4rem; font-weight: 600; }
+    .filter-control { width: 100%; background-color: #1a1a1a; border: 1px solid #333333; color: #ffffff; padding: 0.55rem 0.75rem; border-radius: 6px; font-size: 0.9rem; }
+    .filter-control:focus { border-color: #00d26a; outline: none; }
+    .filter-actions { display: flex; gap: 0.5rem; }
+
+    .status-container { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .btn-status { background-color: #121212; border: 1px solid #2e2e2e; color: #ffffff; padding: 0.6rem 1.2rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; }
     .btn-status:hover { background-color: #1c1c1c; border-color: #555555; color: #ffffff; }
-    .table-card {
-        background-color: #121212; border: 1px solid #2e2e2e; border-radius: 8px;
-        overflow: hidden; 
-    }
-    .table-card-header {
-        background-color: #181818; border-bottom: 1px solid #2e2e2e;
-        padding: 1rem 1.25rem; border-top-left-radius: 8px; border-top-right-radius: 8px;
-    }
+    .btn-status.active { border-color: #00d26a; background-color: #18281e; }
+
+    .table-card { background-color: #121212; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; }
+    .table-card-header { background-color: #181818; border-bottom: 1px solid #2e2e2e; padding: 1rem 1.25rem; }
     .custom-table { width: 100%; border-collapse: collapse; color: #e0e0e0; }
-    .custom-table th {
-        background-color: #1a1a1a; color: #888888; text-transform: uppercase;
-        font-size: 0.75rem; letter-spacing: 0.5px; padding: 0.85rem 1rem;
-        border-bottom: 2px solid #2e2e2e; text-align: left;
-    }
+    .custom-table th { background-color: #1a1a1a; color: #888888; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 0.85rem 1rem; border-bottom: 2px solid #2e2e2e; text-align: left; }
     .custom-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #222222; font-size: 0.9rem; vertical-align: middle; }
     .custom-table tbody tr:hover { background-color: #1a1a1a; }
+
+    /* ESTILOS DE BOTONES DE ACCIÓN PERSONALIZADOS */
+    .btn-accion-custom {
+        background-color: #222222;
+        border: 1px solid #444444;
+        color: #ffffff;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .btn-accion-custom:hover {
+        background-color: #333333;
+        border-color: #00d26a;
+        color: #00d26a;
+    }
+    
+    /* ESTILOS PARA EL BOTÓN DE PAGO */
+    .btn-pago-pagado { background-color: #00d26a; color: #000; border: none; padding: 4px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    .btn-pago-debe { background-color: #e74c3c; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+
+    /* MODAL FLOTANTE PROPIO (Independiente de Bootstrap) */
+    .custom-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+    .custom-modal-box {
+        background-color: #181818;
+        border: 1px solid #333;
+        width: 350px;
+        max-width: 90%;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+        overflow: hidden;
+    }
+    .custom-modal-header {
+        background-color: #222;
+        padding: 12px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #333;
+        color: #fff;
+        font-weight: bold;
+    }
+    .custom-modal-close {
+        background: none; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer;
+    }
+    .custom-modal-close:hover { color: #fff; }
+    .custom-modal-body {
+        background-color: #ffffff;
+        color: #000000;
+        padding: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .custom-modal-footer {
+        background-color: #222;
+        padding: 10px 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid #333;
+    }
 </style>
 
 <div class="dashboard-wrapper">
@@ -76,12 +128,37 @@
 
     <!-- BOTONES DE ESTADO -->
     <div class="status-container">
-        <a href="#" class="btn-status"><span>Pendientes:</span> <span class="badge bg-warning text-dark">{{ resumen.pendiente }}</span></a>
-        <a href="#" class="btn-status"><span>En Preparación:</span> <span class="badge bg-info text-dark">{{ resumen.en_preparacion }}</span></a>
-        <a href="#" class="btn-status"><span>Enviados:</span> <span class="badge bg-primary">{{ resumen.enviado }}</span></a>
-        <a href="#" class="btn-status"><span>Entregados:</span> <span class="badge bg-success">{{ resumen.entregado }}</span></a>
-        <a href="#" class="btn-status"><span>Cancelados:</span> <span class="badge bg-danger">{{ resumen.cancelado }}</span></a>
+        {% for item in estados_con_conteo %}
+            <a href="?estado={{ item.estado.pk }}{% if filtro_cliente_actual %}&cliente={{ filtro_cliente_actual }}{% endif %}" 
+               class="btn-status {% if filtro_estado_actual == item.estado.pk|stringformat:'s' %}active{% endif %}">
+                <span>{{ item.estado.descripcion }}:</span> 
+                <span class="badge" style="background-color: #333333; color: #ffffff; padding: 0.35em 0.65em; border-radius: 4px; font-weight: bold;">
+                    {{ item.cantidad|default:0 }}
+                </span>
+            </a>
+        {% endfor %}
+
+        {% if filtro_estado_actual or filtro_cliente_actual %}
+        <a href="{% url 'panel_inicio' %}" class="btn-status" style="border-color: #e74c3c; color: #ff6b6b;">
+            <span>✕ Limpiar filtros</span>
+        </a>
+        {% endif %}
     </div>
+
+    <!-- FORMULARIO DE BÚSQUEDA -->
+    <form method="GET" class="filter-card">
+        <div class="filter-group">
+            <label for="cliente">🔍 Buscar Pedido por Nombre o Apellido de Cliente</label>
+            <input type="text" id="cliente" name="cliente" class="filter-control" value="{{ filtro_cliente_actual|default:'' }}" placeholder="Ej: candela, Juan, Perez...">
+        </div>
+        {% if filtro_estado_actual %}
+        <input type="hidden" name="estado" value="{{ filtro_estado_actual }}">
+        {% endif %}
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-success fw-bold px-4" style="background-color: #00d26a; border: none; color: #000;">Buscar</button>
+            <a href="{% url 'panel_inicio' %}" class="btn btn-outline-secondary px-3" style="color: #ccc; border-color: #333;">Restablecer</a>
+        </div>
+    </form>
 
     <!-- TABLA DE PEDIDOS -->
     <div class="table-card">
@@ -112,25 +189,24 @@
                             <td>{{ pedido.horarioentregadeseado|time:"H:i"|default:"Sin hora" }}</td>
                             <td>{{ pedido.idmediopago|default:"No especificado" }}</td>
                             
-                            <!-- BOTÓN DE PAGO DIRECTO CON COLOR FORZADO -->
                             <td>
-                                <button type="button" 
-                                        id="btn-pago-{{ pedido.idpedido }}" 
-                                        class="btn btn-sm fw-bold text-white btn-toggle-pago {% if pedido.pagado %}btn-pago-pagado{% else %}btn-pago-debe{% endif %}" 
-                                        data-url="{% url 'toggle_pagado' pedido.idpedido %}" 
-                                        data-id="{{ pedido.idpedido }}" 
-                                        title="Hacer clic para cambiar estado">
+                                <a href="{% url 'toggle_pagado' pedido.idpedido %}" class="{% if pedido.pagado %}btn-pago-pagado{% else %}btn-pago-debe{% endif %}" style="text-decoration: none; display: inline-block;">
                                     {% if pedido.pagado %}Pagado{% else %}Debe{% endif %}
-                                </button>
+                                </a>
                             </td>
 
                             <td><span class="badge bg-secondary">{{ pedido.idestadopedido|default:"Sin estado" }}</span></td>
                             <td><strong class="text-success">${{ pedido.total|default:"0.00"|floatformat:2 }}</strong></td>
+                            
+                            <!-- BOTONES DE ACCIÓN PROLIJOS -->
                             <td class="text-end pe-3">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{% url 'ver_ticket' pedido.idpedido %}" class="btn btn-outline-light btn-sm" title="Visualizar ticket">🧾</a>
-                                    <a href="{% url 'imprimir_ticket' pedido.idpedido %}" target="_blank" class="btn btn-outline-light btn-sm" title="Imprimir ticket">🖨️</a>
-                                    <a href="{% url 'cambiar_estado_pedido' pedido.idpedido %}" class="btn btn-outline-warning btn-sm" title="Modificar estado">🔄</a>
+                                <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                                    <button type="button" class="btn-accion-custom" data-ticket-url="{% url 'obtener_ticket_modal' pedido.idpedido %}" onclick="abrirTicketModal(this.dataset.ticketUrl)" title="Ver / Imprimir Ticket">
+                                        🧾 Ticket
+                                    </button>
+                                    <button type="button" class="btn-accion-custom" data-id-pedido="{{ pedido.idpedido }}" data-estado-actual="{{ pedido.idestadopedido.pk|default_if_none:'' }}" onclick="abrirEstadoModal(this.dataset.idPedido, this.dataset.estadoActual)" title="Modificar estado">
+                                        🔄 Estado
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -142,52 +218,164 @@
             <div class="text-center py-5 text-muted">
                 <div class="fs-1 mb-2">📭</div>
                 <h5>No hay pedidos registrados para hoy</h5>
-                <p class="small text-muted">Los nuevos pedidos aparecerán automáticamente aquí.</p>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- SCRIPTS: Bootstrap + JavaScript AJAX Actualizado -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- VENTANA MODAL FLOTANTE PARA TICKET -->
+<div id="modalTicketOverlay" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div class="custom-modal-header">
+            <span>🧾 Ticket Térmico</span>
+            <button type="button" class="custom-modal-close" onclick="cerrarTicketModal()">&times;</button>
+        </div>
+        <div id="contenido-ticket-modal" class="custom-modal-body">
+            Cargando ticket...
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cerrarTicketModal()">Cerrar</button>
+            <button type="button" class="btn btn-success btn-sm fw-bold" onclick="imprimirModal()" style="background-color: #00d26a; color: #000; border: none;">🖨️ Imprimir</button>
+        </div>
+    </div>
+</div>
+
+<!-- VENTANA MODAL FLOTANTE PARA CAMBIAR ESTADO -->
+<div id="modalEstadoOverlay" class="custom-modal-overlay">
+    <div class="custom-modal-box" style="width: 400px;">
+        <div class="custom-modal-header">
+            <span>🔄 Actualizar Estado del Pedido</span>
+            <button type="button" class="custom-modal-close" onclick="cerrarEstadoModal()">&times;</button>
+        </div>
+        <form id="formCambiarEstado" method="POST" action="">
+            {% csrf_token %}
+            <div class="custom-modal-body" style="background-color: #181818; color: #fff;">
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted" style="font-size: 0.8rem;">Seleccionar Nuevo Estado:</label>
+                    <select name="nuevo_estado" id="selectNuevoEstado" class="filter-control" onchange="verificarEstadoCancelado(this)">
+                        {% for item in estados_con_conteo %}
+                            <option value="{{ item.estado.pk }}">{{ item.estado.descripcion }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Campo dinámico para justificación de cancelación -->
+                <div class="mb-3" id="grupoJustificacion" style="display: none;">
+                    <label class="form-label text-warning" style="font-size: 0.8rem;">⚠️ Justificación de cancelación (Obligatorio si se cancela):</label>
+                    <textarea name="justificacioncancelacion" id="inputJustificacion" class="filter-control" rows="2" placeholder="Ej: Sin stock de medallones, local cerrado..."></textarea>
+                </div>
+
+                <div class="p-3 rounded" style="background-color: #222; border: 1px dashed #444;">
+                    <p class="mb-1 text-info" style="font-size: 0.8rem;">💡 <strong>Aviso al cliente:</strong></p>
+                    <p class="mb-0 text-muted" style="font-size: 0.75rem;">Al guardar, el sistema generará automáticamente el mensaje formateado con los datos del cliente para notificarle el cambio.</p>
+                </div>
+
+            </div>
+            <div class="custom-modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="cerrarEstadoModal()">Cancelar</button>
+                <button type="submit" class="btn btn-success btn-sm fw-bold" style="background-color: #00d26a; color: #000; border: none;">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SCRIPTS PARA CONTROLAR MODALES E IMPRESIÓN -->
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll(".btn-toggle-pago").forEach(function(button) {
-            button.addEventListener("click", function() {
-                const url = this.getAttribute("data-url");
-                const idPedido = this.getAttribute("data-id");
-                const btn = document.getElementById("btn-pago-" + idPedido);
+    // FUNCIONES MODAL TICKET
+    function abrirTicketModal(url) {
+        const overlay = document.getElementById('modalTicketOverlay');
+        overlay.style.display = 'flex';
+        
+        document.getElementById('contenido-ticket-modal').innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Cargando ticket...</div>';
 
-                fetch(url, {
-                    method: "GET",
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "Accept": "application/json"
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // 1. Cambiar aspecto visual del botón del pedido individual
-                        if (data.pagado) {
-                            btn.classList.remove("btn-pago-debe");
-                            btn.classList.add("btn-pago-pagado");
-                            btn.innerHTML = "Pagado";
-                        } else {
-                            btn.classList.remove("btn-pago-pagado");
-                            btn.classList.add("btn-pago-debe");
-                            btn.innerHTML = "Debe";
-                        }
-
-                        // 2. ACTUALIZAR AL INSTANTE LOS TOTALES DE INGRESOS DE ARRIBA
-                        document.getElementById("val-efectivo").innerText = "$" + data.total_efectivo.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                        document.getElementById("val-transferencia").innerText = "$" + data.total_transferencia.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    }
-                })
-                .catch(error => console.error("Error:", error));
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('contenido-ticket-modal').innerHTML = html;
+            })
+            .catch(error => {
+                document.getElementById('contenido-ticket-modal').innerHTML = '<p style="color:red; text-align:center;">Error al cargar el ticket.</p>';
             });
-        });
-    });
+    }
+
+    function cerrarTicketModal() {
+        document.getElementById('modalTicketOverlay').style.display = 'none';
+    }
+
+    function imprimirModal() {
+        var contenidoTicket = document.getElementById('contenido-ticket-modal').innerHTML;
+        
+        var ventanaImpresion = window.open('', '_blank', 'height=600,width=400');
+        ventanaImpresion.document.write('<html><head><title>Imprimir Ticket</title>');
+        ventanaImpresion.document.write('<style>body { margin: 0; padding: 5px; font-family: "Courier New", Courier, monospace; }</style>');
+        ventanaImpresion.document.write('</head><body>');
+        ventanaImpresion.document.write(contenidoTicket);
+        ventanaImpresion.document.write('</body></html>');
+        ventanaImpresion.document.close();
+        ventanaImpresion.focus();
+        
+        setTimeout(() => {
+            ventanaImpresion.print();
+            ventanaImpresion.close();
+        }, 300);
+    }
+
+    // URL de cambio de estado generada por Django (con 0 como placeholder del id)
+    const URL_CAMBIAR_ESTADO_TEMPLATE = "{% url 'cambiar_estado' 0 %}";
+
+    // FUNCIONES MODAL ESTADO
+    function abrirEstadoModal(idPedido, estadoActualId) {
+        const overlay = document.getElementById('modalEstadoOverlay');
+        overlay.style.display = 'flex';
+        
+        const form = document.getElementById('formCambiarEstado');
+        form.action = URL_CAMBIAR_ESTADO_TEMPLATE.replace('/0/', `/${idPedido}/`);
+        
+        const select = document.getElementById('selectNuevoEstado');
+        if (estadoActualId) {
+            select.value = estadoActualId;
+        }
+        
+        verificarEstadoCancelado(select);
+    }
+
+    function cerrarEstadoModal() {
+        document.getElementById('modalEstadoOverlay').style.display = 'none';
+    }
+
+    function verificarEstadoCancelado(selectElement) {
+        const grupoJustificacion = document.getElementById('grupoJustificacion');
+        const inputJustificacion = document.getElementById('inputJustificacion');
+        
+        const textoSeleccionado = selectElement.options[selectElement.selectedIndex].text.toLowerCase();
+        
+        if (textoSeleccionado.includes('cancelado')) {
+            grupoJustificacion.style.display = 'block';
+            inputJustificacion.required = true;
+        } else {
+            grupoJustificacion.style.display = 'none';
+            inputJustificacion.required = false;
+            inputJustificacion.value = '';
+        }
+    }
+
+    // ABRIR WHATSAPP AUTOMÁTICAMENTE TRAS CAMBIAR ESTADO
+    // La vista devuelve ?wa_url=<link codificado> en el redirect si hay teléfono cargado.
+    (function abrirWhatsAppSiCorresponde() {
+        const params = new URLSearchParams(window.location.search);
+        // params.get() ya decodifica una vez automáticamente — no hay que
+        // volver a decodificar, o el "#" del número de pedido queda literal
+        // y el navegador corta el mensaje ahí (lo trata como fragmento de URL).
+        const waUrl = params.get('wa_url');
+        if (waUrl) {
+            window.open(waUrl, '_blank');
+            // Limpiamos el parámetro de la URL para que no se reabra al refrescar
+            params.delete('wa_url');
+            const nuevaUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.replaceState({}, document.title, nuevaUrl);
+        }
+    })();
 </script>
 {% endblock %}

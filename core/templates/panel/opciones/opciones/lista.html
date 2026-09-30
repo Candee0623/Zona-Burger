@@ -1,0 +1,31 @@
+{% extends 'panel/base.html' %}
+{% block title %}Zona-Burger | Opciones{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Opciones</h1>
+    <a href="{% url 'opcion_crear' %}" class="btn btn-primary">+ Nueva opción</a>
+</div>
+
+<table class="tabla-panel">
+    <thead>
+        <tr><th>ID</th><th>Nombre</th><th>Grupo</th><th>Precio adicional</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+        {% for opcion in opciones %}
+        <tr>
+            <td>{{ opcion.idopcion }}</td>
+            <td>{{ opcion.nombre }}</td>
+            <td>{{ opcion.idgrupo.nombre|default:"-" }}</td>
+            <td>${{ opcion.precioadicional|default:0 }}</td>
+            <td>
+                <a href="{% url 'opcion_editar' opcion.idopcion %}">✏️ Editar</a>
+                <a href="{% url 'opcion_eliminar' opcion.idopcion %}">🗑️ Eliminar</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No hay opciones cargadas.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,8 +1,9 @@
 from datetime import date, datetime
+from decimal import Decimal
 import logging
 import re
+import urllib.parse
 from urllib.parse import quote
-from django.db.models import Sum, F, DecimalField
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -10,40 +11,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.http import JsonResponse
+from django.db.models import Count, DecimalField, F, Q, Sum
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from decimal import Decimal
+from django.urls import reverse
 from django.utils import timezone
-from django.http import HttpResponse
-
-
 from .models import (
-    CategoriaProducto,
-    Cliente,
-    Direccion,
-    EstadoPedido,
-    Extras,
-    Horario,
-    MedioPago,
-    Negocio,
-    Opcion,
-    Pedido,
-    Producto,
-    ProductoGrupoOpcion,
-    ProductoPromocion,
-    Promocion,
-    RedesSociales,
-    ZonasEntrega,
-    GrupoOpcion,
-    EstadoStock,
-    EstadoProducto,
-    Receta,
-    RecetaInsumo,
-    Insumo,
-    Compras,
-    DetalleCompra,
-    AjusteStock,
-    DetallePedido
+    AjusteStock, CategoriaProducto, Cliente, Compras,
+    DetalleCompra, DetallePedido, Direccion, EstadoPedido,
+    EstadoProducto, EstadoStock, Extras, GrupoOpcion,
+    Horario, Insumo, MedioPago, Negocio, Opcion, Pedido,
+    Producto, ProductoGrupoOpcion, ProductoPromocion,
+    Promocion, Receta, RecetaInsumo, RedesSociales,
+    TipoBeneficio, ZonasEntrega
 )
 
 logger = logging.getLogger(__name__)
@@ -484,19 +464,22 @@ def procesar_checkout(request):
                 producto_obj = Producto.objects.filter(
                     pk=item.get('producto_id')
                 ).first()
-                
-                if producto_obj:
-                    cantidad = item.get('cantidad', 1)
-                    subtotal_item = Decimal(str(item.get('subtotal', 0)))
-                    # Precio unitario exacto calculado por ítem
-                    precio_unitario = subtotal_item / cantidad if cantidad else subtotal_item
+    
+            if producto_obj:
+                cantidad = item.get('cantidad', 1)
+                subtotal_item = Decimal(str(item.get('subtotal', 0)))
+                precio_unitario = subtotal_item / cantidad if cantidad else subtotal_item
 
-                    DetallePedido.objects.create(
-                        idpedido=pedido,
-                        idproducto=producto_obj,
-                        cantidad=cantidad,
-                        preciounitario=precio_unitario, # Se guarda el precio unitario perfecto
-                    )
+                # Convertimos las opciones/detalles del carrito en un texto plano
+                texto_opciones = ", ".join(item.get('detalles', [])) if isinstance(item.get('detalles'), list) else ""
+
+                DetallePedido.objects.create(
+                    idpedido=pedido,
+                    idproducto=producto_obj,
+                    cantidad=cantidad,
+                    preciounitario=precio_unitario,
+                    observaciones=texto_opciones, # <-- Guardamos las opciones aquí
+                )
 
         # Construcción del mensaje para WhatsApp y redirección...
         mensaje = '*¡Nuevo Pedido! 🍔*\n\n'
@@ -605,148 +588,343 @@ def pedido_exitoso(request):
 # 4. GESTIÓN DE PROMOCIONES
 # ==========================================
 
+def promociones_panel(request):
+    return render(request, 'panel/promociones/inicio.html')
+
 def lista_promociones(request):
-    promociones = Promocion.objects.all().order_by('-idpromocion')
+
+    promociones = Promocion.objects.all()
+
     return render(
         request,
         'panel/promociones/listaPromociones.html',
         {
-            'promociones': promociones
+            'promociones': promociones,
         }
     )
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Producto, TipoBeneficio, Promocion, ProductoPromocion
+
 def crear_promocion(request):
     productos = Producto.objects.all()
-
+    tipos = TipoBeneficio.objects.all()
+ 
     if request.method == 'POST':
         palabraclave = request.POST.get('palabraclave')
-        tipobeneficio = request.POST.get('tipobeneficio')
-        valor = request.POST.get('descuento') or None
-        fechainicio = request.POST.get('fechainicio')
-        fechafin = request.POST.get('fechafin')
+        tipo_beneficio_id = request.POST.get('tipobeneficio')
+        
+        # 1. Obtenemos el tipo de beneficio seleccionado
+        tipo_beneficio_obj = get_object_or_404(TipoBeneficio, pk=tipo_beneficio_id)
+        
+        # 2. Capturamos el valor del descuento enviado por el formulario
+        valor_raw = request.POST.get('descuento')
+        
+        # 3. Validamos según el comportamiento del tipo de beneficio que manda tu HTML
+        # Si el tipo es 'SIN_VALOR' (ej: 2x1), forzamos el valor a None (NULL en la BD)
+        if tipo_beneficio_obj.comportamiento == 'SIN_VALOR' or not valor_raw:
+            valor = None
+        else:
+            valor = valor_raw
+
+        fechainicio = request.POST.get('fechainicio') or None
+        fechafin = request.POST.get('fechafin') or None
         producto_id = request.POST.get('producto')
         activo = 1 if request.POST.get('activo') == 'on' else 0
-
+ 
+        # Validación de fechas
         if fechainicio and fechafin and fechafin < fechainicio:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'productos': productos,
-                    'titulo': 'Nueva promoción',
-                    'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
-                    'promocion': request.POST,
-                    'error': (
-                        'La fecha de fin no puede ser anterior a la fecha de inicio.'
-                    ),
-                },
-            )
-
+            return render(request, 'panel/promociones/formPromocion.html', {
+                'productos': productos,
+                'titulo': 'Nueva promoción',
+                'tipos_beneficio': tipos,
+                'promocion': request.POST,
+                'producto_seleccionado': int(producto_id) if producto_id else None,
+                'error': 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+            })
+ 
+        # Creamos la promoción con el valor limpio
         promocion = Promocion.objects.create(
             palabraclave=palabraclave,
-            tipobeneficio=tipobeneficio,
+            tipo_beneficio=tipo_beneficio_obj,
             valor=valor,
             fechainicio=fechainicio,
             fechafin=fechafin,
             activo=activo,
         )
-
+ 
+        # Asociamos el producto
         producto_obj = get_object_or_404(Producto, pk=producto_id)
         ProductoPromocion.objects.create(idpromocion=promocion, idproducto=producto_obj)
-
+        
         return redirect('lista_promociones')
-
-    return render(
-        request,
-        'panel/promociones/formPromocion.html',
-        {
-            'productos': productos,
-            'titulo': 'Nueva promoción',
-            'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
-            'promocion': {},
-        },
-    )
+ 
+    return render(request, 'panel/promociones/formPromocion.html', {
+        'productos': productos,
+        'titulo': 'Nueva promoción',
+        'tipos_beneficio': tipos,
+        'promocion': {},
+    })
 
 
 def editar_promocion(request, idpromocion):
     productos = Producto.objects.all()
+    tipos = TipoBeneficio.objects.all()
     promocion = get_object_or_404(Promocion, pk=idpromocion)
     relacion_pp = ProductoPromocion.objects.filter(idpromocion=promocion).first()
-
+ 
     if request.method == 'POST':
-        fechainicio = request.POST.get('fechainicio')
-        fechafin = request.POST.get('fechafin')
-
+        fechainicio = request.POST.get('fechainicio') or None
+        fechafin = request.POST.get('fechafin') or None
+ 
         if fechainicio and fechafin and fechafin < fechainicio:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'productos': productos,
-                    'titulo': 'Modificar promoción',
-                    'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
-                    'promocion': request.POST,
-                    'producto_seleccionado': int(request.POST.get('producto', 0)),
-                    'error': (
-                        'La fecha de fin no puede ser anterior a la fecha de inicio.'
-                    ),
-                },
-            )
+            return render(request, 'panel/promociones/formPromocion.html', {
+                'productos': productos,
+                'titulo': 'Modificar promoción',
+                'tipos_beneficio': tipos,
+                'promocion': request.POST,
+                'producto_seleccionado': int(request.POST.get('producto') or 0),
+                'tipo_beneficio_seleccionado': int(request.POST.get('tipobeneficio')) if request.POST.get('tipobeneficio') else None,
+                'error': 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+            })
+ 
+        # DIAGNÓSTICO: Esto imprimirá en tu consola negra de Django qué valor está llegando del select
+        id_tipo_recibido = request.POST.get('tipobeneficio')
+        print(f"--- DEBUG: ID de tipo beneficio recibido del form: {id_tipo_recibido} ---")
 
+        tipo_beneficio_obj = get_object_or_404(
+            TipoBeneficio, pk=id_tipo_recibido
+        )
+        
+        # Capturamos el valor del descuento enviado por el formulario
+        valor_raw = request.POST.get('descuento')
+        
+        # Validamos según el comportamiento: si es SIN_VALOR o está vacío, forzamos a None
+        if tipo_beneficio_obj.comportamiento == 'SIN_VALOR' or not valor_raw:
+            valor = None
+        else:
+            valor = valor_raw
+ 
         promocion.palabraclave = request.POST.get('palabraclave')
-        promocion.tipobeneficio = request.POST.get('tipobeneficio')
-        promocion.valor = request.POST.get('descuento') or None
+        promocion.tipobeneficio = tipo_beneficio_obj  
+        promocion.valor = valor  
         promocion.fechainicio = fechainicio
         promocion.fechafin = fechafin
         promocion.activo = 1 if request.POST.get('activo') == 'on' else 0
         promocion.save()
-
+ 
         ProductoPromocion.objects.filter(idpromocion=promocion).delete()
-
         producto_id = request.POST.get('producto')
         if producto_id:
             producto_obj = get_object_or_404(Producto, pk=producto_id)
-            ProductoPromocion.objects.create(
-                idpromocion=promocion, idproducto=producto_obj
-            )
-
+            ProductoPromocion.objects.create(idpromocion=promocion, idproducto=producto_obj)
+ 
         return redirect('lista_promociones')
-
-    return render(
-        request,
-        'panel/promociones/formPromocion.html',
-        {
-            'productos': productos,
-            'titulo': 'Modificar promoción',
-            'tipos_beneficio': Promocion.TIPOS_BENEFICIO,
-            'promocion': promocion,
-            'producto_seleccionado': (
-                relacion_pp.idproducto.pk
-                if relacion_pp and relacion_pp.idproducto
-                else None
-            ),
-        },
-    )
-
+ 
+    return render(request, 'panel/promociones/formPromocion.html', {
+        'productos': productos,
+        'titulo': 'Modificar promoción',
+        'tipos_beneficio': tipos,
+        'promocion': promocion,
+        'producto_seleccionado': (
+            relacion_pp.idproducto.pk if relacion_pp and relacion_pp.idproducto else None
+        ),
+        'tipo_beneficio_seleccionado': (
+            promocion.tipobeneficio.pk if promocion.tipobeneficio else None  
+        ),
+    })
 
 def eliminar_promocion(request, idpromocion):
     promocion = get_object_or_404(Promocion, pk=idpromocion)
-
+ 
     if request.method == 'POST':
         with transaction.atomic():
             ProductoPromocion.objects.filter(idpromocion=promocion).delete()
             promocion.delete()
         return redirect('lista_promociones')
+ 
+    return render(request, 'panel/promociones/confirmarEliminar.html', {
+        'promocion': promocion,
+    })
+
+def lista_tipos_beneficio(request):
+
+    tipos = TipoBeneficio.objects.all()
 
     return render(
         request,
-        'panel/promociones/confirmarEliminar.html',
+        'panel/promociones/tiposBeneficio/listar.html',
         {
-            'promocion': promocion
+            'tipos': tipos
+        }
+    )
+    
+
+def crear_tipo_beneficio(request):
+
+    if request.method == 'GET':
+        return render(
+            request,
+            'panel/promociones/tiposBeneficio/crear.html'
+        )
+
+    codigo = request.POST.get('codigo', '').strip()
+    nombre = request.POST.get('nombre', '').strip()
+    descripcion = request.POST.get('descripcion', '').strip()
+    comportamiento = request.POST.get('comportamiento', '').strip()
+
+    if not nombre:
+        messages.error(request, 'Debes ingresar un nombre para el beneficio.')
+        return redirect('crear_tipo_beneficio')
+
+    if not comportamiento:
+        messages.error(request, 'Debes seleccionar un comportamiento.')
+        return redirect('crear_tipo_beneficio')
+
+    # Si no se ingresa código, lo generamos automáticamente
+    if not codigo:
+        codigo = nombre.upper().replace(' ', '_')
+
+    if TipoBeneficio.objects.filter(codigo__iexact=codigo).exists():
+        messages.error(request, 'Ya existe un tipo de beneficio con ese código.')
+        return redirect('crear_tipo_beneficio')
+
+    if TipoBeneficio.objects.filter(nombre__iexact=nombre).exists():
+        messages.error(request, 'Ya existe un tipo de beneficio con ese nombre.')
+        return redirect('crear_tipo_beneficio')
+
+    TipoBeneficio.objects.create(
+        codigo=codigo,
+        nombre=nombre,
+        descripcion=descripcion,
+        comportamiento=comportamiento,
+    )
+
+    messages.success(request, 'Tipo de beneficio creado correctamente.')
+    return redirect('lista_tipos_beneficio')
+
+def editar_tipo_beneficio(request, pk):
+
+    tipo = get_object_or_404(
+        TipoBeneficio,
+        pk=pk
+    )
+
+    if request.method == 'POST':
+
+        codigo = request.POST.get(
+            'codigo',
+            ''
+        ).strip()
+
+        nombre = request.POST.get(
+            'nombre',
+            ''
+        ).strip()
+
+        descripcion = request.POST.get(
+            'descripcion',
+            ''
+        ).strip()
+
+        if not nombre:
+            messages.error(
+                request,
+                'El nombre no puede estar vacío.'
+            )
+
+            return redirect(
+                'editar_tipo_beneficio',
+                pk=pk
+            )
+
+        if not codigo:
+            codigo = nombre.upper().replace(' ', '_')
+
+        existe_codigo = TipoBeneficio.objects.filter(
+            codigo__iexact=codigo
+        ).exclude(
+            pk=pk
+        ).exists()
+
+        if existe_codigo:
+            messages.error(
+                request,
+                'Ya existe otro beneficio con ese código.'
+            )
+
+            return redirect(
+                'editar_tipo_beneficio',
+                pk=pk
+            )
+
+        existe_nombre = TipoBeneficio.objects.filter(
+            nombre__iexact=nombre
+        ).exclude(
+            pk=pk
+        ).exists()
+
+        if existe_nombre:
+            messages.error(
+                request,
+                'Ya existe otro beneficio con ese nombre.'
+            )
+
+            return redirect(
+                'editar_tipo_beneficio',
+                pk=pk
+            )
+
+        tipo.codigo = codigo
+        tipo.nombre = nombre
+        tipo.descripcion = descripcion
+
+        tipo.save()
+
+        messages.success(
+            request,
+            'Tipo de beneficio modificado correctamente.'
+        )
+
+        return redirect('lista_tipos_beneficio')
+
+    return render(
+        request,
+        'panel/promociones/tiposBeneficio/editar.html',
+        {
+            'tipo': tipo
         }
     )
 
+
+def eliminar_tipo_beneficio(request, pk):
+
+    tipo = get_object_or_404(
+        TipoBeneficio,
+        pk=pk
+    )
+
+    # Verificar si existen promociones relacionadas
+    if Promocion.objects.filter(
+        tipo_beneficio=tipo
+    ).exists():
+
+        messages.error(
+            request,
+            'No puedes eliminar este beneficio porque tiene promociones asociadas.'
+        )
+
+        return redirect('lista_promociones')
+
+    tipo.delete()
+
+    messages.success(
+        request,
+        'Tipo de beneficio eliminado correctamente.'
+    )
+
+    return redirect('lista_promociones')
 
 def promocion_es_valida(promocion):
     if not promocion or promocion.activo != 1:
@@ -805,7 +983,7 @@ def calcular_descuento_promocion(carrito, promocion):
     if not unidades:
         return Decimal('0.00'), 'La promoción no aplica a los productos del carrito.'
 
-    tipo = promocion.tipobeneficio
+    tipo = promocion.tipobeneficio.codigo if promocion.tipobeneficio else None
     valor = promocion.valor or Decimal('0.00')
     descuento = Decimal('0.00')
 
@@ -847,256 +1025,659 @@ def calcular_descuento_promocion(carrito, promocion):
 # ==========================================
 
 def panel_inicio(request):
-    hoy = timezone.localdate()
-    print(f"\n--- DEBUG PANEL --- Fecha de hoy: {hoy}")
+    hoy = timezone.now().date()
 
-    pedidos_hoy = Pedido.objects.filter(
+    # Pedidos del día
+    pedidos_hoy_base = Pedido.objects.filter(
         fecha_creacion__date=hoy
-    ).prefetch_related('detallepedido_set', 'detallepedido_set__idproducto').order_by('-fecha_creacion')
+    )
 
-    print(f"Total pedidos encontrados para hoy: {pedidos_hoy.count()}")
-    for p in pedidos_hoy:
-        print(f"Pedido #{p.idpedido} | Total: {p.total} | Pagado: {p.pagado} | Medio de Pago: '{getattr(p.idmediopago, 'nombremetodo', 'Sin método')}'")
+    # Filtros
+    filtro_estado = request.GET.get('estado')
+    filtro_cliente = request.GET.get('cliente')
 
-    total_pedidos_hoy = pedidos_hoy.count()
+    # Estados a mostrar
+    nombres_estados_deseados = [
+        'Pendiente',
+        'En Preparación',
+        'En proceso',
+        'Enviado',
+        'Entregado',
+        'Cancelado'
+    ]
 
-    ingresos_efectivo = Pedido.objects.filter(
-        fecha_creacion__date=hoy,
+    estados_con_conteo = []
+
+    for nombre in nombres_estados_deseados:
+        try:
+            estado = EstadoPedido.objects.get(
+                descripcion__iexact=nombre
+            )
+
+            cantidad = pedidos_hoy_base.filter(
+                idestadopedido=estado
+            ).count()
+
+            estados_con_conteo.append({
+                'estado': estado,
+                'cantidad': cantidad
+            })
+
+        except EstadoPedido.DoesNotExist:
+            pass
+
+    # Tabla principal
+    pedidos_hoy = pedidos_hoy_base
+
+    # Filtrar por estado
+    if filtro_estado:
+        pedidos_hoy = pedidos_hoy.filter(
+            idestadopedido_id=filtro_estado
+        )
+
+    # Filtrar por cliente
+    if filtro_cliente:
+        pedidos_hoy = pedidos_hoy.filter(
+            Q(idcliente__nombre__icontains=filtro_cliente) |
+            Q(idcliente__apellido__icontains=filtro_cliente)
+        )
+
+    # Total de pedidos del día
+    total_pedidos_hoy = pedidos_hoy_base.count()
+
+    # Ingresos en efectivo
+    total_efectivo = pedidos_hoy_base.filter(
         idmediopago__nombremetodo__iexact='efectivo',
         pagado=True
-    ).aggregate(suma=Sum('total'))['suma'] or 0
+    ).aggregate(
+        suma=Sum('total')
+    )['suma'] or 0
 
-    ingresos_transferencia = Pedido.objects.filter(
-        fecha_creacion__date=hoy,
+    # Ingresos por transferencia
+    total_transferencia = pedidos_hoy_base.filter(
         idmediopago__nombremetodo__icontains='transferencia',
         pagado=True
-    ).aggregate(suma=Sum('total'))['suma'] or 0
+    ).aggregate(
+        suma=Sum('total')
+    )['suma'] or 0
 
-    resumen = {
-        'pendiente': Pedido.objects.filter(fecha_creacion__date=hoy, idestadopedido=1).count(),
-        'en_preparacion': Pedido.objects.filter(fecha_creacion__date=hoy, idestadopedido=2).count(),
-        'enviado': Pedido.objects.filter(fecha_creacion__date=hoy, idestadopedido=3).count(),
-        'entregado': Pedido.objects.filter(fecha_creacion__date=hoy, idestadopedido=4).count(),
-        'cancelado': Pedido.objects.filter(fecha_creacion__date=hoy, idestadopedido=5).count(),
-    }
-
-    contexto = {
+    context = {
         'pedidos_hoy': pedidos_hoy,
+        'estados_con_conteo': estados_con_conteo,
+        'filtro_estado_actual': filtro_estado,
+        'filtro_cliente_actual': filtro_cliente,
         'total_pedidos_hoy': total_pedidos_hoy,
-        'total_efectivo': ingresos_efectivo,
-        'total_transferencia': ingresos_transferencia,
-        'resumen': resumen,
+        'total_efectivo': total_efectivo,
+        'total_transferencia': total_transferencia,
     }
-    
-    return render(request, 'panel/inicio.html', contexto)
+
+    return render(
+        request,
+        'panel/inicio.html',
+        context
+    )
 
 
-# --- NUEVA VISTA PARA CAMBIAR EL ESTADO DE PAGO ---
+def obtener_ticket_modal(request, idpedido):
+
+    pedido = get_object_or_404(
+        Pedido,
+        idpedido=idpedido
+    )
+
+    detalles = DetallePedido.objects.filter(
+        idpedido=pedido
+    )
+
+    direccion_cliente = None
+
+    if pedido.idcliente:
+        direccion_cliente = Direccion.objects.filter(
+            idcliente=pedido.idcliente
+        ).first()
+
+    context = {
+        'pedido': pedido,
+        'detalles': detalles,
+        'direccion_cliente': direccion_cliente,
+    }
+
+    return render(
+        request,
+        'panel/parcialTicket.html',
+        context
+    )
+
+
+def actualizar_estado_pedido(request, idpedido):
+
+    if request.method == 'POST':
+
+        pedido = get_object_or_404(
+            Pedido,
+            idpedido=idpedido
+        )
+
+        nuevo_estado_id = request.POST.get(
+            'nuevo_estado'
+        )
+
+        if nuevo_estado_id:
+
+            nuevo_estado = get_object_or_404(
+                EstadoPedido,
+                pk=nuevo_estado_id
+            )
+
+            pedido.idestadopedido = nuevo_estado
+
+            es_cancelado = (
+                'cancelado'
+                in nuevo_estado.descripcion.lower()
+            )
+
+            if es_cancelado:
+
+                justificacion = request.POST.get(
+                    'justificacioncancelacion',
+                    ''
+                )
+
+                pedido.justificacioncancelacion = justificacion
+
+            pedido.save()
+
+            cliente = pedido.idcliente
+
+            nombre_cliente = (
+                cliente.nombre
+                if cliente
+                else 'Cliente'
+            )
+
+            telefono_cliente = (
+                getattr(cliente, 'telefono', '')
+                if cliente
+                else ''
+            )
+
+            if es_cancelado:
+
+                motivo = (
+                    pedido.justificacioncancelacion
+                    or 'Sin motivo especificado'
+                )
+
+                mensaje_texto = (
+                    f'Hola {nombre_cliente}, '
+                    f'te escribimos de Zona Burger para '
+                    f'informarte que tu pedido '
+                    f'#{pedido.idpedido} ha sido '
+                    f'*CANCELADO*. Motivo: {motivo}.'
+                )
+
+            else:
+
+                mensaje_texto = (
+                    f'Hola {nombre_cliente}, '
+                    f'te escribimos de Zona Burger. '
+                    f'Tu pedido #{pedido.idpedido} '
+                    f'ahora se encuentra en estado: '
+                    f'*{nuevo_estado.descripcion}*.'
+                )
+
+            messages.success(
+                request,
+                f'Estado actualizado correctamente. '
+                f'Mensaje preparado para {nombre_cliente}.'
+            )
+
+            if telefono_cliente:
+
+                url_whatsapp = (
+                    f'https://wa.me/{telefono_cliente}'
+                    f'?text={urllib.parse.quote(mensaje_texto)}'
+                )
+
+                url_redirect = (
+                    f"{reverse('panel_inicio')}"
+                    f"?wa_url={urllib.parse.quote(url_whatsapp)}"
+                )
+
+                return redirect(url_redirect)
+
+    return redirect('panel_inicio')
+
+
 def toggle_pagado(request, idpedido):
-    pedido = get_object_or_404(Pedido, pk=idpedido)
+
+    pedido = get_object_or_404(
+        Pedido,
+        pk=idpedido
+    )
+
     pedido.pagado = not pedido.pagado
     pedido.save()
 
     hoy = timezone.localdate()
 
-    # Calculamos los nuevos ingresos totales del día ya actualizados
     ingresos_efectivo = Pedido.objects.filter(
         fecha_creacion__date=hoy,
         idmediopago__nombremetodo__iexact='efectivo',
         pagado=True
-    ).aggregate(suma=Sum('total'))['suma'] or 0
+    ).aggregate(
+        suma=Sum('total')
+    )['suma'] or 0
 
     ingresos_transferencia = Pedido.objects.filter(
         fecha_creacion__date=hoy,
         idmediopago__nombremetodo__icontains='transferencia',
         pagado=True
-    ).aggregate(suma=Sum('total'))['suma'] or 0
+    ).aggregate(
+        suma=Sum('total')
+    )['suma'] or 0
 
-    # Verificamos si es una petición por Fetch / AJAX (aceptando solicitudes application/json o el header clásico)
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
+    if (
+        request.headers.get('x-requested-with')
+        == 'XMLHttpRequest'
+        or 'application/json'
+        in request.headers.get('Accept', '')
+    ):
+
         return JsonResponse({
-            'success': True, 
+            'success': True,
             'pagado': pedido.pagado,
-            'total_efectivo': float(ingresos_efectivo),
-            'total_transferencia': float(ingresos_transferencia)
+            'total_efectivo': float(
+                ingresos_efectivo
+            ),
+            'total_transferencia': float(
+                ingresos_transferencia
+            )
         })
-        
-    # Si entra de forma normal (recarga completa)
+
     return redirect('panel_inicio')
 
+
 def ver_ticket(request, idpedido):
-    pedido = get_object_or_404(Pedido, idpedido=idpedido)
-    # Puedes crear un HTML para esto o retornar un texto temporal
-    return HttpResponse(f"Visualizando el ticket del pedido #{idpedido}")
+
+    pedido = get_object_or_404(
+        Pedido,
+        idpedido=idpedido
+    )
+
+    return HttpResponse(
+        f'Visualizando el ticket del pedido #{idpedido}'
+    )
+
 
 def imprimir_ticket(request, idpedido):
-    pedido = get_object_or_404(Pedido, idpedido=idpedido)
-    return HttpResponse(f"Imprimiendo ticket del pedido #{idpedido}")
+
+    pedido = get_object_or_404(
+        Pedido,
+        idpedido=idpedido
+    )
+
+    return HttpResponse(
+        f'Imprimiendo ticket del pedido #{idpedido}'
+    )
+
 
 def cambiar_estado_pedido(request, idpedido):
-    pedido = get_object_or_404(Pedido, idpedido=idpedido)
-    # Aquí luego puedes agregar la lógica para cambiar el estado
+
+    pedido = get_object_or_404(
+        Pedido,
+        idpedido=idpedido
+    )
+
     return redirect('panel_inicio')
 
 
 # ==========================================
-# 6. GESTIÓN DE CATEGORÍAS (PANEL ADMIN)
+# 6. PANEL - MENÚ
+# ==========================================
+
+def menu_panel(request):
+
+    return render(
+        request,
+        'panel/menu/inicio.html'
+    )
+
+
+# ==========================================
+# 7. GESTIÓN DE CATEGORÍAS
 # ==========================================
 
 def categoria_lista(request):
+
     categorias = CategoriaProducto.objects.all()
-    return render(request, 'panel/categorias/lista.html', {'categorias': categorias})
+
+    return render(
+        request,
+        'panel/menu/categorias/listaCategorias.html',
+        {
+            'categorias': categorias
+        }
+    )
 
 
 def categoria_crear(request):
+
     errores = []
 
     if request.method == 'POST':
-        nombre = request.POST.get('nombre', '').strip()
+
+        nombre = request.POST.get(
+            'nombre',
+            ''
+        ).strip()
 
         if not nombre:
-            errores.append('El nombre es obligatorio.')
+            errores.append(
+                'El nombre es obligatorio.'
+            )
 
         if not errores:
-            CategoriaProducto.objects.create(nombre=nombre)
-            messages.success(request, 'Categoría creada correctamente.')
+
+            CategoriaProducto.objects.create(
+                nombre=nombre
+            )
+
+            messages.success(
+                request,
+                'Categoría creada correctamente.'
+            )
+
             return redirect('categoria_lista')
 
-    return render(request, 'panel/categorias/crear.html', {'errores': errores})
+    return render(
+        request,
+        'panel/menu/categorias/crearCategoria.html',
+        {
+            'errores': errores
+        }
+    )
 
 
 def categoria_editar(request, idcategoria):
-    categoria = get_object_or_404(CategoriaProducto, pk=idcategoria)
+
+    categoria = get_object_or_404(
+        CategoriaProducto,
+        pk=idcategoria
+    )
+
     errores = []
 
     if request.method == 'POST':
-        nombre = request.POST.get('nombre', '').strip()
+
+        nombre = request.POST.get(
+            'nombre',
+            ''
+        ).strip()
 
         if not nombre:
-            errores.append('El nombre es obligatorio.')
+
+            errores.append(
+                'El nombre es obligatorio.'
+            )
 
         if not errores:
+
             categoria.nombre = nombre
             categoria.save()
-            messages.success(request, 'Categoría actualizada correctamente.')
+
+            messages.success(
+                request,
+                'Categoría actualizada correctamente.'
+            )
+
             return redirect('categoria_lista')
 
-    return render(request, 'panel/categorias/editar.html', {
-        'categoria': categoria,
-        'errores': errores,
-    })
+    return render(
+        request,
+        'panel/menu/categorias/editarCategoria.html',
+        {
+            'categoria': categoria,
+            'errores': errores,
+        }
+    )
 
 
 def categoria_eliminar(request, idcategoria):
-    categoria = get_object_or_404(CategoriaProducto, pk=idcategoria)
+
+    categoria = get_object_or_404(
+        CategoriaProducto,
+        pk=idcategoria
+    )
+
     if request.method == 'POST':
+
         categoria.delete()
-        messages.success(request, 'Categoría eliminada.')
+
+        messages.success(
+            request,
+            'Categoría eliminada.'
+        )
+
         return redirect('categoria_lista')
-    return render(request, 'panel/categorias/eliminar.html', {
-        'titulo': 'categoría',
-        'objeto': categoria,
-        'cancel_url': 'categoria_lista',
-    })
+
+    return render(
+        request,
+        'panel/menu/categorias/eliminarCategoria.html',
+        {
+            'titulo': 'categoría',
+            'objeto': categoria,
+            'cancel_url': 'categoria_lista',
+        }
+    )
 
 
 # ==========================================
-# 7. GESTIÓN DE OPCIONES Y GRUPOS (PANEL ADMIN)
+# 8. GESTIÓN DE OPCIONES Y GRUPOS
 # ==========================================
 
 def grupo_lista(request):
-    grupos = GrupoOpcion.objects.prefetch_related('opcion_set').all()
-    return render(request, 'panel/opciones/lista.html', {'grupos': grupos})
+
+    grupos = GrupoOpcion.objects.prefetch_related(
+        'opcion_set'
+    ).all()
+
+    return render(
+        request,
+        'panel/menu/opciones/listaOpciones.html',
+        {
+            'grupos': grupos
+        }
+    )
 
 
 def grupo_crear(request):
+
     errores = []
 
     if request.method == 'POST':
-        nombre = request.POST.get('nombre', '').strip()
-        minselecciones = request.POST.get('minselecciones') or 0
-        maxselecciones = request.POST.get('maxselecciones') or 1
 
-        opcion_nombres = request.POST.getlist('opcion_nombre[]')
-        opcion_precios = request.POST.getlist('opcion_precio[]')
+        nombre = request.POST.get(
+            'nombre',
+            ''
+        ).strip()
+
+        minselecciones = request.POST.get(
+            'minselecciones'
+        ) or 0
+
+        maxselecciones = request.POST.get(
+            'maxselecciones'
+        ) or 1
+
+        opcion_nombres = request.POST.getlist(
+            'opcion_nombre[]'
+        )
+
+        opcion_precios = request.POST.getlist(
+            'opcion_precio[]'
+        )
 
         if not nombre:
-            errores.append('El nombre del grupo es obligatorio.')
+
+            errores.append(
+                'El nombre del grupo es obligatorio.'
+            )
 
         if not errores:
+
             grupo = GrupoOpcion.objects.create(
                 nombre=nombre,
                 minselecciones=minselecciones,
                 maxselecciones=maxselecciones
             )
-            for nom, prec in zip(opcion_nombres, opcion_precios):
+
+            for nom, prec in zip(
+                opcion_nombres,
+                opcion_precios
+            ):
+
                 if nom.strip():
+
                     Opcion.objects.create(
                         idgrupo=grupo,
                         nombre=nom.strip(),
                         precioadicional=prec or 0
                     )
-            messages.success(request, 'Grupo de opciones creado correctamente.')
+
+            messages.success(
+                request,
+                'Grupo de opciones creado correctamente.'
+            )
+
             return redirect('grupo_lista')
 
-    return render(request, 'panel/opciones/crear.html', {'errores': errores})
+    return render(
+        request,
+        'panel/menu/opciones/crearGrupo.html',
+        {
+            'errores': errores
+        }
+    )
 
 
 def grupo_editar(request, idgrupo):
-    grupo = get_object_or_404(GrupoOpcion, pk=idgrupo)
+
+    grupo = get_object_or_404(
+        GrupoOpcion,
+        pk=idgrupo
+    )
+
     errores = []
 
     if request.method == 'POST':
-        nombre = request.POST.get('nombre', '').strip()
-        grupo.minselecciones = request.POST.get('minselecciones') or 0
-        grupo.maxselecciones = request.POST.get('maxselecciones') or 1
+
+        nombre = request.POST.get(
+            'nombre',
+            ''
+        ).strip()
+
+        grupo.minselecciones = request.POST.get(
+            'minselecciones'
+        ) or 0
+
+        grupo.maxselecciones = request.POST.get(
+            'maxselecciones'
+        ) or 1
 
         if not nombre:
-            errores.append('El nombre del grupo es obligatorio.')
+
+            errores.append(
+                'El nombre del grupo es obligatorio.'
+            )
+
         else:
+
             grupo.nombre = nombre
             grupo.save()
-            messages.success(request, 'Grupo actualizado correctamente.')
+
+            messages.success(
+                request,
+                'Grupo actualizado correctamente.'
+            )
+
             return redirect('grupo_lista')
 
-    return render(request, 'panel/opciones/editar.html', {
-        'grupo': grupo,
-        'errores': errores
-    })
+    return render(
+        request,
+        'panel/menu/opciones/editarGrupo.html',
+        {
+            'grupo': grupo,
+            'errores': errores
+        }
+    )
 
 
 def grupo_eliminar(request, idgrupo):
-    grupo = get_object_or_404(GrupoOpcion, pk=idgrupo)
+
+    grupo = get_object_or_404(
+        GrupoOpcion,
+        pk=idgrupo
+    )
+
     if request.method == 'POST':
+
         grupo.delete()
-        messages.success(request, 'Grupo eliminado correctamente.')
+
+        messages.success(
+            request,
+            'Grupo eliminado correctamente.'
+        )
+
         return redirect('grupo_lista')
-    return render(request, 'panel/opciones/eliminar.html', {
-        'titulo': 'grupo de opciones',
-        'objeto': grupo,
-        'cancel_url': 'grupo_lista',
-    })
+
+    return render(
+        request,
+        'panel/menu/opciones/eliminarGrupo.html',
+        {
+            'titulo': 'grupo de opciones',
+            'objeto': grupo,
+            'cancel_url': 'grupo_lista',
+        }
+    )
 
 
 # ==========================================
-# 8. GESTIÓN DE PRODUCTOS (PANEL ADMIN)
+# 9. GESTIÓN DE PRODUCTOS
 # ==========================================
 
 def producto_lista(request):
+
     productos = Producto.objects.all()
-    return render(request, 'panel/productos/lista.html', {'productos': productos})
+
+    return render(
+        request,
+        'panel/menu/productos/listaProductos.html',
+        {
+            'productos': productos
+        }
+    )
 
 
 def producto_crear(request):
+
     categorias = CategoriaProducto.objects.all()
+
     if request.method == 'POST':
+
         nombre = request.POST.get('nombre')
         descripcion = request.POST.get('descripcion')
         precio = request.POST.get('precio')
         idcategoria = request.POST.get('idcategoria')
         imagen = request.FILES.get('imagen')
 
-        cat_obj = CategoriaProducto.objects.filter(pk=idcategoria).first() if idcategoria else None
+        cat_obj = (
+            CategoriaProducto.objects.filter(
+                pk=idcategoria
+            ).first()
+            if idcategoria
+            else None
+        )
 
         Producto.objects.create(
             nombre=nombre,
@@ -1105,80 +1686,186 @@ def producto_crear(request):
             idcategoria=cat_obj,
             imagen=imagen
         )
-        messages.success(request, 'Producto creado exitosamente.')
+
+        messages.success(
+            request,
+            'Producto creado exitosamente.'
+        )
+
         return redirect('producto_lista')
 
-    return render(request, 'panel/productos/crear.html', {'categorias': categorias})
+    return render(
+        request,
+        'panel/menu/productos/crearProducto.html',
+        {
+            'categorias': categorias
+        }
+    )
 
 
 def producto_editar(request, idproducto):
-    producto = get_object_or_404(Producto, pk=idproducto)
+
+    producto = get_object_or_404(
+        Producto,
+        pk=idproducto
+    )
+
     categorias = CategoriaProducto.objects.all()
 
     if request.method == 'POST':
-        producto.nombre = request.POST.get('nombre')
-        producto.descripcion = request.POST.get('descripcion')
-        producto.precio = request.POST.get('precio')
-        idcategoria = request.POST.get('idcategoria')
-        producto.idcategoria = CategoriaProducto.objects.filter(pk=idcategoria).first() if idcategoria else None
+
+        producto.nombre = request.POST.get(
+            'nombre'
+        )
+
+        producto.descripcion = request.POST.get(
+            'descripcion'
+        )
+
+        producto.precio = request.POST.get(
+            'precio'
+        )
+
+        idcategoria = request.POST.get(
+            'idcategoria'
+        )
+
+        producto.idcategoria = (
+            CategoriaProducto.objects.filter(
+                pk=idcategoria
+            ).first()
+            if idcategoria
+            else None
+        )
 
         if request.FILES.get('imagen'):
-            producto.imagen = request.FILES.get('imagen')
+
+            producto.imagen = request.FILES.get(
+                'imagen'
+            )
 
         producto.save()
-        messages.success(request, 'Producto actualizado correctamente.')
+
+        messages.success(
+            request,
+            'Producto actualizado correctamente.'
+        )
+
         return redirect('producto_lista')
 
-    return render(request, 'panel/productos/editar.html', {
-        'producto': producto,
-        'categorias': categorias
-    })
+    return render(
+        request,
+        'panel/menu/productos/editarProducto.html',
+        {
+            'producto': producto,
+            'categorias': categorias
+        }
+    )
 
 
 def producto_eliminar(request, idproducto):
-    producto = get_object_or_404(Producto, pk=idproducto)
+
+    producto = get_object_or_404(
+        Producto,
+        pk=idproducto
+    )
+
     if request.method == 'POST':
+
         producto.delete()
-        messages.success(request, 'Producto eliminado.')
+
+        messages.success(
+            request,
+            'Producto eliminado.'
+        )
+
         return redirect('producto_lista')
-    return render(request, 'panel/productos/eliminar.html', {
-        'titulo': 'producto',
-        'objeto': producto,
-        'cancel_url': 'producto_lista',
-    })
+
+    return render(
+        request,
+        'panel/menu/productos/eliminarProducto.html',
+        {
+            'titulo': 'producto',
+            'objeto': producto,
+            'cancel_url': 'producto_lista',
+        }
+    )
 
 
 # ==========================================
-# 9. GESTIÓN DE RECETAS E INSUMOS POR PRODUCTO (PANEL ADMIN)
+# 10. GESTIÓN DE RECETAS
 # ==========================================
 
 def lista_recetas(request):
+
     productos = Producto.objects.all()
-    return render(request, 'panel/recetas/lista.html', {'productos': productos})
+
+    return render(
+        request,
+        'panel/recetas/lista.html',
+        {
+            'productos': productos
+        }
+    )
 
 
 def gestionar_receta(request, idproducto):
-    producto = get_object_or_404(Producto, pk=idproducto)
-    receta, creado = Receta.objects.get_or_create(idproducto=producto)
-    detalles_receta = RecetaInsumo.objects.filter(idreceta=receta)
+
+    producto = get_object_or_404(
+        Producto,
+        pk=idproducto
+    )
+
+    receta, creado = Receta.objects.get_or_create(
+        idproducto=producto
+    )
+
+    detalles_receta = RecetaInsumo.objects.filter(
+        idreceta=receta
+    )
+
     todos_los_insumos = Insumo.objects.all()
 
     if request.method == 'POST':
-        id_insumo = request.POST.get('id_insumo')
-        cantidad = request.POST.get('cantidadinsumo')
-        es_removible = True if request.POST.get('es_removible') == 'on' else False
+
+        id_insumo = request.POST.get(
+            'id_insumo'
+        )
+
+        cantidad = request.POST.get(
+            'cantidadinsumo'
+        )
+
+        es_removible = (
+            request.POST.get('es_removible')
+            == 'on'
+        )
 
         if id_insumo and cantidad:
-            insumo_obj = get_object_or_404(Insumo, pk=id_insumo)
-            existe = RecetaInsumo.objects.filter(idreceta=receta, idinsumo=insumo_obj).exists()
+
+            insumo_obj = get_object_or_404(
+                Insumo,
+                pk=id_insumo
+            )
+
+            existe = RecetaInsumo.objects.filter(
+                idreceta=receta,
+                idinsumo=insumo_obj
+            ).exists()
+
             if not existe:
+
                 RecetaInsumo.objects.create(
                     idreceta=receta,
                     idinsumo=insumo_obj,
                     cantidadinsumo=cantidad,
                     es_removible=es_removible
                 )
-            return redirect('gestionar_receta', idproducto=producto.idproducto)
+
+            return redirect(
+                'gestionar_receta',
+                idproducto=producto.idproducto
+            )
 
     contexto = {
         'producto': producto,
@@ -1186,38 +1873,79 @@ def gestionar_receta(request, idproducto):
         'detalles_receta': detalles_receta,
         'todos_los_insumos': todos_los_insumos,
     }
-    return render(request, 'panel/recetas/gestionarReceta.html', contexto)
+
+    return render(
+        request,
+        'panel/recetas/gestionarReceta.html',
+        contexto
+    )
 
 
 def eliminar_insumo_receta(request, idrecetainsumo):
-    detalle = get_object_or_404(RecetaInsumo, pk=idrecetainsumo)
-    id_producto = detalle.idreceta.idproducto.idproducto
+
+    detalle = get_object_or_404(
+        RecetaInsumo,
+        pk=idrecetainsumo
+    )
+
+    id_producto = (
+        detalle.idreceta.idproducto.idproducto
+    )
+
     detalle.delete()
-    return redirect('gestionar_receta', idproducto=id_producto)
+
+    return redirect(
+        'gestionar_receta',
+        idproducto=id_producto
+    )
 
 
 # ==========================================
-# 10. GESTIÓN DE STOCK, COMPRAS Y AJUSTES MANUALES (PANEL ADMIN)
+# 11. GESTIÓN DE STOCK
 # ==========================================
 
 def stock_lista(request):
+
     insumos = Insumo.objects.all()
-    insumos_criticos = [i for i in insumos if i.stockactual <= i.stockminimo]
+
+    insumos_criticos = [
+        insumo
+        for insumo in insumos
+        if insumo.stockactual <= insumo.stockminimo
+    ]
+
     contexto = {
         'insumos': insumos,
         'insumos_criticos': insumos_criticos
     }
-    return render(request, 'panel/stock/stock_lista.html', contexto)
+
+    return render(
+        request,
+        'panel/stock/stock_lista.html',
+        contexto
+    )
 
 
 def stock_crear(request):
+
     if request.method == 'POST':
+
         codigo = request.POST.get('codigo')
         nombreinsumo = request.POST.get('nombreinsumo')
-        unidadmedidaingreso = request.POST.get('unidadmedidaingreso')
-        unidadmedidaegreso = request.POST.get('unidadmedidaegreso')
-        stockactual = request.POST.get('stockactual', 0)
-        stockminimo = request.POST.get('stockminimo', 5)
+        unidadmedidaingreso = request.POST.get(
+            'unidadmedidaingreso'
+        )
+        unidadmedidaegreso = request.POST.get(
+            'unidadmedidaegreso'
+        )
+        stockactual = request.POST.get(
+            'stockactual',
+            0
+        )
+        stockminimo = request.POST.get(
+            'stockminimo',
+            5
+        )
 
         Insumo.objects.create(
             codigo=codigo,
@@ -1227,26 +1955,55 @@ def stock_crear(request):
             stockactual=stockactual,
             stockminimo=stockminimo
         )
-        messages.success(request, 'Insumo creado correctamente en el stock.')
+
+        messages.success(
+            request,
+            'Insumo creado correctamente en el stock.'
+        )
+
         return redirect('stock_lista')
 
-    return render(request, 'panel/stock/stock_form.html')
+    return render(
+        request,
+        'panel/stock/stock_form.html'
+    )
 
 
 def registrar_compra_insumo(request):
-    insumos = Insumo.objects.all()
-    if request.method == 'POST':
-        idinsumo = request.POST.get('idinsumo')
-        cantidad = float(request.POST.get('cantidad', 0))
-        costounitario = float(request.POST.get('costounitario', 0))
 
-        insumo = get_object_or_404(Insumo, pk=idinsumo)
+    insumos = Insumo.objects.all()
+
+    if request.method == 'POST':
+
+        idinsumo = request.POST.get(
+            'idinsumo'
+        )
+
+        cantidad = float(
+            request.POST.get(
+                'cantidad',
+                0
+            )
+        )
+
+        costounitario = float(
+            request.POST.get(
+                'costounitario',
+                0
+            )
+        )
+
+        insumo = get_object_or_404(
+            Insumo,
+            pk=idinsumo
+        )
 
         with transaction.atomic():
+
             compra = Compras.objects.create(
                 fecha=datetime.now(),
                 preciototal=cantidad * costounitario,
-                idempleado=None 
+                idempleado=None
             )
 
             DetalleCompra.objects.create(
@@ -1256,26 +2013,51 @@ def registrar_compra_insumo(request):
                 costounitario=costounitario
             )
 
-            insumo.stockactual += Decimal(str(cantidad))
+            insumo.stockactual += Decimal(
+                str(cantidad)
+            )
+
             insumo.save()
 
-        messages.success(request, 'Compra registrada y stock actualizado con éxito.')
+        messages.success(
+            request,
+            'Compra registrada y stock actualizado con éxito.'
+        )
+
         return redirect('stock_lista')
 
-    return render(request, 'panel/stock/registrar_compra.html', {'insumos': insumos})
+    return render(
+        request,
+        'panel/stock/registrar_compra.html',
+        {
+            'insumos': insumos
+        }
+    )
 
 
 def ajustar_stock(request, idinsumo):
-    insumo = get_object_or_404(Insumo, pk=idinsumo)
+
+    insumo = get_object_or_404(
+        Insumo,
+        pk=idinsumo
+    )
 
     if request.method == 'POST':
-        nueva_cantidad = request.POST.get('stockactual')
-        motivo = request.POST.get('motivo')
+
+        nueva_cantidad = request.POST.get(
+            'stockactual'
+        )
+
+        motivo = request.POST.get(
+            'motivo'
+        )
 
         if motivo and motivo.strip():
+
             cantidad_anterior = insumo.stockactual
 
             with transaction.atomic():
+
                 AjusteStock.objects.create(
                     idinsumo=insumo,
                     cantidadanterior=cantidad_anterior,
@@ -1283,12 +2065,29 @@ def ajustar_stock(request, idinsumo):
                     motivo=motivo.strip()
                 )
 
-                insumo.stockactual = Decimal(str(nueva_cantidad))
+                insumo.stockactual = Decimal(
+                    str(nueva_cantidad)
+                )
+
                 insumo.save()
 
-            messages.success(request, 'Ajuste de stock guardado correctamente con su motivo.')
-            return redirect('stock_lista')
-        else:
-            messages.error(request, 'El motivo del ajuste es obligatorio.')
+            messages.success(
+                request,
+                'Ajuste de stock guardado correctamente con su motivo.'
+            )
 
-    return render(request, 'panel/stock/ajustar_stock.html', {'insumo': insumo})
+            return redirect('stock_lista')
+
+        messages.error(
+            request,
+            'El motivo del ajuste es obligatorio.'
+        )
+
+    return render(
+        request,
+        'panel/stock/ajustar_stock.html',
+        {
+            'insumo': insumo
+        }
+    )
+ 

@@ -1,0 +1,150 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Zona-Burger | Tipos de beneficio{% endblock %}
+
+{% block content %}
+
+<div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+
+ 
+<div>
+
+    <h1 style="font-size: 1.8rem; font-weight: 600; color: #fff; margin: 0;">
+        Tipos de beneficio
+    </h1>
+
+    <p style="margin: 5px 0 0; color: #888; font-size: 0.9rem;">
+        Gestioná los tipos de beneficio del sistema: creá, editá y eliminá tipos de beneficio.
+    </p>
+
+</div>
+
+<div>
+
+    <a
+        href="{% url 'panel_crear_tipo_beneficio' %}"
+        class="btn btn-primary"
+        style="background-color: #00d26a; color: #000; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2);"
+    >
+        + Nuevo tipo de beneficio
+    </a>
+
+</div>
+ 
+
+</div>
+
+<div
+    class="table-responsive"
+    style="background: #181818; border: 1px solid #333; border-radius: 8px; overflow: hidden;"
+>
+
+ 
+<table
+    class="tabla-panel"
+    style="width: 100%; border-collapse: collapse; text-align: left;"
+>
+
+    <thead>
+
+        <tr
+            style="background: #222; border-bottom: 2px solid #333; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;"
+        >
+
+            <th style="padding: 14px 16px;">
+                ID
+            </th>
+
+            <th style="padding: 14px 16px;">
+                Código
+            </th>
+
+            <th style="padding: 14px 16px;">
+                Nombre
+            </th>
+
+            <th style="padding: 14px 16px;">
+                Comportamiento
+            </th>
+
+            <th style="padding: 14px 16px;">
+                Descripción
+            </th>
+
+            <th style="padding: 14px 16px; text-align: right;">
+                Acciones
+            </th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for tipo in tipos %}
+
+        <tr style="border-bottom: 1px solid #252525; transition: background 0.2s;">
+
+            <td style="padding: 14px 16px; color: #888; font-weight: 500;">
+                #{{ tipo.pk }}
+            </td>
+
+            <td style="padding: 14px 16px; color: #aaa; font-weight: 500;">
+                {{ tipo.codigo|default:"Sin código" }}
+            </td>
+
+            <td style="padding: 14px 16px; color: #fff; font-weight: 500;">
+                {{ tipo.nombre|default:"Sin nombre" }}
+            </td>
+
+            <td style="padding: 14px 16px; color: #aaa; font-size: 0.85rem;">
+                {{ tipo.get_comportamiento_display }}
+            </td>
+
+            <td style="padding: 14px 16px; color: #aaa;">
+                {{ tipo.descripcion|default:"Sin descripción" }}
+            </td>
+
+            <td style="padding: 14px 16px; text-align: right;">
+
+                <a
+                    href="{% url 'panel_editar_tipo_beneficio' tipo.pk %}"
+                    style="background: #2b2b2b; color: #3498db; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-right: 6px; border: 1px solid #444; display: inline-block;"
+                >
+                    ✏️ Editar
+                </a>
+
+                <a
+                    href="{% url 'panel_eliminar_tipo_beneficio' tipo.pk %}"
+                    style="background: #2b2b2b; color: #ff6b6b; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; border: 1px solid #444; display: inline-block;"
+                >
+                    🗑️ Eliminar
+                </a>
+
+            </td>
+
+        </tr>
+
+        {% empty %}
+
+        <tr>
+
+            <td
+                colspan="6"
+                style="padding: 30px; text-align: center; color: #777; font-style: italic;"
+            >
+                No hay tipos de beneficio cargados actualmente.
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+ 
+
+</div>
+
+{% endblock %}

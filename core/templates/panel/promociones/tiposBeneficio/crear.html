@@ -1,0 +1,152 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Zona-Burger | Nuevo tipo de beneficio{% endblock %}
+
+{% block content %}
+
+<div class="form-container" style="max-width: 600px; background: #181818; padding: 25px; border-radius: 8px; border: 1px solid #333; color: #fff; margin: 0 auto;">
+
+ 
+<h1 style="margin-bottom: 20px; font-size: 1.5rem; color: #fff;">
+    Nuevo tipo de beneficio
+</h1>
+
+{% if messages %}
+    <ul style="color: #ff6b6b; margin-bottom: 15px; padding-left: 20px;">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if errores %}
+    <ul class="errores" style="color: #ff6b6b; margin-bottom: 15px; padding-left: 20px;">
+        {% for error in errores %}
+            <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div class="form-group" style="margin-bottom: 15px;">
+
+        <label for="codigo" style="display: block; margin-bottom: 5px; color: #ccc;">
+            Código
+        </label>
+
+        <input
+            type="text"
+            id="codigo"
+            name="codigo"
+            class="form-control"
+            maxlength="50"
+            placeholder="Ej: DESCUENTO_20"
+            style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;"
+        >
+
+        <small style="display: block; margin-top: 5px; color: #777;">
+            Si lo dejas vacío, se generará automáticamente a partir del nombre.
+        </small>
+
+    </div>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+
+        <label for="nombre" style="display: block; margin-bottom: 5px; color: #ccc;">
+            Nombre
+        </label>
+
+        <input
+            type="text"
+            id="nombre"
+            name="nombre"
+            class="form-control"
+            maxlength="100"
+            placeholder="Ej: Descuento 20%"
+            style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;"
+            required
+        >
+
+    </div>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+
+        <label for="comportamiento" style="display: block; margin-bottom: 5px; color: #ccc;">
+            Comportamiento (Regla de negocio)
+        </label>
+
+        <select
+            id="comportamiento"
+            name="comportamiento"
+            class="form-control"
+            style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;"
+            required
+        >
+
+            <option value="SIN_VALOR">
+                Sin valor (Ej: 2x1, 3x2, Producto de regalo)
+            </option>
+
+            <option value="PORCENTAJE">
+                Descuento porcentual (%)
+            </option>
+
+            <option value="MONTO_FIJO">
+                Descuento en dinero fijo ($)
+            </option>
+
+        </select>
+
+        <small style="display: block; margin-top: 5px; color: #777;">
+            Define si al crear una promoción con este tipo se le exigirá o no un número de valor.
+        </small>
+
+    </div>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+
+        <label for="descripcion" style="display: block; margin-bottom: 5px; color: #ccc;">
+            Descripción
+        </label>
+
+        <textarea
+            id="descripcion"
+            name="descripcion"
+            class="form-control"
+            maxlength="255"
+            rows="4"
+            placeholder="Describe el tipo de beneficio..."
+            style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; resize: vertical;"
+        ></textarea>
+
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+            style="padding: 10px 20px; background: #00d26a; border: none; color: #000; font-weight: bold; border-radius: 4px; cursor: pointer;"
+        >
+            Guardar
+        </button>
+
+        <a
+            href="{% url 'panel_lista_tipos_beneficio' %}"
+            class="btn"
+            style="padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;"
+        >
+            Cancelar
+        </a>
+
+    </div>
+
+</form>
+ 
+
+</div>
+
+{% endblock %}

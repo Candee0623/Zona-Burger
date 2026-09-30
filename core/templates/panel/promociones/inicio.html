@@ -1,0 +1,72 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Zona-Burger | Promociones{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: 30px;">
+    <span style="color: #f39c12; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">
+        Zona-Burger Panel
+    </span>
+
+ 
+<h1 style="font-size: 1.8rem; font-weight: 600; color: #fff; margin: 5px 0 0;">
+    Promociones
+</h1>
+
+<p style="margin: 5px 0 0; color: #888; font-size: 0.9rem;">
+    Gestioná las promociones y los tipos de beneficio del sistema.
+</p>
+ 
+
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+
+ 
+<a href="{% url 'panel_lista_promociones' %}"
+   style="display: block; background: #181818; border: 1px solid #333; border-radius: 10px; padding: 25px; text-decoration: none;">
+
+    <div style="font-size: 2rem; margin-bottom: 15px;">
+        🎁
+    </div>
+
+    <h2 style="margin: 0 0 8px; color: #fff; font-size: 1.2rem;">
+        Promociones
+    </h2>
+
+    <p style="margin: 0; color: #888; font-size: 0.9rem; line-height: 1.5;">
+        Creá, editá y eliminá las promociones disponibles para los productos.
+    </p>
+
+    <div style="margin-top: 20px; color: #00d26a; font-weight: 600; font-size: 0.9rem;">
+        Gestionar promociones →
+    </div>
+
+</a>
+
+<a href="{% url 'panel_lista_tipos_beneficio' %}"
+   style="display: block; background: #181818; border: 1px solid #333; border-radius: 10px; padding: 25px; text-decoration: none;">
+
+    <div style="font-size: 2rem; margin-bottom: 15px;">
+        🏷️
+    </div>
+
+    <h2 style="margin: 0 0 8px; color: #fff; font-size: 1.2rem;">
+        Tipos de beneficio
+    </h2>
+
+    <p style="margin: 0; color: #888; font-size: 0.9rem; line-height: 1.5;">
+        Configurá los tipos de descuentos y beneficios disponibles.
+    </p>
+
+    <div style="margin-top: 20px; color: #00d26a; font-weight: 600; font-size: 0.9rem;">
+        Gestionar beneficios →
+    </div>
+
+</a>
+ 
+
+</div>
+
+{% endblock %}

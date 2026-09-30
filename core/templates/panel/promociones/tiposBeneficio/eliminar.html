@@ -1,0 +1,66 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Zona-Burger | Eliminar tipo de beneficio{% endblock %}
+
+{% block content %}
+
+<div class="form-container" style="max-width: 600px; background: #181818; padding: 25px; border-radius: 8px; border: 1px solid #333; text-align: center;">
+
+ 
+<h1 style="margin-bottom: 15px; font-size: 1.5rem; color: #ff6b6b;">
+    Eliminar tipo de beneficio
+</h1>
+
+<p style="margin-bottom: 25px; color: #ccc; font-size: 1.1rem;">
+    ¿Estás seguro de que deseas eliminar el tipo de beneficio
+    <strong style="color: #fff;">"{{ tipo.nombre }}"</strong>?
+</p>
+
+<div style="background: #222; border: 1px solid #333; border-radius: 6px; padding: 15px; margin-bottom: 25px; text-align: left;">
+
+    <p style="margin: 0 0 8px 0; color: #aaa;">
+        <strong style="color: #ccc;">Código:</strong>
+        {{ tipo.codigo|default:"Sin código" }}
+    </p>
+
+    <p style="margin: 0; color: #aaa;">
+        <strong style="color: #ccc;">Descripción:</strong>
+        {{ tipo.descripcion|default:"Sin descripción" }}
+    </p>
+
+</div>
+
+<p style="margin-bottom: 25px; color: #ffb3b3; font-size: 0.9rem;">
+    Esta acción no se puede deshacer.
+</p>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div style="display: flex; justify-content: center; gap: 15px;">
+
+        <button
+            type="submit"
+            class="btn btn-danger"
+            style="padding: 10px 20px; background: #ff4757; border: none; color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer;"
+        >
+            Sí, eliminar
+        </button>
+
+        <a
+            href="{% url 'panel_lista_tipos_beneficio' %}"
+            class="btn"
+            style="padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;"
+        >
+            Cancelar
+        </a>
+
+    </div>
+
+</form>
+ 
+
+</div>
+
+{% endblock %}

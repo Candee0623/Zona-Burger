@@ -1,0 +1,34 @@
+{% extends 'panel/base.html' %}
+{% block title %}Zona-Burger | Nuevo grupo de opciones{% endblock %}
+
+{% block content %}
+<h1>Nuevo grupo de opciones</h1>
+
+{% if errores %}
+    <ul class="errores">
+        {% for error in errores %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="nombre">Nombre del grupo</label>
+        <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Ej: Bebida" required>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="minselecciones">Mín. selecciones</label>
+            <input type="number" id="minselecciones" name="minselecciones" class="form-control" min="0" value="0">
+        </div>
+        <div class="form-group">
+            <label for="maxselecciones">Máx. selecciones</label>
+            <input type="number" id="maxselecciones" name="maxselecciones" class="form-control" min="1" value="1">
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'grupo_lista' %}" class="btn">Cancelar</a>
+</form>
+{% endblock %}
