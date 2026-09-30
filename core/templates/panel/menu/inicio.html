@@ -1,4 +1,3 @@
- html
 {% extends 'panel/base.html' %}
 
 {% block title %}Zona-Burger | Menú{% endblock %}
@@ -21,7 +20,7 @@
         color: #888;
         font-size: 0.9rem;
     ">
-        Seleccioná qué querés administrar.
+        Seleccioná qué sección del menú querés administrar.
     </p>
 
 </div>
@@ -33,10 +32,8 @@
     gap: 20px;
 ">
 
-
     <!-- PRODUCTOS -->
-
-    <a href="#" style="
+    <a href="{% url 'producto_lista' %}" style="
         background: #181818;
         border: 1px solid #333;
         border-radius: 8px;
@@ -52,7 +49,7 @@
             font-size: 2rem;
             margin-bottom: 12px;
         ">
-            🍕
+            🍔
         </div>
 
         <h2 style="
@@ -69,14 +66,13 @@
             color: #888;
             font-size: 0.9rem;
         ">
-            Administrar productos
+            Administrar productos del catálogo
         </p>
 
     </a>
 
 
     <!-- CATEGORÍAS -->
-
     <a href="{% url 'categoria_lista' %}" style="
         background: #181818;
         border: 1px solid #333;
@@ -110,14 +106,13 @@
             color: #888;
             font-size: 0.9rem;
         ">
-            Administrar categorías
+            Administrar categorías del menú
         </p>
 
     </a>
 
 
     <!-- GRUPOS DE OPCIONES -->
-
     <a href="{% url 'grupo_lista' %}" style="
         background: #181818;
         border: 1px solid #333;
@@ -151,13 +146,51 @@
             color: #888;
             font-size: 0.9rem;
         ">
-            Administrar opciones y adicionales
+            Administrar opciones y variantes
         </p>
 
     </a>
 
 
+    <!-- EXTRAS (NUEVO) -->
+    <a href="{% url 'extra_lista' %}" style="
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 25px;
+        text-decoration: none;
+        display: block;
+        transition: 0.2s;
+    "
+    onmouseover="this.style.borderColor='#00d26a'"
+    onmouseout="this.style.borderColor='#333'">
+
+        <div style="
+            font-size: 2rem;
+            margin-bottom: 12px;
+        ">
+            🥓
+        </div>
+
+        <h2 style="
+            margin: 0;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 600;
+        ">
+            Extras
+        </h2>
+
+        <p style="
+            margin: 8px 0 0;
+            color: #888;
+            font-size: 0.9rem;
+        ">
+            Administrar extras y adicionales
+        </p>
+
+    </a>
+
 </div>
 
 {% endblock %}
-

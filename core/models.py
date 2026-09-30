@@ -336,7 +336,7 @@ class RecetaInsumo(models.Model):
     idrecetainsumo = models.IntegerField(db_column='IdRecetaInsumo', primary_key=True)
     idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo', blank=True, null=True)
     idreceta = models.ForeignKey(Receta, models.DO_NOTHING, db_column='IdReceta', blank=True, null=True)
-    cantidadinsumo = models.IntegerField(db_column='CantidadInsumo')
+    cantidadinsumo = models.IntegerField(db_column='CantidadInsumo', blank=True, null=True, default=0)
     es_removible = models.BooleanField(default=False)
 
     class Meta:

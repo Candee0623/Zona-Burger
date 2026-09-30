@@ -33,7 +33,7 @@
             <h2 class="detalle-titulo">{{ producto.nombre }}</h2>
             <p class="detalle-descripcion">{{ producto.descripcion }}</p>
             <div class="detalle-precio-base" data-precio-base="{{ producto.precio }}">
-                Precio Base: $<span id="base-val">{{ producto.precio }}</span>
+                $<span id="base-val">{{ producto.precio }}</span>
             </div>
 
             <hr class="detalle-divider">
@@ -47,27 +47,31 @@
                 
                 <!-- 1. GRUPOS DE OPCIONES (Ej: Puntos de carne, Bebidas) -->
                 {% for item in grupos_opciones %}
-                    <div class="grupo-opcion-seccion">
+                    <div class="grupo-opcion-seccion" data-min="{{ item.grupo.minselecciones|default:item.grupo.min_selecciones|default:0 }}" data-max="{{ item.grupo.maxselecciones|default:item.grupo.max_selecciones|default:0 }}" data-nombre="{{ item.grupo.nombre }}">
                         <h3 class="grupo-titulo">{{ item.grupo.nombre }}</h3>
                         <p class="grupo-estado">
-                            {% if item.grupo.min_selecciones > 0 %}(Obligatorio - Seleccioná al menos {{ item.grupo.min_selecciones }}){% else %}(Opcional){% endif %}
+                            {% if item.grupo.minselecciones > 0 or item.grupo.min_selecciones > 0 %}
+                                <span style="color: #ffb703; font-weight: 600;">(Obligatorio - Seleccioná al menos {% if item.grupo.minselecciones %}{{ item.grupo.minselecciones }}{% else %}{{ item.grupo.min_selecciones }}{% endif %})</span>
+                            {% else %}
+                                (Opcional)
+                            {% endif %}
                         </p>
 
                         <div class="opciones-lista">
                             {% for opcion in item.opciones %}
                                 <div class="opcion-item">
                                     <label class="opcion-label">
-                                        {% if item.grupo.max_selecciones == 1 %}
-                                            <input type="radio" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" 
-                                            {% if opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}checked{% elif item.grupo.min_selecciones > 0 and forloop.first and not edit_item_id %}required{% endif %} class="opcion-input">
+                                        {% if item.grupo.maxselecciones == 1 or item.grupo.max_selecciones == 1 %}
+                                            <input type="radio" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:opcion.precioadicional|default:0 }}" 
+                                            {% if opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}checked{% endif %} class="opcion-input">
                                         {% else %}
-                                            <input type="checkbox" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:0 }}" 
+                                            <input type="checkbox" name="grupo_{{ item.grupo.idgrupo }}" value="{{ opcion.idopcion }}" data-precio="{{ opcion.precio_adicional|default:opcion.precioadicional|default:0 }}" 
                                             {% if opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}checked{% endif %} class="opcion-input">
                                         {% endif %}
                                         <span>{{ opcion.nombre }}</span>
                                     </label>
-                                    {% if opcion.precio_adicional > 0 %}
-                                        <span class="opcion-precio-extra">+${{ opcion.precio_adicional }}</span>
+                                    {% if opcion.precio_adicional > 0 or opcion.precioadicional > 0 %}
+                                        <span class="opcion-precio-extra">+${{ opcion.precio_adicional|default:opcion.precioadicional }}</span>
                                     {% endif %}
                                 </div>
                             {% endfor %}
@@ -169,6 +173,51 @@
             inputsCantidad.forEach(input => input.addEventListener('input', calcularTotal));
 
             calcularTotal();
+
+            // Validación de grupos de opciones obligatorios y máximos
+            const form = document.getElementById('form-personalizar');
+            if (form) {
+                const gruposSecciones = document.querySelectorAll('.grupo-opcion-seccion[data-min]');
+
+                gruposSecciones.forEach(seccion => {
+                    const max = parseInt(seccion.getAttribute('data-max')) || 0;
+                    if (max > 1) {
+                        const checkboxes = seccion.querySelectorAll('input[type="checkbox"]');
+                        checkboxes.forEach(cb => {
+                            cb.addEventListener('change', function() {
+                                const marcados = seccion.querySelectorAll('input[type="checkbox"]:checked');
+                                if (marcados.length > max) {
+                                    this.checked = false;
+                                    alert(`En este grupo podés elegir como máximo ${max} opciones.`);
+                                    calcularTotal();
+                                }
+                            });
+                        });
+                    }
+                });
+
+                form.addEventListener('submit', function(e) {
+                    for (const seccion of gruposSecciones) {
+                        const min = parseInt(seccion.getAttribute('data-min')) || 0;
+                        const nombre = seccion.getAttribute('data-nombre') || 'un grupo';
+                        if (min > 0) {
+                            const marcados = seccion.querySelectorAll('input[type="radio"]:checked, input[type="checkbox"]:checked');
+                            if (marcados.length < min) {
+                                e.preventDefault();
+                                seccion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                seccion.style.transition = 'all 0.3s ease';
+                                seccion.style.boxShadow = '0 0 10px #ff4757';
+                                seccion.style.borderRadius = '8px';
+                                setTimeout(() => {
+                                    seccion.style.boxShadow = 'none';
+                                }, 3500);
+                                alert(`Por favor, seleccioná al menos ${min} opción en "${nombre}".`);
+                                return false;
+                            }
+                        }
+                    }
+                });
+            }
         });
     </script>
 </body>
