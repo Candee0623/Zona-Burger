@@ -624,9 +624,6 @@ def lista_promociones(request):
     )
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Producto, TipoBeneficio, Promocion, ProductoPromocion
-
 def crear_promocion(request):
     productos = Producto.objects.all()
     tipos = TipoBeneficio.objects.all()
@@ -1726,11 +1723,7 @@ def producto_crear(request):
 
         precio = None
         try:
-<<<<<<< HEAD
             precio = Decimal(precio_raw.replace(',', '.'))
-=======
-            precio = Decimal(precio_raw)
->>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
             if precio < Decimal('0.00'):
                 errores.append('El precio no puede ser negativo.')
         except Exception:
@@ -1745,20 +1738,14 @@ def producto_crear(request):
         if not errores:
             with transaction.atomic():
                 negocio = Negocio.objects.first()
-<<<<<<< HEAD
                 estado_activo, _ = EstadoProducto.objects.get_or_create(descripcion='Activo')
-=======
->>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
                 producto = Producto.objects.create(
                     nombre=nombre,
                     descripcion=descripcion,
                     precio=precio,
                     idcategoria=cat_obj,
                     idnegocio=negocio,
-<<<<<<< HEAD
                     idestadoproducto=estado_activo,
-=======
->>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
                     imagen=imagen
                 )
 
@@ -1838,11 +1825,7 @@ def producto_editar(request, idproducto):
             errores.append('El nombre del producto es obligatorio.')
 
         try:
-<<<<<<< HEAD
             precio = Decimal(precio_raw.replace(',', '.'))
-=======
-            precio = Decimal(precio_raw)
->>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
             if precio < Decimal('0.00'):
                 errores.append('El precio no puede ser negativo.')
         except Exception:
@@ -1931,7 +1914,6 @@ def producto_eliminar(request, idproducto):
 
     if request.method == 'POST':
         with transaction.atomic():
-<<<<<<< HEAD
             es_deshabilitado = (
                 producto.idestadoproducto
                 and producto.idestadoproducto.descripcion.lower() == 'deshabilitado'
@@ -1953,17 +1935,6 @@ def producto_eliminar(request, idproducto):
                     f'Producto "{producto.nombre}" deshabilitado correctamente.'
                 )
 
-=======
-            ProductoGrupoOpcion.objects.filter(idproducto=producto).delete()
-            ProductoExtras.objects.filter(idproducto=producto).delete()
-            nombre_producto = producto.nombre
-            producto.delete()
-
-        messages.success(
-            request,
-            f'Producto "{nombre_producto}" eliminado.'
-        )
->>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
         return redirect('producto_lista')
 
     return render(
@@ -2398,4 +2369,3 @@ def ajustar_stock(request, idinsumo):
             'insumo': insumo
         }
     )
- 
