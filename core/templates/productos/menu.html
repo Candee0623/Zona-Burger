@@ -50,6 +50,27 @@
                             <div class="producto-info">
                                 <h3 class="producto-nombre">{{ producto.nombre }}</h3>
                                 <p class="producto-descripcion">{{ producto.descripcion|striptags }}</p>
+<<<<<<< HEAD
+=======
+                                
+                                {% if producto.productogrupoopcion_set.all %}
+                                <div class="producto-incluye">
+                                    <ul class="incluye-lista">
+                                        {% for rel in producto.productogrupoopcion_set.all %}
+                                            {% if rel.idgrupo %}
+                                                <li><i class="fa-solid fa-check"></i> Incluye: {{ rel.idgrupo.nombre }}</li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+>>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
+
+                                {% if producto.productoextras_set.all %}
+                                <div class="producto-extras-disponibles" style="margin-top: 5px; font-size: 0.8rem; color: #ffb703;">
+                                    <i class="fa-solid fa-circle-plus"></i> Admite extras personalizados
+                                </div>
+                                {% endif %}
 
                                 <div class="producto-footer">
                                     <span class="producto-precio">${{ producto.precio }}</span>

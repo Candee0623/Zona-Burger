@@ -1,4 +1,5 @@
 {% extends 'panel/base.html' %}
+<<<<<<< HEAD
 {% block title %}Zona-Burger | {% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}Habilitar{% else %}Deshabilitar{% endif %} Producto{% endblock %}
 
 {% block content %}
@@ -22,6 +23,18 @@
                 El producto dejará de estar visible en el menú para los clientes, pero se conservará en el sistema protegiendo pedidos históricos y recetas.
             </span>
         {% endif %}
+=======
+{% block title %}Zona-Burger | Eliminar Producto{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 600px; background: #181818; padding: 30px; border-radius: 8px; border: 1px solid #333; text-align: center; margin: 0 auto;">
+    <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
+
+    <h1 style="margin-bottom: 15px; font-size: 1.6rem; color: #ff6b6b;">Eliminar Producto</h1>
+    
+    <p style="margin-bottom: 20px; color: #ccc; font-size: 1.1rem;">
+        ¿Estás seguro de que deseas eliminar el producto <strong>"{{ producto.nombre }}"</strong>?
+>>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
     </p>
 
     <div style="background: #222; border: 1px solid #333; border-radius: 6px; padding: 15px; margin-bottom: 25px; text-align: left; display: flex; align-items: center; gap: 15px;">
@@ -38,21 +51,29 @@
             {% if producto.idcategoria %}
                 <span style="color: #888; font-size: 0.85rem; margin-left: 10px;">• {{ producto.idcategoria.nombre }}</span>
             {% endif %}
+<<<<<<< HEAD
             {% if producto.idestadoproducto %}
                 <span style="color: #e74c3c; font-size: 0.85rem; margin-left: 10px;">[{{ producto.idestadoproducto.descripcion }}]</span>
             {% endif %}
+=======
+>>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
         </div>
     </div>
 
     <form method="post">
         {% csrf_token %}
         <div style="display: flex; justify-content: center; gap: 15px;">
+<<<<<<< HEAD
             <button type="submit" class="btn" style="padding: 10px 24px; background: {% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}#2ed573; color: #000;{% else %}#ff4757; color: #fff;{% endif %} border: none; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
                 {% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}
                     Sí, habilitar producto
                 {% else %}
                     Sí, deshabilitar producto
                 {% endif %}
+=======
+            <button type="submit" class="btn btn-danger" style="padding: 10px 24px; background: #ff4757; border: none; color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
+                Sí, eliminar producto
+>>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
             </button>
             <a href="{% url 'producto_lista' %}" class="btn" style="padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;">
                 Cancelar
