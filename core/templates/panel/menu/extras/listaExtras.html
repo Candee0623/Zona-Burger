@@ -1,97 +1,731 @@
 {% extends 'panel/base.html' %}
+
 {% block title %}Zona-Burger | Extras{% endblock %}
 
 {% block content %}
 
-<div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+<style>
+    /* =========================================================
+       ENCABEZADO
+       ========================================================= */
 
-    <div>
-        <h1 style="font-size: 1.8rem; font-weight: 600; color: #fff; margin: 0;">
+    .extras-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .extras-header-info h1 {
+        margin: 0;
+        color: #fff;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+
+    .extras-header-info p {
+        margin: 5px 0 0;
+        color: #888;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .btn-nuevo-extra {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 40px;
+        padding: 10px 18px;
+        box-sizing: border-box;
+
+        background: #00d26a;
+        color: #000;
+
+        border: 1px solid #00d26a;
+        border-radius: 6px;
+
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+
+        transition:
+            background 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .btn-nuevo-extra:hover {
+        background: #00e879;
+        transform: translateY(-1px);
+    }
+
+
+    /* =========================================================
+       MENSAJES
+       ========================================================= */
+
+    .extras-messages {
+        margin-bottom: 20px;
+    }
+
+    .extras-message {
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .extras-message-success {
+        background: rgba(0, 210, 106, 0.15);
+        border: 1px solid #00d26a;
+        color: #00d26a;
+    }
+
+    .extras-message-error {
+        background: rgba(255, 107, 107, 0.15);
+        border: 1px solid #ff6b6b;
+        color: #ff6b6b;
+    }
+
+
+    /* =========================================================
+       TABLA
+       ========================================================= */
+
+    .extras-table-container {
+        width: 100%;
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .extras-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .extras-table thead tr {
+        background: #222;
+        border-bottom: 2px solid #333;
+        color: #aaa;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .extras-table th {
+        padding: 14px 16px;
+        font-weight: 600;
+    }
+
+    .extras-table tbody tr {
+        border-bottom: 1px solid #252525;
+        transition: background 0.2s ease;
+    }
+
+    .extras-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .extras-table tbody tr:hover {
+        background: #1f1f1f;
+    }
+
+    .extras-table td {
+        padding: 14px 16px;
+    }
+
+
+    /* =========================================================
+       DATOS DEL EXTRA
+       ========================================================= */
+
+    .extra-id {
+        color: #888;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .extra-nombre {
+        color: #fff;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .extra-precio {
+        color: #00d26a;
+        font-weight: 600;
+        font-size: 1rem;
+        white-space: nowrap;
+    }
+
+    .extra-productos {
+        color: #bbb;
+        font-size: 0.9rem;
+    }
+
+    .extra-productos-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+
+        max-width: 100%;
+        box-sizing: border-box;
+
+        background: #2a2a2a;
+        color: #f1c40f;
+
+        padding: 4px 10px;
+        border-radius: 12px;
+
+        font-size: 0.8rem;
+
+        border: 1px solid #444;
+
+        overflow-wrap: anywhere;
+    }
+
+    .extra-sin-asignar {
+        color: #666;
+        font-style: italic;
+    }
+
+
+    /* =========================================================
+       ACCIONES
+       ========================================================= */
+
+    .extra-acciones {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .btn-extra-accion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 34px;
+        padding: 6px 12px;
+        box-sizing: border-box;
+
+        background: #2b2b2b;
+        border: 1px solid #444;
+        border-radius: 4px;
+
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+
+        transition:
+            background 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .btn-extra-accion:hover {
+        background: #333;
+        transform: translateY(-1px);
+    }
+
+    .btn-extra-editar {
+        color: #3498db;
+        margin-right: 6px;
+    }
+
+    .btn-extra-eliminar {
+        color: #ff6b6b;
+    }
+
+
+    /* =========================================================
+       ESTADO VACÍO
+       ========================================================= */
+
+    .extras-empty {
+        padding: 35px !important;
+        text-align: center;
+        color: #777;
+        font-style: italic;
+        line-height: 1.5;
+    }
+
+
+    /* =========================================================
+       TABLET
+       ========================================================= */
+
+    @media (max-width: 850px) {
+
+        .extras-header {
+            align-items: flex-start;
+        }
+
+        .extras-header-info h1 {
+            font-size: 1.6rem;
+        }
+
+        .extras-table th,
+        .extras-table td {
+            padding: 12px;
+        }
+
+    }
+
+
+    /* =========================================================
+       MOBILE
+       La tabla se convierte en tarjetas.
+       ========================================================= */
+
+    @media (max-width: 700px) {
+
+        .extras-header {
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+            margin-bottom: 18px;
+        }
+
+        .extras-header-info {
+            width: 100%;
+        }
+
+        .extras-header-info h1 {
+            font-size: 1.45rem;
+        }
+
+        .extras-header-info p {
+            font-size: 0.82rem;
+        }
+
+        .btn-nuevo-extra {
+            width: 100%;
+            min-height: 42px;
+        }
+
+
+        /* Contenedor */
+
+        .extras-table-container {
+            width: 100%;
+            background: transparent;
+            border: none;
+            overflow: visible !important;
+        }
+
+
+        /* Tabla */
+
+        .extras-table {
+            display: block;
+            width: 100% !important;
+            min-width: 0 !important;
+            table-layout: auto;
+        }
+
+        .extras-table thead {
+            display: none;
+        }
+
+        .extras-table tbody {
+            display: block;
+            width: 100%;
+        }
+
+
+        /* Cada fila pasa a ser una tarjeta */
+
+        .extras-table tbody tr {
+            display: block;
+
+            width: 100% !important;
+            min-width: 0 !important;
+
+            margin: 0 0 12px;
+            padding: 12px;
+
+            box-sizing: border-box;
+
+            background: #181818;
+
+            border: 1px solid #303030 !important;
+            border-radius: 10px;
+
+            overflow: visible;
+        }
+
+        .extras-table tbody tr:hover {
+            background: #1b1b1b;
+        }
+
+
+        /* Celdas */
+
+        .extras-table tbody td {
+            display: block;
+
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+
+            box-sizing: border-box;
+
+            padding: 10px 2px;
+
+            border-bottom: 1px solid #292929;
+
+            overflow: visible;
+            white-space: normal;
+        }
+
+        .extras-table tbody td:last-child {
+            border-bottom: none;
+            padding-bottom: 2px;
+        }
+
+
+        /* ID */
+
+        .extras-table tbody td:first-child {
+            padding-top: 2px;
+        }
+
+        .extra-id {
+            display: block;
+            width: 100%;
+            font-size: 0.78rem;
+        }
+
+
+        /* Nombre */
+
+        .extra-nombre {
+            display: block;
+            width: 100%;
+
+            font-size: 1.05rem;
+            line-height: 1.4;
+
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+
+        /* Precio */
+
+        .extra-precio {
+            display: block;
+            width: 100%;
+
+            font-size: 1.1rem;
+        }
+
+
+        /* Productos asociados */
+
+        .extra-productos {
+            width: 100%;
+        }
+
+        .extra-productos-badge {
+            max-width: 100%;
+            white-space: normal;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+
+
+        /* Acciones */
+
+        .extra-acciones {
+            display: grid !important;
+
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            width: 100% !important;
+
+            gap: 7px;
+
+            padding-top: 10px !important;
+            padding-bottom: 2px !important;
+
+            box-sizing: border-box;
+
+            text-align: initial !important;
+        }
+
+        .btn-extra-accion {
+            width: 100%;
+            min-width: 0;
+
+            min-height: 40px;
+
+            margin: 0 !important;
+            padding: 7px 8px;
+
+            box-sizing: border-box;
+
+            white-space: normal;
+            text-align: center;
+        }
+
+
+        /* Fila vacía */
+
+        .extras-table tbody tr:has(.extras-empty) {
+            display: block;
+            width: 100% !important;
+
+            padding: 0;
+
+            background: #181818;
+        }
+
+        .extras-empty {
+            display: block !important;
+
+            width: 100% !important;
+
+            box-sizing: border-box;
+
+            padding: 25px 15px !important;
+
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+    }
+
+
+    /* =========================================================
+       MOBILE CHICO
+       ========================================================= */
+
+    @media (max-width: 430px) {
+
+        .extras-header-info h1 {
+            font-size: 1.35rem;
+        }
+
+        .extras-header-info p {
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .btn-nuevo-extra {
+            width: 100%;
+        }
+
+        .extra-nombre {
+            font-size: 1rem;
+        }
+
+        .extra-productos-badge {
+            font-size: 0.75rem;
+            padding: 4px 7px;
+        }
+
+        .extra-acciones {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-extra-accion {
+            min-height: 40px;
+        }
+    }
+</style>
+
+
+<!-- =========================================================
+     ENCABEZADO
+     ========================================================= -->
+
+<div class="extras-header">
+
+    <div class="extras-header-info">
+
+        <h1>
             Extras
         </h1>
 
-        <p style="margin: 5px 0 0; color: #888; font-size: 0.9rem;">
+        <p>
             Gestioná los extras y adicionales del menú: creá, editá precios y asignalos a los productos.
         </p>
+
     </div>
 
-    <!-- Botón Crear Extra -->
-    <a href="{% url 'extra_crear' %}" class="btn btn-primary" style="background-color: #00d26a; color: #000; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s;">
+
+    <a
+        href="{% url 'extra_crear' %}"
+        class="btn-nuevo-extra"
+    >
         + Nuevo extra
     </a>
 
 </div>
 
+
+<!-- =========================================================
+     MENSAJES
+     ========================================================= -->
+
 {% if messages %}
-    <div style="margin-bottom: 20px;">
-        {% for message in messages %}
-            <div style="padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; font-size: 0.9rem; {% if message.tags == 'success' %}background: rgba(0, 210, 106, 0.15); border: 1px solid #00d26a; color: #00d26a;{% else %}background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ff6b6b;{% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
+
+<div class="extras-messages">
+
+    {% for message in messages %}
+
+        <div
+            class="
+                extras-message
+                {% if message.tags == 'success' %}
+                    extras-message-success
+                {% else %}
+                    extras-message-error
+                {% endif %}
+            "
+        >
+            {{ message }}
+        </div>
+
+    {% endfor %}
+
+</div>
+
 {% endif %}
 
-<div class="table-responsive" style="background: #181818; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
 
-    <table class="tabla-panel" style="width: 100%; border-collapse: collapse; text-align: left;">
+<!-- =========================================================
+     TABLA / TARJETAS DE EXTRAS
+     ========================================================= -->
+
+<div class="extras-table-container">
+
+    <table class="extras-table">
 
         <thead>
-            <tr style="background: #222; border-bottom: 2px solid #333; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                <th style="padding: 14px 16px;">ID</th>
-                <th style="padding: 14px 16px;">Nombre del Extra</th>
-                <th style="padding: 14px 16px;">Precio Adicional</th>
-                <th style="padding: 14px 16px;">Productos Asociados</th>
-                <th style="padding: 14px 16px; text-align: right;">Acciones</th>
+
+            <tr>
+
+                <th>
+                    ID
+                </th>
+
+                <th>
+                    Nombre del Extra
+                </th>
+
+                <th>
+                    Precio Adicional
+                </th>
+
+                <th>
+                    Productos Asociados
+                </th>
+
+                <th style="text-align: right;">
+                    Acciones
+                </th>
+
             </tr>
+
         </thead>
 
+
         <tbody>
+
             {% for item in extras_con_conteo %}
-            <tr style="border-bottom: 1px solid #252525; transition: background 0.2s;">
-                <td style="padding: 14px 16px; color: #888; font-weight: 500;">
+
+            <tr>
+
+                <!-- ID -->
+
+                <td class="extra-id">
                     #{{ item.extra.idextra }}
                 </td>
 
-                <td style="padding: 14px 16px; color: #fff; font-weight: 600;">
+
+                <!-- Nombre -->
+
+                <td class="extra-nombre">
                     🥓 {{ item.extra.nombre }}
                 </td>
 
-                <td style="padding: 14px 16px; color: #00d26a; font-weight: 600; font-size: 1rem;">
+
+                <!-- Precio -->
+
+                <td class="extra-precio">
                     ${{ item.extra.precio }}
                 </td>
 
-                <td style="padding: 14px 16px; color: #bbb; font-size: 0.9rem;">
+
+                <!-- Productos asociados -->
+
+                <td class="extra-productos">
+
                     {% if item.cant_productos > 0 %}
-                        <span style="background: #2a2a2a; color: #f1c40f; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; border: 1px solid #444;">
-                            🍔 {{ item.cant_productos }} producto{{ item.cant_productos|pluralize }}
+
+                        <span class="extra-productos-badge">
+                            🍔
+                            {{ item.cant_productos }}
+                            producto{{ item.cant_productos|pluralize }}
                         </span>
+
                     {% else %}
-                        <span style="color: #666; font-style: italic;">
+
+                        <span class="extra-sin-asignar">
                             Sin asignar
                         </span>
+
                     {% endif %}
+
                 </td>
 
-                <td style="padding: 14px 16px; text-align: right;">
-                    <!-- Botón Editar -->
-                    <a href="{% url 'extra_editar' item.extra.idextra %}" style="background: #2b2b2b; color: #3498db; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-right: 6px; border: 1px solid #444; display: inline-block;">
+
+                <!-- Acciones -->
+
+                <td class="extra-acciones">
+
+                    <a
+                        href="{% url 'extra_editar' item.extra.idextra %}"
+                        class="btn-extra-accion btn-extra-editar"
+                    >
                         ✏️ Editar
                     </a>
 
-                    <!-- Botón Eliminar -->
-                    <a href="{% url 'extra_eliminar' item.extra.idextra %}" style="background: #2b2b2b; color: #ff6b6b; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; border: 1px solid #444; display: inline-block;">
+                    <a
+                        href="{% url 'extra_eliminar' item.extra.idextra %}"
+                        class="btn-extra-accion btn-extra-eliminar"
+                    >
                         🗑️ Eliminar
                     </a>
+
                 </td>
+
             </tr>
+
             {% empty %}
+
             <tr>
-                <td colspan="5" style="padding: 35px; text-align: center; color: #777; font-style: italic;">
-                    No hay extras registrados actualmente. ¡Hacé clic en "+ Nuevo extra" para comenzar!
+
+                <td
+                    colspan="5"
+                    class="extras-empty"
+                >
+                    No hay extras registrados actualmente.
+                    ¡Hacé clic en "+ Nuevo extra" para comenzar!
                 </td>
+
             </tr>
+
             {% endfor %}
+
         </tbody>
 
     </table>

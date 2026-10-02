@@ -4,31 +4,523 @@
 {% block title %}Lista de Recetas - Zona-Burger{% endblock %}
 
 {% block content %}
-<div class="admin-container" style="padding: 20px; color: #fff;">
-    <h1>Gestión de Recetas</h1>
-    <p style="color: #aaa;">Seleccioná un producto para configurar sus ingredientes y cuáles son removibles por el cliente.</p>
 
-    <table style="width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e1e1e;">
-        <thead>
-            <tr style="background: #2a2a2a; text-align: left;">
-                <th style="padding: 12px;">Producto</th>
-                <th style="padding: 12px;">Precio</th>
-                <th style="padding: 12px;">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for producto in productos %}
-            <tr style="border-bottom: 1px solid #333;">
-                <td style="padding: 12px;"><strong>{{ producto.nombre }}</strong></td>
-                <td style="padding: 12px;">${{ producto.precio }}</td>
-                <td style="padding: 12px;">
-                    <a href="{% url 'gestionar_receta' producto.idproducto %}" class="btn-accion" style="background: #f39c12; color: #000; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold;">
-                        🍔 Gestionar Receta
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<style>
+    /* =========================================================
+       CONTENEDOR PRINCIPAL
+       ========================================================= */
+
+    .recetas-container {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 20px;
+        color: #fff;
+    }
+
+    .recetas-titulo {
+        margin: 0;
+        color: #fff;
+        font-size: 1.8rem;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+
+    .recetas-descripcion {
+        margin: 8px 0 0;
+        color: #aaa;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+
+    /* =========================================================
+       CONTENEDOR DE LA TABLA
+       ========================================================= */
+
+    .recetas-table-container {
+        width: 100%;
+        margin-top: 20px;
+
+        background: #1e1e1e;
+
+        border: 1px solid #333;
+        border-radius: 8px;
+
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .recetas-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .recetas-table thead tr {
+        background: #2a2a2a;
+        text-align: left;
+    }
+
+    .recetas-table th {
+        padding: 12px;
+        color: #ddd;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .recetas-table tbody tr {
+        border-bottom: 1px solid #333;
+        transition: background 0.2s ease;
+    }
+
+    .recetas-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .recetas-table tbody tr:hover {
+        background: #242424;
+    }
+
+    .recetas-table td {
+        padding: 12px;
+        color: #ddd;
+        vertical-align: middle;
+    }
+
+
+    /* =========================================================
+       DATOS
+       ========================================================= */
+
+    .receta-producto {
+        color: #fff;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .receta-precio {
+        color: #00d26a;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       BOTÓN
+       ========================================================= */
+
+    .btn-gestionar-receta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 36px;
+        padding: 6px 12px;
+
+        box-sizing: border-box;
+
+        background: #f39c12;
+        color: #000;
+
+        border: 1px solid #f39c12;
+        border-radius: 4px;
+
+        text-decoration: none;
+
+        font-size: 0.85rem;
+        font-weight: bold;
+
+        transition:
+            background 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .btn-gestionar-receta:hover {
+        background: #ffad2f;
+        transform: translateY(-1px);
+    }
+
+
+    /* =========================================================
+       ESTADO VACÍO
+       ========================================================= */
+
+    .recetas-vacio {
+        padding: 30px 15px !important;
+        text-align: center;
+        color: #777;
+        font-style: italic;
+    }
+
+
+    /* =========================================================
+       TABLET
+       ========================================================= */
+
+    @media (max-width: 850px) {
+
+        .recetas-container {
+            padding: 16px;
+        }
+
+        .recetas-titulo {
+            font-size: 1.6rem;
+        }
+
+        .recetas-descripcion {
+            font-size: 0.85rem;
+        }
+
+        .recetas-table th,
+        .recetas-table td {
+            padding: 10px;
+        }
+
+        .btn-gestionar-receta {
+            padding: 6px 10px;
+            font-size: 0.82rem;
+        }
+    }
+
+
+    /* =========================================================
+       MOBILE
+       La tabla se transforma en tarjetas.
+       ========================================================= */
+
+    @media (max-width: 700px) {
+
+        .recetas-container {
+            width: 100%;
+            max-width: 100%;
+            padding: 14px;
+            box-sizing: border-box;
+            overflow: visible;
+        }
+
+        .recetas-titulo {
+            font-size: 1.4rem;
+        }
+
+        .recetas-descripcion {
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+
+        /* Contenedor */
+
+        .recetas-table-container {
+            width: 100%;
+            margin-top: 18px;
+
+            background: transparent;
+            border: none;
+
+            overflow: visible !important;
+        }
+
+
+        /* Tabla */
+
+        .recetas-table {
+            display: block;
+
+            width: 100% !important;
+            min-width: 0 !important;
+
+            border-collapse: separate;
+            box-sizing: border-box;
+        }
+
+        .recetas-table thead {
+            display: none;
+        }
+
+        .recetas-table tbody {
+            display: block;
+            width: 100%;
+        }
+
+
+        /* Cada fila se transforma en tarjeta */
+
+        .recetas-table tbody tr {
+            display: block;
+
+            width: 100% !important;
+            min-width: 0 !important;
+
+            margin: 0 0 12px;
+            padding: 12px;
+
+            box-sizing: border-box;
+
+            background: #1e1e1e;
+
+            border: 1px solid #333 !important;
+            border-radius: 10px;
+
+            overflow: visible;
+        }
+
+        .recetas-table tbody tr:hover {
+            background: #222;
+        }
+
+
+        /* Celdas */
+
+        .recetas-table tbody td {
+            display: block;
+
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+
+            box-sizing: border-box;
+
+            padding: 10px 2px;
+
+            border-bottom: 1px solid #2d2d2d;
+
+            overflow: visible;
+            white-space: normal;
+        }
+
+        .recetas-table tbody td:last-child {
+            border-bottom: none;
+            padding-bottom: 2px;
+        }
+
+
+        /* Producto */
+
+        .recetas-table tbody td:first-child {
+            padding-top: 2px;
+        }
+
+        .receta-producto {
+            display: block;
+
+            width: 100%;
+
+            color: #fff;
+
+            font-size: 1.05rem;
+            line-height: 1.4;
+
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+
+        /* Precio */
+
+        .receta-precio {
+            display: block;
+
+            width: 100%;
+
+            font-size: 1.05rem;
+        }
+
+
+        /* Acción */
+
+        .recetas-table tbody td:last-child {
+            padding-top: 12px;
+        }
+
+        .btn-gestionar-receta {
+            display: flex;
+
+            width: 100%;
+            min-width: 0;
+
+            min-height: 42px;
+
+            padding: 8px 10px;
+
+            box-sizing: border-box;
+
+            text-align: center;
+            white-space: normal;
+        }
+
+
+        /* Estado vacío */
+
+        .recetas-table tbody tr:has(.recetas-vacio) {
+            display: block;
+
+            width: 100% !important;
+
+            padding: 0;
+
+            background: #1e1e1e;
+        }
+
+        .recetas-vacio {
+            display: block !important;
+
+            width: 100% !important;
+
+            box-sizing: border-box;
+
+            padding: 25px 15px !important;
+
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+    }
+
+
+    /* =========================================================
+       CELULARES PEQUEÑOS
+       ========================================================= */
+
+    @media (max-width: 430px) {
+
+        .recetas-container {
+            padding: 12px;
+        }
+
+        .recetas-titulo {
+            font-size: 1.3rem;
+        }
+
+        .recetas-descripcion {
+            font-size: 0.8rem;
+        }
+
+        .recetas-table tbody tr {
+            padding: 10px;
+            border-radius: 9px;
+        }
+
+        .receta-producto {
+            font-size: 1rem;
+        }
+
+        .receta-precio {
+            font-size: 1rem;
+        }
+
+        .btn-gestionar-receta {
+            min-height: 42px;
+            font-size: 0.82rem;
+        }
+    }
+</style>
+
+
+<!-- =========================================================
+     CONTENIDO PRINCIPAL
+     ========================================================= -->
+
+<div class="recetas-container">
+
+    <h1 class="recetas-titulo">
+        Gestión de Recetas
+    </h1>
+
+    <p class="recetas-descripcion">
+        Seleccioná un producto para configurar sus ingredientes
+        y cuáles son removibles por el cliente.
+    </p>
+
+
+    <!-- =====================================================
+         TABLA / TARJETAS DE PRODUCTOS
+         ===================================================== -->
+
+    <div class="recetas-table-container">
+
+        <table class="recetas-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Producto
+                    </th>
+
+                    <th>
+                        Precio
+                    </th>
+
+                    <th>
+                        Acciones
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for producto in productos %}
+
+                <tr>
+
+                    <!-- Producto -->
+
+                    <td>
+                        <strong class="receta-producto">
+                            {{ producto.nombre }}
+                        </strong>
+                    </td>
+
+
+                    <!-- Precio -->
+
+                    <td>
+                        <span class="receta-precio">
+                            ${{ producto.precio }}
+                        </span>
+                    </td>
+
+
+                    <!-- Acción -->
+
+                    <td>
+
+                        <a
+                            href="{% url 'gestionar_receta' producto.idproducto %}"
+                            class="btn-gestionar-receta"
+                        >
+                            🍔 Gestionar Receta
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td
+                        colspan="3"
+                        class="recetas-vacio"
+                    >
+                        No hay productos disponibles para configurar recetas.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
 </div>
+
 {% endblock %}

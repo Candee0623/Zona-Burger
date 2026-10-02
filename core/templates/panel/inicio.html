@@ -2,380 +2,2813 @@
 {% load static %}
 
 {% block content %}
+
 <style>
-    .dashboard-wrapper { background-color: #000000; color: #ffffff; padding: 1.5rem; }
-    .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-    @media (max-width: 768px) { .metrics-grid { grid-template-columns: 1fr; } }
-    .metric-card { background-color: #121212; border: 1px solid #2e2e2e; border-radius: 8px; padding: 1rem; text-align: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
-    .metric-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.2rem; }
-    .metric-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #a0a0a0; font-weight: 600; }
-    
-    .filter-card { background-color: #121212; border: 1px solid #2e2e2e; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
-    .filter-group { flex: 1; min-width: 250px; }
-    .filter-group label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #a0a0a0; margin-bottom: 0.4rem; font-weight: 600; }
-    .filter-control { width: 100%; background-color: #1a1a1a; border: 1px solid #333333; color: #ffffff; padding: 0.55rem 0.75rem; border-radius: 6px; font-size: 0.9rem; }
-    .filter-control:focus { border-color: #00d26a; outline: none; }
-    .filter-actions { display: flex; gap: 0.5rem; }
 
-    .status-container { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
-    .btn-status { background-color: #121212; border: 1px solid #2e2e2e; color: #ffffff; padding: 0.6rem 1.2rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; }
-    .btn-status:hover { background-color: #1c1c1c; border-color: #555555; color: #ffffff; }
-    .btn-status.active { border-color: #00d26a; background-color: #18281e; }
+/* =========================================================
+   BASE
+========================================================= */
 
-    .table-card { background-color: #121212; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; }
-    .table-card-header { background-color: #181818; border-bottom: 1px solid #2e2e2e; padding: 1rem 1.25rem; }
-    .custom-table { width: 100%; border-collapse: collapse; color: #e0e0e0; }
-    .custom-table th { background-color: #1a1a1a; color: #888888; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 0.85rem 1rem; border-bottom: 2px solid #2e2e2e; text-align: left; }
-    .custom-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #222222; font-size: 0.9rem; vertical-align: middle; }
-    .custom-table tbody tr:hover { background-color: #1a1a1a; }
+.dashboard-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
 
-    /* ESTILOS DE BOTONES DE ACCIÓN PERSONALIZADOS */
-    .btn-accion-custom {
-        background-color: #222222;
-        border: 1px solid #444444;
-        color: #ffffff;
-        padding: 6px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
+    padding: 1.5rem;
+
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(0, 210, 106, 0.035),
+            transparent 30%
+        ),
+        #050505;
+
+    color: #ffffff;
+
+    overflow: visible;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+========================================================= */
+
+.dashboard-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+
+    min-width: 0;
+}
+
+.dashboard-header > div:first-child {
+    min-width: 0;
+}
+
+.dashboard-title {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 1.45rem;
+    font-weight: 800;
+
+    letter-spacing: -0.4px;
+
+    overflow-wrap: anywhere;
+}
+
+.dashboard-subtitle {
+    margin: 5px 0 0;
+
+    color: #686868;
+
+    font-size: 0.8rem;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   INDICADOR DE SINCRONIZACIÓN
+========================================================= */
+
+.panel-sync-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 5px 10px;
+
+    background: #0d1712;
+
+    border: 1px solid #173523;
+    border-radius: 20px;
+
+    color: #00d26a;
+
+    font-size: 0.7rem;
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    flex-shrink: 0;
+}
+
+.panel-sync-indicator.actualizando {
+    background: #18150a;
+
+    border-color: #40370f;
+
+    color: #ffc107;
+}
+
+
+/* =========================================================
+   MÉTRICAS
+========================================================= */
+
+.metrics-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 12px;
+
+    width: 100%;
+    max-width: 100%;
+
+    margin-bottom: 1.1rem;
+}
+
+.metric-card {
+    position: relative;
+
+    min-width: 0;
+    min-height: 92px;
+
+    padding: 1rem 1.1rem;
+
+    background: #0e0e0e;
+
+    border: 1px solid #1d1d1d;
+    border-radius: 10px;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.25);
+
+    overflow: hidden;
+
+    transition:
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.metric-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 65px;
+    height: 65px;
+
+    right: -20px;
+    bottom: -25px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.metric-card:hover {
+    transform: translateY(-1px);
+
+    border-color: #292929;
+}
+
+.metric-value {
+    margin-bottom: 4px;
+
+    font-size: 1.45rem;
+    line-height: 1.2;
+
+    font-weight: 800;
+
+    overflow-wrap: anywhere;
+}
+
+.metric-label {
+    color: #666666;
+
+    font-size: 0.68rem;
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+
+    overflow-wrap: anywhere;
+}
+
+.text-primary {
+    color: #4da3ff !important;
+}
+
+.text-success {
+    color: #00d26a !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+
+/* =========================================================
+   FILTROS
+========================================================= */
+
+.filters-section {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    width: 100%;
+    max-width: 100%;
+
+    margin-bottom: 1rem;
+
+    min-width: 0;
+}
+
+
+/* =========================================================
+   ESTADOS
+========================================================= */
+
+.status-container {
+    display: flex;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    min-width: 0;
+
+    flex: 1;
+}
+
+.btn-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    min-height: 32px;
+
+    padding: 5px 9px;
+
+    background: #0d0d0d;
+
+    border: 1px solid #222222;
+    border-radius: 6px;
+
+    color: #888888;
+
+    font-size: 0.72rem;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition:
+        color 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease;
+
+    white-space: nowrap;
+}
+
+.btn-status:hover {
+    background: #151515;
+
+    border-color: #333333;
+
+    color: #dddddd;
+}
+
+.btn-status.active {
+    background: #0d2116;
+
+    border-color: #087a42;
+
+    color: #00d26a;
+}
+
+.estado-contador {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 19px;
+    height: 18px;
+
+    padding: 0 5px;
+
+    background: #202020;
+
+    border-radius: 4px;
+
+    color: #777777;
+
+    font-size: 0.64rem;
+    font-weight: 800;
+}
+
+.btn-status.active .estado-contador {
+    background: #00d26a;
+
+    color: #000000;
+}
+
+
+/* =========================================================
+   LIMPIAR FILTROS
+========================================================= */
+
+.clear-filters {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    min-height: 30px;
+
+    padding: 0 9px;
+
+    background: #111111;
+
+    border: 1px solid #292929;
+    border-radius: 6px;
+
+    color: #777777;
+
+    text-decoration: none;
+
+    font-size: 0.68rem;
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    transition:
+        color 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.clear-filters span:first-child {
+    font-size: 0.72rem;
+}
+
+.clear-filters:hover {
+    background: #1b1010;
+
+    border-color: #552525;
+
+    color: #ff6666;
+}
+
+
+/* =========================================================
+   BUSCADOR
+========================================================= */
+
+.search-box {
+    display: flex;
+    align-items: center;
+
+    width: 290px;
+    max-width: 100%;
+
+    flex-shrink: 1;
+
+    height: 34px;
+
+    background: #0d0d0d;
+
+    border: 1px solid #242424;
+    border-radius: 7px;
+
+    overflow: hidden;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.search-box:focus-within {
+    border-color: #3a3a3a;
+
+    box-shadow:
+        0 0 0 2px rgba(0, 210, 106, 0.05);
+}
+
+.search-icon {
+    width: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    color: #666666;
+
+    font-size: 0.85rem;
+}
+
+.search-box input {
+    flex: 1;
+
+    min-width: 0;
+
+    width: 100%;
+    height: 100%;
+
+    padding: 0 7px 0 0;
+
+    background: transparent;
+
+    border: none;
+    outline: none;
+
+    color: #dddddd;
+
+    font-size: 0.76rem;
+}
+
+.search-box input::placeholder {
+    color: #555555;
+}
+
+.search-submit {
+    width: 34px;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background: transparent;
+
+    border: none;
+
+    color: #777777;
+
+    cursor: pointer;
+
+    transition:
+        color 0.15s ease,
+        background 0.15s ease;
+}
+
+.search-submit:hover {
+    background: #151515;
+
+    color: #00d26a;
+}
+
+
+/* =========================================================
+   TABLA
+========================================================= */
+
+.table-card {
+    width: 100%;
+    max-width: 100%;
+
+    background: #0c0c0c;
+
+    border: 1px solid #1c1c1c;
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.table-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 48px;
+
+    padding: 0 1rem;
+
+    background: #101010;
+
+    border-bottom: 1px solid #1d1d1d;
+}
+
+.table-card-title {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    color: #dddddd;
+
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.table-card-title-icon {
+    color: #00d26a;
+}
+
+
+/* =========================================================
+   CONTENEDOR DE TABLA
+========================================================= */
+
+.table-responsive {
+    width: 100%;
+    max-width: 100%;
+
+    overflow-x: auto;
+    overflow-y: visible;
+
+    scrollbar-width: thin;
+
+    scrollbar-color:
+        #333333
+        #0d0d0d;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #0d0d0d;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #333333;
+
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   TABLA INTERNA
+========================================================= */
+
+.custom-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    color: #dddddd;
+}
+
+.custom-table th {
+    padding: 9px 10px;
+
+    background: #111111;
+
+    border-bottom: 1px solid #202020;
+
+    color: #555555;
+
+    font-size: 0.64rem;
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.45px;
+
+    white-space: nowrap;
+}
+
+.custom-table td {
+    padding: 9px 10px;
+
+    border-bottom: 1px solid #181818;
+
+    color: #aaaaaa;
+
+    font-size: 0.76rem;
+
+    vertical-align: middle;
+}
+
+.custom-table tbody tr {
+    transition:
+        background 0.12s ease;
+}
+
+.custom-table tbody tr:hover {
+    background: #111111;
+}
+
+.custom-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* =========================================================
+   BOTONES DE ACCIÓN
+========================================================= */
+
+.actions-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 5px;
+
+    flex-wrap: wrap;
+}
+
+.btn-accion-custom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 4px;
+
+    min-height: 28px;
+
+    padding: 4px 8px;
+
+    background: #151515;
+
+    border: 1px solid #292929;
+    border-radius: 5px;
+
+    color: #aaaaaa;
+
+    cursor: pointer;
+
+    font-size: 0.68rem;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition:
+        color 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.btn-accion-custom:hover {
+    background: #102017;
+
+    border-color: #1d633c;
+
+    color: #00d26a;
+}
+
+
+/* =========================================================
+   ESTADO DE PAGO
+========================================================= */
+
+.btn-pago-pagado,
+.btn-pago-debe {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 4px;
+
+    padding: 4px 7px;
+
+    border-radius: 5px;
+
+    font-size: 0.65rem;
+    font-weight: 800;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition:
+        filter 0.15s ease,
+        transform 0.15s ease;
+}
+
+.btn-pago-pagado {
+    background: #0d2417;
+
+    border: 1px solid #185a35;
+
+    color: #00d26a;
+}
+
+.btn-pago-debe {
+    background: #241010;
+
+    border: 1px solid #542121;
+
+    color: #ff5f5f;
+}
+
+.btn-pago-pagado:hover,
+.btn-pago-debe:hover {
+    filter: brightness(1.2);
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   ESTADO DEL PEDIDO
+========================================================= */
+
+.custom-table .badge {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 4px;
+
+    padding: 4px 7px;
+
+    background: #181818 !important;
+
+    border: 1px solid #282828;
+
+    border-radius: 5px;
+
+    color: #aaaaaa;
+
+    font-size: 0.65rem;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   PEDIDOS VACÍOS
+========================================================= */
+
+.empty-orders {
+    padding: 4rem 1rem;
+
+    text-align: center;
+
+    color: #555555;
+}
+
+.empty-orders-icon {
+    margin-bottom: 10px;
+
+    font-size: 2.3rem;
+
+    opacity: 0.6;
+}
+
+.empty-orders-title {
+    margin: 0 0 5px;
+
+    color: #888888;
+
+    font-size: 0.9rem;
+}
+
+.empty-orders-text {
+    margin: 0;
+
+    color: #4d4d4d;
+
+    font-size: 0.72rem;
+}
+
+
+/* =========================================================
+   MODALES
+========================================================= */
+
+.custom-modal-overlay {
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 1rem;
+
+    background: rgba(0, 0, 0, 0.82);
+
+    overflow-y: auto;
+}
+
+.custom-modal-overlay.active {
+    display: flex;
+}
+
+.custom-modal-box {
+    width: 420px;
+    max-width: 100%;
+
+    background: #121212;
+
+    border: 1px solid #292929;
+
+    border-radius: 9px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.75);
+}
+
+.custom-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 11px 14px;
+
+    background: #171717;
+
+    border-bottom: 1px solid #292929;
+
+    color: #dddddd;
+
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.custom-modal-header span {
+    min-width: 0;
+
+    overflow-wrap: anywhere;
+}
+
+.custom-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+
+    flex-shrink: 0;
+
+    background: transparent;
+
+    border: none;
+
+    border-radius: 5px;
+
+    color: #666666;
+
+    cursor: pointer;
+
+    font-size: 1.2rem;
+}
+
+.custom-modal-close:hover {
+    background: #252525;
+
+    color: #ffffff;
+}
+
+.custom-modal-body {
+    width: 100%;
+    max-height: 400px;
+
+    padding: 14px;
+
+    background: #ffffff;
+
+    color: #000000;
+
+    overflow-y: auto;
+}
+
+.custom-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 7px;
+
+    padding: 10px 14px;
+
+    background: #171717;
+
+    border-top: 1px solid #292929;
+}
+
+.custom-modal-footer .btn-success {
+    background: #00d26a !important;
+
+    border: none !important;
+
+    color: #000000 !important;
+
+    font-weight: 800;
+}
+
+.custom-modal-footer .btn-secondary {
+    background: #242424 !important;
+
+    border: 1px solid #333333 !important;
+
+    color: #cccccc !important;
+}
+
+
+/* =========================================================
+   CAMPOS DEL MODAL
+========================================================= */
+
+.filter-control {
+    width: 100%;
+    max-width: 100%;
+
+    min-height: 38px;
+
+    padding: 8px 10px;
+
+    background: #1b1b1b;
+
+    border: 1px solid #333333;
+
+    border-radius: 6px;
+
+    color: #ffffff;
+
+    font-size: 0.78rem;
+
+    outline: none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.filter-control:focus {
+    border-color: #00a653;
+
+    box-shadow:
+        0 0 0 2px rgba(0, 210, 106, 0.08);
+}
+
+textarea.filter-control {
+    resize: vertical;
+
+    min-height: 80px;
+}
+
+select.filter-control option {
+    background: #1b1b1b;
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   TABLET / PANTALLA DIVIDIDA
+========================================================= */
+
+@media (max-width: 1050px) {
+
+    .dashboard-wrapper {
+        padding: 1rem;
     }
-    .btn-accion-custom:hover {
-        background-color: #333333;
-        border-color: #00d26a;
-        color: #00d26a;
-    }
-    
-    /* ESTILOS PARA EL BOTÓN DE PAGO */
-    .btn-pago-pagado { background-color: #00d26a; color: #000; border: none; padding: 4px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-    .btn-pago-debe { background-color: #e74c3c; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-    /* MODAL FLOTANTE PROPIO (Independiente de Bootstrap) */
-    .custom-modal-overlay {
+    .filters-section {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+    .status-container {
+        width: 100%;
+    }
+
+    .search-box {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .metrics-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+/* =========================================================
+   TABLET PEQUEÑA
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .dashboard-wrapper {
+        padding: 0.85rem;
+    }
+
+    .dashboard-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .panel-sync-indicator {
+        align-self: flex-start;
+    }
+
+}
+
+
+/* =========================================================
+   MÓVIL
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .dashboard-wrapper {
+        width: 100%;
+        max-width: 100%;
+
+        padding: 0.7rem;
+    }
+
+    .dashboard-header {
+        width: 100%;
+
+        margin-bottom: 1rem;
+    }
+
+    .dashboard-title {
+        font-size: 1.2rem;
+    }
+
+    .dashboard-subtitle {
+        font-size: 0.74rem;
+    }
+
+
+    /* -----------------------------------------------------
+       ESTADOS
+    ----------------------------------------------------- */
+
+    .status-container {
+        display: grid;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        width: 100%;
+
+        gap: 6px;
+    }
+
+    .btn-status,
+    .clear-filters {
+        width: 100%;
+        min-width: 0;
+
+        white-space: normal;
+
+        text-align: center;
+    }
+
+
+    /* -----------------------------------------------------
+       TABLA -> TARJETAS
+    ----------------------------------------------------- */
+
+    .table-card {
+        width: 100%;
+        max-width: 100%;
+
+        overflow: visible;
+    }
+
+    .table-card-header {
+        padding: 0 0.8rem;
+    }
+
+    .table-responsive {
+        width: 100%;
+
+        overflow: visible;
+    }
+
+    .custom-table {
+        width: 100%;
+        min-width: 0;
+
+        display: block;
+    }
+
+    .custom-table thead {
         display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        z-index: 9999;
-        justify-content: center;
-        align-items: center;
     }
-    .custom-modal-box {
-        background-color: #181818;
-        border: 1px solid #333;
-        width: 350px;
-        max-width: 90%;
-        border-radius: 10px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-        overflow: hidden;
+
+    .custom-table tbody {
+        display: block;
+
+        width: 100%;
     }
-    .custom-modal-header {
-        background-color: #222;
-        padding: 12px 15px;
+
+    .custom-table tbody tr {
+        display: block;
+
+        width: 100%;
+
+        margin: 10px 0;
+
+        padding: 10px;
+
+        background: #101010;
+
+        border: 1px solid #222222;
+
+        border-radius: 9px;
+
+        box-shadow:
+            0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .custom-table tbody tr:hover {
+        background: #131313;
+    }
+
+    .custom-table tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .custom-table td {
         display: flex;
+        align-items: flex-start;
         justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #333;
-        color: #fff;
-        font-weight: bold;
+
+        gap: 12px;
+
+        width: 100%;
+
+        min-width: 0;
+
+        padding: 9px 3px;
+
+        border-bottom: 1px solid #1d1d1d;
+
+        text-align: right;
+
+        overflow-wrap: anywhere;
     }
-    .custom-modal-close {
-        background: none; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer;
+
+    .custom-table td:last-child {
+        border-bottom: none;
+
+        padding-bottom: 4px;
     }
-    .custom-modal-close:hover { color: #fff; }
+
+    /*
+     * Etiquetas automáticas de cada columna.
+     * Esto reemplaza visualmente al encabezado
+     * que ocultamos en móvil.
+     */
+
+    .custom-table td:nth-child(1)::before {
+        content: "# Pedido";
+    }
+
+    .custom-table td:nth-child(2)::before {
+        content: "Cliente";
+    }
+
+    .custom-table td:nth-child(3)::before {
+        content: "Hora";
+    }
+
+    .custom-table td:nth-child(4)::before {
+        content: "Pago";
+    }
+
+    .custom-table td:nth-child(5)::before {
+        content: "Estado pago";
+    }
+
+    .custom-table td:nth-child(6)::before {
+        content: "Estado";
+    }
+
+    .custom-table td:nth-child(7)::before {
+        content: "Total";
+    }
+
+    .custom-table td:nth-child(8)::before {
+        content: "Acciones";
+    }
+
+    .custom-table td::before {
+        flex: 0 0 auto;
+
+        color: #666666;
+
+        font-size: 0.63rem;
+        font-weight: 800;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.35px;
+
+        text-align: left;
+    }
+
+    .custom-table td > * {
+        max-width: 65%;
+
+        min-width: 0;
+    }
+
+
+    /* -----------------------------------------------------
+       ACCIONES
+    ----------------------------------------------------- */
+
+    .custom-table td:last-child {
+        display: block;
+    }
+
+    .custom-table td:last-child::before {
+        display: block;
+
+        margin-bottom: 7px;
+    }
+
+    .actions-wrapper {
+        display: grid;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        width: 100%;
+
+        gap: 6px;
+    }
+
+    .btn-accion-custom {
+        width: 100%;
+
+        min-width: 0;
+
+        min-height: 34px;
+
+        padding: 6px;
+
+        white-space: normal;
+    }
+
+
+    /* -----------------------------------------------------
+       MODALES
+    ----------------------------------------------------- */
+
+    .custom-modal-overlay {
+        align-items: flex-start;
+
+        padding: 0.6rem;
+
+        padding-top: 1rem;
+    }
+
+    .custom-modal-box {
+        width: 100% !important;
+        max-width: 100%;
+
+        max-height: calc(100vh - 2rem);
+    }
+
     .custom-modal-body {
-        background-color: #ffffff;
-        color: #000000;
-        padding: 15px;
-        max-height: 400px;
+        max-height: calc(100vh - 150px);
+
         overflow-y: auto;
     }
+
     .custom-modal-footer {
-        background-color: #222;
-        padding: 10px 15px;
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        border-top: 1px solid #333;
+        flex-wrap: wrap;
     }
+
+    .custom-modal-footer button {
+        min-height: 34px;
+    }
+
+}
+
+
+/* =========================================================
+   MÓVIL MUY PEQUEÑO
+========================================================= */
+
+@media (max-width: 430px) {
+
+    .dashboard-wrapper {
+        padding: 0.55rem;
+    }
+
+    .dashboard-title {
+        font-size: 1.1rem;
+    }
+
+    .dashboard-subtitle {
+        font-size: 0.7rem;
+    }
+
+    .status-container {
+        grid-template-columns: 1fr;
+    }
+
+    .metric-card {
+        padding: 0.85rem;
+    }
+
+    .metric-value {
+        font-size: 1.3rem;
+    }
+
+    .table-card-header {
+        min-height: 44px;
+
+        padding: 0 0.7rem;
+    }
+
+    .table-card-title {
+        font-size: 0.72rem;
+    }
+
+    .custom-table tbody tr {
+        padding: 8px;
+    }
+
+    .custom-table td {
+        gap: 8px;
+
+        font-size: 0.7rem;
+    }
+
+    .custom-table td > * {
+        max-width: 58%;
+    }
+
+    .actions-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .custom-modal-footer {
+        flex-direction: column;
+    }
+
+    .custom-modal-footer button {
+        width: 100%;
+    }
+
+}
+
+
+/* =========================================================
+   PANTALLA EXTREMADAMENTE ESTRECHA
+========================================================= */
+
+@media (max-width: 350px) {
+
+    .dashboard-wrapper {
+        padding: 0.4rem;
+    }
+
+    .custom-table td {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 4px;
+
+        text-align: left;
+    }
+
+    .custom-table td::before {
+        width: 100%;
+    }
+
+    .custom-table td > * {
+        width: 100%;
+        max-width: 100%;
+
+        text-align: left;
+    }
+
+}
+
+
+/* =========================================================
+   EVITAR DESBORDE GENERAL
+========================================================= */
+
+.dashboard-wrapper,
+.dashboard-wrapper *,
+.dashboard-wrapper *::before,
+.dashboard-wrapper *::after {
+    max-width: 100%;
+}
+
+.dashboard-wrapper img,
+.dashboard-wrapper iframe,
+.dashboard-wrapper video {
+    max-width: 100%;
+}
+
 </style>
 
+
+<!-- =========================================================
+     CONTENEDOR PRINCIPAL
+========================================================= -->
+
 <div class="dashboard-wrapper">
-    <div class="mb-4">
-        <h1 class="h3 text-light fw-bold">Panel de Control - Zona Burger</h1>
-        <p class="text-muted mb-0">Resumen de operaciones y pedidos del día.</p>
+
+
+    <!-- =====================================================
+         ENCABEZADO
+    ===================================================== -->
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <h1 class="dashboard-title">
+                🍔 Panel de Control
+            </h1>
+
+            <p class="dashboard-subtitle">
+                Resumen de operaciones y pedidos del día.
+            </p>
+
+        </div>
+
+
+        <div
+            id="panel-sync-indicator"
+            class="panel-sync-indicator"
+        >
+            ● Sincronizado
+        </div>
+
     </div>
 
-    <!-- MÉTRICAS -->
-    <div class="metrics-grid">
+
+    <!-- =====================================================
+         MÉTRICAS
+    ===================================================== -->
+
+    <div
+        class="metrics-grid"
+        id="metricas-panel"
+    >
+
         <div class="metric-card">
-            <div class="metric-value text-primary">{{ total_pedidos_hoy }}</div>
-            <div class="metric-label">📦 Total Pedidos Hoy</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value text-success" id="val-efectivo">${{ total_efectivo|floatformat:2 }}</div>
-            <div class="metric-label">💵 Ingresos Efectivo</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value text-warning" id="val-transferencia">${{ total_transferencia|floatformat:2 }}</div>
-            <div class="metric-label">💳 Ingresos Transferencia</div>
-        </div>
-    </div>
 
-    <!-- BOTONES DE ESTADO -->
-    <div class="status-container">
-        {% for item in estados_con_conteo %}
-            <a href="?estado={{ item.estado.pk }}{% if filtro_cliente_actual %}&cliente={{ filtro_cliente_actual }}{% endif %}" 
-               class="btn-status {% if filtro_estado_actual == item.estado.pk|stringformat:'s' %}active{% endif %}">
-                <span>{{ item.estado.descripcion }}:</span> 
-                <span class="badge" style="background-color: #333333; color: #ffffff; padding: 0.35em 0.65em; border-radius: 4px; font-weight: bold;">
-                    {{ item.cantidad|default:0 }}
-                </span>
-            </a>
-        {% endfor %}
-
-        {% if filtro_estado_actual or filtro_cliente_actual %}
-        <a href="{% url 'panel_inicio' %}" class="btn-status" style="border-color: #e74c3c; color: #ff6b6b;">
-            <span>✕ Limpiar filtros</span>
-        </a>
-        {% endif %}
-    </div>
-
-    <!-- FORMULARIO DE BÚSQUEDA -->
-    <form method="GET" class="filter-card">
-        <div class="filter-group">
-            <label for="cliente">🔍 Buscar Pedido por Nombre o Apellido de Cliente</label>
-            <input type="text" id="cliente" name="cliente" class="filter-control" value="{{ filtro_cliente_actual|default:'' }}" placeholder="Ej: candela, Juan, Perez...">
-        </div>
-        {% if filtro_estado_actual %}
-        <input type="hidden" name="estado" value="{{ filtro_estado_actual }}">
-        {% endif %}
-        <div class="filter-actions">
-            <button type="submit" class="btn btn-success fw-bold px-4" style="background-color: #00d26a; border: none; color: #000;">Buscar</button>
-            <a href="{% url 'panel_inicio' %}" class="btn btn-outline-secondary px-3" style="color: #ccc; border-color: #333;">Restablecer</a>
-        </div>
-    </form>
-
-    <!-- TABLA DE PEDIDOS -->
-    <div class="table-card">
-        <div class="table-card-header">
-            <h5 class="mb-0 text-light fw-bold">Pedidos Registrados Hoy</h5>
-        </div>
-        <div class="p-0">
-            {% if pedidos_hoy %}
-            <div class="table-responsive">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th class="ps-3">ID</th>
-                            <th>Cliente</th>
-                            <th>Hora Deseada</th>
-                            <th>Medio de Pago</th>
-                            <th>Estado Pago</th>
-                            <th>Estado Pedido</th>
-                            <th>Total</th>
-                            <th class="text-end pe-3">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pedido in pedidos_hoy %}
-                        <tr>
-                            <td class="ps-3"><strong>#{{ pedido.idpedido }}</strong></td>
-                            <td>{{ pedido.idcliente|default:"Cliente General" }}</td>
-                            <td>{{ pedido.horarioentregadeseado|time:"H:i"|default:"Sin hora" }}</td>
-                            <td>{{ pedido.idmediopago|default:"No especificado" }}</td>
-                            
-                            <td>
-                                <a href="{% url 'toggle_pagado' pedido.idpedido %}" class="{% if pedido.pagado %}btn-pago-pagado{% else %}btn-pago-debe{% endif %}" style="text-decoration: none; display: inline-block;">
-                                    {% if pedido.pagado %}Pagado{% else %}Debe{% endif %}
-                                </a>
-                            </td>
-
-                            <td><span class="badge bg-secondary">{{ pedido.idestadopedido|default:"Sin estado" }}</span></td>
-                            <td><strong class="text-success">${{ pedido.total|default:"0.00"|floatformat:2 }}</strong></td>
-                            
-                            <!-- BOTONES DE ACCIÓN PROLIJOS -->
-                            <td class="text-end pe-3">
-                                <div style="display: flex; gap: 5px; justify-content: flex-end;">
-                                    <button type="button" class="btn-accion-custom" data-ticket-url="{% url 'obtener_ticket_modal' pedido.idpedido %}" onclick="abrirTicketModal(this.dataset.ticketUrl)" title="Ver / Imprimir Ticket">
-                                        🧾 Ticket
-                                    </button>
-                                    <button type="button" class="btn-accion-custom" data-id-pedido="{{ pedido.idpedido }}" data-estado-actual="{{ pedido.idestadopedido.pk|default_if_none:'' }}" onclick="abrirEstadoModal(this.dataset.idPedido, this.dataset.estadoActual)" title="Modificar estado">
-                                        🔄 Estado
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="metric-value text-primary">
+                {{ total_pedidos_hoy }}
             </div>
-            {% else %}
-            <div class="text-center py-5 text-muted">
-                <div class="fs-1 mb-2">📭</div>
-                <h5>No hay pedidos registrados para hoy</h5>
+
+            <div class="metric-label">
+                📦 Total Pedidos Hoy
             </div>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <div
+                class="metric-value text-success"
+                id="val-efectivo"
+            >
+                ${{ total_efectivo|floatformat:2 }}
+            </div>
+
+            <div class="metric-label">
+                💵 Ingresos Efectivo
+            </div>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <div
+                class="metric-value text-warning"
+                id="val-transferencia"
+            >
+                ${{ total_transferencia|floatformat:2 }}
+            </div>
+
+            <div class="metric-label">
+                💳 Ingresos Transferencia
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FILTROS
+    ===================================================== -->
+
+    <div class="filters-section">
+
+
+        <!-- ESTADOS -->
+
+        <div
+            class="status-container"
+            id="estados-panel"
+        >
+
+            {% for item in estados_con_conteo %}
+
+                <a
+                    href="?estado={{ item.estado.pk }}{% if filtro_cliente_actual %}&cliente={{ filtro_cliente_actual|urlencode }}{% endif %}"
+                    class="btn-status {% if filtro_estado_actual|stringformat:'s' == item.estado.pk|stringformat:'s' %}active{% endif %}"
+                >
+
+                    <span>
+
+                        {% if item.estado.descripcion == "Pendiente" %}
+                            🕐
+
+                        {% elif item.estado.descripcion == "En preparación" %}
+                            👨‍🍳
+
+                        {% elif item.estado.descripcion == "Preparando" %}
+                            👨‍🍳
+
+                        {% elif item.estado.descripcion == "Listo" %}
+                            ✅
+
+                        {% elif item.estado.descripcion == "Entregado" %}
+                            🛵
+
+                        {% elif item.estado.descripcion == "Cancelado" %}
+                            ❌
+
+                        {% else %}
+                            📋
+                        {% endif %}
+
+                    </span>
+
+
+                    <span>
+                        {{ item.estado.descripcion }}
+                    </span>
+
+
+                    <span class="estado-contador">
+                        {{ item.cantidad|default:0 }}
+                    </span>
+
+                </a>
+
+            {% endfor %}
+
+
+            {% if filtro_estado_actual or filtro_cliente_actual %}
+
+                <a
+                    href="{% url 'panel_inicio' %}"
+                    class="clear-filters"
+                    title="Quitar todos los filtros"
+                >
+
+                    <span>
+                        ✕
+                    </span>
+
+                    <span>
+                        Limpiar filtros
+                    </span>
+
+                </a>
+
             {% endif %}
+
         </div>
+
+
+        <!-- BUSCADOR -->
+
+        <form
+            method="GET"
+            class="search-box"
+        >
+
+            {% if filtro_estado_actual %}
+
+                <input
+                    type="hidden"
+                    name="estado"
+                    value="{{ filtro_estado_actual }}"
+                >
+
+            {% endif %}
+
+
+            <span class="search-icon">
+                🔍
+            </span>
+
+
+            <input
+                type="text"
+                id="cliente"
+                name="cliente"
+                value="{{ filtro_cliente_actual|default:'' }}"
+                placeholder="Buscar cliente..."
+                autocomplete="off"
+            >
+
+
+            <button
+                type="submit"
+                class="search-submit"
+                title="Buscar"
+                aria-label="Buscar"
+            >
+                ↵
+            </button>
+
+        </form>
+
     </div>
+
+
+    <!-- =====================================================
+         TABLA DE PEDIDOS
+    ===================================================== -->
+
+    <div
+        class="table-card"
+        id="pedidos-panel"
+    >
+
+        <div class="table-card-header">
+
+            <div class="table-card-title">
+
+                <span class="table-card-title-icon">
+                    ●
+                </span>
+
+                <span>
+                    Pedidos de hoy
+                </span>
+
+            </div>
+
+        </div>
+
+
+        {% if pedidos_hoy %}
+
+            <div class="table-responsive">
+
+                <table class="custom-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                # Pedido
+                            </th>
+
+                            <th>
+                                👤 Cliente
+                            </th>
+
+                            <th>
+                                🕐 Hora deseada
+                            </th>
+
+                            <th>
+                                💳 Pago
+                            </th>
+
+                            <th>
+                                Estado pago
+                            </th>
+
+                            <th>
+                                📋 Estado
+                            </th>
+
+                            <th>
+                                💰 Total
+                            </th>
+
+                            <th>
+                                Acciones
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for pedido in pedidos_hoy %}
+
+                            <tr>
+
+                                <!-- NÚMERO -->
+
+                                <td>
+
+                                    <strong style="color:#dddddd;">
+                                        #{{ pedido.idpedido }}
+                                    </strong>
+
+                                </td>
+
+
+                                <!-- CLIENTE -->
+
+                                <td>
+
+                                    <span style="color:#cccccc;">
+                                        {{ pedido.idcliente|default:"Cliente General" }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- HORA DESEADA -->
+
+                                <td>
+
+                                    {% if pedido.horarioentregadeseado %}
+
+                                        <span
+                                            style="
+                                                color:#cccccc;
+                                                font-weight:600;
+                                            "
+                                        >
+                                            🕐
+                                            {{ pedido.horarioentregadeseado|time:"H:i" }}
+                                        </span>
+
+                                    {% else %}
+
+                                        <span style="color:#555555;">
+                                            Sin horario
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- MEDIO DE PAGO -->
+
+                                <td>
+                                    {{ pedido.idmediopago|default:"No especificado" }}
+                                </td>
+
+
+                                <!-- ESTADO DE PAGO -->
+
+                                <td>
+
+                                    <a
+                                        href="{% url 'toggle_pagado' pedido.idpedido %}"
+                                        class="{% if pedido.pagado %}btn-pago-pagado{% else %}btn-pago-debe{% endif %}"
+                                    >
+
+                                        {% if pedido.pagado %}
+                                            ✓ Pagado
+                                        {% else %}
+                                            ✕ Debe
+                                        {% endif %}
+
+                                    </a>
+
+                                </td>
+
+
+                                <!-- ESTADO DEL PEDIDO -->
+
+                                <td>
+
+                                    <span class="badge">
+
+                                        {% if pedido.idestadopedido.descripcion == "Pendiente" %}
+                                            🕐
+
+                                        {% elif pedido.idestadopedido.descripcion == "En preparación" %}
+                                            👨‍🍳
+
+                                        {% elif pedido.idestadopedido.descripcion == "Preparando" %}
+                                            👨‍🍳
+
+                                        {% elif pedido.idestadopedido.descripcion == "Listo" %}
+                                            ✅
+
+                                        {% elif pedido.idestadopedido.descripcion == "Entregado" %}
+                                            🛵
+
+                                        {% elif pedido.idestadopedido.descripcion == "Cancelado" %}
+                                            ❌
+
+                                        {% else %}
+                                            📋
+                                        {% endif %}
+
+                                        {{ pedido.idestadopedido|default:"Sin estado" }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- TOTAL -->
+
+                                <td>
+
+                                    <strong class="text-success">
+                                        ${{ pedido.total|default:"0.00"|floatformat:2 }}
+                                    </strong>
+
+                                </td>
+
+
+                                <!-- ACCIONES -->
+
+                                <td>
+
+                                    <div class="actions-wrapper">
+
+
+                                        <!-- TICKET -->
+
+                                        <button
+                                            type="button"
+                                            class="btn-accion-custom"
+
+                                            data-ticket-url="{% url 'obtener_ticket_modal' pedido.idpedido %}"
+
+                                            onclick="abrirTicketModal(this.dataset.ticketUrl)"
+
+                                            title="Ver ticket"
+                                        >
+
+                                            🧾
+
+                                            <span>
+                                                Ticket
+                                            </span>
+
+                                        </button>
+
+
+                                        <!-- CAMBIAR ESTADO -->
+
+                                        <button
+                                            type="button"
+                                            class="btn-accion-custom"
+
+                                            data-id-pedido="{{ pedido.idpedido }}"
+
+                                            data-estado-actual="{{ pedido.idestadopedido.pk|default_if_none:'' }}"
+
+                                            onclick="abrirEstadoModal(this.dataset.idPedido, this.dataset.estadoActual)"
+
+                                            title="Cambiar estado"
+                                        >
+
+                                            🔄
+
+                                            <span>
+                                                Estado
+                                            </span>
+
+                                        </button>
+
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+        {% else %}
+
+            <div class="empty-orders">
+
+                <div class="empty-orders-icon">
+                    📭
+                </div>
+
+                <h5 class="empty-orders-title">
+                    No hay pedidos registrados para hoy
+                </h5>
+
+                <p class="empty-orders-text">
+                    Los nuevos pedidos aparecerán automáticamente.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
 </div>
 
-<!-- VENTANA MODAL FLOTANTE PARA TICKET -->
-<div id="modalTicketOverlay" class="custom-modal-overlay">
+
+<!-- =========================================================
+     MODAL TICKET
+========================================================= -->
+
+<div
+    id="modalTicketOverlay"
+    class="custom-modal-overlay"
+>
+
     <div class="custom-modal-box">
+
         <div class="custom-modal-header">
-            <span>🧾 Ticket Térmico</span>
-            <button type="button" class="custom-modal-close" onclick="cerrarTicketModal()">&times;</button>
+
+            <span>
+                🧾 Ticket del pedido
+            </span>
+
+            <button
+                type="button"
+                class="custom-modal-close"
+                onclick="cerrarTicketModal()"
+            >
+                &times;
+            </button>
+
         </div>
-        <div id="contenido-ticket-modal" class="custom-modal-body">
+
+
+        <div
+            id="contenido-ticket-modal"
+            class="custom-modal-body"
+        >
             Cargando ticket...
         </div>
+
+
         <div class="custom-modal-footer">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="cerrarTicketModal()">Cerrar</button>
-            <button type="button" class="btn btn-success btn-sm fw-bold" onclick="imprimirModal()" style="background-color: #00d26a; color: #000; border: none;">🖨️ Imprimir</button>
+
+            <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                onclick="cerrarTicketModal()"
+            >
+                Cerrar
+            </button>
+
+
+            <button
+                type="button"
+                class="btn btn-success btn-sm fw-bold"
+                onclick="imprimirModal()"
+            >
+                🖨️ Imprimir
+            </button>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- VENTANA MODAL FLOTANTE PARA CAMBIAR ESTADO -->
-<div id="modalEstadoOverlay" class="custom-modal-overlay">
-    <div class="custom-modal-box" style="width: 400px;">
+
+<!-- =========================================================
+     MODAL CAMBIAR ESTADO
+========================================================= -->
+
+<div
+    id="modalEstadoOverlay"
+    class="custom-modal-overlay"
+>
+
+    <div class="custom-modal-box">
+
         <div class="custom-modal-header">
-            <span>🔄 Actualizar Estado del Pedido</span>
-            <button type="button" class="custom-modal-close" onclick="cerrarEstadoModal()">&times;</button>
+
+            <span>
+                🔄 Actualizar estado
+            </span>
+
+            <button
+                type="button"
+                class="custom-modal-close"
+                onclick="cerrarEstadoModal()"
+            >
+                &times;
+            </button>
+
         </div>
-        <form id="formCambiarEstado" method="POST" action="">
+
+
+        <form
+            id="formCambiarEstado"
+            method="POST"
+            action=""
+        >
+
             {% csrf_token %}
-            <div class="custom-modal-body" style="background-color: #181818; color: #fff;">
-                
+
+
+            <div
+                class="custom-modal-body"
+                style="
+                    background:#121212;
+                    color:#ffffff;
+                "
+            >
+
+                <!-- NUEVO ESTADO -->
+
                 <div class="mb-3">
-                    <label class="form-label text-muted" style="font-size: 0.8rem;">Seleccionar Nuevo Estado:</label>
-                    <select name="nuevo_estado" id="selectNuevoEstado" class="filter-control" onchange="verificarEstadoCancelado(this)">
+
+                    <label
+                        for="selectNuevoEstado"
+                        class="form-label"
+
+                        style="
+                            color:#888888;
+                            font-size:0.75rem;
+                            font-weight:700;
+                        "
+                    >
+                        📋 Nuevo estado
+                    </label>
+
+
+                    <select
+                        name="nuevo_estado"
+                        id="selectNuevoEstado"
+                        class="filter-control"
+                        onchange="verificarEstadoCancelado(this)"
+                    >
+
                         {% for item in estados_con_conteo %}
-                            <option value="{{ item.estado.pk }}">{{ item.estado.descripcion }}</option>
+
+                            <option
+                                value="{{ item.estado.pk }}"
+                            >
+                                {{ item.estado.descripcion }}
+                            </option>
+
                         {% endfor %}
+
                     </select>
+
                 </div>
 
-                <!-- Campo dinámico para justificación de cancelación -->
-                <div class="mb-3" id="grupoJustificacion" style="display: none;">
-                    <label class="form-label text-warning" style="font-size: 0.8rem;">⚠️ Justificación de cancelación (Obligatorio si se cancela):</label>
-                    <textarea name="justificacioncancelacion" id="inputJustificacion" class="filter-control" rows="2" placeholder="Ej: Sin stock de medallones, local cerrado..."></textarea>
-                </div>
 
-                <div class="p-3 rounded" style="background-color: #222; border: 1px dashed #444;">
-                    <p class="mb-1 text-info" style="font-size: 0.8rem;">💡 <strong>Aviso al cliente:</strong></p>
-                    <p class="mb-0 text-muted" style="font-size: 0.75rem;">Al guardar, el sistema generará automáticamente el mensaje formateado con los datos del cliente para notificarle el cambio.</p>
+                <!-- JUSTIFICACIÓN -->
+
+                <div
+                    id="grupoJustificacion"
+                    class="mb-3"
+
+                    style="
+                        display:none;
+                    "
+                >
+
+                    <label
+                        for="inputJustificacion"
+                        class="form-label"
+
+                        style="
+                            color:#ffc107;
+                            font-size:0.75rem;
+                            font-weight:700;
+                        "
+                    >
+                        ⚠️ Motivo de cancelación
+                    </label>
+
+
+                    <textarea
+                        name="justificacioncancelacion"
+                        id="inputJustificacion"
+                        class="filter-control"
+                        rows="3"
+                        placeholder="Indique el motivo..."
+                    ></textarea>
+
                 </div>
 
             </div>
+
+
             <div class="custom-modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="cerrarEstadoModal()">Cancelar</button>
-                <button type="submit" class="btn btn-success btn-sm fw-bold" style="background-color: #00d26a; color: #000; border: none;">Guardar Cambios</button>
+
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick="cerrarEstadoModal()"
+                >
+                    Cancelar
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-success btn-sm fw-bold"
+                >
+                    ✓ Guardar
+                </button>
+
             </div>
+
         </form>
+
     </div>
+
 </div>
 
-<!-- SCRIPTS PARA CONTROLAR MODALES E IMPRESIÓN -->
+
 <script>
-    // FUNCIONES MODAL TICKET
-    function abrirTicketModal(url) {
-        const overlay = document.getElementById('modalTicketOverlay');
-        overlay.style.display = 'flex';
-        
-        document.getElementById('contenido-ticket-modal').innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Cargando ticket...</div>';
 
-        fetch(url)
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('contenido-ticket-modal').innerHTML = html;
-            })
-            .catch(error => {
-                document.getElementById('contenido-ticket-modal').innerHTML = '<p style="color:red; text-align:center;">Error al cargar el ticket.</p>';
-            });
-    }
+/* =========================================================
+   MODAL TICKET
+========================================================= */
 
-    function cerrarTicketModal() {
-        document.getElementById('modalTicketOverlay').style.display = 'none';
-    }
+function abrirTicketModal(url) {
 
-    function imprimirModal() {
-        var contenidoTicket = document.getElementById('contenido-ticket-modal').innerHTML;
-        
-        var ventanaImpresion = window.open('', '_blank', 'height=600,width=400');
-        ventanaImpresion.document.write('<html><head><title>Imprimir Ticket</title>');
-        ventanaImpresion.document.write('<style>body { margin: 0; padding: 5px; font-family: "Courier New", Courier, monospace; }</style>');
-        ventanaImpresion.document.write('</head><body>');
-        ventanaImpresion.document.write(contenidoTicket);
-        ventanaImpresion.document.write('</body></html>');
-        ventanaImpresion.document.close();
-        ventanaImpresion.focus();
-        
-        setTimeout(() => {
-            ventanaImpresion.print();
-            ventanaImpresion.close();
-        }, 300);
-    }
+    const overlay =
+        document.getElementById(
+            'modalTicketOverlay'
+        );
 
-    // URL de cambio de estado generada por Django (con 0 como placeholder del id)
-    const URL_CAMBIAR_ESTADO_TEMPLATE = "{% url 'cambiar_estado' 0 %}";
+    const contenido =
+        document.getElementById(
+            'contenido-ticket-modal'
+        );
 
-    // FUNCIONES MODAL ESTADO
-    function abrirEstadoModal(idPedido, estadoActualId) {
-        const overlay = document.getElementById('modalEstadoOverlay');
-        overlay.style.display = 'flex';
-        
-        const form = document.getElementById('formCambiarEstado');
-        form.action = URL_CAMBIAR_ESTADO_TEMPLATE.replace('/0/', `/${idPedido}/`);
-        
-        const select = document.getElementById('selectNuevoEstado');
-        if (estadoActualId) {
-            select.value = estadoActualId;
+    overlay.classList.add(
+        'active'
+    );
+
+    contenido.innerHTML =
+        '<div style="text-align:center;padding:25px;color:#666;">' +
+        '⏳ Cargando ticket...' +
+        '</div>';
+
+    fetch(
+        url,
+        {
+            method: 'GET',
+
+            headers: {
+                'X-Requested-With':
+                    'XMLHttpRequest'
+            },
+
+            cache: 'no-store'
         }
-        
-        verificarEstadoCancelado(select);
-    }
+    )
+    .then(
+        response => {
 
-    function cerrarEstadoModal() {
-        document.getElementById('modalEstadoOverlay').style.display = 'none';
-    }
+            if (!response.ok) {
 
-    function verificarEstadoCancelado(selectElement) {
-        const grupoJustificacion = document.getElementById('grupoJustificacion');
-        const inputJustificacion = document.getElementById('inputJustificacion');
-        
-        const textoSeleccionado = selectElement.options[selectElement.selectedIndex].text.toLowerCase();
-        
-        if (textoSeleccionado.includes('cancelado')) {
-            grupoJustificacion.style.display = 'block';
-            inputJustificacion.required = true;
-        } else {
-            grupoJustificacion.style.display = 'none';
-            inputJustificacion.required = false;
-            inputJustificacion.value = '';
+                throw new Error(
+                    'HTTP ' +
+                    response.status
+                );
+
+            }
+
+            return response.text();
+
         }
+    )
+    .then(
+        html => {
+
+            contenido.innerHTML =
+                html;
+
+        }
+    )
+    .catch(
+        error => {
+
+            console.error(
+                'Error cargando ticket:',
+                error
+            );
+
+            contenido.innerHTML =
+                '<div style="text-align:center;color:#dc3545;padding:20px;">' +
+                '❌ No se pudo cargar el ticket.' +
+                '</div>';
+
+        }
+    );
+
+}
+
+
+function cerrarTicketModal() {
+
+    document
+        .getElementById(
+            'modalTicketOverlay'
+        )
+        .classList.remove(
+            'active'
+        );
+
+}
+
+
+function imprimirModal() {
+
+    const contenido =
+        document.getElementById(
+            'contenido-ticket-modal'
+        ).innerHTML;
+
+    const ventana =
+        window.open(
+            '',
+            '_blank',
+            'height=700,width=450'
+        );
+
+    if (!ventana) {
+
+        alert(
+            'El navegador bloqueó la ventana de impresión.'
+        );
+
+        return;
+
     }
 
-    // ABRIR WHATSAPP AUTOMÁTICAMENTE TRAS CAMBIAR ESTADO
-    // La vista devuelve ?wa_url=<link codificado> en el redirect si hay teléfono cargado.
-    (function abrirWhatsAppSiCorresponde() {
-        const params = new URLSearchParams(window.location.search);
-        // params.get() ya decodifica una vez automáticamente — no hay que
-        // volver a decodificar, o el "#" del número de pedido queda literal
-        // y el navegador corta el mensaje ahí (lo trata como fragmento de URL).
-        const waUrl = params.get('wa_url');
-        if (waUrl) {
-            window.open(waUrl, '_blank');
-            // Limpiamos el parámetro de la URL para que no se reabra al refrescar
-            params.delete('wa_url');
-            const nuevaUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-            window.history.replaceState({}, document.title, nuevaUrl);
+    ventana.document.write(
+        '<html>' +
+        '<head>' +
+        '<title>Ticket</title>' +
+        '<style>' +
+        'body{' +
+        'margin:0;' +
+        'padding:5px;' +
+        'font-family:"Courier New",Courier,monospace;' +
+        '}' +
+        '</style>' +
+        '</head>' +
+        '<body>' +
+        contenido +
+        '</body>' +
+        '</html>'
+    );
+
+    ventana.document.close();
+
+    ventana.focus();
+
+    setTimeout(
+        function () {
+
+            ventana.print();
+
+            ventana.close();
+
+        },
+        300
+    );
+
+}
+
+
+/* =========================================================
+   MODAL CAMBIAR ESTADO
+========================================================= */
+
+const URL_CAMBIAR_ESTADO_TEMPLATE =
+    "{% url 'cambiar_estado' 0 %}";
+
+
+function abrirEstadoModal(
+    idPedido,
+    estadoActualId
+) {
+
+    const overlay =
+        document.getElementById(
+            'modalEstadoOverlay'
+        );
+
+    const form =
+        document.getElementById(
+            'formCambiarEstado'
+        );
+
+    const select =
+        document.getElementById(
+            'selectNuevoEstado'
+        );
+
+    form.action =
+        URL_CAMBIAR_ESTADO_TEMPLATE.replace(
+            '/0/',
+            '/' +
+            idPedido +
+            '/'
+        );
+
+    if (estadoActualId) {
+
+        select.value =
+            String(
+                estadoActualId
+            );
+
+    }
+
+    verificarEstadoCancelado(
+        select
+    );
+
+    overlay.classList.add(
+        'active'
+    );
+
+}
+
+
+function cerrarEstadoModal() {
+
+    document
+        .getElementById(
+            'modalEstadoOverlay'
+        )
+        .classList.remove(
+            'active'
+        );
+
+}
+
+
+function verificarEstadoCancelado(
+    selectElement
+) {
+
+    const grupo =
+        document.getElementById(
+            'grupoJustificacion'
+        );
+
+    const input =
+        document.getElementById(
+            'inputJustificacion'
+        );
+
+    const opcion =
+        selectElement.options[
+            selectElement.selectedIndex
+        ];
+
+    const texto =
+        opcion
+            ? opcion.text
+            : '';
+
+    const estaCancelado =
+        texto
+            .toLowerCase()
+            .includes(
+                'cancelado'
+            );
+
+    if (estaCancelado) {
+
+        grupo.style.display =
+            'block';
+
+        input.required =
+            true;
+
+    } else {
+
+        grupo.style.display =
+            'none';
+
+        input.required =
+            false;
+
+        input.value =
+            '';
+
+    }
+
+}
+
+
+/* =========================================================
+   CERRAR MODALES
+========================================================= */
+
+document.addEventListener(
+    'click',
+    function (event) {
+
+        const ticketOverlay =
+            document.getElementById(
+                'modalTicketOverlay'
+            );
+
+        const estadoOverlay =
+            document.getElementById(
+                'modalEstadoOverlay'
+            );
+
+        if (
+            event.target ===
+            ticketOverlay
+        ) {
+
+            cerrarTicketModal();
+
         }
-    })();
+
+        if (
+            event.target ===
+            estadoOverlay
+        ) {
+
+            cerrarEstadoModal();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    'keydown',
+    function (event) {
+
+        if (
+            event.key ===
+            'Escape'
+        ) {
+
+            cerrarTicketModal();
+
+            cerrarEstadoModal();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   WHATSAPP
+========================================================= */
+
+(function abrirWhatsAppSiCorresponde() {
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    const waUrl =
+        params.get(
+            'wa_url'
+        );
+
+    if (!waUrl) {
+
+        return;
+
+    }
+
+    window.open(
+        waUrl,
+        '_blank'
+    );
+
+    params.delete(
+        'wa_url'
+    );
+
+    const nuevaUrl =
+        window.location.pathname +
+        (
+            params.toString()
+                ? '?' +
+                  params.toString()
+                : ''
+        ) +
+        window.location.hash;
+
+    window.history.replaceState(
+        {},
+        document.title,
+        nuevaUrl
+    );
+
+})();
+
+
+/* =========================================================
+   ACTUALIZACIÓN AUTOMÁTICA DEL PANEL
+========================================================= */
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const indicador =
+            document.getElementById(
+                'panel-sync-indicator'
+            );
+
+        let sincronizando = false;
+
+
+        async function sincronizarPanel() {
+
+            /*
+             * Evita que dos actualizaciones se ejecuten
+             * simultáneamente.
+             */
+
+            if (sincronizando) {
+                return;
+            }
+
+
+            /*
+             * Si la pestaña está oculta no hace falta
+             * actualizar el panel.
+             */
+
+            if (document.hidden) {
+                return;
+            }
+
+
+            sincronizando = true;
+
+
+            /*
+             * Guardamos la posición actual de la ventana.
+             */
+
+            const scrollX =
+                window.scrollX;
+
+            const scrollY =
+                window.scrollY;
+
+
+            try {
+
+                indicador.textContent =
+                    '● Actualizando...';
+
+                indicador.classList.add(
+                    'actualizando'
+                );
+
+
+                const response =
+                    await fetch(
+                        window.location.href,
+                        {
+                            method: 'GET',
+
+                            headers: {
+                                'X-Requested-With':
+                                    'XMLHttpRequest',
+
+                                'Cache-Control':
+                                    'no-cache'
+                            },
+
+                            cache: 'no-store'
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        'HTTP ' +
+                        response.status
+                    );
+
+                }
+
+
+                const html =
+                    await response.text();
+
+
+                const parser =
+                    new DOMParser();
+
+
+                const documento =
+                    parser.parseFromString(
+                        html,
+                        'text/html'
+                    );
+
+
+                const nuevasMetricas =
+                    documento.getElementById(
+                        'metricas-panel'
+                    );
+
+
+                const nuevosEstados =
+                    documento.getElementById(
+                        'estados-panel'
+                    );
+
+
+                const nuevosPedidos =
+                    documento.getElementById(
+                        'pedidos-panel'
+                    );
+
+
+                if (
+                    !nuevasMetricas ||
+                    !nuevosEstados ||
+                    !nuevosPedidos
+                ) {
+
+                    console.warn(
+                        'La respuesta no contiene los bloques esperados.'
+                    );
+
+                    return;
+
+                }
+
+
+                const metricasActuales =
+                    document.getElementById(
+                        'metricas-panel'
+                    );
+
+
+                const estadosActuales =
+                    document.getElementById(
+                        'estados-panel'
+                    );
+
+
+                const pedidosActuales =
+                    document.getElementById(
+                        'pedidos-panel'
+                    );
+
+
+                /*
+                 * Solamente reemplazamos cada bloque cuando
+                 * realmente cambió su contenido.
+                 */
+
+                if (
+                    metricasActuales.innerHTML !==
+                    nuevasMetricas.innerHTML
+                ) {
+
+                    metricasActuales.innerHTML =
+                        nuevasMetricas.innerHTML;
+
+                }
+
+
+                if (
+                    estadosActuales.innerHTML !==
+                    nuevosEstados.innerHTML
+                ) {
+
+                    estadosActuales.innerHTML =
+                        nuevosEstados.innerHTML;
+
+                }
+
+
+                if (
+                    pedidosActuales.innerHTML !==
+                    nuevosPedidos.innerHTML
+                ) {
+
+                    pedidosActuales.innerHTML =
+                        nuevosPedidos.innerHTML;
+
+                }
+
+
+                /*
+                 * Restauramos la posición exacta de la página.
+                 */
+
+                window.scrollTo({
+                    left: scrollX,
+                    top: scrollY,
+                    behavior: 'instant'
+                });
+
+
+                indicador.textContent =
+                    '● Sincronizado';
+
+
+            } catch (error) {
+
+                console.error(
+                    'Error actualizando panel:',
+                    error
+                );
+
+
+                indicador.textContent =
+                    '● Sin conexión';
+
+
+            } finally {
+
+                indicador.classList.remove(
+                    'actualizando'
+                );
+
+                sincronizando = false;
+
+            }
+
+        }
+
+
+        /*
+         * Primera sincronización.
+         */
+
+        sincronizarPanel();
+
+
+        /*
+         * Actualización automática cada 2 segundos.
+         */
+
+        setInterval(
+            sincronizarPanel,
+            2000
+        );
+
+    }
+);
+
 </script>
+
 {% endblock %}

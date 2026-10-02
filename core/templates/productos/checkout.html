@@ -147,16 +147,123 @@
         const form = document.querySelector('.checkout-form');
         if (!form) return;
 
-        // subtotalBase ya viene con el descuento de promoción restado desde el
-        // servidor (total_estimado), así el JS no tiene que reconstruir esa cuenta.
-        const subtotalConDescuento = parseFloat("{{ total_estimado|default:total_carrito|default:0 }}");
+        // subtotalConDescuento ya viene con el descuento de promoción restado desde el
+        // servidor (total_estimado). Se usa stringformat para que llegue con punto
+        // decimal y no con coma (si no, parseFloat("1500,50") daría 1500).
+        const subtotalConDescuento = parseFloat("{{ total_estimado|default:total_carrito|default:0|stringformat:'.2f' }}");
 
+        // ============================================
+        // ZONAS DE ENTREGA
+        // ============================================
         const zonasNegocioRaw = JSON.parse(document.getElementById('zonas-data').textContent || '[]');
+<<<<<<< HEAD
         const zonasNegocio = zonasNegocioRaw.map(zona => ({
             nombre: zona.nombre || zona.fields?.nombre || '',
             costo: parseFloat(zona.costoenvio !== undefined ? zona.costoenvio : (zona.costoEnvio || zona.fields?.costoEnvio || 0))
         }));
+=======
+>>>>>>> b8cce5f (Actualización panel administrativo, corrección de errores y comienzo de diseño responsive)
 
+        // La vista manda las claves en minúscula: nombre, costoenvio
+        const zonasNegocio = zonasNegocioRaw
+            .map(zona => ({
+                nombre: zona.nombre || '',
+                costo: (zona.costoenvio === null || zona.costoenvio === undefined)
+                    ? null
+                    : parseFloat(zona.costoenvio)
+            }))
+            .filter(zona => zona.nombre);
+
+        function normalizar(texto) {
+            return (texto || '')
+                .toString()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim();
+        }
+
+        function compactar(texto) {
+            return normalizar(texto).replace(/[^a-z0-9]/g, '');
+        }
+
+        const inputLocalidad = document.getElementById('input-localidad-hidden');
+        const spanEnvio = document.getElementById('span-costo-envio');
+        const spanTotalEst = document.getElementById('span-total-estimado');
+
+        function aplicarSinZona() {
+            inputLocalidad.value = 'A coordinar con el vendedor';
+            spanEnvio.textContent = 'A coordinar con el vendedor';
+            spanTotalEst.textContent = `$${subtotalConDescuento.toFixed(2)} + envío`;
+            spanTotalEst.style.color = '#ffcc00';
+        }
+
+        function aplicarZona(zona) {
+            inputLocalidad.value = zona.nombre;
+
+            // Zona cargada pero sin precio definido: se coordina
+            if (zona.costo === null || isNaN(zona.costo)) {
+                spanEnvio.textContent = 'A coordinar con el vendedor';
+                spanTotalEst.textContent = `$${subtotalConDescuento.toFixed(2)} + envío`;
+                spanTotalEst.style.color = '#ffcc00';
+                return;
+            }
+
+            const total = subtotalConDescuento + zona.costo;
+            if (zona.costo === 0) {
+                spanEnvio.textContent = 'Envío gratis';
+                spanTotalEst.textContent = `$${total.toFixed(2)} (envío gratis)`;
+            } else {
+                spanEnvio.textContent = `$${zona.costo.toFixed(2)}`;
+                spanTotalEst.textContent = `$${total.toFixed(2)}`;
+            }
+            spanTotalEst.style.color = '#2ed573';
+        }
+
+        function buscarZona(address) {
+            const candidatos = [
+                address.city, address.town, address.village, address.suburb,
+                address.neighbourhood, address.quarter, address.city_district,
+                address.borough, address.municipality, address.county,
+                address.state_district, address.residential, address.road
+            ].map(compactar).filter(Boolean);
+
+            const textoCompleto = compactar(address.display_name);
+
+            // 1) Coincidencia exacta con el nombre de la zona
+            for (const zona of zonasNegocio) {
+                const nz = compactar(zona.nombre);
+                if (nz && candidatos.includes(nz)) return zona;
+            }
+            // 2) Coincidencia parcial (ej: "Barrio Piedrabuena" con la zona "PiedraBuena")
+            for (const zona of zonasNegocio) {
+                const nz = compactar(zona.nombre);
+                if (nz && candidatos.some(c => c.includes(nz) || nz.includes(c))) return zona;
+            }
+            // 3) El nombre de la zona aparece en la dirección completa
+            for (const zona of zonasNegocio) {
+                const nz = compactar(zona.nombre);
+                if (nz && textoCompleto.includes(nz)) return zona;
+            }
+            return null;
+        }
+
+        function autocompletarZona(address) {
+            const zona = buscarZona(address);
+            if (zona) {
+                aplicarZona(zona);
+            } else {
+                aplicarSinZona();
+            }
+        }
+
+        // Si la página se recarga con una zona ya elegida (por errores de validación), se vuelve a mostrar
+        const zonaPrevia = zonasNegocio.find(z => normalizar(z.nombre) === normalizar(inputLocalidad.value));
+        if (zonaPrevia) aplicarZona(zonaPrevia);
+
+        // ============================================
+        // MAPA
+        // ============================================
         const map = L.map('map').setView([-34.6037, -58.3816], 13);
         
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -170,6 +277,7 @@
             map.invalidateSize();
         }, 300);
 
+<<<<<<< HEAD
         function autocompletarZona(dataAddress) {
             const inputHidden = document.getElementById('input-localidad-hidden');
             const spanEnvio = document.getElementById('span-costo-envio');
@@ -220,6 +328,8 @@
             }
         }
 
+=======
+>>>>>>> b8cce5f (Actualización panel administrativo, corrección de errores y comienzo de diseño responsive)
         function actualizarUbicacion(lat, lon, desdeEscritura = false) {
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
                 .then(response => response.json())
@@ -240,7 +350,7 @@
                             if (inputNum) inputNum.value = numero;
                         }
                         
-                        autocompletarZona(data.address);
+                        autocompletarZona({ ...data.address, display_name: data.display_name });
                     }
                 }).catch(err => console.log('Error de geolocalización inversa', err));
         }
@@ -253,7 +363,7 @@
 
             const query = `${calleVal} ${numeroVal}, Buenos Aires, Argentina`;
 
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}`)
                 .then(response => response.json())
                 .then(results => {
                     if (results && results.length > 0) {
@@ -263,7 +373,7 @@
                         marker.setLatLng([lat, lon]);
                         
                         if (results[0].address) {
-                            autocompletarZona(results[0].address);
+                            autocompletarZona({ ...results[0].address, display_name: results[0].display_name });
                         } else {
                             actualizarUbicacion(lat, lon, true);
                         }
@@ -316,6 +426,9 @@
             });
         }
 
+        // ============================================
+        // VALIDACIÓN DEL FORMULARIO
+        // ============================================
         const mensajes = {
             nombre: 'Ingresá tu nombre.',
             apellido: 'Ingresá tu apellido.',

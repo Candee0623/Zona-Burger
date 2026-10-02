@@ -1,0 +1,20 @@
+{% for categoria in categorias %}
+
+    <a
+        href="#cat-{{ categoria.id|default:categoria.pk }}"
+        class="categoria-chip"
+    >
+
+        {{ categoria.nombre }}
+
+    </a>
+
+{% empty %}
+
+    <span class="sin-categorias">
+
+        No hay categorías cargadas
+
+    </span>
+
+{% endfor %}

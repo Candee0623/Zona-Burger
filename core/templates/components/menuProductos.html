@@ -1,0 +1,124 @@
+{% for categoria in categorias %}
+
+    <section
+        id="cat-{{ categoria.id|default:categoria.pk }}"
+        class="categoria-seccion"
+    >
+
+        <h2 class="categoria-heading">
+            {{ categoria.nombre }}
+        </h2>
+
+
+        <div class="productos-grid">
+
+            {% for producto in categoria.producto_set.all %}
+
+                {% if not producto.idestadoproducto or producto.idestadoproducto.descripcion != 'Deshabilitado' %}
+
+                    <div
+                        class="producto-card"
+                        data-producto-id="{{ producto.idproducto }}"
+                    >
+
+
+                        <!-- ==================================================
+                             IMAGEN
+                             ================================================== -->
+
+                        {% if producto.imagen %}
+
+                            <img
+                                src="{{ producto.imagen.url }}"
+                                alt="{{ producto.nombre }}"
+                                class="producto-imagen"
+                            >
+
+                        {% else %}
+
+                            <div class="producto-imagen-placeholder">
+                                🍔
+                            </div>
+
+                        {% endif %}
+
+
+
+                        <!-- ==================================================
+                             INFORMACIÓN
+                             ================================================== -->
+
+                        <div class="producto-info">
+
+
+                            <h3 class="producto-nombre">
+
+                                {{ producto.nombre }}
+
+                            </h3>
+
+
+                            <p class="producto-descripcion">
+
+                                {{ producto.descripcion|striptags }}
+
+                            </p>
+
+
+
+                            <!-- ==================================================
+                                 PRECIO Y BOTÓN
+                                 ================================================== -->
+
+                            <div class="producto-footer">
+
+
+                                <span class="producto-precio">
+
+                                    ${{ producto.precio }}
+
+                                </span>
+
+
+                                <a
+                                    href="{% url 'detalleProducto' producto.idproducto %}"
+                                    class="btn-agregar"
+                                >
+
+                                    Agregar
+
+                                </a>
+
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+            {% empty %}
+
+                <p class="no-productos">
+
+                    No hay productos disponibles en esta categoría
+                    por el momento.
+
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+{% empty %}
+
+    <p class="sin-categorias-gral">
+
+        No se encontraron categorías registradas.
+
+    </p>
+
+{% endfor %}

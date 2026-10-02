@@ -1,92 +1,561 @@
 {% extends 'panel/base.html' %}
+
 {% block title %}Zona-Burger | Categorías{% endblock %}
 
 {% block content %}
 
-<div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+<style>
+    /* =========================================================
+       ENCABEZADO
+       ========================================================= */
 
-<div>
-    <h1 style="font-size: 1.8rem; font-weight: 600; color: #fff; margin: 0;">
-        Categorías
-    </h1>
+    .categorias-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
 
-    <p style="margin: 5px 0 0; color: #888; font-size: 0.9rem;">
-        Gestioná las categorías del sistema: creá, editá y eliminá categorías.
-    </p>
+    .categorias-header-info h1 {
+        margin: 0;
+        color: #fff;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+
+    .categorias-header-info p {
+        margin: 5px 0 0;
+        color: #888;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .btn-nueva-categoria {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 10px 18px;
+        box-sizing: border-box;
+
+        background: #00d26a;
+        color: #000;
+
+        border-radius: 6px;
+        border: 1px solid #00d26a;
+
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        transition:
+            background 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .btn-nueva-categoria:hover {
+        background: #00e879;
+        transform: translateY(-1px);
+    }
+
+
+    /* =========================================================
+       CONTENEDOR DE LA TABLA
+       ========================================================= */
+
+    .categorias-table-container {
+        width: 100%;
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .categorias-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .categorias-table thead tr {
+        background: #222;
+        border-bottom: 2px solid #333;
+        color: #aaa;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .categorias-table th {
+        padding: 14px 16px;
+        font-weight: 600;
+    }
+
+    .categorias-table tbody tr {
+        border-bottom: 1px solid #252525;
+        transition: background 0.2s ease;
+    }
+
+    .categorias-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .categorias-table tbody tr:hover {
+        background: #1f1f1f;
+    }
+
+    .categorias-table td {
+        padding: 14px 16px;
+    }
+
+
+    /* =========================================================
+       DATOS
+       ========================================================= */
+
+    .categoria-id {
+        color: #888;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .categoria-nombre {
+        color: #fff;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+
+    /* =========================================================
+       ACCIONES
+       ========================================================= */
+
+    .categoria-acciones {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .btn-categoria-accion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 34px;
+        padding: 6px 12px;
+        box-sizing: border-box;
+
+        background: #2b2b2b;
+        border: 1px solid #444;
+        border-radius: 4px;
+
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+
+        transition:
+            background 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .btn-categoria-accion:hover {
+        background: #333;
+        transform: translateY(-1px);
+    }
+
+    .btn-categoria-editar {
+        color: #3498db;
+        margin-right: 6px;
+    }
+
+    .btn-categoria-eliminar {
+        color: #ff6b6b;
+    }
+
+
+    /* =========================================================
+       ESTADO VACÍO
+       ========================================================= */
+
+    .categorias-empty {
+        padding: 30px !important;
+        text-align: center;
+        color: #777;
+        font-style: italic;
+    }
+
+
+    /* =========================================================
+       TABLET
+       ========================================================= */
+
+    @media (max-width: 850px) {
+
+        .categorias-header {
+            align-items: flex-start;
+        }
+
+        .categorias-header-info h1 {
+            font-size: 1.6rem;
+        }
+
+        .categorias-table th,
+        .categorias-table td {
+            padding: 12px;
+        }
+
+    }
+
+
+    /* =========================================================
+       MOBILE
+       En pantallas chicas la tabla se transforma en tarjetas.
+       Así no queda contenido escondido hacia la derecha.
+       ========================================================= */
+
+    @media (max-width: 700px) {
+
+        .categorias-header {
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+            margin-bottom: 18px;
+        }
+
+        .categorias-header-info {
+            width: 100%;
+        }
+
+        .categorias-header-info h1 {
+            font-size: 1.45rem;
+        }
+
+        .categorias-header-info p {
+            font-size: 0.82rem;
+        }
+
+        .btn-nueva-categoria {
+            width: 100%;
+            min-height: 42px;
+        }
+
+
+        /* Quitamos el comportamiento de tabla */
+
+        .categorias-table-container {
+            width: 100%;
+            background: transparent;
+            border: none;
+            overflow: visible !important;
+        }
+
+        .categorias-table {
+            display: block;
+            width: 100% !important;
+            min-width: 0 !important;
+            table-layout: auto;
+        }
+
+        .categorias-table thead {
+            display: none;
+        }
+
+        .categorias-table tbody {
+            display: block;
+            width: 100%;
+        }
+
+
+        /* Cada fila pasa a ser una tarjeta */
+
+        .categorias-table tbody tr {
+            display: block;
+            width: 100% !important;
+            min-width: 0 !important;
+
+            margin: 0 0 12px;
+            padding: 12px;
+
+            box-sizing: border-box;
+
+            background: #181818;
+            border: 1px solid #303030 !important;
+            border-radius: 10px;
+
+            overflow: visible;
+        }
+
+        .categorias-table tbody tr:hover {
+            background: #1b1b1b;
+        }
+
+
+        /* Cada celda ocupa toda la tarjeta */
+
+        .categorias-table tbody td {
+            display: block;
+
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+
+            box-sizing: border-box;
+
+            padding: 10px 2px;
+
+            border-bottom: 1px solid #292929;
+
+            overflow: visible;
+            white-space: normal;
+        }
+
+        .categorias-table tbody td:last-child {
+            border-bottom: none;
+            padding-bottom: 2px;
+        }
+
+
+        /* ID */
+
+        .categorias-table tbody td:first-child {
+            padding-top: 2px;
+        }
+
+        .categoria-id {
+            display: block;
+            width: 100%;
+            font-size: 0.78rem;
+        }
+
+
+        /* Nombre */
+
+        .categoria-nombre {
+            display: block;
+            width: 100%;
+
+            font-size: 1.05rem;
+            line-height: 1.4;
+
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+
+        /* Acciones */
+
+        .categoria-acciones {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            width: 100% !important;
+
+            gap: 7px;
+
+            padding-top: 10px !important;
+            padding-bottom: 2px !important;
+
+            box-sizing: border-box;
+
+            text-align: initial !important;
+        }
+
+        .btn-categoria-accion {
+            width: 100%;
+            min-width: 0;
+
+            min-height: 40px;
+
+            margin: 0 !important;
+            padding: 7px 8px;
+
+            box-sizing: border-box;
+
+            white-space: normal;
+            text-align: center;
+        }
+
+
+        /* Fila vacía */
+
+        .categorias-table tbody tr:has(.categorias-empty) {
+            display: block;
+            width: 100% !important;
+
+            padding: 0;
+
+            background: #181818;
+        }
+
+        .categorias-empty {
+            display: block !important;
+
+            width: 100% !important;
+
+            box-sizing: border-box;
+
+            padding: 25px 15px !important;
+
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+    }
+
+
+    /* =========================================================
+       MOBILE CHICO
+       ========================================================= */
+
+    @media (max-width: 430px) {
+
+        .categorias-header-info h1 {
+            font-size: 1.35rem;
+        }
+
+        .categorias-header-info p {
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .btn-nueva-categoria {
+            width: 100%;
+        }
+
+        .categoria-nombre {
+            font-size: 1rem;
+        }
+
+        .categoria-acciones {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-categoria-accion {
+            min-height: 40px;
+        }
+    }
+</style>
+
+
+<!-- =========================================================
+     ENCABEZADO
+     ========================================================= -->
+
+<div class="categorias-header">
+
+    <div class="categorias-header-info">
+
+        <h1>
+            Categorías
+        </h1>
+
+        <p>
+            Gestioná las categorías del sistema: creá, editá y eliminá categorías.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{% url 'categoria_crear' %}"
+        class="btn-nueva-categoria"
+    >
+        + Nueva categoría
+    </a>
+
 </div>
 
-<!-- Botón principal estilizado -->
-<a href="{% url 'categoria_crear' %}" class="btn btn-primary" style="background-color: #00d26a; color: #000; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s;">
-    + Nueva categoría
-</a>
 
-</div>
+<!-- =========================================================
+     TABLA / TARJETAS DE CATEGORÍAS
+     ========================================================= -->
 
-<div class="table-responsive" style="background: #181818; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+<div class="categorias-table-container">
 
-<table class="tabla-panel" style="width: 100%; border-collapse: collapse; text-align: left;">
+    <table class="categorias-table">
 
-    <thead>
-        <tr style="background: #222; border-bottom: 2px solid #333; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+        <thead>
 
-            <th style="padding: 14px 16px;">
-                ID
-            </th>
+            <tr>
 
-            <th style="padding: 14px 16px;">
-                Nombre
-            </th>
+                <th>
+                    ID
+                </th>
 
-            <th style="padding: 14px 16px; text-align: right;">
-                Acciones
-            </th>
+                <th>
+                    Nombre
+                </th>
 
-        </tr>
-    </thead>
+                <th style="text-align: right;">
+                    Acciones
+                </th>
 
-    <tbody>
+            </tr>
 
-        {% for categoria in categorias %}
+        </thead>
 
-        <tr style="border-bottom: 1px solid #252525; transition: background 0.2s;">
 
-            <td style="padding: 14px 16px; color: #888; font-weight: 500;">
-                #{{ categoria.idcategoria }}
-            </td>
+        <tbody>
 
-            <td style="padding: 14px 16px; color: #fff; font-weight: 500;">
-                {{ categoria.nombre }}
-            </td>
+            {% for categoria in categorias %}
 
-            <td style="padding: 14px 16px; text-align: right;">
+            <tr>
 
-                <!-- Botón Editar formal -->
-                <a href="{% url 'categoria_editar' categoria.idcategoria %}" style="background: #2b2b2b; color: #3498db; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-right: 6px; border: 1px solid #444; display: inline-block;">
-                    ✏️ Editar
-                </a>
+                <!-- ID -->
 
-                <!-- Botón Eliminar formal -->
-                <a href="{% url 'categoria_eliminar' categoria.idcategoria %}" style="background: #2b2b2b; color: #ff6b6b; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600; border: 1px solid #444; display: inline-block;">
-                    🗑️ Eliminar
-                </a>
+                <td class="categoria-id">
+                    #{{ categoria.idcategoria }}
+                </td>
 
-            </td>
 
-        </tr>
+                <!-- Nombre -->
 
-        {% empty %}
+                <td class="categoria-nombre">
+                    {{ categoria.nombre }}
+                </td>
 
-        <tr>
-            <td colspan="3" style="padding: 30px; text-align: center; color: #777; font-style: italic;">
-                No hay categorías cargadas actualmente.
-            </td>
-        </tr>
 
-        {% endfor %}
+                <!-- Acciones -->
 
-    </tbody>
+                <td class="categoria-acciones">
 
-</table>
+                    <a
+                        href="{% url 'categoria_editar' categoria.idcategoria %}"
+                        class="btn-categoria-accion btn-categoria-editar"
+                    >
+                        ✏️ Editar
+                    </a>
+
+                    <a
+                        href="{% url 'categoria_eliminar' categoria.idcategoria %}"
+                        class="btn-categoria-accion btn-categoria-eliminar"
+                    >
+                        🗑️ Eliminar
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+
+                <td
+                    colspan="3"
+                    class="categorias-empty"
+                >
+                    No hay categorías cargadas actualmente.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
 
 </div>
 

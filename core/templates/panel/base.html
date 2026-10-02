@@ -1,27 +1,47 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>
-        {% block title %}Zona-Burger | Panel{% endblock %}
+        {% block title %}
+            Zona-Burger | Panel
+        {% endblock %}
     </title>
 
-    <link rel="stylesheet" href="{% static 'css/panel.css' %}">
+    <link
+        rel="stylesheet"
+        href="{% static 'css/panel.css' %}"
+    >
+
 </head>
+
 
 <body>
 
-<div class="panel-container" id="panelContainer">
+<div
+    class="panel-container"
+    id="panelContainer"
+>
 
-    <!-- ========================================= -->
+
+    <!-- ================================================== -->
     <!-- SIDEBAR -->
-    <!-- ========================================= -->
+    <!-- ================================================== -->
 
-    <aside class="sidebar" id="sidebar">
+    <aside
+        class="sidebar"
+        id="sidebar"
+    >
 
         <!-- LOGO -->
 
@@ -67,9 +87,9 @@
         </div>
 
 
-        <!-- ========================================= -->
+        <!-- ================================================== -->
         <!-- MENÚ PRINCIPAL -->
-        <!-- ========================================= -->
+        <!-- ================================================== -->
 
         <nav class="sidebar-menu">
 
@@ -80,8 +100,15 @@
                 href="{% url 'panel_inicio' %}"
                 class="menu-item {% if request.resolver_match.url_name == 'panel_inicio' %}active{% endif %}"
             >
-                <span class="menu-icon">📊</span>
-                <span class="menu-text">Inicio</span>
+
+                <span class="menu-icon">
+                    📊
+                </span>
+
+                <span class="menu-text">
+                    Inicio
+                </span>
+
             </a>
 
 
@@ -91,8 +118,15 @@
                 href="#"
                 class="menu-item {% if request.resolver_match.url_name == 'lista_pedidos' %}active{% endif %}"
             >
-                <span class="menu-icon">🛒</span>
-                <span class="menu-text">Pedidos</span>
+
+                <span class="menu-icon">
+                    🛒
+                </span>
+
+                <span class="menu-text">
+                    Pedidos
+                </span>
+
             </a>
 
 
@@ -102,8 +136,15 @@
                 href="{% url 'menu_panel' %}"
                 class="menu-item {% if 'menu' in request.resolver_match.url_name or 'categoria' in request.resolver_match.url_name or 'grupo' in request.resolver_match.url_name or 'producto' in request.resolver_match.url_name or 'extra' in request.resolver_match.url_name %}active{% endif %}"
             >
-                <span class="menu-icon">🍔</span>
-                <span class="menu-text">Menú</span>
+
+                <span class="menu-icon">
+                    🍔
+                </span>
+
+                <span class="menu-text">
+                    Menú
+                </span>
+
             </a>
 
 
@@ -113,8 +154,15 @@
                 href="{% url 'lista_recetas' %}"
                 class="menu-item {% if 'receta' in request.resolver_match.url_name %}active{% endif %}"
             >
-                <span class="menu-icon">📜</span>
-                <span class="menu-text">Recetas</span>
+
+                <span class="menu-icon">
+                    📜
+                </span>
+
+                <span class="menu-text">
+                    Recetas
+                </span>
+
             </a>
 
 
@@ -124,8 +172,15 @@
                 href="#"
                 class="menu-item {% if request.resolver_match.url_name == 'lista_stock' %}active{% endif %}"
             >
-                <span class="menu-icon">📦</span>
-                <span class="menu-text">Stock</span>
+
+                <span class="menu-icon">
+                    📦
+                </span>
+
+                <span class="menu-text">
+                    Stock
+                </span>
+
             </a>
 
 
@@ -135,14 +190,21 @@
                 href="#"
                 class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}"
             >
-                <span class="menu-icon">📈</span>
-                <span class="menu-text">Reportes</span>
+
+                <span class="menu-icon">
+                    📈
+                </span>
+
+                <span class="menu-text">
+                    Reportes
+                </span>
+
             </a>
 
 
-            <!-- ========================================= -->
+            <!-- ================================================== -->
             <!-- ADMINISTRACIÓN -->
-            <!-- ========================================= -->
+            <!-- ================================================== -->
 
             <!-- USUARIOS -->
 
@@ -150,8 +212,15 @@
                 href="#"
                 class="menu-item {% if request.resolver_match.url_name == 'lista_usuarios' %}active{% endif %}"
             >
-                <span class="menu-icon">👥</span>
-                <span class="menu-text">Usuarios</span>
+
+                <span class="menu-icon">
+                    👥
+                </span>
+
+                <span class="menu-text">
+                    Usuarios
+                </span>
+
             </a>
 
 
@@ -161,14 +230,21 @@
                 href="#"
                 class="menu-item {% if request.resolver_match.url_name == 'lista_roles' %}active{% endif %}"
             >
-                <span class="menu-icon">🔐</span>
-                <span class="menu-text">Roles</span>
+
+                <span class="menu-icon">
+                    🔐
+                </span>
+
+                <span class="menu-text">
+                    Roles
+                </span>
+
             </a>
 
 
-            <!-- ========================================= -->
+            <!-- ================================================== -->
             <!-- CONFIGURACIÓN -->
-            <!-- ========================================= -->
+            <!-- ================================================== -->
 
             <!-- PROMOCIONES -->
 
@@ -176,8 +252,15 @@
                 href="{% url 'promociones_panel' %}"
                 class="menu-item {% if 'promociones' in request.resolver_match.url_name %}active{% endif %}"
             >
-                <span class="menu-icon">🎁</span>
-                <span class="menu-text">Promociones</span>
+
+                <span class="menu-icon">
+                    🎁
+                </span>
+
+                <span class="menu-text">
+                    Promociones
+                </span>
+
             </a>
 
 
@@ -187,8 +270,15 @@
                 href="#"
                 class="menu-item {% if request.resolver_match.url_name == 'pagos' %}active{% endif %}"
             >
-                <span class="menu-icon">💳</span>
-                <span class="menu-text">Pagos</span>
+
+                <span class="menu-icon">
+                    💳
+                </span>
+
+                <span class="menu-text">
+                    Pagos
+                </span>
+
             </a>
 
 
@@ -198,8 +288,15 @@
                 href="#"
                 class="menu-item {% if request.resolver_match.url_name == 'lista_estados' %}active{% endif %}"
             >
-                <span class="menu-icon">📋</span>
-                <span class="menu-text">Estados</span>
+
+                <span class="menu-icon">
+                    📋
+                </span>
+
+                <span class="menu-text">
+                    Estados
+                </span>
+
             </a>
 
 
@@ -209,8 +306,15 @@
                 href="#"
                 class="menu-item {% if request.resolver_match.url_name == 'negocio' %}active{% endif %}"
             >
-                <span class="menu-icon">🏪</span>
-                <span class="menu-text">Negocio</span>
+
+                <span class="menu-icon">
+                    🏪
+                </span>
+
+                <span class="menu-text">
+                    Negocio
+                </span>
+
             </a>
 
 
@@ -220,8 +324,15 @@
                 href="#"
                 class="menu-item {% if request.resolver_match.url_name == 'entrega' %}active{% endif %}"
             >
-                <span class="menu-icon">📍</span>
-                <span class="menu-text">Entrega</span>
+
+                <span class="menu-icon">
+                    📍
+                </span>
+
+                <span class="menu-text">
+                    Entrega
+                </span>
+
             </a>
 
         </nav>
@@ -229,32 +340,44 @@
     </aside>
 
 
-    <!-- ========================================= -->
+    <!-- ================================================== -->
     <!-- CONTENIDO PRINCIPAL -->
-    <!-- ========================================= -->
+    <!-- ================================================== -->
 
     <main class="main-content">
 
+
+        <!-- ================================================== -->
         <!-- TOPBAR -->
+        <!-- ================================================== -->
 
         <header class="topbar">
+
+
+            <!-- BOTÓN PARA ABRIR/CERRAR SIDEBAR -->
 
             <button
                 class="menu-toggle"
                 id="menuToggle"
                 type="button"
-                aria-label="Abrir menú"
+                aria-label="Abrir o cerrar menú lateral"
+                aria-controls="sidebar"
+                aria-expanded="true"
             >
                 ☰
             </button>
 
+
+            <!-- NOMBRE DEL PANEL -->
 
             <div class="topbar-brand">
                 Zona-Burger
             </div>
 
 
+            <!-- ================================================== -->
             <!-- USUARIO -->
+            <!-- ================================================== -->
 
             <div class="topbar-user">
 
@@ -264,9 +387,11 @@
                     type="button"
                     aria-label="Abrir menú de usuario"
                 >
+
                     <span class="user-button-icon">
                         👤
                     </span>
+
                 </button>
 
 
@@ -317,9 +442,9 @@
         </header>
 
 
-        <!-- ========================================= -->
+        <!-- ================================================== -->
         <!-- CONTENIDO DE LA PÁGINA -->
-        <!-- ========================================= -->
+        <!-- ================================================== -->
 
         <section class="page-content">
 
@@ -333,7 +458,9 @@
 </div>
 
 
+<!-- ================================================== -->
 <!-- JAVASCRIPT -->
+<!-- ================================================== -->
 
 <script src="{% static 'java/panel.js' %}"></script>
 

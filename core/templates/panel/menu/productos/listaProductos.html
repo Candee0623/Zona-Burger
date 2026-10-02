@@ -1,41 +1,742 @@
 {% extends 'panel/base.html' %}
+
 {% block title %}Zona-Burger | Productos{% endblock %}
 
 {% block content %}
 
-<div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+<style>
+    /*
+    ============================================================
+    PRODUCTOS - RESPONSIVE
+    ============================================================
 
-    <div>
-        <h1 style="font-size: 1.8rem; font-weight: 600; color: #fff; margin: 0;">
-            Productos
-        </h1>
+    En escritorio se mantiene la tabla tradicional.
 
-        <p style="margin: 5px 0 0; color: #888; font-size: 0.9rem;">
-            Gestioná los productos del menú: configurá precios, categorías, grupos de opciones y extras disponibles.
-        </p>
+    En pantallas pequeñas la tabla se transforma en tarjetas:
+    cada fila representa un producto y cada celda muestra
+    su etiqueta mediante data-label.
+    */
+
+    .productos-page {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    /* ---------------------------------------------------------
+       ENCABEZADO
+       --------------------------------------------------------- */
+
+    .productos-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+        min-width: 0;
+    }
+
+    .productos-header-info {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .productos-header h1 {
+        margin: 0;
+        color: #fff;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+
+    .productos-header p {
+        margin: 5px 0 0;
+        color: #888;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .btn-nuevo-producto {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border-radius: 6px;
+        background: #00d26a;
+        color: #000;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .btn-nuevo-producto:hover {
+        background: #00b85c;
+        color: #000;
+        transform: translateY(-1px);
+    }
+
+    /* ---------------------------------------------------------
+       MENSAJES DE DJANGO
+       --------------------------------------------------------- */
+
+    .productos-messages {
+        margin-bottom: 20px;
+    }
+
+    .producto-message {
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .producto-message.success {
+        background: rgba(0, 210, 106, 0.15);
+        border: 1px solid #00d26a;
+        color: #00d26a;
+    }
+
+    .producto-message.error {
+        background: rgba(255, 107, 107, 0.15);
+        border: 1px solid #ff6b6b;
+        color: #ff6b6b;
+    }
+
+    /* ---------------------------------------------------------
+       CONTENEDOR DE TABLA
+       --------------------------------------------------------- */
+
+    .productos-table-wrapper {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 8px;
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .productos-table {
+        width: 100%;
+        min-width: 900px;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .productos-table thead tr {
+        background: #222;
+        border-bottom: 2px solid #333;
+        color: #aaa;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .productos-table th {
+        padding: 14px 16px;
+        white-space: nowrap;
+    }
+
+    .productos-table td {
+        padding: 14px 16px;
+        vertical-align: middle;
+    }
+
+    .producto-row {
+        border-bottom: 1px solid #252525;
+        transition: background 0.2s;
+    }
+
+    .producto-row:hover {
+        background: #1d1d1d;
+    }
+
+    /* Producto eliminado */
+    .producto-row.eliminado {
+        opacity: 0.5;
+    }
+
+    /* ---------------------------------------------------------
+       IMAGEN
+       --------------------------------------------------------- */
+
+    .producto-imagen-cell {
+        width: 80px;
+        text-align: center;
+    }
+
+    .producto-imagen {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #444;
+        display: block;
+        margin: 0 auto;
+    }
+
+    .producto-imagen-placeholder {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto;
+        background: #282828;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        border: 1px solid #3a3a3a;
+    }
+
+    /* ---------------------------------------------------------
+       INFORMACIÓN DEL PRODUCTO
+       --------------------------------------------------------- */
+
+    .producto-info {
+        min-width: 180px;
+        max-width: 300px;
+    }
+
+    .producto-nombre {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 4px;
+        overflow-wrap: anywhere;
+    }
+
+    .producto-eliminado {
+        display: inline-block;
+        background: rgba(255, 107, 107, 0.15);
+        color: #ff6b6b;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.72rem;
+        margin-left: 6px;
+        border: 1px solid rgba(255, 107, 107, 0.4);
+        vertical-align: middle;
+    }
+
+    .producto-descripcion {
+        color: #888;
+        font-size: 0.85rem;
+        max-width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ---------------------------------------------------------
+       CATEGORÍA
+       --------------------------------------------------------- */
+
+    .categoria-badge {
+        display: inline-block;
+        max-width: 100%;
+        background: #232d26;
+        color: #00d26a;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border: 1px solid rgba(0, 210, 106, 0.3);
+        overflow-wrap: anywhere;
+    }
+
+    .sin-dato {
+        color: #666;
+        font-style: italic;
+        font-size: 0.85rem;
+    }
+
+    /* ---------------------------------------------------------
+       PRECIO
+       --------------------------------------------------------- */
+
+    .producto-precio {
+        color: #00d26a;
+        font-weight: 700;
+        font-size: 1.05rem;
+        white-space: nowrap;
+    }
+
+    /* ---------------------------------------------------------
+       GRUPOS Y EXTRAS
+       --------------------------------------------------------- */
+
+    .tags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        min-width: 150px;
+        max-width: 300px;
+    }
+
+    .grupo-tag {
+        display: inline-block;
+        background: #222;
+        color: #3498db;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.78rem;
+        border: 1px solid #333;
+        overflow-wrap: anywhere;
+    }
+
+    .extra-tag {
+        display: inline-block;
+        background: #2a2215;
+        color: #f39c12;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.78rem;
+        border: 1px solid rgba(243, 156, 18, 0.3);
+        overflow-wrap: anywhere;
+    }
+
+    /* ---------------------------------------------------------
+       ACCIONES
+       --------------------------------------------------------- */
+
+    .producto-acciones {
+        text-align: right;
+        white-space: nowrap;
+        min-width: 235px;
+    }
+
+    .acciones-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .btn-producto {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 6px 10px;
+        border-radius: 4px;
+        background: #2b2b2b;
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 600;
+        border: 1px solid #444;
+        transition: background 0.2s, border-color 0.2s;
+        white-space: nowrap;
+    }
+
+    .btn-producto:hover {
+        background: #383838;
+        border-color: #555;
+    }
+
+    .btn-receta {
+        color: #e67e22;
+    }
+
+    .btn-editar {
+        color: #3498db;
+    }
+
+    .btn-restaurar {
+        color: #00d26a;
+    }
+
+    .btn-eliminar {
+        color: #ff6b6b;
+    }
+
+    /* ---------------------------------------------------------
+       ESTADO VACÍO
+       --------------------------------------------------------- */
+
+    .productos-empty {
+        padding: 35px;
+        text-align: center;
+        color: #777;
+        font-style: italic;
+        line-height: 1.5;
+    }
+
+    /* =========================================================
+       RESPONSIVE INTERMEDIO
+       ========================================================= */
+
+    @media (max-width: 1100px) {
+
+        .productos-header {
+            align-items: flex-start;
+        }
+
+        .productos-header h1 {
+            font-size: 1.65rem;
+        }
+
+        .productos-header p {
+            max-width: 650px;
+        }
+
+        .productos-table-wrapper {
+            border-radius: 7px;
+        }
+
+        .productos-table th,
+        .productos-table td {
+            padding: 12px 10px;
+        }
+
+        .producto-info {
+            max-width: 230px;
+        }
+
+        .tags-container {
+            max-width: 220px;
+        }
+
+        .producto-acciones {
+            min-width: 220px;
+        }
+    }
+
+    /* =========================================================
+       TABLET / VENTANA ANGOSTA
+       ========================================================= */
+
+    @media (max-width: 850px) {
+
+        .productos-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .productos-header-info {
+            width: 100%;
+        }
+
+        .btn-nuevo-producto {
+            width: 100%;
+        }
+
+        /*
+        La tabla todavía se mantiene como tabla,
+        pero permite desplazamiento horizontal solamente
+        dentro del contenedor y no sobre toda la página.
+        */
+        .productos-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .productos-table {
+            min-width: 850px;
+        }
+    }
+
+    /* =========================================================
+       MÓVIL
+       ========================================================= */
+
+    @media (max-width: 700px) {
+
+        .productos-header {
+            margin-bottom: 20px;
+            gap: 12px;
+        }
+
+        .productos-header h1 {
+            font-size: 1.45rem;
+        }
+
+        .productos-header p {
+            font-size: 0.84rem;
+            line-height: 1.5;
+        }
+
+        .productos-table-wrapper {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            overflow: visible !important;
+        }
+
+        /*
+        En móvil dejamos de usar la tabla horizontal.
+
+        Cada <tr> pasa a ser una tarjeta.
+        Esto evita que el usuario tenga que desplazarse
+        horizontalmente para ver las columnas restantes.
+        */
+
+        .productos-table {
+            width: 100%;
+            min-width: 0 !important;
+            border-collapse: separate;
+            border-spacing: 0;
+            display: block;
+        }
+
+        .productos-table thead {
+            display: none;
+        }
+
+        .productos-table tbody {
+            display: block;
+            width: 100%;
+        }
+
+        .productos-table tbody tr {
+            width: 100%;
+            min-width: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 0;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: #181818;
+            border: 1px solid #333;
+            border-radius: 8px;
+            opacity: 1;
+        }
+
+        .productos-table tbody tr.eliminado {
+            opacity: 0.5;
+        }
+
+        .productos-table tbody tr:last-child {
+            margin-bottom: 0;
+        }
+
+        /*
+        Las celdas se muestran como bloques.
+        data-label contiene el nombre de la columna.
+        */
+
+        .productos-table tbody td {
+            width: 100%;
+            min-width: 0 !important;
+            max-width: none !important;
+            padding: 10px;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 5px;
+            text-align: left !important;
+            overflow: visible;
+        }
+
+        .productos-table tbody td::before {
+            content: attr(data-label);
+            display: block;
+            width: 100%;
+            color: #777;
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* La foto */
+        .productos-table tbody .producto-imagen-cell {
+            width: 100%;
+            align-items: flex-start;
+        }
+
+        .producto-imagen,
+        .producto-imagen-placeholder {
+            margin: 0;
+        }
+
+        /* Información del producto ocupa toda la fila */
+        .productos-table tbody .producto-info {
+            grid-column: 1 / -1;
+            max-width: none;
+        }
+
+        .producto-nombre {
+            width: 100%;
+            line-height: 1.4;
+        }
+
+        .producto-descripcion {
+            width: 100%;
+            max-width: 100%;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+
+        /* Categoría */
+        .productos-table tbody td:nth-child(3) {
+            grid-column: 1 / -1;
+        }
+
+        .categoria-badge {
+            max-width: 100%;
+        }
+
+        /* Precio */
+        .productos-table tbody td:nth-child(4) {
+            align-items: flex-start;
+        }
+
+        /* Grupos */
+        .productos-table tbody td:nth-child(5),
+        .productos-table tbody td:nth-child(6) {
+            grid-column: 1 / -1;
+        }
+
+        .tags-container {
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+        }
+
+        .grupo-tag,
+        .extra-tag {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+        }
+
+        /* Acciones */
+        .productos-table tbody .producto-acciones {
+            grid-column: 1 / -1;
+            width: 100%;
+            min-width: 0;
+            white-space: normal;
+        }
+
+        .acciones-wrapper {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px;
+        }
+
+        .btn-producto {
+            width: 100%;
+            min-width: 0;
+            margin: 0 !important;
+        }
+
+        /*
+        La fila vacía también se adapta.
+        */
+        .productos-table tbody tr.productos-empty-row {
+            display: block;
+            padding: 0;
+        }
+
+        .productos-table tbody tr.productos-empty-row td {
+            display: block;
+            width: 100%;
+            padding: 30px 18px;
+            text-align: center !important;
+        }
+
+        .productos-table tbody tr.productos-empty-row td::before {
+            display: none;
+        }
+    }
+
+    /* =========================================================
+       CELULAR PEQUEÑO
+       ========================================================= */
+
+    @media (max-width: 430px) {
+
+        .productos-header h1 {
+            font-size: 1.3rem;
+        }
+
+        .productos-header p {
+            font-size: 0.8rem;
+        }
+
+        .btn-nuevo-producto {
+            padding: 10px 14px;
+            font-size: 0.88rem;
+        }
+
+        .productos-table tbody tr {
+            grid-template-columns: 1fr;
+            padding: 6px;
+        }
+
+        .productos-table tbody td {
+            padding: 9px;
+        }
+
+        .acciones-wrapper {
+            grid-template-columns: 1fr;
+        }
+
+        .producto-eliminado {
+            margin-left: 0;
+            margin-top: 4px;
+        }
+    }
+</style>
+
+
+<div class="productos-page">
+
+    <!-- =====================================================
+         ENCABEZADO
+         ===================================================== -->
+    <div class="productos-header">
+
+        <div class="productos-header-info">
+
+            <h1>
+                Productos
+            </h1>
+
+            <p>
+                Gestioná los productos del menú: configurá precios,
+                categorías, grupos de opciones y extras disponibles.
+            </p>
+
+        </div>
+
+        <!-- Botón para crear un producto nuevo -->
+        <a
+            href="{% url 'producto_crear' %}"
+            class="btn-nuevo-producto"
+        >
+            + Nuevo producto
+        </a>
+
     </div>
 
-    <!-- Botón Nuevo Producto -->
-    <a href="{% url 'producto_crear' %}" class="btn btn-primary" style="background-color: #00d26a; color: #000; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.2s;">
-        + Nuevo producto
-    </a>
 
-</div>
+    <!-- =====================================================
+         MENSAJES
+         ===================================================== -->
+    {% if messages %}
 
-{% if messages %}
-    <div style="margin-bottom: 20px;">
-        {% for message in messages %}
-            <div style="padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; font-size: 0.9rem; {% if message.tags == 'success' %}background: rgba(0, 210, 106, 0.15); border: 1px solid #00d26a; color: #00d26a;{% else %}background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ff6b6b;{% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-{% endif %}
+        <div class="productos-messages">
 
-<div class="table-responsive" style="background: #181818; border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+            {% for message in messages %}
 
-    <table class="tabla-panel" style="width: 100%; border-collapse: collapse; text-align: left;">
+                <div
+                    class="producto-message {% if message.tags == 'success' %}success{% else %}error{% endif %}"
+                >
+                    {{ message }}
+                </div>
 
+<<<<<<< HEAD
         <thead>
             <tr style="background: #222; border-bottom: 2px solid #333; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
                 <th style="padding: 14px 16px; width: 70px;">Foto</th>
@@ -181,10 +882,326 @@
                     No hay productos registrados en el menú actualmente. ¡Hacé clic en "+ Nuevo producto" para crear el primero!
                 </td>
             </tr>
+=======
+>>>>>>> b8cce5f (Actualización panel administrativo, corrección de errores y comienzo de diseño responsive)
             {% endfor %}
-        </tbody>
 
-    </table>
+        </div>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         TABLA DE PRODUCTOS
+         ===================================================== -->
+    <div class="productos-table-wrapper">
+
+        <table class="productos-table">
+
+            <!-- -------------------------------------------------
+                 ENCABEZADO DE LA TABLA
+                 ------------------------------------------------- -->
+            <thead>
+
+                <tr>
+
+                    <th style="width: 70px;">
+                        Foto
+                    </th>
+
+                    <th>
+                        Producto
+                    </th>
+
+                    <th>
+                        Categoría
+                    </th>
+
+                    <th>
+                        Precio
+                    </th>
+
+                    <th>
+                        Opciones / Grupos
+                    </th>
+
+                    <th>
+                        Extras
+                    </th>
+
+                    <th style="text-align: right;">
+                        Acciones
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <!-- -------------------------------------------------
+                 PRODUCTOS
+                 ------------------------------------------------- -->
+            <tbody>
+
+                {% for producto in productos %}
+
+                <tr
+                    class="producto-row {% if producto.idestadoproducto_id == ESTADO_ELIMINADO %}eliminado{% endif %}"
+                >
+
+                    <!-- =========================================
+                         FOTO
+                         ========================================= -->
+                    <td
+                        class="producto-imagen-cell"
+                        data-label="Foto"
+                    >
+
+                        {% if producto.imagen %}
+
+                            <img
+                                src="{{ producto.imagen.url }}"
+                                alt="{{ producto.nombre }}"
+                                class="producto-imagen"
+                            >
+
+                        {% else %}
+
+                            <div class="producto-imagen-placeholder">
+                                🍔
+                            </div>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- =========================================
+                         PRODUCTO
+                         ========================================= -->
+                    <td
+                        class="producto-info"
+                        data-label="Producto"
+                    >
+
+                        <div class="producto-nombre">
+
+                            {{ producto.nombre }}
+
+                            {% if producto.idestadoproducto_id == ESTADO_ELIMINADO %}
+
+                                <span class="producto-eliminado">
+                                    Eliminado
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        {% if producto.descripcion %}
+
+                            <div class="producto-descripcion">
+                                {{ producto.descripcion|striptags }}
+                            </div>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- =========================================
+                         CATEGORÍA
+                         ========================================= -->
+                    <td data-label="Categoría">
+
+                        {% if producto.idcategoria %}
+
+                            <span class="categoria-badge">
+                                🏷️ {{ producto.idcategoria.nombre }}
+                            </span>
+
+                        {% else %}
+
+                            <span class="sin-dato">
+                                Sin categoría
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- =========================================
+                         PRECIO
+                         ========================================= -->
+                    <td
+                        class="producto-precio"
+                        data-label="Precio"
+                    >
+                        ${{ producto.precio }}
+                    </td>
+
+
+                    <!-- =========================================
+                         GRUPOS DE OPCIONES
+                         ========================================= -->
+                    <td data-label="Opciones / Grupos">
+
+                        {% with grupos=producto.productogrupoopcion_set.all %}
+
+                            {% if grupos %}
+
+                                <div class="tags-container">
+
+                                    {% for pgo in grupos %}
+
+                                        {% if pgo.idgrupo %}
+
+                                            <span class="grupo-tag">
+                                                ➕ {{ pgo.idgrupo.nombre }}
+                                            </span>
+
+                                        {% endif %}
+
+                                    {% endfor %}
+
+                                </div>
+
+                            {% else %}
+
+                                <span class="sin-dato">
+                                    Sin opciones
+                                </span>
+
+                            {% endif %}
+
+                        {% endwith %}
+
+                    </td>
+
+
+                    <!-- =========================================
+                         EXTRAS
+                         ========================================= -->
+                    <td data-label="Extras">
+
+                        {% with extras=producto.productoextras_set.all %}
+
+                            {% if extras %}
+
+                                <div class="tags-container">
+
+                                    {% for pe in extras %}
+
+                                        {% if pe.idextra %}
+
+                                            <span class="extra-tag">
+                                                🥓 {{ pe.idextra.nombre }} (${{ pe.idextra.precio }})
+                                            </span>
+
+                                        {% endif %}
+
+                                    {% endfor %}
+
+                                </div>
+
+                            {% else %}
+
+                                <span class="sin-dato">
+                                    Sin extras
+                                </span>
+
+                            {% endif %}
+
+                        {% endwith %}
+
+                    </td>
+
+
+                    <!-- =========================================
+                         ACCIONES
+                         ========================================= -->
+                    <td
+                        class="producto-acciones"
+                        data-label="Acciones"
+                    >
+
+                        <div class="acciones-wrapper">
+
+                            <!-- Gestionar receta -->
+                            <a
+                                href="{% url 'gestionar_receta' producto.idproducto %}"
+                                class="btn-producto btn-receta"
+                                title="Gestionar receta e insumos"
+                            >
+                                📜 Receta
+                            </a>
+
+
+                            <!-- Editar producto -->
+                            <a
+                                href="{% url 'producto_editar' producto.idproducto %}"
+                                class="btn-producto btn-editar"
+                            >
+                                ✏️ Editar
+                            </a>
+
+
+                            <!-- Eliminar / restaurar producto -->
+                            {% if producto.idestadoproducto_id == ESTADO_ELIMINADO %}
+
+                                <a
+                                    href="{% url 'producto_eliminar' producto.idproducto %}"
+                                    class="btn-producto btn-restaurar"
+                                    title="Restaurar producto"
+                                >
+                                    ♻️
+                                </a>
+
+                            {% else %}
+
+                                <a
+                                    href="{% url 'producto_eliminar' producto.idproducto %}"
+                                    class="btn-producto btn-eliminar"
+                                    title="Eliminar producto"
+                                >
+                                    🗑️
+                                </a>
+
+                            {% endif %}
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+
+                {% empty %}
+
+                <!-- -------------------------------------------------
+                     SIN PRODUCTOS
+                     ------------------------------------------------- -->
+                <tr class="productos-empty-row">
+
+                    <td
+                        colspan="7"
+                        class="productos-empty"
+                    >
+                        No hay productos registrados en el menú actualmente.
+                        ¡Hacé clic en "+ Nuevo producto" para crear el primero!
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
 

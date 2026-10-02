@@ -1,42 +1,84 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menú - {{ negocio.nombre|default:"Zona Burger" }}</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="stylesheet" href="{% static 'css/Index.css' %}">
-    <link rel="stylesheet" href="{% static 'css/productos/Menu.css' %}">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Menú - {{ negocio.nombre|default:"Zona Burger" }}
+    </title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/Index.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/productos/Menu.css' %}"
+    >
+
 </head>
+
+
 <body>
 
+
+    <!-- ========================================================
+         HEADER Y NAVEGACIÓN
+         ======================================================== -->
+
     <div class="header-fixed-wrapper">
+
         {% include 'components/header.html' %}
 
+
         <div class="categorias-nav-container">
-        <div class="categorias-scroll">
-            {% for categoria in categorias %}
-                <a href="#cat-{{ categoria.id|default:categoria.pk }}" class="categoria-chip">
-                    {{ categoria.nombre }}
-                </a>
-            {% empty %}
-                <span class="sin-categorias">No hay categorías cargadas</span>
-            {% endfor %}
+
+            <div
+                class="categorias-scroll"
+                id="categorias-dinamicas"
+            >
+
+                {% include 'components/menuCategorias.html' %}
+
+            </div>
+
         </div>
+
     </div>
-</div>
+
+
+
+    <!-- ========================================================
+         MENÚ DE PRODUCTOS
+         ======================================================== -->
 
     <main class="menu-container">
-        <h1 class="menu-title">Nuestro Menú</h1>
 
-        {% for categoria in categorias %}
-            <section id="cat-{{ categoria.id|default:categoria.pk }}" class="categoria-seccion">
-                <h2 class="categoria-heading">{{ categoria.nombre }}</h2>
+        <h1 class="menu-title">
+            Nuestro Menú
+        </h1>
 
+<<<<<<< HEAD
                 <div class="productos-grid">
                     {% for producto in categoria.producto_set.all %}
                         {% if not producto.idestadoproducto or producto.idestadoproducto.descripcion != 'Deshabilitado' %}
@@ -65,13 +107,16 @@
                                 </div>
                                 {% endif %}
 >>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
+=======
+>>>>>>> b8cce5f (Actualización panel administrativo, corrección de errores y comienzo de diseño responsive)
 
-                                {% if producto.productoextras_set.all %}
-                                <div class="producto-extras-disponibles" style="margin-top: 5px; font-size: 0.8rem; color: #ffb703;">
-                                    <i class="fa-solid fa-circle-plus"></i> Admite extras personalizados
-                                </div>
-                                {% endif %}
+        <div id="menu-dinamico">
 
+            {% include 'components/menuProductos.html' %}
+
+        </div>
+
+<<<<<<< HEAD
                                 <div class="producto-footer">
                                     <span class="producto-precio">${{ producto.precio }}</span>
                                     <a href="{% url 'detalleProducto' producto.idproducto %}" class="btn-agregar">Agregar</a>
@@ -87,26 +132,54 @@
         {% empty %}
             <p class="sin-categorias-gral">No se encontraron categorías registradas.</p>
         {% endfor %}
+=======
+>>>>>>> b8cce5f (Actualización panel administrativo, corrección de errores y comienzo de diseño responsive)
     </main>
 
+
+
+    <!-- ========================================================
+         BANNER DEL CARRITO
+         ======================================================== -->
+
     {% if request.session.carrito %}
+
         <div class="carrito-flotante-banner">
+
             <div class="carrito-flotante-info">
+
                 <i class="fa-solid fa-bag-shopping"></i>
+
                 <div class="carrito-flotante-texto">
-                    <span>Tienes productos agregados</span>
-                    <strong>Ver mi pedido</strong>
+
+                    <span>
+                        Tienes productos agregados
+                    </span>
+
+                    <strong>
+                        Ver mi pedido
+                    </strong>
+
                 </div>
+
             </div>
-            <a href="{% url 'ver_carrito' %}" class="btn-ir-carrito-flotante">
-                Ir al Carrito <i class="fa-solid fa-arrow-right"></i>
-            </a>
+
         </div>
+
     {% endif %}
 
-    {% include 'components/footer.html' %}
 
-    <script src="{% static 'java/header.js' %}"></script>
+
+    <!-- ========================================================
+         JAVASCRIPT DEL MENÚ
+         ======================================================== -->
+
+    <script>
+    window.MENU_ACTUALIZACIONES_URL = "{% url 'menu_actualizaciones' %}";
+    </script>
+
     <script src="{% static 'java/menu.js' %}"></script>
+
 </body>
+
 </html>

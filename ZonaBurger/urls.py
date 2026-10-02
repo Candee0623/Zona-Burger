@@ -11,6 +11,7 @@ urlpatterns = [
     # Vistas Públicas / Tienda
     path('', views.index, name='index'),
     path('menu/', views.menu, name='menu'),
+    path('menu/actualizaciones/', views.menu_actualizaciones, name='menu_actualizaciones'),
     path('producto/<int:idproducto>/', views.detalleProducto, name='detalleProducto'),
 
     # Carrito de Compras
@@ -33,9 +34,9 @@ urlpatterns = [
 
     # Tipos de beneficio
     path('panel/promociones/tipos-beneficio/', views.lista_tipos_beneficio, name='panel_lista_tipos_beneficio'),
-path('panel/promociones/tipos-beneficio/crear/', views.crear_tipo_beneficio, name='panel_crear_tipo_beneficio'),
-path('panel/promociones/tipos-beneficio/<int:pk>/editar/', views.editar_tipo_beneficio, name='panel_editar_tipo_beneficio'),
-path('panel/promociones/tipos-beneficio/<int:pk>/eliminar/', views.eliminar_tipo_beneficio, name='panel_eliminar_tipo_beneficio'),
+    path('panel/promociones/tipos-beneficio/crear/', views.crear_tipo_beneficio, name='panel_crear_tipo_beneficio'),
+    path('panel/promociones/tipos-beneficio/<int:pk>/editar/', views.editar_tipo_beneficio, name='panel_editar_tipo_beneficio'),
+    path('panel/promociones/tipos-beneficio/<int:pk>/eliminar/', views.eliminar_tipo_beneficio, name='panel_eliminar_tipo_beneficio'),
 
     # Panel de Administración - Inicio
     path('panel/', panel_inicio, name='panel_inicio'),
