@@ -1,32 +1,21 @@
 {% extends 'panel/base.html' %}
 {% load static %}
 
+{% block title %}Zona-Burger | Panel de Control{% endblock %}
+
 {% block content %}
 
 <style>
 
 /* =========================================================
-   BASE
+   CONTENEDOR
 ========================================================= */
 
-.dashboard-wrapper {
+.dashboard-page {
     width: 100%;
-    max-width: 100%;
-    min-height: 100vh;
-
-    padding: 1.5rem;
-
-    background:
-        radial-gradient(
-            circle at top right,
-            rgba(0, 210, 106, 0.035),
-            transparent 30%
-        ),
-        #050505;
-
-    color: #ffffff;
-
-    overflow: visible;
+    max-width: 1100px;
+    margin: 0 auto;
+    color: #fff;
 }
 
 
@@ -35,77 +24,92 @@
 ========================================================= */
 
 .dashboard-header {
+    margin-bottom: 30px;
+}
+
+.dashboard-header-title {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
 
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-
-    min-width: 0;
-}
-
-.dashboard-header > div:first-child {
-    min-width: 0;
-}
-
-.dashboard-title {
     margin: 0;
 
-    color: #ffffff;
+    color: #fff;
 
-    font-size: 1.45rem;
-    font-weight: 800;
-
-    letter-spacing: -0.4px;
-
-    overflow-wrap: anywhere;
+    font-size: 1.8rem;
+    font-weight: 600;
 }
 
-.dashboard-subtitle {
-    margin: 5px 0 0;
+.dashboard-header-icon {
+    width: 42px;
+    height: 42px;
 
-    color: #686868;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    font-size: 0.8rem;
+    border-radius: 8px;
 
-    overflow-wrap: anywhere;
+    background: rgba(46, 204, 113, 0.12);
+    border: 1px solid rgba(46, 204, 113, 0.25);
+
+    color: #2ecc71;
+}
+
+.dashboard-header-description {
+    margin: 8px 0 0 54px;
+
+    color: #888;
+
+    font-size: 0.9rem;
+    line-height: 1.5;
 }
 
 
 /* =========================================================
-   INDICADOR DE SINCRONIZACIÓN
+   SINCRONIZACIÓN
 ========================================================= */
 
 .panel-sync-indicator {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 7px;
 
-    gap: 6px;
+    margin-top: 12px;
+    margin-left: 54px;
 
-    padding: 5px 10px;
+    min-height: 28px;
+
+    padding: 0 10px;
 
     background: #0d1712;
 
     border: 1px solid #173523;
+
     border-radius: 20px;
 
     color: #00d26a;
 
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
+}
 
-    white-space: nowrap;
+.panel-sync-dot {
+    width: 7px;
+    height: 7px;
 
     flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: currentColor;
+
+    box-shadow: 0 0 8px currentColor;
 }
 
 .panel-sync-indicator.actualizando {
     background: #18150a;
-
     border-color: #40370f;
-
     color: #ffc107;
 }
 
@@ -120,35 +124,35 @@
     grid-template-columns:
         repeat(3, minmax(0, 1fr));
 
-    gap: 12px;
+    gap: 18px;
 
-    width: 100%;
-    max-width: 100%;
-
-    margin-bottom: 1.1rem;
+    margin-bottom: 20px;
 }
 
 .metric-card {
     position: relative;
 
     min-width: 0;
-    min-height: 92px;
 
-    padding: 1rem 1.1rem;
+    min-height: 135px;
 
-    background: #0e0e0e;
+    padding: 20px;
 
-    border: 1px solid #1d1d1d;
+    box-sizing: border-box;
+
+    background: #181818;
+
+    border: 1px solid #333;
+
     border-radius: 10px;
-
-    box-shadow:
-        0 5px 18px rgba(0, 0, 0, 0.25);
 
     overflow: hidden;
 
     transition:
+        transform 0.2s ease,
         border-color 0.2s ease,
-        transform 0.2s ease;
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .metric-card::after {
@@ -156,25 +160,98 @@
 
     position: absolute;
 
-    width: 65px;
-    height: 65px;
+    width: 130px;
+    height: 130px;
 
-    right: -20px;
-    bottom: -25px;
+    right: -45px;
+    bottom: -60px;
 
     border-radius: 50%;
 
-    background: rgba(255, 255, 255, 0.025);
+    background: var(--metric-accent);
+
+    opacity: 0.035;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
 }
 
 .metric-card:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 
-    border-color: #292929;
+    background: #1b1b1b;
+
+    border-color: var(--metric-accent);
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.22);
 }
 
+.metric-card:hover::after {
+    opacity: 0.08;
+    transform: scale(1.2);
+}
+
+.metric-card-blue {
+    --metric-accent: #3498db;
+}
+
+.metric-card-green {
+    --metric-accent: #2ecc71;
+}
+
+.metric-card-yellow {
+    --metric-accent: #f1c40f;
+}
+
+
+/* =========================================================
+   ICONOS MÉTRICAS
+========================================================= */
+
+.metric-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 15px;
+}
+
+.metric-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    color: var(--metric-accent);
+
+    background: color-mix(
+        in srgb,
+        var(--metric-accent) 10%,
+        transparent
+    );
+
+    border: 1px solid color-mix(
+        in srgb,
+        var(--metric-accent) 25%,
+        transparent
+    );
+}
+
+
+/* =========================================================
+   VALORES
+========================================================= */
+
 .metric-value {
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 
     font-size: 1.45rem;
     line-height: 1.2;
@@ -185,28 +262,26 @@
 }
 
 .metric-label {
-    color: #666666;
+    color: #777;
 
     font-size: 0.68rem;
     font-weight: 700;
 
     text-transform: uppercase;
 
-    letter-spacing: 0.5px;
-
-    overflow-wrap: anywhere;
+    letter-spacing: 0.6px;
 }
 
 .text-primary {
-    color: #4da3ff !important;
+    color: #3498db !important;
 }
 
 .text-success {
-    color: #00d26a !important;
+    color: #2ecc71 !important;
 }
 
 .text-warning {
-    color: #ffc107 !important;
+    color: #f1c40f !important;
 }
 
 
@@ -216,23 +291,12 @@
 
 .filters-section {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    align-items: center;
 
-    gap: 1rem;
+    gap: 14px;
 
-    width: 100%;
-    max-width: 100%;
-
-    margin-bottom: 1rem;
-
-    min-width: 0;
+    margin-bottom: 18px;
 }
-
-
-/* =========================================================
-   ESTADOS
-========================================================= */
 
 .status-container {
     display: flex;
@@ -240,50 +304,59 @@
 
     flex-wrap: wrap;
 
-    gap: 6px;
+    gap: 7px;
 
     min-width: 0;
 
     flex: 1;
 }
 
+
+/* =========================================================
+   BOTONES ESTADO
+========================================================= */
+
 .btn-status {
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    gap: 5px;
+    gap: 7px;
 
-    min-height: 32px;
+    min-height: 34px;
 
-    padding: 5px 9px;
+    padding: 5px 10px;
 
-    background: #0d0d0d;
+    background: #181818;
 
-    border: 1px solid #222222;
+    border: 1px solid #333;
+
     border-radius: 6px;
 
-    color: #888888;
+    color: #888;
 
     font-size: 0.72rem;
     font-weight: 700;
 
     text-decoration: none;
 
+    white-space: nowrap;
+
     transition:
         color 0.15s ease,
         background 0.15s ease,
-        border-color 0.15s ease;
-
-    white-space: nowrap;
+        border-color 0.15s ease,
+        transform 0.15s ease;
 }
 
 .btn-status:hover {
-    background: #151515;
+    background: #1d1d1d;
 
-    border-color: #333333;
+    border-color: #444;
 
-    color: #dddddd;
+    color: #ddd;
+
+    transform: translateY(-1px);
 }
 
 .btn-status.active {
@@ -294,30 +367,37 @@
     color: #00d26a;
 }
 
+.status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: currentColor;
+}
+
 .estado-contador {
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    min-width: 19px;
+    min-width: 20px;
     height: 18px;
 
     padding: 0 5px;
 
-    background: #202020;
+    background: #242424;
 
     border-radius: 4px;
 
-    color: #777777;
+    color: #777;
 
-    font-size: 0.64rem;
+    font-size: 0.63rem;
     font-weight: 800;
 }
 
 .btn-status.active .estado-contador {
     background: #00d26a;
-
-    color: #000000;
+    color: #000;
 }
 
 
@@ -330,18 +410,19 @@
     align-items: center;
     justify-content: center;
 
-    gap: 5px;
+    gap: 6px;
 
-    min-height: 30px;
+    min-height: 34px;
 
-    padding: 0 9px;
+    padding: 0 10px;
 
-    background: #111111;
+    background: #181818;
 
-    border: 1px solid #292929;
+    border: 1px solid #333;
+
     border-radius: 6px;
 
-    color: #777777;
+    color: #777;
 
     text-decoration: none;
 
@@ -356,12 +437,8 @@
         border-color 0.15s ease;
 }
 
-.clear-filters span:first-child {
-    font-size: 0.72rem;
-}
-
 .clear-filters:hover {
-    background: #1b1010;
+    background: #211313;
 
     border-color: #552525;
 
@@ -377,16 +454,15 @@
     display: flex;
     align-items: center;
 
-    width: 290px;
-    max-width: 100%;
+    width: 280px;
+    height: 38px;
 
-    flex-shrink: 1;
+    flex-shrink: 0;
 
-    height: 34px;
+    background: #181818;
 
-    background: #0d0d0d;
+    border: 1px solid #333;
 
-    border: 1px solid #242424;
     border-radius: 7px;
 
     overflow: hidden;
@@ -397,14 +473,14 @@
 }
 
 .search-box:focus-within {
-    border-color: #3a3a3a;
+    border-color: #444;
 
     box-shadow:
-        0 0 0 2px rgba(0, 210, 106, 0.05);
+        0 0 0 2px rgba(46, 204, 113, 0.05);
 }
 
 .search-icon {
-    width: 34px;
+    width: 38px;
 
     display: flex;
     align-items: center;
@@ -412,9 +488,7 @@
 
     flex-shrink: 0;
 
-    color: #666666;
-
-    font-size: 0.85rem;
+    color: #666;
 }
 
 .search-box input {
@@ -425,24 +499,24 @@
     width: 100%;
     height: 100%;
 
-    padding: 0 7px 0 0;
+    padding: 0 6px;
 
     background: transparent;
 
     border: none;
     outline: none;
 
-    color: #dddddd;
+    color: #ddd;
 
     font-size: 0.76rem;
 }
 
 .search-box input::placeholder {
-    color: #555555;
+    color: #555;
 }
 
 .search-submit {
-    width: 34px;
+    width: 36px;
     height: 100%;
 
     display: flex;
@@ -455,7 +529,7 @@
 
     border: none;
 
-    color: #777777;
+    color: #777;
 
     cursor: pointer;
 
@@ -465,9 +539,9 @@
 }
 
 .search-submit:hover {
-    background: #151515;
+    background: #222;
 
-    color: #00d26a;
+    color: #2ecc71;
 }
 
 
@@ -477,17 +551,17 @@
 
 .table-card {
     width: 100%;
-    max-width: 100%;
 
-    background: #0c0c0c;
+    background: #181818;
 
-    border: 1px solid #1c1c1c;
+    border: 1px solid #333;
+
     border-radius: 10px;
 
     overflow: hidden;
 
     box-shadow:
-        0 8px 25px rgba(0, 0, 0, 0.3);
+        0 8px 25px rgba(0, 0, 0, 0.22);
 }
 
 .table-card-header {
@@ -495,34 +569,42 @@
     align-items: center;
     justify-content: space-between;
 
-    min-height: 48px;
+    min-height: 52px;
 
-    padding: 0 1rem;
+    padding: 0 18px;
 
-    background: #101010;
+    background: #1b1b1b;
 
-    border-bottom: 1px solid #1d1d1d;
+    border-bottom: 1px solid #333;
 }
 
 .table-card-title {
     display: flex;
     align-items: center;
 
-    gap: 8px;
+    gap: 9px;
 
-    color: #dddddd;
+    color: #ddd;
 
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 800;
 }
 
 .table-card-title-icon {
-    color: #00d26a;
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #2ecc71;
+
+    box-shadow:
+        0 0 8px rgba(46, 204, 113, 0.5);
 }
 
 
 /* =========================================================
-   CONTENEDOR DE TABLA
+   TABLA RESPONSIVE
 ========================================================= */
 
 .table-responsive {
@@ -535,8 +617,8 @@
     scrollbar-width: thin;
 
     scrollbar-color:
-        #333333
-        #0d0d0d;
+        #333
+        #181818;
 }
 
 .table-responsive::-webkit-scrollbar {
@@ -544,18 +626,18 @@
 }
 
 .table-responsive::-webkit-scrollbar-track {
-    background: #0d0d0d;
+    background: #181818;
 }
 
 .table-responsive::-webkit-scrollbar-thumb {
-    background: #333333;
+    background: #333;
 
     border-radius: 10px;
 }
 
 
 /* =========================================================
-   TABLA INTERNA
+   TABLA
 ========================================================= */
 
 .custom-table {
@@ -563,17 +645,17 @@
 
     border-collapse: collapse;
 
-    color: #dddddd;
+    color: #ddd;
 }
 
 .custom-table th {
-    padding: 9px 10px;
+    padding: 11px 12px;
 
-    background: #111111;
+    background: #1b1b1b;
 
-    border-bottom: 1px solid #202020;
+    border-bottom: 1px solid #333;
 
-    color: #555555;
+    color: #666;
 
     font-size: 0.64rem;
     font-weight: 800;
@@ -586,11 +668,11 @@
 }
 
 .custom-table td {
-    padding: 9px 10px;
+    padding: 11px 12px;
 
-    border-bottom: 1px solid #181818;
+    border-bottom: 1px solid #242424;
 
-    color: #aaaaaa;
+    color: #aaa;
 
     font-size: 0.76rem;
 
@@ -603,7 +685,7 @@
 }
 
 .custom-table tbody tr:hover {
-    background: #111111;
+    background: #1d1d1d;
 }
 
 .custom-table tbody tr:last-child td {
@@ -612,63 +694,68 @@
 
 
 /* =========================================================
-   BOTONES DE ACCIÓN
+   CLIENTE
 ========================================================= */
 
-.actions-wrapper {
+.cliente-cell {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
 
-    gap: 5px;
+    gap: 9px;
 
-    flex-wrap: wrap;
+    min-width: 0;
 }
 
-.btn-accion-custom {
-    display: inline-flex;
+.cliente-avatar {
+    width: 28px;
+    height: 28px;
+
+    display: flex;
     align-items: center;
     justify-content: center;
 
-    gap: 4px;
+    flex-shrink: 0;
 
-    min-height: 28px;
+    background: #222;
 
-    padding: 4px 8px;
+    border: 1px solid #333;
 
-    background: #151515;
+    border-radius: 6px;
 
-    border: 1px solid #292929;
-    border-radius: 5px;
-
-    color: #aaaaaa;
-
-    cursor: pointer;
-
-    font-size: 0.68rem;
-    font-weight: 700;
-
-    text-decoration: none;
-
-    white-space: nowrap;
-
-    transition:
-        color 0.15s ease,
-        background 0.15s ease,
-        border-color 0.15s ease;
+    color: #777;
 }
 
-.btn-accion-custom:hover {
-    background: #102017;
+.cliente-nombre {
+    min-width: 0;
 
-    border-color: #1d633c;
+    color: #ccc;
 
-    color: #00d26a;
+    overflow-wrap: anywhere;
 }
 
 
 /* =========================================================
-   ESTADO DE PAGO
+   HORA
+========================================================= */
+
+.hora-cell {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    color: #ccc;
+
+    font-weight: 600;
+}
+
+.hora-icon {
+    color: #777;
+}
+
+
+/* =========================================================
+   PAGO
 ========================================================= */
 
 .btn-pago-pagado,
@@ -677,9 +764,9 @@
     align-items: center;
     justify-content: center;
 
-    gap: 4px;
+    gap: 5px;
 
-    padding: 4px 7px;
+    padding: 5px 8px;
 
     border-radius: 5px;
 
@@ -720,24 +807,24 @@
 
 
 /* =========================================================
-   ESTADO DEL PEDIDO
+   ESTADO PEDIDO
 ========================================================= */
 
 .custom-table .badge {
     display: inline-flex;
     align-items: center;
 
-    gap: 4px;
+    gap: 5px;
 
-    padding: 4px 7px;
+    padding: 5px 8px;
 
-    background: #181818 !important;
+    background: #222 !important;
 
-    border: 1px solid #282828;
+    border: 1px solid #333;
 
     border-radius: 5px;
 
-    color: #aaaaaa;
+    color: #aaa;
 
     font-size: 0.65rem;
     font-weight: 700;
@@ -745,41 +832,124 @@
     white-space: nowrap;
 }
 
+.estado-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
 /* =========================================================
-   PEDIDOS VACÍOS
+   ACCIONES
+========================================================= */
+
+.actions-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 6px;
+
+    flex-wrap: wrap;
+}
+
+.btn-accion-custom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    min-height: 30px;
+
+    padding: 5px 9px;
+
+    background: #222;
+
+    border: 1px solid #333;
+
+    border-radius: 5px;
+
+    color: #aaa;
+
+    cursor: pointer;
+
+    font-size: 0.68rem;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition:
+        color 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.btn-accion-custom:hover {
+    background: #102017;
+
+    border-color: #1d633c;
+
+    color: #00d26a;
+
+    transform: translateY(-1px);
+}
+
+.btn-accion-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* =========================================================
+   VACÍO
 ========================================================= */
 
 .empty-orders {
-    padding: 4rem 1rem;
+    padding: 70px 20px;
 
     text-align: center;
 
-    color: #555555;
+    color: #555;
 }
 
 .empty-orders-icon {
-    margin-bottom: 10px;
+    width: 48px;
+    height: 48px;
 
-    font-size: 2.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    opacity: 0.6;
+    margin: 0 auto 14px;
+
+    background: #222;
+
+    border: 1px solid #333;
+
+    border-radius: 9px;
+
+    color: #555;
 }
 
 .empty-orders-title {
-    margin: 0 0 5px;
+    margin: 0 0 6px;
 
-    color: #888888;
+    color: #888;
 
-    font-size: 0.9rem;
+    font-size: 0.92rem;
 }
 
 .empty-orders-text {
     margin: 0;
 
-    color: #4d4d4d;
+    color: #555;
 
-    font-size: 0.72rem;
+    font-size: 0.74rem;
 }
 
 
@@ -811,14 +981,14 @@
 }
 
 .custom-modal-box {
-    width: 420px;
+    width: 440px;
     max-width: 100%;
 
-    background: #121212;
+    background: #181818;
 
-    border: 1px solid #292929;
+    border: 1px solid #333;
 
-    border-radius: 9px;
+    border-radius: 10px;
 
     overflow: hidden;
 
@@ -833,22 +1003,31 @@
 
     gap: 10px;
 
-    padding: 11px 14px;
+    padding: 13px 16px;
 
-    background: #171717;
+    background: #1d1d1d;
 
-    border-bottom: 1px solid #292929;
+    border-bottom: 1px solid #333;
 
-    color: #dddddd;
+    color: #ddd;
 
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 800;
 }
 
-.custom-modal-header span {
-    min-width: 0;
+.custom-modal-title {
+    display: flex;
+    align-items: center;
 
-    overflow-wrap: anywhere;
+    gap: 8px;
+
+    min-width: 0;
+}
+
+.custom-modal-title-icon {
+    color: #2ecc71;
+
+    display: inline-flex;
 }
 
 .custom-modal-close {
@@ -856,8 +1035,8 @@
     align-items: center;
     justify-content: center;
 
-    width: 28px;
-    height: 28px;
+    width: 29px;
+    height: 29px;
 
     flex-shrink: 0;
 
@@ -867,66 +1046,68 @@
 
     border-radius: 5px;
 
-    color: #666666;
+    color: #666;
 
     cursor: pointer;
 
-    font-size: 1.2rem;
+    font-size: 1.25rem;
 }
 
 .custom-modal-close:hover {
-    background: #252525;
+    background: #292929;
 
-    color: #ffffff;
+    color: #fff;
 }
 
 .custom-modal-body {
     width: 100%;
     max-height: 400px;
 
-    padding: 14px;
+    padding: 16px;
 
-    background: #ffffff;
+    background: #fff;
 
-    color: #000000;
+    color: #000;
 
     overflow-y: auto;
+
+    box-sizing: border-box;
 }
 
 .custom-modal-footer {
     display: flex;
     justify-content: flex-end;
 
-    gap: 7px;
+    gap: 8px;
 
-    padding: 10px 14px;
+    padding: 11px 16px;
 
-    background: #171717;
+    background: #1d1d1d;
 
-    border-top: 1px solid #292929;
+    border-top: 1px solid #333;
 }
 
 .custom-modal-footer .btn-success {
-    background: #00d26a !important;
+    background: #2ecc71 !important;
 
     border: none !important;
 
-    color: #000000 !important;
+    color: #000 !important;
 
     font-weight: 800;
 }
 
 .custom-modal-footer .btn-secondary {
-    background: #242424 !important;
+    background: #292929 !important;
 
-    border: 1px solid #333333 !important;
+    border: 1px solid #3a3a3a !important;
 
-    color: #cccccc !important;
+    color: #ccc !important;
 }
 
 
 /* =========================================================
-   CAMPOS DEL MODAL
+   CAMPOS MODAL
 ========================================================= */
 
 .filter-control {
@@ -937,13 +1118,13 @@
 
     padding: 8px 10px;
 
-    background: #1b1b1b;
+    background: #222;
 
-    border: 1px solid #333333;
+    border: 1px solid #444;
 
     border-radius: 6px;
 
-    color: #ffffff;
+    color: #fff;
 
     font-size: 0.78rem;
 
@@ -952,13 +1133,15 @@
     transition:
         border-color 0.15s ease,
         box-shadow 0.15s ease;
+
+    box-sizing: border-box;
 }
 
 .filter-control:focus {
-    border-color: #00a653;
+    border-color: #2ecc71;
 
     box-shadow:
-        0 0 0 2px rgba(0, 210, 106, 0.08);
+        0 0 0 2px rgba(46, 204, 113, 0.08);
 }
 
 textarea.filter-control {
@@ -968,20 +1151,21 @@ textarea.filter-control {
 }
 
 select.filter-control option {
-    background: #1b1b1b;
+    background: #222;
 
-    color: #ffffff;
+    color: #fff;
 }
 
 
 /* =========================================================
-   TABLET / PANTALLA DIVIDIDA
+   TABLET
 ========================================================= */
 
 @media (max-width: 1050px) {
 
-    .dashboard-wrapper {
-        padding: 1rem;
+    .dashboard-page {
+        padding: 0 1rem;
+        box-sizing: border-box;
     }
 
     .filters-section {
@@ -996,7 +1180,6 @@ select.filter-control option {
 
     .search-box {
         width: 100%;
-        max-width: 100%;
     }
 
     .metrics-grid {
@@ -1013,22 +1196,12 @@ select.filter-control option {
 
 @media (max-width: 800px) {
 
-    .dashboard-wrapper {
-        padding: 0.85rem;
-    }
-
-    .dashboard-header {
-        align-items: flex-start;
-
-        flex-direction: column;
+    .dashboard-page {
+        padding: 0 0.85rem;
     }
 
     .metrics-grid {
         grid-template-columns: 1fr;
-    }
-
-    .panel-sync-indicator {
-        align-self: flex-start;
     }
 
 }
@@ -1040,31 +1213,24 @@ select.filter-control option {
 
 @media (max-width: 600px) {
 
-    .dashboard-wrapper {
-        width: 100%;
-        max-width: 100%;
-
-        padding: 0.7rem;
+    .dashboard-page {
+        padding: 0 0.7rem;
     }
 
-    .dashboard-header {
-        width: 100%;
-
-        margin-bottom: 1rem;
+    .dashboard-header-title {
+        font-size: 1.5rem;
     }
 
-    .dashboard-title {
-        font-size: 1.2rem;
+    .dashboard-header-description {
+        margin-left: 0;
     }
 
-    .dashboard-subtitle {
-        font-size: 0.74rem;
+    .panel-sync-indicator {
+        margin-left: 0;
     }
 
 
-    /* -----------------------------------------------------
-       ESTADOS
-    ----------------------------------------------------- */
+    /* ESTADOS */
 
     .status-container {
         display: grid;
@@ -1088,24 +1254,17 @@ select.filter-control option {
     }
 
 
-    /* -----------------------------------------------------
-       TABLA -> TARJETAS
-    ----------------------------------------------------- */
+    /* TABLA COMO TARJETAS */
 
     .table-card {
-        width: 100%;
-        max-width: 100%;
-
         overflow: visible;
     }
 
     .table-card-header {
-        padding: 0 0.8rem;
+        padding: 0 13px;
     }
 
     .table-responsive {
-        width: 100%;
-
         overflow: visible;
     }
 
@@ -1133,20 +1292,22 @@ select.filter-control option {
 
         margin: 10px 0;
 
-        padding: 10px;
+        padding: 11px;
 
-        background: #101010;
+        background: #181818;
 
-        border: 1px solid #222222;
+        border: 1px solid #333;
 
         border-radius: 9px;
 
         box-shadow:
             0 5px 15px rgba(0, 0, 0, 0.2);
+
+        box-sizing: border-box;
     }
 
     .custom-table tbody tr:hover {
-        background: #131313;
+        background: #1d1d1d;
     }
 
     .custom-table tbody tr:last-child {
@@ -1155,6 +1316,7 @@ select.filter-control option {
 
     .custom-table td {
         display: flex;
+
         align-items: flex-start;
         justify-content: space-between;
 
@@ -1166,11 +1328,13 @@ select.filter-control option {
 
         padding: 9px 3px;
 
-        border-bottom: 1px solid #1d1d1d;
+        border-bottom: 1px solid #292929;
 
         text-align: right;
 
         overflow-wrap: anywhere;
+
+        box-sizing: border-box;
     }
 
     .custom-table td:last-child {
@@ -1179,11 +1343,8 @@ select.filter-control option {
         padding-bottom: 4px;
     }
 
-    /*
-     * Etiquetas automáticas de cada columna.
-     * Esto reemplaza visualmente al encabezado
-     * que ocultamos en móvil.
-     */
+
+    /* ETIQUETAS */
 
     .custom-table td:nth-child(1)::before {
         content: "# Pedido";
@@ -1220,7 +1381,7 @@ select.filter-control option {
     .custom-table td::before {
         flex: 0 0 auto;
 
-        color: #666666;
+        color: #666;
 
         font-size: 0.63rem;
         font-weight: 800;
@@ -1239,9 +1400,7 @@ select.filter-control option {
     }
 
 
-    /* -----------------------------------------------------
-       ACCIONES
-    ----------------------------------------------------- */
+    /* ACCIONES */
 
     .custom-table td:last-child {
         display: block;
@@ -1250,7 +1409,7 @@ select.filter-control option {
     .custom-table td:last-child::before {
         display: block;
 
-        margin-bottom: 7px;
+        margin-bottom: 8px;
     }
 
     .actions-wrapper {
@@ -1277,15 +1436,12 @@ select.filter-control option {
     }
 
 
-    /* -----------------------------------------------------
-       MODALES
-    ----------------------------------------------------- */
+    /* MODALES */
 
     .custom-modal-overlay {
         align-items: flex-start;
 
         padding: 0.6rem;
-
         padding-top: 1rem;
     }
 
@@ -1314,21 +1470,22 @@ select.filter-control option {
 
 
 /* =========================================================
-   MÓVIL MUY PEQUEÑO
+   MÓVIL PEQUEÑO
 ========================================================= */
 
 @media (max-width: 430px) {
 
-    .dashboard-wrapper {
-        padding: 0.55rem;
+    .dashboard-page {
+        padding: 0 0.55rem;
     }
 
-    .dashboard-title {
-        font-size: 1.1rem;
+    .dashboard-header-title {
+        font-size: 1.35rem;
     }
 
-    .dashboard-subtitle {
-        font-size: 0.7rem;
+    .dashboard-header-icon {
+        width: 38px;
+        height: 38px;
     }
 
     .status-container {
@@ -1336,7 +1493,7 @@ select.filter-control option {
     }
 
     .metric-card {
-        padding: 0.85rem;
+        padding: 17px;
     }
 
     .metric-value {
@@ -1346,7 +1503,7 @@ select.filter-control option {
     .table-card-header {
         min-height: 44px;
 
-        padding: 0 0.7rem;
+        padding: 0 11px;
     }
 
     .table-card-title {
@@ -1354,7 +1511,7 @@ select.filter-control option {
     }
 
     .custom-table tbody tr {
-        padding: 8px;
+        padding: 9px;
     }
 
     .custom-table td {
@@ -1383,13 +1540,13 @@ select.filter-control option {
 
 
 /* =========================================================
-   PANTALLA EXTREMADAMENTE ESTRECHA
+   PANTALLA MUY ESTRECHA
 ========================================================= */
 
 @media (max-width: 350px) {
 
-    .dashboard-wrapper {
-        padding: 0.4rem;
+    .dashboard-page {
+        padding: 0 0.4rem;
     }
 
     .custom-table td {
@@ -1417,30 +1574,26 @@ select.filter-control option {
 
 
 /* =========================================================
-   EVITAR DESBORDE GENERAL
+   EVITAR DESBORDE
 ========================================================= */
 
-.dashboard-wrapper,
-.dashboard-wrapper *,
-.dashboard-wrapper *::before,
-.dashboard-wrapper *::after {
+.dashboard-page,
+.dashboard-page *,
+.dashboard-page *::before,
+.dashboard-page *::after {
     max-width: 100%;
 }
 
-.dashboard-wrapper img,
-.dashboard-wrapper iframe,
-.dashboard-wrapper video {
+.dashboard-page img,
+.dashboard-page iframe,
+.dashboard-page video {
     max-width: 100%;
 }
 
 </style>
 
 
-<!-- =========================================================
-     CONTENEDOR PRINCIPAL
-========================================================= -->
-
-<div class="dashboard-wrapper">
+<div class="dashboard-page">
 
 
     <!-- =====================================================
@@ -1449,24 +1602,47 @@ select.filter-control option {
 
     <div class="dashboard-header">
 
-        <div>
+        <h1 class="dashboard-header-title">
 
-            <h1 class="dashboard-title">
-                🍔 Panel de Control
-            </h1>
+            <span class="dashboard-header-icon">
 
-            <p class="dashboard-subtitle">
-                Resumen de operaciones y pedidos del día.
-            </p>
+                <svg
+                    width="23"
+                    height="23"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                </svg>
 
-        </div>
+            </span>
 
+            Panel de Control
+
+        </h1>
+
+        <p class="dashboard-header-description">
+            Resumen de operaciones y pedidos del día.
+        </p>
 
         <div
             id="panel-sync-indicator"
             class="panel-sync-indicator"
         >
-            ● Sincronizado
+
+            <span class="panel-sync-dot"></span>
+
+            <span>
+                Sincronizado
+            </span>
+
         </div>
 
     </div>
@@ -1481,20 +1657,73 @@ select.filter-control option {
         id="metricas-panel"
     >
 
-        <div class="metric-card">
+
+        <!-- PEDIDOS -->
+
+        <div class="metric-card metric-card-blue">
+
+            <div class="metric-top">
+
+                <div class="metric-icon">
+
+                    <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M6 2h12v20H6z"></path>
+                        <path d="M9 6h6"></path>
+                        <path d="M9 10h6"></path>
+                        <path d="M9 14h4"></path>
+                    </svg>
+
+                </div>
+
+            </div>
 
             <div class="metric-value text-primary">
                 {{ total_pedidos_hoy }}
             </div>
 
             <div class="metric-label">
-                📦 Total Pedidos Hoy
+                Total pedidos hoy
             </div>
 
         </div>
 
 
-        <div class="metric-card">
+        <!-- EFECTIVO -->
+
+        <div class="metric-card metric-card-green">
+
+            <div class="metric-top">
+
+                <div class="metric-icon">
+
+                    <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M7 10h.01"></path>
+                        <path d="M17 14h.01"></path>
+                    </svg>
+
+                </div>
+
+            </div>
 
             <div
                 class="metric-value text-success"
@@ -1504,13 +1733,38 @@ select.filter-control option {
             </div>
 
             <div class="metric-label">
-                💵 Ingresos Efectivo
+                Ingresos en efectivo
             </div>
 
         </div>
 
 
-        <div class="metric-card">
+        <!-- TRANSFERENCIA -->
+
+        <div class="metric-card metric-card-yellow">
+
+            <div class="metric-top">
+
+                <div class="metric-icon">
+
+                    <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <line x1="7" y1="15" x2="10" y2="15"></line>
+                    </svg>
+
+                </div>
+
+            </div>
 
             <div
                 class="metric-value text-warning"
@@ -1520,7 +1774,7 @@ select.filter-control option {
             </div>
 
             <div class="metric-label">
-                💳 Ingresos Transferencia
+                Ingresos por transferencia
             </div>
 
         </div>
@@ -1534,9 +1788,6 @@ select.filter-control option {
 
     <div class="filters-section">
 
-
-        <!-- ESTADOS -->
-
         <div
             class="status-container"
             id="estados-panel"
@@ -1549,37 +1800,63 @@ select.filter-control option {
                     class="btn-status {% if filtro_estado_actual|stringformat:'s' == item.estado.pk|stringformat:'s' %}active{% endif %}"
                 >
 
-                    <span>
+                    <span class="status-icon">
 
                         {% if item.estado.descripcion == "Pendiente" %}
-                            🕐
 
-                        {% elif item.estado.descripcion == "En preparación" %}
-                            👨‍🍳
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <polyline points="12 7 12 12 15 15"></polyline>
+                            </svg>
 
-                        {% elif item.estado.descripcion == "Preparando" %}
-                            👨‍🍳
+                        {% elif item.estado.descripcion == "En preparación" or item.estado.descripcion == "Preparando" %}
+
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 13h12"></path>
+                                <path d="M8 13v4"></path>
+                                <path d="M16 13v4"></path>
+                                <path d="M5 17h14"></path>
+                                <path d="M9 9h6"></path>
+                            </svg>
 
                         {% elif item.estado.descripcion == "Listo" %}
-                            ✅
+
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
 
                         {% elif item.estado.descripcion == "Entregado" %}
-                            🛵
+
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="7" width="13" height="10" rx="1"></rect>
+                                <path d="M16 10h3l2 3v4h-5z"></path>
+                                <circle cx="7" cy="19" r="1.5"></circle>
+                                <circle cx="18" cy="19" r="1.5"></circle>
+                            </svg>
 
                         {% elif item.estado.descripcion == "Cancelado" %}
-                            ❌
+
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <line x1="8" y1="8" x2="16" y2="16"></line>
+                                <line x1="16" y1="8" x2="8" y2="16"></line>
+                            </svg>
 
                         {% else %}
-                            📋
+
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                                <line x1="8" y1="9" x2="16" y2="9"></line>
+                                <line x1="8" y1="13" x2="16" y2="13"></line>
+                            </svg>
+
                         {% endif %}
 
                     </span>
 
-
                     <span>
                         {{ item.estado.descripcion }}
                     </span>
-
 
                     <span class="estado-contador">
                         {{ item.cantidad|default:0 }}
@@ -1598,9 +1875,19 @@ select.filter-control option {
                     title="Quitar todos los filtros"
                 >
 
-                    <span>
-                        ✕
-                    </span>
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
 
                     <span>
                         Limpiar filtros
@@ -1630,11 +1917,23 @@ select.filter-control option {
 
             {% endif %}
 
-
             <span class="search-icon">
-                🔍
-            </span>
 
+                <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <line x1="16" y1="16" x2="21" y2="21"></line>
+                </svg>
+
+            </span>
 
             <input
                 type="text"
@@ -1645,14 +1944,27 @@ select.filter-control option {
                 autocomplete="off"
             >
 
-
             <button
                 type="submit"
                 class="search-submit"
                 title="Buscar"
                 aria-label="Buscar"
             >
-                ↵
+
+                <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+
             </button>
 
         </form>
@@ -1661,7 +1973,7 @@ select.filter-control option {
 
 
     <!-- =====================================================
-         TABLA DE PEDIDOS
+         PEDIDOS
     ===================================================== -->
 
     <div
@@ -1673,9 +1985,7 @@ select.filter-control option {
 
             <div class="table-card-title">
 
-                <span class="table-card-title-icon">
-                    ●
-                </span>
+                <span class="table-card-title-icon"></span>
 
                 <span>
                     Pedidos de hoy
@@ -1695,43 +2005,17 @@ select.filter-control option {
                     <thead>
 
                         <tr>
-
-                            <th>
-                                # Pedido
-                            </th>
-
-                            <th>
-                                👤 Cliente
-                            </th>
-
-                            <th>
-                                🕐 Hora deseada
-                            </th>
-
-                            <th>
-                                💳 Pago
-                            </th>
-
-                            <th>
-                                Estado pago
-                            </th>
-
-                            <th>
-                                📋 Estado
-                            </th>
-
-                            <th>
-                                💰 Total
-                            </th>
-
-                            <th>
-                                Acciones
-                            </th>
-
+                            <th># Pedido</th>
+                            <th>Cliente</th>
+                            <th>Hora deseada</th>
+                            <th>Pago</th>
+                            <th>Estado pago</th>
+                            <th>Estado</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
                         </tr>
 
                     </thead>
-
 
                     <tbody>
 
@@ -1743,7 +2027,7 @@ select.filter-control option {
 
                                 <td>
 
-                                    <strong style="color:#dddddd;">
+                                    <strong style="color:#ddd;">
                                         #{{ pedido.idpedido }}
                                     </strong>
 
@@ -1754,32 +2038,68 @@ select.filter-control option {
 
                                 <td>
 
-                                    <span style="color:#cccccc;">
-                                        {{ pedido.idcliente|default:"Cliente General" }}
-                                    </span>
+                                    <div class="cliente-cell">
+
+                                        <div class="cliente-avatar">
+
+                                            <svg
+                                                width="15"
+                                                height="15"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="2"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            >
+                                                <path d="M20 21a8 8 0 0 0-16 0"></path>
+                                                <circle cx="12" cy="7" r="4"></circle>
+                                            </svg>
+
+                                        </div>
+
+                                        <span class="cliente-nombre">
+                                            {{ pedido.idcliente|default:"Cliente General" }}
+                                        </span>
+
+                                    </div>
 
                                 </td>
 
 
-                                <!-- HORA DESEADA -->
+                                <!-- HORA -->
 
                                 <td>
 
                                     {% if pedido.horarioentregadeseado %}
 
-                                        <span
-                                            style="
-                                                color:#cccccc;
-                                                font-weight:600;
-                                            "
-                                        >
-                                            🕐
+                                        <span class="hora-cell">
+
+                                            <span class="hora-icon">
+
+                                                <svg
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                >
+                                                    <circle cx="12" cy="12" r="9"></circle>
+                                                    <polyline points="12 7 12 12 15 15"></polyline>
+                                                </svg>
+
+                                            </span>
+
                                             {{ pedido.horarioentregadeseado|time:"H:i" }}
+
                                         </span>
 
                                     {% else %}
 
-                                        <span style="color:#555555;">
+                                        <span style="color:#555;">
                                             Sin horario
                                         </span>
 
@@ -1805,9 +2125,22 @@ select.filter-control option {
                                     >
 
                                         {% if pedido.pagado %}
-                                            ✓ Pagado
+
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+
+                                            Pagado
+
                                         {% else %}
-                                            ✕ Debe
+
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="8" y1="8" x2="16" y2="16"></line>
+                                                <line x1="16" y1="8" x2="8" y2="16"></line>
+                                            </svg>
+
+                                            Debe
+
                                         {% endif %}
 
                                     </a>
@@ -1815,33 +2148,65 @@ select.filter-control option {
                                 </td>
 
 
-                                <!-- ESTADO DEL PEDIDO -->
+                                <!-- ESTADO -->
 
                                 <td>
 
                                     <span class="badge">
 
-                                        {% if pedido.idestadopedido.descripcion == "Pendiente" %}
-                                            🕐
+                                        <span class="estado-icon">
 
-                                        {% elif pedido.idestadopedido.descripcion == "En preparación" %}
-                                            👨‍🍳
+                                            {% if pedido.idestadopedido.descripcion == "Pendiente" %}
 
-                                        {% elif pedido.idestadopedido.descripcion == "Preparando" %}
-                                            👨‍🍳
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="12" cy="12" r="9"></circle>
+                                                    <polyline points="12 7 12 12 15 15"></polyline>
+                                                </svg>
 
-                                        {% elif pedido.idestadopedido.descripcion == "Listo" %}
-                                            ✅
+                                            {% elif pedido.idestadopedido.descripcion == "En preparación" or pedido.idestadopedido.descripcion == "Preparando" %}
 
-                                        {% elif pedido.idestadopedido.descripcion == "Entregado" %}
-                                            🛵
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M6 13h12"></path>
+                                                    <path d="M8 13v4"></path>
+                                                    <path d="M16 13v4"></path>
+                                                    <path d="M5 17h14"></path>
+                                                    <path d="M9 9h6"></path>
+                                                </svg>
 
-                                        {% elif pedido.idestadopedido.descripcion == "Cancelado" %}
-                                            ❌
+                                            {% elif pedido.idestadopedido.descripcion == "Listo" %}
 
-                                        {% else %}
-                                            📋
-                                        {% endif %}
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+
+                                            {% elif pedido.idestadopedido.descripcion == "Entregado" %}
+
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="3" y="7" width="13" height="10" rx="1"></rect>
+                                                    <path d="M16 10h3l2 3v4h-5z"></path>
+                                                    <circle cx="7" cy="19" r="1.5"></circle>
+                                                    <circle cx="18" cy="19" r="1.5"></circle>
+                                                </svg>
+
+                                            {% elif pedido.idestadopedido.descripcion == "Cancelado" %}
+
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="12" cy="12" r="9"></circle>
+                                                    <line x1="8" y1="8" x2="16" y2="16"></line>
+                                                    <line x1="16" y1="8" x2="8" y2="16"></line>
+                                                </svg>
+
+                                            {% else %}
+
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                                                    <line x1="8" y1="9" x2="16" y2="9"></line>
+                                                    <line x1="8" y1="13" x2="16" y2="13"></line>
+                                                </svg>
+
+                                            {% endif %}
+
+                                        </span>
 
                                         {{ pedido.idestadopedido|default:"Sin estado" }}
 
@@ -1867,9 +2232,6 @@ select.filter-control option {
 
                                     <div class="actions-wrapper">
 
-
-                                        <!-- TICKET -->
-
                                         <button
                                             type="button"
                                             class="btn-accion-custom"
@@ -1881,16 +2243,29 @@ select.filter-control option {
                                             title="Ver ticket"
                                         >
 
-                                            🧾
+                                            <span class="btn-accion-icon">
 
-                                            <span>
-                                                Ticket
+                                                <svg
+                                                    width="15"
+                                                    height="15"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.9"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                >
+                                                    <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path>
+                                                    <line x1="9" y1="8" x2="15" y2="8"></line>
+                                                    <line x1="9" y1="12" x2="15" y2="12"></line>
+                                                </svg>
+
                                             </span>
+
+                                            Ticket
 
                                         </button>
 
-
-                                        <!-- CAMBIAR ESTADO -->
 
                                         <button
                                             type="button"
@@ -1905,14 +2280,29 @@ select.filter-control option {
                                             title="Cambiar estado"
                                         >
 
-                                            🔄
+                                            <span class="btn-accion-icon">
 
-                                            <span>
-                                                Estado
+                                                <svg
+                                                    width="15"
+                                                    height="15"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.9"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                >
+                                                    <path d="M21 12a9 9 0 0 1-15.5 6.3"></path>
+                                                    <polyline points="3 16 3 21 8 21"></polyline>
+                                                    <path d="M3 12a9 9 0 0 1 15.5-6.3"></path>
+                                                    <polyline points="21 8 21 3 16 3"></polyline>
+                                                </svg>
+
                                             </span>
 
-                                        </button>
+                                            Estado
 
+                                        </button>
 
                                     </div>
 
@@ -1934,7 +2324,23 @@ select.filter-control option {
             <div class="empty-orders">
 
                 <div class="empty-orders-icon">
-                    📭
+
+                    <svg
+                        width="25"
+                        height="25"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M4 4h16v16H4z"></path>
+                        <path d="M8 9h8"></path>
+                        <path d="M8 13h5"></path>
+                        <path d="M8 17h8"></path>
+                    </svg>
+
                 </div>
 
                 <h5 class="empty-orders-title">
@@ -1967,14 +2373,36 @@ select.filter-control option {
 
         <div class="custom-modal-header">
 
-            <span>
-                🧾 Ticket del pedido
+            <span class="custom-modal-title">
+
+                <span class="custom-modal-title-icon">
+
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.9"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path>
+                        <line x1="9" y1="8" x2="15" y2="8"></line>
+                        <line x1="9" y1="12" x2="15" y2="12"></line>
+                    </svg>
+
+                </span>
+
+                Ticket del pedido
+
             </span>
 
             <button
                 type="button"
                 class="custom-modal-close"
                 onclick="cerrarTicketModal()"
+                aria-label="Cerrar"
             >
                 &times;
             </button>
@@ -2000,13 +2428,30 @@ select.filter-control option {
                 Cerrar
             </button>
 
-
             <button
                 type="button"
                 class="btn btn-success btn-sm fw-bold"
                 onclick="imprimirModal()"
             >
-                🖨️ Imprimir
+
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="vertical-align:middle; margin-right:4px;"
+                >
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+
+                Imprimir
+
             </button>
 
         </div>
@@ -2029,14 +2474,37 @@ select.filter-control option {
 
         <div class="custom-modal-header">
 
-            <span>
-                🔄 Actualizar estado
+            <span class="custom-modal-title">
+
+                <span class="custom-modal-title-icon">
+
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.9"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M21 12a9 9 0 0 1-15.5 6.3"></path>
+                        <polyline points="3 16 3 21 8 21"></polyline>
+                        <path d="M3 12a9 9 0 0 1 15.5-6.3"></path>
+                        <polyline points="21 8 21 3 16 3"></polyline>
+                    </svg>
+
+                </span>
+
+                Actualizar estado
+
             </span>
 
             <button
                 type="button"
                 class="custom-modal-close"
                 onclick="cerrarEstadoModal()"
+                aria-label="Cerrar"
             >
                 &times;
             </button>
@@ -2052,30 +2520,34 @@ select.filter-control option {
 
             {% csrf_token %}
 
-
             <div
                 class="custom-modal-body"
                 style="
-                    background:#121212;
-                    color:#ffffff;
+                    background:#181818;
+                    color:#fff;
                 "
             >
-
-                <!-- NUEVO ESTADO -->
 
                 <div class="mb-3">
 
                     <label
                         for="selectNuevoEstado"
                         class="form-label"
-
                         style="
-                            color:#888888;
+                            color:#888;
                             font-size:0.75rem;
                             font-weight:700;
                         "
                     >
-                        📋 Nuevo estado
+
+                        <span style="color:#2ecc71;">
+                            Estado
+                        </span>
+
+                        <br>
+
+                        Nuevo estado
+
                     </label>
 
 
@@ -2088,9 +2560,7 @@ select.filter-control option {
 
                         {% for item in estados_con_conteo %}
 
-                            <option
-                                value="{{ item.estado.pk }}"
-                            >
+                            <option value="{{ item.estado.pk }}">
                                 {{ item.estado.descripcion }}
                             </option>
 
@@ -2101,28 +2571,22 @@ select.filter-control option {
                 </div>
 
 
-                <!-- JUSTIFICACIÓN -->
-
                 <div
                     id="grupoJustificacion"
                     class="mb-3"
-
-                    style="
-                        display:none;
-                    "
+                    style="display:none;"
                 >
 
                     <label
                         for="inputJustificacion"
                         class="form-label"
-
                         style="
                             color:#ffc107;
                             font-size:0.75rem;
                             font-weight:700;
                         "
                     >
-                        ⚠️ Motivo de cancelación
+                        Motivo de cancelación
                     </label>
 
 
@@ -2154,7 +2618,23 @@ select.filter-control option {
                     type="submit"
                     class="btn btn-success btn-sm fw-bold"
                 >
-                    ✓ Guardar
+
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        style="vertical-align:middle; margin-right:4px;"
+                    >
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+
+                    Guardar
+
                 </button>
 
             </div>
@@ -2184,13 +2664,11 @@ function abrirTicketModal(url) {
             'contenido-ticket-modal'
         );
 
-    overlay.classList.add(
-        'active'
-    );
+    overlay.classList.add('active');
 
     contenido.innerHTML =
-        '<div style="text-align:center;padding:25px;color:#666;">' +
-        '⏳ Cargando ticket...' +
+        '<div style="text-align:center;padding:30px;color:#666;">' +
+        '<div style="margin-bottom:8px;">Cargando ticket...</div>' +
         '</div>';
 
     fetch(
@@ -2239,8 +2717,8 @@ function abrirTicketModal(url) {
             );
 
             contenido.innerHTML =
-                '<div style="text-align:center;color:#dc3545;padding:20px;">' +
-                '❌ No se pudo cargar el ticket.' +
+                '<div style="text-align:center;color:#dc3545;padding:25px;">' +
+                'No se pudo cargar el ticket.' +
                 '</div>';
 
         }
@@ -2522,9 +3000,7 @@ document.addEventListener(
         );
 
     if (!waUrl) {
-
         return;
-
     }
 
     window.open(
@@ -2556,7 +3032,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   ACTUALIZACIÓN AUTOMÁTICA DEL PANEL
+   ACTUALIZACIÓN AUTOMÁTICA
 ========================================================= */
 
 document.addEventListener(
@@ -2573,32 +3049,16 @@ document.addEventListener(
 
         async function sincronizarPanel() {
 
-            /*
-             * Evita que dos actualizaciones se ejecuten
-             * simultáneamente.
-             */
-
             if (sincronizando) {
                 return;
             }
-
-
-            /*
-             * Si la pestaña está oculta no hace falta
-             * actualizar el panel.
-             */
 
             if (document.hidden) {
                 return;
             }
 
-
             sincronizando = true;
 
-
-            /*
-             * Guardamos la posición actual de la ventana.
-             */
 
             const scrollX =
                 window.scrollX;
@@ -2609,8 +3069,9 @@ document.addEventListener(
 
             try {
 
-                indicador.textContent =
-                    '● Actualizando...';
+                indicador.innerHTML =
+                    '<span class="panel-sync-dot"></span>' +
+                    '<span>Actualizando...</span>';
 
                 indicador.classList.add(
                     'actualizando'
@@ -2666,12 +3127,10 @@ document.addEventListener(
                         'metricas-panel'
                     );
 
-
                 const nuevosEstados =
                     documento.getElementById(
                         'estados-panel'
                     );
-
 
                 const nuevosPedidos =
                     documento.getElementById(
@@ -2699,23 +3158,16 @@ document.addEventListener(
                         'metricas-panel'
                     );
 
-
                 const estadosActuales =
                     document.getElementById(
                         'estados-panel'
                     );
-
 
                 const pedidosActuales =
                     document.getElementById(
                         'pedidos-panel'
                     );
 
-
-                /*
-                 * Solamente reemplazamos cada bloque cuando
-                 * realmente cambió su contenido.
-                 */
 
                 if (
                     metricasActuales.innerHTML !==
@@ -2750,10 +3202,6 @@ document.addEventListener(
                 }
 
 
-                /*
-                 * Restauramos la posición exacta de la página.
-                 */
-
                 window.scrollTo({
                     left: scrollX,
                     top: scrollY,
@@ -2761,8 +3209,9 @@ document.addEventListener(
                 });
 
 
-                indicador.textContent =
-                    '● Sincronizado';
+                indicador.innerHTML =
+                    '<span class="panel-sync-dot"></span>' +
+                    '<span>Sincronizado</span>';
 
 
             } catch (error) {
@@ -2773,9 +3222,9 @@ document.addEventListener(
                 );
 
 
-                indicador.textContent =
-                    '● Sin conexión';
-
+                indicador.innerHTML =
+                    '<span class="panel-sync-dot"></span>' +
+                    '<span>Sin conexión</span>';
 
             } finally {
 

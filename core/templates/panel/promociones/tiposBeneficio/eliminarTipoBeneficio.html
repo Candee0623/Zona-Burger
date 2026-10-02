@@ -1,0 +1,353 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Zona-Burger | Eliminar tipo de beneficio{% endblock %}
+
+{% block content %}
+
+<style>
+    .tipo-beneficio-delete-page {
+        max-width: 650px;
+        margin: 0 auto;
+        color: #fff;
+    }
+
+    .tipo-beneficio-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+        transition: color 0.2s ease;
+    }
+
+    .tipo-beneficio-back:hover {
+        color: #fff;
+    }
+
+    .tipo-beneficio-card {
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    .tipo-beneficio-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 20px;
+        border-radius: 14px;
+        background: rgba(52, 152, 219, 0.12);
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tipo-beneficio-icon svg {
+        width: 38px;
+        height: 38px;
+        stroke: #3498db;
+    }
+
+    .tipo-beneficio-title {
+        margin: 0 0 12px;
+        font-size: 1.6rem;
+        color: #fff;
+    }
+
+    .tipo-beneficio-question {
+        margin: 0 auto 25px;
+        max-width: 520px;
+        color: #ccc;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .tipo-beneficio-question strong {
+        color: #fff;
+    }
+
+    .tipo-beneficio-info {
+        background: #202020;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 18px;
+        margin-bottom: 22px;
+        text-align: left;
+    }
+
+    .tipo-beneficio-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: 10px 0;
+        border-bottom: 1px solid #333;
+    }
+
+    .tipo-beneficio-info-row:last-child {
+        border-bottom: none;
+    }
+
+    .tipo-beneficio-info-label {
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .tipo-beneficio-info-value {
+        color: #ddd;
+        font-size: 0.9rem;
+        text-align: right;
+    }
+
+    .tipo-beneficio-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        background: rgba(255, 71, 87, 0.08);
+        border: 1px solid rgba(255, 71, 87, 0.25);
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 25px;
+        text-align: left;
+        color: #ffb3b3;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .tipo-beneficio-warning svg {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        stroke: #ff4757;
+        margin-top: 1px;
+    }
+
+    .tipo-beneficio-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .tipo-beneficio-btn {
+        min-width: 150px;
+        padding: 11px 20px;
+        border-radius: 7px;
+        border: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .tipo-beneficio-btn-delete {
+        background: #ff4757;
+        color: #fff;
+    }
+
+    .tipo-beneficio-btn-delete:hover {
+        background: #e84150;
+        transform: translateY(-1px);
+    }
+
+    .tipo-beneficio-btn-cancel {
+        background: #333;
+        color: #fff;
+    }
+
+    .tipo-beneficio-btn-cancel:hover {
+        background: #444;
+    }
+
+    @media (max-width: 600px) {
+        .tipo-beneficio-delete-page {
+            width: 100%;
+        }
+
+        .tipo-beneficio-card {
+            padding: 22px 18px;
+        }
+
+        .tipo-beneficio-info-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .tipo-beneficio-info-value {
+            text-align: left;
+        }
+
+        .tipo-beneficio-actions {
+            flex-direction: column;
+        }
+
+        .tipo-beneficio-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="tipo-beneficio-delete-page">
+
+    <!-- Volver -->
+    <a href="{% url 'panel_lista_tipos_beneficio' %}" class="tipo-beneficio-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        Volver a tipos de beneficio
+    </a>
+
+    <div class="tipo-beneficio-card">
+
+        <!-- Icono -->
+        <div class="tipo-beneficio-icon">
+            <svg viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+        </div>
+
+        <h1 class="tipo-beneficio-title">
+            Eliminar tipo de beneficio
+        </h1>
+
+        <p class="tipo-beneficio-question">
+            ¿Estás seguro de que deseas eliminar el tipo de beneficio
+            <strong>"{{ tipo.nombre }}"</strong>?
+        </p>
+
+        <!-- Información -->
+        <div class="tipo-beneficio-info">
+
+            <div class="tipo-beneficio-info-row">
+                <span class="tipo-beneficio-info-label">
+                    Código
+                </span>
+
+                <span class="tipo-beneficio-info-value">
+                    {{ tipo.codigo|default:"Sin código" }}
+                </span>
+            </div>
+
+            <div class="tipo-beneficio-info-row">
+                <span class="tipo-beneficio-info-label">
+                    Nombre
+                </span>
+
+                <span class="tipo-beneficio-info-value">
+                    {{ tipo.nombre }}
+                </span>
+            </div>
+
+            <div class="tipo-beneficio-info-row">
+                <span class="tipo-beneficio-info-label">
+                    Comportamiento
+                </span>
+
+                <span class="tipo-beneficio-info-value">
+                    {{ tipo.get_comportamiento_display }}
+                </span>
+            </div>
+
+            <div class="tipo-beneficio-info-row">
+                <span class="tipo-beneficio-info-label">
+                    Descripción
+                </span>
+
+                <span class="tipo-beneficio-info-value">
+                    {{ tipo.descripcion|default:"Sin descripción" }}
+                </span>
+            </div>
+
+        </div>
+
+        <!-- Advertencia -->
+        <div class="tipo-beneficio-warning">
+
+            <svg viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+
+            <span>
+                Esta acción no se puede deshacer. Si este tipo de beneficio
+                está asociado a promociones, no podrá eliminarse.
+            </span>
+
+        </div>
+
+        <!-- Acciones -->
+        <div class="tipo-beneficio-actions">
+
+            <form method="post" style="margin: 0;">
+                {% csrf_token %}
+
+                <button type="submit"
+                        class="tipo-beneficio-btn tipo-beneficio-btn-delete">
+
+                    <svg width="17" height="17"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6l-1 14H6L5 6"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+
+                    </svg>
+
+                    Sí, eliminar
+
+                </button>
+            </form>
+
+            <a href="{% url 'panel_lista_tipos_beneficio' %}"
+               class="tipo-beneficio-btn tipo-beneficio-btn-cancel">
+
+                <svg width="17" height="17"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+
+                </svg>
+
+                Cancelar
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

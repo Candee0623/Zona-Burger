@@ -1,0 +1,2076 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ negocio.nombre|default:"Zona Burger" }}</title>
+
+
+    <!-- =====================================================
+         FUENTES
+    ====================================================== -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         FONT AWESOME
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    >
+
+
+    <!-- =====================================================
+         CSS PRINCIPAL
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/index.css' %}"
+    >
+
+
+    <style>
+
+        /* =====================================================
+           VARIABLES
+        ====================================================== */
+
+        :root {
+
+            --black: #070707;
+            --black-2: #0d0d0d;
+            --dark: #121212;
+
+            --card: #191919;
+            --card-2: #202020;
+
+            --border: #303030;
+            --border-red: #542019;
+
+            --red: #d82505;
+            --red-bright: #f03816;
+            --red-light: #ff5635;
+            --red-dark: #9e1c06;
+            --red-soft: rgba(216, 37, 5, .12);
+
+            --yellow: #ffcc00;
+            --green: #2ecc71;
+
+            --white: #ffffff;
+            --gray: #b5b5b5;
+            --muted: #777777;
+
+            --radius: 16px;
+        }
+
+
+        /* =====================================================
+           BASE
+        ====================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
+        body {
+            margin: 0;
+
+            background: var(--black);
+
+            color: var(--white);
+
+            font-family: 'Montserrat', sans-serif;
+        }
+
+
+        /* =====================================================
+           HERO
+        ====================================================== */
+
+        .home-hero {
+
+            position: relative;
+
+            min-height: 690px;
+
+            overflow: hidden;
+
+            display: flex;
+
+            align-items: center;
+
+            background:
+
+                linear-gradient(
+                    90deg,
+                    rgba(0, 0, 0, .97) 0%,
+                    rgba(15, 3, 2, .90) 32%,
+                    rgba(30, 5, 2, .62) 58%,
+                    rgba(0, 0, 0, .25) 100%
+                ),
+
+                url("https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1800&q=90")
+                center/cover no-repeat;
+
+            border-bottom: 1px solid #32110c;
+        }
+
+
+        .home-hero::before {
+
+            content: "";
+
+            position: absolute;
+
+            width: 600px;
+            height: 600px;
+
+            top: -300px;
+            left: -180px;
+
+            border-radius: 50%;
+
+            background: rgba(216, 37, 5, .12);
+
+            filter: blur(10px);
+
+            pointer-events: none;
+        }
+
+
+        .home-hero::after {
+
+            content: "";
+
+            position: absolute;
+
+            inset: 0;
+
+            background:
+
+                linear-gradient(
+                    0deg,
+                    var(--black) 0%,
+                    transparent 25%,
+                    transparent 75%,
+                    rgba(216, 37, 5, .08) 100%
+                );
+
+            pointer-events: none;
+        }
+
+
+        .hero-content {
+
+            position: relative;
+
+            z-index: 2;
+
+            width: min(1200px, calc(100% - 40px));
+
+            margin: 0 auto;
+
+            padding: 80px 0;
+        }
+
+
+        .hero-kicker {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            margin-bottom: 22px;
+
+            padding: 9px 15px;
+
+            background: rgba(216, 37, 5, .16);
+
+            border: 1px solid rgba(240, 56, 22, .45);
+
+            border-radius: 999px;
+
+            color: #ff6245;
+
+            font-size: .75rem;
+
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            box-shadow:
+                0 5px 25px rgba(216, 37, 5, .12);
+        }
+
+
+        .hero-kicker i {
+
+            font-size: .55rem;
+
+            color: var(--red-bright);
+        }
+
+
+        .hero-title {
+
+            max-width: 800px;
+
+            margin: 0;
+
+            font-size: clamp(3.1rem, 7vw, 6.5rem);
+
+            line-height: .92;
+
+            font-weight: 900;
+
+            letter-spacing: -4px;
+
+            text-transform: uppercase;
+
+            color: white;
+
+            text-shadow:
+                0 10px 35px rgba(0, 0, 0, .7);
+        }
+
+
+        .hero-title span {
+
+            color: var(--red-bright);
+
+            text-shadow:
+                0 0 30px rgba(216, 37, 5, .25);
+        }
+
+
+        .hero-description {
+
+            max-width: 570px;
+
+            margin: 27px 0 30px;
+
+            color: #d0d0d0;
+
+            font-size: 1rem;
+
+            line-height: 1.75;
+        }
+
+
+        .hero-actions {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 12px;
+        }
+
+
+        .hero-button {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 9px;
+
+            padding: 14px 22px;
+
+            border-radius: 10px;
+
+            text-decoration: none;
+
+            font-size: .82rem;
+
+            font-weight: 900;
+
+            transition: .2s ease;
+        }
+
+
+        .hero-button-primary {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--red-bright),
+                    var(--red-dark)
+                );
+
+            color: white;
+
+            box-shadow:
+                0 8px 25px rgba(216, 37, 5, .25);
+        }
+
+
+        .hero-button-primary:hover {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff4b27,
+                    var(--red)
+                );
+
+            transform: translateY(-3px);
+
+            box-shadow:
+                0 12px 30px rgba(216, 37, 5, .35);
+        }
+
+
+        .hero-button-secondary {
+
+            background: rgba(255, 255, 255, .07);
+
+            border: 1px solid rgba(255, 255, 255, .22);
+
+            color: white;
+
+            backdrop-filter: blur(8px);
+        }
+
+
+        .hero-button-secondary:hover {
+
+            background: rgba(216, 37, 5, .18);
+
+            border-color: rgba(216, 37, 5, .5);
+
+            transform: translateY(-3px);
+        }
+
+
+        .hero-status {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            margin-top: 32px;
+
+            color: #bbb;
+
+            font-size: .78rem;
+
+            font-weight: 700;
+        }
+
+
+        .hero-status-dot {
+
+            width: 9px;
+            height: 9px;
+
+            border-radius: 50%;
+
+            background: var(--green);
+
+            box-shadow:
+                0 0 12px rgba(46, 204, 113, .8);
+        }
+
+
+        /* =====================================================
+           GENERALES
+        ====================================================== */
+
+        .container {
+
+            width: min(1200px, calc(100% - 40px));
+
+            margin: 0 auto;
+        }
+
+
+        .section {
+
+            padding: 100px 0;
+        }
+
+
+        .section-label {
+
+            margin-bottom: 10px;
+
+            color: var(--red-bright);
+
+            font-size: .7rem;
+
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1.7px;
+        }
+
+
+        .section-heading {
+
+            margin: 0 0 18px;
+
+            font-size: clamp(2rem, 4vw, 3.2rem);
+
+            line-height: 1.05;
+
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+            letter-spacing: -1.5px;
+        }
+
+
+        .section-heading span {
+
+            color: var(--red-bright);
+        }
+
+
+        .section-intro {
+
+            max-width: 650px;
+
+            margin: 0;
+
+            color: var(--gray);
+
+            line-height: 1.7;
+
+            font-size: .92rem;
+        }
+
+
+        /* =====================================================
+           SOBRE NOSOTROS
+        ====================================================== */
+
+        .about-section {
+
+            position: relative;
+
+            background:
+
+                radial-gradient(
+                    circle at 90% 50%,
+                    rgba(216, 37, 5, .08),
+                    transparent 35%
+                ),
+
+                var(--black);
+        }
+
+
+        .about-layout {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 70px;
+
+            align-items: center;
+        }
+
+
+        .about-copy p {
+
+            color: #bdbdbd;
+
+            line-height: 1.85;
+
+            font-size: .92rem;
+        }
+
+
+        .about-copy strong {
+
+            color: white;
+        }
+
+
+        .about-list {
+
+            display: grid;
+
+            grid-template-columns: repeat(2, 1fr);
+
+            gap: 10px;
+
+            margin-top: 30px;
+        }
+
+
+        .about-item {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 15px;
+
+            background: var(--card);
+
+            border: 1px solid var(--border);
+
+            border-radius: 11px;
+
+            color: #eee;
+
+            font-size: .76rem;
+
+            font-weight: 800;
+
+            transition: .2s ease;
+        }
+
+
+        .about-item:hover {
+
+            transform: translateY(-3px);
+
+            background: #1d1d1d;
+
+            border-color: rgba(216, 37, 5, .55);
+
+            box-shadow:
+                0 8px 25px rgba(216, 37, 5, .07);
+        }
+
+
+        .about-item-icon {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            width: 34px;
+            height: 34px;
+
+            flex-shrink: 0;
+
+            background: rgba(216, 37, 5, .13);
+
+            border: 1px solid rgba(216, 37, 5, .22);
+
+            border-radius: 8px;
+
+            color: var(--red-bright);
+        }
+
+
+        .about-photo {
+
+            position: relative;
+        }
+
+
+        .about-photo::before {
+
+            content: "";
+
+            position: absolute;
+
+            inset: -10px;
+
+            border: 1px solid rgba(216, 37, 5, .3);
+
+            border-radius: 24px;
+
+            z-index: 0;
+        }
+
+
+        .about-photo img {
+
+            position: relative;
+
+            z-index: 1;
+
+            display: block;
+
+            width: 100%;
+
+            height: 500px;
+
+            object-fit: cover;
+
+            border-radius: 20px;
+
+            border: 1px solid #3a3a3a;
+
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, .55);
+        }
+
+
+        .photo-badge {
+
+            position: absolute;
+
+            z-index: 2;
+
+            left: -25px;
+
+            bottom: 30px;
+
+            padding: 17px 20px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--red-bright),
+                    var(--red-dark)
+                );
+
+            color: white;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 15px 35px rgba(0, 0, 0, .5),
+                0 0 25px rgba(216, 37, 5, .18);
+        }
+
+
+        .photo-badge strong {
+
+            display: block;
+
+            font-size: 1.1rem;
+
+            font-weight: 900;
+        }
+
+
+        .photo-badge span {
+
+            font-size: .65rem;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+        }
+
+
+        /* =====================================================
+           PROMOCIONES
+        ====================================================== */
+
+        .promotions-section {
+
+            position: relative;
+
+            overflow: hidden;
+
+            padding: 90px 0;
+
+            background:
+
+                radial-gradient(
+                    circle at 10% 20%,
+                    rgba(216, 37, 5, .18),
+                    transparent 30%
+                ),
+
+                radial-gradient(
+                    circle at 90% 80%,
+                    rgba(216, 37, 5, .08),
+                    transparent 30%
+                ),
+
+                linear-gradient(
+                    135deg,
+                    #160806 0%,
+                    #100b0a 45%,
+                    #090909 100%
+                );
+
+            border-top: 1px solid #41150f;
+
+            border-bottom: 1px solid #41150f;
+        }
+
+
+        .promotions-section::before {
+
+            content: "";
+
+            position: absolute;
+
+            width: 500px;
+            height: 500px;
+
+            top: -300px;
+
+            right: -150px;
+
+            border-radius: 50%;
+
+            border: 1px solid rgba(216, 37, 5, .12);
+
+            box-shadow:
+                0 0 0 35px rgba(216, 37, 5, .025),
+                0 0 0 70px rgba(216, 37, 5, .018);
+
+            pointer-events: none;
+        }
+
+
+        .promotions-header {
+
+            position: relative;
+
+            z-index: 1;
+
+            display: flex;
+
+            align-items: end;
+
+            justify-content: space-between;
+
+            gap: 30px;
+
+            margin-bottom: 32px;
+        }
+
+
+        .promotion-heading {
+
+            margin: 0;
+
+            font-size: clamp(2rem, 4vw, 3.1rem);
+
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+            letter-spacing: -1px;
+        }
+
+
+        .promotion-heading i {
+
+            color: var(--red-bright);
+
+            margin-right: 5px;
+
+            text-shadow:
+                0 0 20px rgba(216, 37, 5, .4);
+        }
+
+
+        .promotion-description {
+
+            max-width: 420px;
+
+            margin: 0;
+
+            color: #999;
+
+            font-size: .84rem;
+
+            line-height: 1.6;
+        }
+
+
+        .promotion-grid {
+
+            position: relative;
+
+            z-index: 1;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(auto-fit, minmax(290px, 1fr));
+
+            gap: 18px;
+        }
+
+
+        .promotion-card {
+
+            position: relative;
+
+            overflow: hidden;
+
+            display: flex;
+
+            flex-direction: column;
+
+            padding: 22px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #1d1b1b 0%,
+                    #151313 100%
+                );
+
+            border: 1px solid #3b2926;
+
+            border-radius: 15px;
+
+            transition:
+                transform .2s ease,
+                border-color .2s ease,
+                box-shadow .2s ease;
+        }
+
+
+        .promotion-card::before {
+
+            content: "";
+
+            position: absolute;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 4px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    var(--red-dark),
+                    var(--red-bright),
+                    #ff6547
+                );
+        }
+
+
+        .promotion-card::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 180px;
+            height: 180px;
+
+            top: -100px;
+            right: -90px;
+
+            border-radius: 50%;
+
+            background: rgba(216, 37, 5, .08);
+
+            pointer-events: none;
+        }
+
+
+        .promotion-card:hover {
+
+            transform: translateY(-5px);
+
+            border-color: rgba(216, 37, 5, .65);
+
+            box-shadow:
+                0 18px 40px rgba(0, 0, 0, .4),
+                0 0 30px rgba(216, 37, 5, .1);
+        }
+
+
+        .promotion-code {
+
+            position: relative;
+
+            z-index: 1;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            width: fit-content;
+
+            margin-bottom: 14px;
+
+            padding: 7px 11px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--red-bright),
+                    var(--red-dark)
+                );
+
+            border-radius: 7px;
+
+            color: white;
+
+            font-size: .68rem;
+
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+            letter-spacing: .4px;
+
+            box-shadow:
+                0 6px 18px rgba(216, 37, 5, .2);
+        }
+
+
+        .promotion-code i {
+
+            font-size: .7rem;
+        }
+
+
+        .promotion-card h3 {
+
+            position: relative;
+
+            z-index: 1;
+
+            margin: 0 0 12px;
+
+            color: white;
+
+            font-size: 1.08rem;
+
+            line-height: 1.4;
+        }
+
+
+        .promotion-date {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            color: #8d8d8d;
+
+            font-size: .74rem;
+        }
+
+
+        .promotion-date i {
+
+            color: var(--red-bright);
+        }
+
+
+        .promotion-products {
+
+            margin-top: 18px;
+
+            padding-top: 15px;
+
+            border-top: 1px dashed #49312d;
+        }
+
+
+        .promotion-products-title {
+
+            display: block;
+
+            margin-bottom: 8px;
+
+            color: #777;
+
+            font-size: .66rem;
+
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+            letter-spacing: .8px;
+        }
+
+
+        .promotion-tags {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 5px;
+        }
+
+
+        .promotion-tag {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            padding: 5px 8px;
+
+            background: #252323;
+
+            border: 1px solid #423432;
+
+            border-radius: 6px;
+
+            color: #eee;
+
+            font-size: .68rem;
+
+            font-weight: 600;
+        }
+
+
+        .promotion-tag i {
+
+            color: var(--red-bright);
+        }
+
+
+        .promotion-empty {
+
+            color: #777;
+
+            font-size: .72rem;
+
+            font-style: italic;
+        }
+
+
+        /* =====================================================
+           INFORMACIÓN
+        ====================================================== */
+
+        .info-section {
+
+            padding: 100px 0;
+
+            background:
+
+                radial-gradient(
+                    circle at 80% 50%,
+                    rgba(216, 37, 5, .06),
+                    transparent 30%
+                ),
+
+                var(--black);
+        }
+
+
+        .info-header {
+
+            margin-bottom: 35px;
+        }
+
+
+        .info-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 20px;
+        }
+
+
+        .info-card {
+
+            padding: 28px;
+
+            background: var(--card);
+
+            border: 1px solid var(--border);
+
+            border-radius: 16px;
+
+            transition: .2s ease;
+        }
+
+
+        .info-card:hover {
+
+            border-color: rgba(216, 37, 5, .4);
+
+            box-shadow:
+                0 12px 35px rgba(0, 0, 0, .25);
+        }
+
+
+        .info-card-header {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+            margin-bottom: 20px;
+        }
+
+
+        .info-card-icon {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            width: 42px;
+            height: 42px;
+
+            background: rgba(216, 37, 5, .12);
+
+            border: 1px solid rgba(216, 37, 5, .22);
+
+            border-radius: 10px;
+
+            color: var(--red-bright);
+        }
+
+
+        .info-card h3 {
+
+            margin: 0;
+
+            font-size: .95rem;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+        }
+
+
+        .info-list {
+
+            list-style: none;
+
+            margin: 0;
+
+            padding: 0;
+        }
+
+
+        .info-list li {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding: 13px 0;
+
+            border-bottom: 1px solid #292929;
+
+            color: #aaa;
+
+            font-size: .8rem;
+        }
+
+
+        .info-list li:last-child {
+
+            border-bottom: none;
+
+            padding-bottom: 0;
+        }
+
+
+        .info-value {
+
+            color: var(--red-light);
+
+            font-weight: 900;
+
+            white-space: nowrap;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media (max-width: 900px) {
+
+            .home-hero {
+
+                min-height: 610px;
+
+                background:
+
+                    linear-gradient(
+                        90deg,
+                        rgba(0, 0, 0, .93),
+                        rgba(30, 5, 2, .7)
+                    ),
+
+                    url("https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1400&q=90")
+                    center/cover no-repeat;
+            }
+
+
+            .about-layout {
+
+                grid-template-columns: 1fr;
+
+                gap: 45px;
+            }
+
+
+            .about-photo {
+
+                width: 100%;
+
+                max-width: 700px;
+
+                margin: 0 auto;
+            }
+
+
+            .promotions-header {
+
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+        }
+
+
+        @media (max-width: 700px) {
+
+            .container,
+            .hero-content {
+
+                width: min(100% - 28px, 1200px);
+            }
+
+
+            .section,
+            .promotions-section,
+            .info-section {
+
+                padding: 70px 0;
+            }
+
+
+            .home-hero {
+
+                min-height: 560px;
+            }
+
+
+            .hero-title {
+
+                font-size: 3.2rem;
+
+                letter-spacing: -2px;
+            }
+
+
+            .hero-description {
+
+                font-size: .9rem;
+            }
+
+
+            .about-list {
+
+                grid-template-columns: 1fr;
+            }
+
+
+            .about-photo img {
+
+                height: 380px;
+            }
+
+
+            .photo-badge {
+
+                left: 15px;
+
+                bottom: 15px;
+            }
+
+
+            .info-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (max-width: 500px) {
+
+            .home-hero {
+
+                min-height: 530px;
+            }
+
+
+            .hero-title {
+
+                font-size: 2.7rem;
+            }
+
+
+            .hero-actions {
+
+                flex-direction: column;
+            }
+
+
+            .hero-button {
+
+                width: 100%;
+            }
+
+
+            .about-photo img {
+
+                height: 300px;
+            }
+
+
+            .info-card {
+
+                padding: 22px;
+            }
+
+
+            .info-list li {
+
+                align-items: flex-start;
+
+                flex-direction: column;
+
+                gap: 6px;
+            }
+
+
+            .info-value {
+
+                white-space: normal;
+            }
+
+        }
+
+
+        @media (max-width: 420px) {
+
+            .footer-social {
+
+                flex: 1;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         HEADER COMPARTIDO
+    ====================================================== -->
+
+    {% include 'components/header.html' %}
+
+
+
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+    <section class="home-hero">
+
+        <div class="hero-content">
+
+
+            <div class="hero-kicker">
+
+                <i class="fa-solid fa-circle"></i>
+
+                {% if negocio.idestado %}
+
+                    {{ negocio.idestado.descripcion }}
+
+                {% else %}
+
+                    Abierto
+
+                {% endif %}
+
+            </div>
+
+
+            <h1 class="hero-title">
+
+                Hamburguesas<br>
+
+                <span>
+                    de verdad.
+                </span>
+
+            </h1>
+
+
+            <p class="hero-description">
+
+                Burgers artesanales, ingredientes frescos y todo el sabor
+                que buscás en cada bocado.
+
+            </p>
+
+
+            <div class="hero-actions">
+
+
+                <a
+                    href="#nosotros"
+                    class="hero-button hero-button-primary"
+                >
+
+                    <i class="fa-solid fa-arrow-down"></i>
+
+                    Conocé Zona Burger
+
+                </a>
+
+
+                <a
+                    href="#promociones"
+                    class="hero-button hero-button-secondary"
+                >
+
+                    <i class="fa-solid fa-fire"></i>
+
+                    Ver promociones
+
+                </a>
+
+            </div>
+
+
+            <div class="hero-status">
+
+                <span class="hero-status-dot"></span>
+
+                {% if negocio.idestado %}
+
+                    {{ negocio.idestado.descripcion }}
+
+                {% else %}
+
+                    Estamos abiertos
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         SOBRE NOSOTROS
+    ====================================================== -->
+
+    <section
+        class="section about-section"
+        id="nosotros"
+    >
+
+        <div class="container">
+
+            <div class="about-layout">
+
+
+                <div class="about-copy">
+
+
+                    <div class="section-label">
+                        Nuestra historia
+                    </div>
+
+
+                    <h2 class="section-heading">
+
+                        No hacemos burgers.<br>
+
+                        Hacemos
+                        <span>
+                            experiencias.
+                        </span>
+
+                    </h2>
+
+
+                    <p class="section-intro">
+
+                        En
+
+                        <strong>
+                            {{ negocio.nombre|default:"Zona Burger" }}
+                        </strong>
+
+                        nos apasiona hacer las cosas bien.
+
+                    </p>
+
+
+                    <p>
+
+                        Nacimos con el propósito de revolucionar el concepto
+                        de la comida rápida artesanal, ofreciendo burgers de
+                        autor preparadas con ingredientes frescos, locales y
+                        de primera calidad.
+
+                    </p>
+
+
+                    <p>
+
+                        Cada blend de carne es seleccionado con dedicación y
+                        nuestros medallones se cocinan al punto justo en la
+                        plancha para lograr esa costra crujiente y jugosa
+                        que tanto te gusta.
+
+                    </p>
+
+
+                    <div class="about-list">
+
+
+                        <div class="about-item">
+
+                            <div class="about-item-icon">
+
+                                <i class="fa-solid fa-fire-flame-curved"></i>
+
+                            </div>
+
+                            <span>
+                                Carne 100% fresca
+                            </span>
+
+                        </div>
+
+
+                        <div class="about-item">
+
+                            <div class="about-item-icon">
+
+                                <i class="fa-solid fa-bread-slice"></i>
+
+                            </div>
+
+                            <span>
+                                Panes caseros del día
+                            </span>
+
+                        </div>
+
+
+                        <div class="about-item">
+
+                            <div class="about-item-icon">
+
+                                <i class="fa-solid fa-utensils"></i>
+
+                            </div>
+
+                            <span>
+                                Salsas propias
+                            </span>
+
+                        </div>
+
+
+                        <div class="about-item">
+
+                            <div class="about-item-icon">
+
+                                <i class="fa-solid fa-heart"></i>
+
+                            </div>
+
+                            <span>
+                                Hecho con pasión
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="about-photo">
+
+
+                    <img
+                        src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1000&q=90"
+                        alt="Nuestras Hamburguesas"
+                    >
+
+
+                    <div class="photo-badge">
+
+                        <strong>
+                            100%
+                        </strong>
+
+                        <span>
+                            Artesanal
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PROMOCIONES
+    ====================================================== -->
+
+    {% if promociones_activas %}
+
+    <section
+        class="promotions-section"
+        id="promociones"
+    >
+
+        <div class="container">
+
+
+            <div class="promotions-header">
+
+
+                <div>
+
+                    <div class="section-label">
+                        Aprovechá hoy
+                    </div>
+
+
+                    <h2 class="promotion-heading">
+
+                        <i class="fa-solid fa-fire"></i>
+
+                        Promociones
+
+                    </h2>
+
+                </div>
+
+
+                <p class="promotion-description">
+
+                    Beneficios exclusivos para que disfrutes tu pedido
+                    por menos.
+
+                </p>
+
+            </div>
+
+
+
+            <div class="promotion-grid">
+
+
+                {% for promo in promociones_activas %}
+
+
+                <article class="promotion-card">
+
+
+                    <div>
+
+
+                        <div class="promotion-code">
+
+                            <i class="fa-solid fa-ticket"></i>
+
+                            {{ promo.palabraclave }}
+
+                        </div>
+
+
+                        <h3>
+
+                            {{ promo.descripcion_amigable }}
+
+                        </h3>
+
+
+                        <div class="promotion-date">
+
+                            <i class="fa-solid fa-calendar-days"></i>
+
+
+                            {% if promo.fechafin %}
+
+                                <span>
+
+                                    Válido hasta el
+                                    {{ promo.fechafin|date:"d/m/Y" }}
+
+                                </span>
+
+                            {% else %}
+
+                                <span>
+                                    ¡Tiempo limitado!
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="promotion-products">
+
+
+                        <span class="promotion-products-title">
+
+                            Productos participantes
+
+                        </span>
+
+
+                        <div class="promotion-tags">
+
+
+                            {% for rel in promo.productopromocion_set.all %}
+
+
+                                <span class="promotion-tag">
+
+                                    <i class="fa-solid fa-burger"></i>
+
+                                    {{ rel.idproducto.nombre }}
+
+                                </span>
+
+
+                            {% empty %}
+
+
+                                <span class="promotion-empty">
+
+                                    Aplica de forma general en el carrito
+
+                                </span>
+
+
+                            {% endfor %}
+
+
+                        </div>
+
+                    </div>
+
+
+                </article>
+
+
+                {% empty %}
+
+
+                <div style="
+                    grid-column: 1 / -1;
+                    text-align: center;
+                    padding: 40px;
+                    color: #777;
+                ">
+
+                    <p>
+
+                        No hay promociones disponibles en este momento.
+                        ¡Volvé pronto por más novedades!
+
+                    </p>
+
+                </div>
+
+
+                {% endfor %}
+
+
+            </div>
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+
+
+    <!-- =====================================================
+         INFORMACIÓN DEL LOCAL
+    ====================================================== -->
+
+    <section
+        class="info-section"
+        id="info"
+    >
+
+        <div class="container">
+
+
+            <div class="info-header">
+
+
+                <div class="section-label">
+                    Estamos para vos
+                </div>
+
+
+                <h2 class="section-heading">
+
+                    Información del
+                    <span>
+                        local
+                    </span>
+
+                </h2>
+
+
+                <p class="section-intro">
+
+                    Consultá nuestros horarios y las zonas donde realizamos
+                    entregas.
+
+                </p>
+
+            </div>
+
+
+
+            <div class="info-grid">
+
+
+                <!-- HORARIOS -->
+
+                <div class="info-card">
+
+
+                    <div class="info-card-header">
+
+
+                        <div class="info-card-icon">
+
+                            <i class="fa-solid fa-clock"></i>
+
+                        </div>
+
+
+                        <h3>
+                            Horarios de Atención
+                        </h3>
+
+
+                    </div>
+
+
+                    <ul class="info-list">
+
+
+                        {% for h in horarios %}
+
+
+                        <li>
+
+                            <span>
+                                {{ h.diasemana }}
+                            </span>
+
+
+                            <span class="info-value">
+
+                                {{ h.horaapertura|time:"H:i" }}
+
+                                -
+
+                                {{ h.horacierre|time:"H:i" }}
+
+                            </span>
+
+                        </li>
+
+
+                        {% empty %}
+
+
+                        <li>
+
+                            <span>
+                                No hay horarios configurados.
+                            </span>
+
+                        </li>
+
+
+                        {% endfor %}
+
+
+                    </ul>
+
+                </div>
+
+
+
+                <!-- ZONAS -->
+
+                <div class="info-card">
+
+
+                    <div class="info-card-header">
+
+
+                        <div class="info-card-icon">
+
+                            <i class="fa-solid fa-motorcycle"></i>
+
+                        </div>
+
+
+                        <h3>
+                            Zonas de Entrega
+                        </h3>
+
+
+                    </div>
+
+
+                    <ul class="info-list">
+
+
+                        {% for zona in zonas %}
+
+
+                        <li>
+
+                            <span>
+                                {{ zona.nombre }}
+                            </span>
+
+
+                            <span class="info-value">
+
+
+                                {% if zona.costoenvio == 0 or zona.costoenvio == 0.00 %}
+
+                                    GRATIS
+
+                                {% else %}
+
+                                    ${{ zona.costoenvio }}
+
+                                {% endif %}
+
+
+                            </span>
+
+                        </li>
+
+
+                        {% empty %}
+
+
+                        <li>
+
+                            <span>
+                                No hay zonas de entrega configuradas.
+                            </span>
+
+                        </li>
+
+
+                        {% endfor %}
+
+
+                    </ul>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <div id="contacto">
+
+        {% include 'components/footer.html' %}
+
+    </div>
+
+
+</body>
+
+</html>

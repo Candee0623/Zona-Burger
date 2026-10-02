@@ -2,81 +2,736 @@
 {% block title %}Zona-Burger | Nuevo grupo de opciones{% endblock %}
 
 {% block content %}
-<div class="form-container" style="max-width: 750px; background: #181818; padding: 30px; border-radius: 8px; border: 1px solid #333; margin: auto;">
-    <h1 style="margin-bottom: 20px; font-size: 1.5rem; color: #fff;">Nuevo grupo de opciones</h1>
 
-    {% if errores %}
-        <ul class="errores" style="color: #ff6b6b; margin-bottom: 15px; list-style: inside;">
-            {% for error in errores %}<li>{{ error }}</li>{% endfor %}
-        </ul>
-    {% endif %}
+<style>
+    .grupo-create-page {
+        max-width: 800px;
+        margin: 0 auto;
+    }
 
-    <form method="post">
-        {% csrf_token %}
+    .grupo-create-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 18px;
+        transition: color 0.2s;
+    }
 
-        <div class="form-group" style="margin-bottom: 15px;">
-            <label for="nombre" style="display: block; margin-bottom: 6px; color: #ccc;">Nombre del grupo</label>
-            <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Ej: Bebida" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;" required>
-        </div>
+    .grupo-create-back:hover {
+        color: #fff;
+    }
 
-        <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <div class="form-group" style="flex: 1;">
-                <label for="minselecciones" style="display: block; margin-bottom: 6px; color: #ccc;">Mín. selecciones</label>
-                <input type="number" id="minselecciones" name="minselecciones" class="form-control" min="0" value="0" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+    .grupo-create-card {
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .grupo-create-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 28px;
+        border-bottom: 1px solid #333;
+    }
+
+    .grupo-create-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 8px;
+        background: rgba(52, 152, 219, 0.15);
+        border: 1px solid rgba(52, 152, 219, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3498db;
+        flex-shrink: 0;
+    }
+
+    .grupo-create-header-text h1 {
+        margin: 0 0 5px;
+        color: #fff;
+        font-size: 1.45rem;
+    }
+
+    .grupo-create-header-text p {
+        margin: 0;
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .grupo-create-body {
+        padding: 28px;
+    }
+
+    .grupo-create-errors {
+        background: rgba(255, 107, 107, 0.12);
+        border: 1px solid rgba(255, 107, 107, 0.45);
+        padding: 13px 16px;
+        border-radius: 7px;
+        margin-bottom: 22px;
+    }
+
+    .grupo-create-errors ul {
+        color: #ff6b6b;
+        margin: 0;
+        padding-left: 20px;
+        font-size: 0.9rem;
+    }
+
+    .grupo-create-field {
+        margin-bottom: 20px;
+    }
+
+    .grupo-create-label {
+        display: block;
+        margin-bottom: 7px;
+        color: #ccc;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .grupo-create-input {
+        width: 100%;
+        padding: 10px 11px;
+        background: #222;
+        border: 1px solid #444;
+        color: #fff;
+        border-radius: 5px;
+        box-sizing: border-box;
+        font-size: 0.9rem;
+    }
+
+    .grupo-create-input:focus {
+        outline: none;
+        border-color: #3498db;
+    }
+
+    .grupo-create-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 24px;
+    }
+
+    .grupo-create-row .grupo-create-field {
+        flex: 1;
+        margin-bottom: 0;
+    }
+
+    .grupo-create-section {
+        border-top: 1px solid #333;
+        padding-top: 25px;
+        margin-top: 25px;
+    }
+
+    .grupo-create-section-header {
+        margin-bottom: 16px;
+    }
+
+    .grupo-create-section-title {
+        margin: 0;
+        color: #ddd;
+        font-size: 1.05rem;
+    }
+
+    .grupo-create-section-description {
+        color: #777;
+        font-size: 0.8rem;
+        margin: 4px 0 0;
+    }
+
+    .grupo-create-table-wrapper {
+        overflow-x: auto;
+        border: 1px solid #333;
+        border-radius: 7px;
+    }
+
+    .grupo-create-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+
+    .grupo-create-table th {
+        padding: 11px 12px;
+        text-align: left;
+        color: #888;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-bottom: 1px solid #333;
+        background: #1d1d1d;
+    }
+
+    .grupo-create-table th:last-child {
+        text-align: center;
+    }
+
+    .grupo-create-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #252525;
+    }
+
+    .grupo-create-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .grupo-create-table .grupo-create-input {
+        padding: 8px 9px;
+    }
+
+    /* Botón agregar opción */
+    .grupo-add-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #2b2b2b;
+        color: #3498db;
+        border: 1px solid #444;
+        padding: 8px 14px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        margin-top: 14px;
+    }
+
+    .grupo-add-option:hover {
+        background: #333;
+        border-color: #3498db;
+    }
+
+    /* Botón quitar opción */
+    .grupo-remove-new-option {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 10px;
+        background: #252525;
+        border: 1px solid #444;
+        border-radius: 5px;
+        color: #999;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .grupo-remove-new-option:hover {
+        background: rgba(255, 71, 87, 0.12);
+        border-color: #ff4757;
+        color: #ff4757;
+    }
+
+    .grupo-create-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid #333;
+        flex-wrap: wrap;
+    }
+
+    .grupo-create-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .grupo-create-save {
+        background: #00d26a;
+        border: 1px solid #00d26a;
+        color: #000;
+    }
+
+    .grupo-create-save:hover {
+        background: #00bd5f;
+        border-color: #00bd5f;
+    }
+
+    .grupo-create-cancel {
+        background: #333;
+        border: 1px solid #444;
+        color: #fff;
+    }
+
+    .grupo-create-cancel:hover {
+        background: #3d3d3d;
+    }
+
+    @media (max-width: 650px) {
+        .grupo-create-header,
+        .grupo-create-body {
+            padding: 20px;
+        }
+
+        .grupo-create-row {
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .grupo-create-row .grupo-create-field {
+            margin-bottom: 0;
+        }
+
+        .grupo-create-actions {
+            flex-direction: column;
+        }
+
+        .grupo-create-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="grupo-create-page">
+
+    <!-- Volver al listado -->
+    <a href="{% url 'grupo_lista' %}" class="grupo-create-back">
+
+        <svg width="18" height="18"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+
+        </svg>
+
+        Volver a grupos de opciones
+
+    </a>
+
+
+    <div class="grupo-create-card">
+
+        <!-- Encabezado -->
+        <div class="grupo-create-header">
+
+            <div class="grupo-create-icon">
+
+                <svg width="27" height="27"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <circle cx="12" cy="12" r="3"></circle>
+
+                    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.42 1.42-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-2v-.08a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.42-1.42.06-.06A1.7 1.7 0 0 0 9.4 15a1.7 1.7 0 0 0-1.56-1.03H7v-2h.84A1.7 1.7 0 0 0 9.4 10a1.7 1.7 0 0 0-.34-1.88L9 8.06l1.42-1.42.06.06A1.7 1.7 0 0 0 12.36 7.04 1.7 1.7 0 0 0 13.39 5.48V5h2v.48A1.7 1.7 0 0 0 16.42 7.04a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.42 1.42-.06.06A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.56 1.03H21v2h-.04A1.7 1.7 0 0 0 19.4 15z"></path>
+
+                </svg>
+
             </div>
-            <div class="form-group" style="flex: 1;">
-                <label for="maxselecciones" style="display: block; margin-bottom: 6px; color: #ccc;">Máx. selecciones</label>
-                <input type="number" id="maxselecciones" name="maxselecciones" class="form-control" min="1" value="1" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+
+            <div class="grupo-create-header-text">
+
+                <h1>Nuevo grupo de opciones</h1>
+
+                <p>
+                    Crea un grupo y define las opciones disponibles.
+                </p>
+
             </div>
+
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #333; margin: 25px 0;">
-        <h3 style="font-size: 1.1rem; color: #ddd; margin-bottom: 15px;">Opciones (ej: Coca-Cola, Sprite...)</h3>
 
-        <table id="tabla-opciones" class="tabla-panel" style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
-            <thead>
-                <tr style="text-align: left; color: #888; font-size: 0.85rem; border-bottom: 1px solid #333;">
-                    <th style="padding: 10px;">Nombre</th>
-                    <th style="padding: 10px;">Precio adicional</th>
-                </tr>
-            </thead>
-            <tbody id="filas-opciones">
-                <tr style="border-bottom: 1px solid #222;">
-                    <td style="padding: 10px;">
-                        <input type="text" name="opcion_nombre[]" class="form-control" placeholder="Ej: Coca-Cola" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
-                    </td>
-                    <td style="padding: 10px;">
-                        <input type="number" step="0.01" name="opcion_precio[]" class="form-control" value="0" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="grupo-create-body">
 
-        <button type="button" id="btn-agregar-opcion" class="btn" style="background: #2b2b2b; color: #3498db; border: 1px solid #444; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-bottom: 25px;">+ Agregar opción</button>
+            {% if errores %}
 
-        <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 20px;">
-        
-        <div style="display: flex; gap: 10px;">
-            <button type="submit" class="btn btn-primary" style="padding: 10px 20px; background: #00d26a; border: none; color: #000; font-weight: bold; border-radius: 4px; cursor: pointer;">Guardar grupo</button>
-            <a href="{% url 'grupo_lista' %}" class="btn" style="padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;">Cancelar</a>
+                <div class="grupo-create-errors">
+
+                    <ul>
+
+                        {% for error in errores %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+
+                    </ul>
+
+                </div>
+
+            {% endif %}
+
+
+            <form method="post">
+
+                {% csrf_token %}
+
+
+                <!-- Nombre -->
+                <div class="grupo-create-field">
+
+                    <label
+                        for="nombre"
+                        class="grupo-create-label"
+                    >
+                        Nombre del grupo
+                    </label>
+
+                    <input
+                        type="text"
+                        id="nombre"
+                        name="nombre"
+                        class="grupo-create-input"
+                        placeholder="Ej: Bebida"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- Mínimo y máximo -->
+                <div class="grupo-create-row">
+
+                    <div class="grupo-create-field">
+
+                        <label
+                            for="minselecciones"
+                            class="grupo-create-label"
+                        >
+                            Mín. selecciones
+                        </label>
+
+                        <input
+                            type="number"
+                            id="minselecciones"
+                            name="minselecciones"
+                            class="grupo-create-input"
+                            min="0"
+                            value="0"
+                        >
+
+                    </div>
+
+
+                    <div class="grupo-create-field">
+
+                        <label
+                            for="maxselecciones"
+                            class="grupo-create-label"
+                        >
+                            Máx. selecciones
+                        </label>
+
+                        <input
+                            type="number"
+                            id="maxselecciones"
+                            name="maxselecciones"
+                            class="grupo-create-input"
+                            min="1"
+                            value="1"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Opciones -->
+                <div class="grupo-create-section">
+
+                    <div class="grupo-create-section-header">
+
+                        <h3 class="grupo-create-section-title">
+                            Opciones
+                        </h3>
+
+                        <p class="grupo-create-section-description">
+                            Agrega las opciones que podrá seleccionar el cliente.
+                        </p>
+
+                    </div>
+
+
+                    <div class="grupo-create-table-wrapper">
+
+                        <table
+                            id="tabla-opciones"
+                            class="grupo-create-table"
+                        >
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Nombre
+                                    </th>
+
+                                    <th>
+                                        Precio adicional
+                                    </th>
+
+                                    <th>
+                                        Acción
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="filas-opciones">
+
+                                <!-- Primera opción -->
+                                <tr>
+
+                                    <td>
+
+                                        <input
+                                            type="text"
+                                            name="opcion_nombre[]"
+                                            class="grupo-create-input"
+                                            placeholder="Ej: Coca-Cola"
+                                        >
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            name="opcion_precio[]"
+                                            class="grupo-create-input"
+                                            value="0"
+                                        >
+
+                                    </td>
+
+
+                                    <td style="text-align: center;">
+
+                                        <button
+                                            type="button"
+                                            class="grupo-remove-new-option"
+                                            title="Quitar opción"
+                                        >
+
+                                            <svg
+                                                width="15"
+                                                height="15"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="2"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            >
+
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6l-1 14H6L5 6"></path>
+                                                <path d="M10 11v6"></path>
+                                                <path d="M14 11v6"></path>
+                                                <path d="M9 6V4h6v2"></path>
+
+                                            </svg>
+
+                                            Quitar
+
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <!-- Agregar opción -->
+                    <button
+                        type="button"
+                        id="btn-agregar-opcion"
+                        class="grupo-add-option"
+                    >
+
+                        <svg
+                            width="17"
+                            height="17"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+
+                        </svg>
+
+                        Agregar opción
+
+                    </button>
+
+                </div>
+
+
+                <!-- Acciones -->
+                <div class="grupo-create-actions">
+
+                    <button
+                        type="submit"
+                        class="grupo-create-btn grupo-create-save"
+                    >
+
+                        <svg
+                            width="17"
+                            height="17"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+
+                        </svg>
+
+                        Guardar grupo
+
+                    </button>
+
+
+                    <a
+                        href="{% url 'grupo_lista' %}"
+                        class="grupo-create-btn grupo-create-cancel"
+                    >
+                        Cancelar
+                    </a>
+
+                </div>
+
+            </form>
+
         </div>
-    </form>
+
+    </div>
+
 </div>
+
 
 <script>
 document.getElementById('btn-agregar-opcion').addEventListener('click', function () {
+
     const tbody = document.getElementById('filas-opciones');
+
     const fila = document.createElement('tr');
-    fila.style.borderBottom = "1px solid #222";
+
     fila.innerHTML = `
-        <td style="padding: 10px;">
-            <input type="text" name="opcion_nombre[]" class="form-control" placeholder="Ej: Sprite" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+        <td>
+
+            <input
+                type="text"
+                name="opcion_nombre[]"
+                class="grupo-create-input"
+                placeholder="Ej: Sprite"
+            >
+
         </td>
-        <td style="padding: 10px;">
-            <input type="number" step="0.01" name="opcion_precio[]" class="form-control" value="0" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+
+        <td>
+
+            <input
+                type="number"
+                step="0.01"
+                name="opcion_precio[]"
+                class="grupo-create-input"
+                value="0"
+            >
+
+        </td>
+
+        <td style="text-align: center;">
+
+            <button
+                type="button"
+                class="grupo-remove-new-option"
+                title="Quitar opción"
+            >
+
+                <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14H6L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4h6v2"></path>
+
+                </svg>
+
+                Quitar
+
+            </button>
+
         </td>
     `;
+
     tbody.appendChild(fila);
+
+});
+
+
+/*
+ * Quitar una opción nueva.
+ * Como todavía no fue guardada en la base de datos,
+ * simplemente eliminamos la fila del formulario.
+ */
+document.getElementById('filas-opciones').addEventListener('click', function (event) {
+
+    const boton = event.target.closest('.grupo-remove-new-option');
+
+    if (!boton) {
+        return;
+    }
+
+    const fila = boton.closest('tr');
+
+    if (fila) {
+        fila.remove();
+    }
+
 });
 </script>
+
 {% endblock %}

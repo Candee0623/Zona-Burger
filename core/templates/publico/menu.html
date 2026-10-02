@@ -1,0 +1,1225 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Menú - {{ negocio.nombre|default:"Zona Burger" }}
+    </title>
+
+
+    <!-- =====================================================
+         FUENTES
+    ====================================================== -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         FONT AWESOME
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    >
+
+
+    <!-- =====================================================
+         CSS GENERAL
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/Index.css' %}"
+    >
+
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/productos/Menu.css' %}"
+    >
+
+
+    <style>
+
+        /* =====================================================
+           VARIABLES
+        ====================================================== */
+
+        :root {
+
+            --black: #070707;
+
+            --black-2: #0d0d0d;
+
+            --dark: #111111;
+
+            --card: #181818;
+
+            --card-2: #202020;
+
+            --border: #2d2d2d;
+
+            --border-red: #4b211b;
+
+            --red: #d82505;
+
+            --red-bright: #f03816;
+
+            --red-light: #ff5635;
+
+            --red-dark: #9e1c06;
+
+            --red-soft:
+                rgba(216, 37, 5, .12);
+
+            --white: #ffffff;
+
+            --gray: #b5b5b5;
+
+            --muted: #777777;
+
+            --green: #2ecc71;
+        }
+
+
+
+        /* =====================================================
+           BASE
+        ====================================================== */
+
+        * {
+
+            box-sizing: border-box;
+        }
+
+
+        html {
+
+            scroll-behavior: smooth;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            background:
+                radial-gradient(
+                    circle at 50% -10%,
+                    rgba(216, 37, 5, .07),
+                    transparent 35%
+                ),
+                var(--black);
+
+            color: var(--white);
+
+            font-family:
+                'Montserrat',
+                sans-serif;
+        }
+
+
+
+        /* =====================================================
+           HEADER + CATEGORÍAS
+           
+           LOS DOS FORMAN UN SOLO BLOQUE STICKY
+        ====================================================== */
+
+        .menu-sticky-header {
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 3000;
+
+            width: 100%;
+
+            margin: 0;
+
+            padding: 0;
+
+            background: #0b0b0b;
+        }
+
+
+        /*
+         * El header.html tiene su propio
+         * .header-fixed-wrapper.
+         *
+         * Acá NO debe volver a ser sticky.
+         */
+
+        .menu-sticky-header
+        .header-fixed-wrapper {
+
+            position: relative;
+
+            top: auto;
+
+            left: auto;
+
+            right: auto;
+
+            width: 100%;
+
+            margin: 0;
+
+            padding: 0;
+
+            z-index: auto;
+
+            background: transparent;
+
+            backdrop-filter: none;
+
+            border-bottom: none;
+
+            box-shadow: none;
+        }
+
+
+
+        /* =====================================================
+           CATEGORÍAS
+        ====================================================== */
+
+        .categorias-nav-container {
+
+            width: 100%;
+
+            margin: 0;
+
+            padding: 0;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #111111 0%,
+                    #0b0b0b 100%
+                );
+
+            border-top:
+                1px solid
+                rgba(255, 255, 255, .04);
+
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, .08);
+
+            box-shadow:
+                0 8px 20px
+                rgba(0, 0, 0, .18);
+        }
+
+
+        .categorias-scroll {
+
+            width:
+                min(
+                    1200px,
+                    calc(100% - 28px)
+                );
+
+            min-height: 52px;
+
+            margin: 0 auto;
+
+            display: flex;
+
+            align-items: stretch;
+
+            overflow-x: auto;
+
+            scrollbar-width: none;
+        }
+
+
+        .categorias-scroll::-webkit-scrollbar {
+
+            display: none;
+        }
+
+
+
+        /* =====================================================
+           LINKS DE CATEGORÍAS
+        ====================================================== */
+
+        .categorias-scroll a,
+        .categorias-scroll button {
+
+            position: relative;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex: 0 0 auto;
+
+            min-height: 52px;
+
+            padding: 0 18px;
+
+            margin: 0;
+
+            background: transparent;
+
+            border: none;
+
+            color: #999999;
+
+            font-family:
+                'Montserrat',
+                sans-serif;
+
+            font-size: .75rem;
+
+            font-weight: 800;
+
+            text-decoration: none;
+
+            text-transform: uppercase;
+
+            letter-spacing: .4px;
+
+            white-space: nowrap;
+
+            cursor: pointer;
+
+            transition:
+                color .2s ease;
+        }
+
+
+        /*
+         * Línea roja inferior.
+         */
+
+        .categorias-scroll a::after,
+        .categorias-scroll button::after {
+
+            content: "";
+
+            position: absolute;
+
+            left: 15px;
+
+            right: 15px;
+
+            bottom: 0;
+
+            height: 3px;
+
+            border-radius:
+                5px 5px 0 0;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #d82505,
+                    #f03816
+                );
+
+            transform:
+                scaleX(0);
+
+            transform-origin: center;
+
+            transition:
+                transform .2s ease;
+        }
+
+
+        /*
+         * Hover:
+         * solamente cambia el texto y aparece
+         * la línea roja.
+         */
+
+        .categorias-scroll a:hover,
+        .categorias-scroll button:hover {
+
+            color: #ffffff;
+        }
+
+
+        .categorias-scroll a:hover::after,
+        .categorias-scroll button:hover::after {
+
+            transform:
+                scaleX(1);
+        }
+
+
+        /*
+         * Categoría activa.
+         *
+         * Sin fondo rojo.
+         */
+
+        .categorias-scroll a.active,
+        .categorias-scroll button.active,
+        .categorias-scroll .active {
+
+            color: #ffffff;
+
+            background: transparent;
+        }
+
+
+        .categorias-scroll a.active::after,
+        .categorias-scroll button.active::after,
+        .categorias-scroll .active::after {
+
+            transform:
+                scaleX(1);
+        }
+
+
+
+        /* =====================================================
+           CONTENEDOR DEL MENÚ
+        ====================================================== */
+
+        .menu-container {
+
+            width:
+                min(
+                    1200px,
+                    calc(100% - 28px)
+                );
+
+            margin: 0 auto;
+
+            padding:
+                50px 0 130px;
+        }
+
+
+
+        /* =====================================================
+           TÍTULO
+        ====================================================== */
+
+        .menu-title {
+
+            position: relative;
+
+            margin:
+                0 0 38px;
+
+            padding-left: 18px;
+
+            color: white;
+
+            font-size:
+                clamp(
+                    2rem,
+                    5vw,
+                    3.4rem
+                );
+
+            line-height: 1;
+
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+            letter-spacing: -1.5px;
+        }
+
+
+        .menu-title::before {
+
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+
+            top: 4px;
+
+            width: 5px;
+
+            height:
+                calc(100% - 8px);
+
+            background:
+                linear-gradient(
+                    180deg,
+                    var(--red-bright),
+                    var(--red-dark)
+                );
+
+            border-radius: 5px;
+
+            box-shadow:
+                0 0 15px
+                rgba(216, 37, 5, .35);
+        }
+
+
+        .menu-title::after {
+
+            content:
+                "BURGERS • PAPAS • BEBIDAS";
+
+            display: block;
+
+            margin-top: 12px;
+
+            color:
+                var(--red-light);
+
+            font-size: .65rem;
+
+            font-weight: 800;
+
+            letter-spacing: 2px;
+        }
+
+
+
+        /* =====================================================
+           CONTENEDOR DINÁMICO
+        ====================================================== */
+
+        #menu-dinamico {
+
+            min-height: 200px;
+        }
+
+
+        #menu-dinamico > div {
+
+            transition: .2s ease;
+        }
+
+
+        #menu-dinamico a {
+
+            text-decoration: none;
+        }
+
+
+
+        /* =====================================================
+           TARJETAS DE PRODUCTO
+        ====================================================== */
+
+        #menu-dinamico .producto-card,
+        #menu-dinamico .product-card {
+
+            position: relative;
+
+            overflow: hidden;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #1b1b1b,
+                    #131313
+                );
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius: 16px;
+
+            transition:
+                transform .2s ease,
+                border-color .2s ease,
+                box-shadow .2s ease;
+        }
+
+
+        #menu-dinamico .producto-card:hover,
+        #menu-dinamico .product-card:hover {
+
+            transform:
+                translateY(-5px);
+
+            border-color:
+                rgba(216, 37, 5, .55);
+
+            box-shadow:
+
+                0 18px 40px
+                rgba(0, 0, 0, .45),
+
+                0 0 25px
+                rgba(216, 37, 5, .08);
+        }
+
+
+        #menu-dinamico .producto-card::before,
+        #menu-dinamico .product-card::before {
+
+            content: "";
+
+            position: absolute;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 3px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    var(--red-dark),
+                    var(--red-bright),
+                    #ff6547
+                );
+
+            opacity: .85;
+        }
+
+
+
+        /* =====================================================
+           IMAGEN DE PRODUCTO
+        ====================================================== */
+
+        #menu-dinamico .producto-card img,
+        #menu-dinamico .product-card img {
+
+            transition:
+                transform .35s ease;
+        }
+
+
+        #menu-dinamico .producto-card:hover img,
+        #menu-dinamico .product-card:hover img {
+
+            transform:
+                scale(1.04);
+        }
+
+
+
+        /* =====================================================
+           NOMBRES
+        ====================================================== */
+
+        #menu-dinamico .producto-card h2,
+        #menu-dinamico .producto-card h3,
+        #menu-dinamico .product-card h2,
+        #menu-dinamico .product-card h3 {
+
+            color: white;
+
+            font-weight: 900;
+        }
+
+
+        #menu-dinamico .producto-card p,
+        #menu-dinamico .product-card p {
+
+            color: #999999;
+
+            line-height: 1.6;
+        }
+
+
+
+        /* =====================================================
+           PRECIOS
+        ====================================================== */
+
+        #menu-dinamico .precio,
+        #menu-dinamico .price,
+        #menu-dinamico .producto-precio {
+
+            color:
+                var(--red-light);
+
+            font-weight: 900;
+        }
+
+
+
+        /* =====================================================
+           BOTONES
+        ====================================================== */
+
+        #menu-dinamico button {
+
+            border: none;
+
+            border-radius: 9px;
+
+            font-family:
+                'Montserrat',
+                sans-serif;
+
+            font-weight: 800;
+
+            cursor: pointer;
+
+            transition: .2s ease;
+        }
+
+
+        #menu-dinamico button:hover {
+
+            transform:
+                translateY(-2px);
+        }
+
+
+
+        /* =====================================================
+           BOTONES ROJOS
+        ====================================================== */
+
+        #menu-dinamico .btn-agregar,
+        #menu-dinamico .agregar-carrito,
+        #menu-dinamico .btn-primary,
+        #menu-dinamico button[type="submit"] {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--red-bright),
+                    var(--red-dark)
+                );
+
+            color: white;
+
+            box-shadow:
+                0 7px 20px
+                rgba(216, 37, 5, .18);
+        }
+
+
+        #menu-dinamico .btn-agregar:hover,
+        #menu-dinamico .agregar-carrito:hover,
+        #menu-dinamico .btn-primary:hover,
+        #menu-dinamico button[type="submit"]:hover {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff4b27,
+                    var(--red)
+                );
+
+            box-shadow:
+                0 10px 25px
+                rgba(216, 37, 5, .3);
+        }
+
+
+
+        /* =====================================================
+           BADGES
+        ====================================================== */
+
+        #menu-dinamico .badge,
+        #menu-dinamico .etiqueta,
+        #menu-dinamico .tag {
+
+            background:
+                var(--red-soft);
+
+            border:
+                1px solid
+                rgba(216, 37, 5, .25);
+
+            color:
+                var(--red-light);
+
+            border-radius: 6px;
+        }
+
+
+
+        /* =====================================================
+           CARRITO FLOTANTE
+        ====================================================== */
+
+        .carrito-flotante-banner {
+
+            position: fixed;
+
+            z-index: 4000;
+
+            left: 50%;
+
+            bottom: 20px;
+
+            transform:
+                translateX(-50%);
+
+            width:
+                min(
+                    500px,
+                    calc(100% - 28px)
+                );
+
+            display: block;
+
+            cursor: pointer;
+
+            text-decoration: none;
+
+            color: inherit;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--red-bright),
+                    var(--red-dark)
+                );
+
+            border:
+                1px solid
+                rgba(255, 255, 255, .12);
+
+            border-radius: 14px;
+
+            box-shadow:
+
+                0 15px 45px
+                rgba(0, 0, 0, .55),
+
+                0 0 35px
+                rgba(216, 37, 5, .25);
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+
+        .carrito-flotante-banner:hover {
+
+            transform:
+                translateX(-50%)
+                translateY(-4px);
+
+            box-shadow:
+
+                0 20px 50px
+                rgba(0, 0, 0, .6),
+
+                0 0 45px
+                rgba(216, 37, 5, .35);
+        }
+
+
+        .carrito-flotante-info {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            padding:
+                15px 19px;
+        }
+
+
+        .carrito-flotante-info > i {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            width: 43px;
+
+            height: 43px;
+
+            flex-shrink: 0;
+
+            background:
+                rgba(0, 0, 0, .18);
+
+            border:
+                1px solid
+                rgba(255, 255, 255, .16);
+
+            border-radius: 10px;
+
+            color: white;
+
+            font-size: 1.1rem;
+        }
+
+
+        .carrito-flotante-texto {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 3px;
+        }
+
+
+        .carrito-flotante-texto span {
+
+            color:
+                rgba(255, 255, 255, .78);
+
+            font-size: .68rem;
+
+            font-weight: 600;
+        }
+
+
+        .carrito-flotante-texto strong {
+
+            color: white;
+
+            font-size: .9rem;
+
+            font-weight: 900;
+        }
+
+
+        .carrito-flotante-banner::after {
+
+            content: "→";
+
+            position: absolute;
+
+            right: 20px;
+
+            top: 50%;
+
+            transform:
+                translateY(-50%);
+
+            color: white;
+
+            font-size: 1.3rem;
+
+            font-weight: 900;
+
+            transition: .2s ease;
+        }
+
+
+        .carrito-flotante-banner:hover::after {
+
+            right: 16px;
+        }
+
+
+
+        /* =====================================================
+           SCROLLBAR
+        ====================================================== */
+
+        ::-webkit-scrollbar {
+
+            width: 8px;
+
+            height: 8px;
+        }
+
+
+        ::-webkit-scrollbar-track {
+
+            background: #090909;
+        }
+
+
+        ::-webkit-scrollbar-thumb {
+
+            background: #3b3b3b;
+
+            border-radius: 10px;
+        }
+
+
+        ::-webkit-scrollbar-thumb:hover {
+
+            background:
+                var(--red);
+        }
+
+
+
+        /* =====================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media (max-width: 700px) {
+
+            .menu-container {
+
+                width:
+                    calc(100% - 24px);
+
+                padding-top: 35px;
+
+                padding-bottom: 120px;
+            }
+
+
+            .menu-title {
+
+                margin-bottom: 28px;
+
+                font-size: 2.2rem;
+            }
+
+
+            .menu-title::after {
+
+                font-size: .55rem;
+
+                letter-spacing: 1.3px;
+            }
+
+
+            .categorias-scroll {
+
+                width: 100%;
+
+                min-height: 47px;
+
+                padding: 0 8px;
+            }
+
+
+            .categorias-scroll a,
+            .categorias-scroll button {
+
+                min-height: 47px;
+
+                padding: 0 14px;
+
+                font-size: .68rem;
+            }
+
+
+            .categorias-scroll a::after,
+            .categorias-scroll button::after {
+
+                left: 12px;
+
+                right: 12px;
+            }
+
+
+            .carrito-flotante-banner {
+
+                bottom: 12px;
+
+                width:
+                    calc(100% - 24px);
+            }
+
+        }
+
+
+
+        @media (max-width: 450px) {
+
+            .menu-title {
+
+                font-size: 1.9rem;
+            }
+
+
+            .menu-title::after {
+
+                margin-top: 9px;
+
+                font-size: .5rem;
+
+                letter-spacing: 1px;
+            }
+
+
+            .carrito-flotante-info {
+
+                padding:
+                    13px 15px;
+            }
+
+
+            .carrito-flotante-info > i {
+
+                width: 39px;
+
+                height: 39px;
+
+                font-size: 1rem;
+            }
+
+
+            .carrito-flotante-texto strong {
+
+                font-size: .82rem;
+            }
+
+
+            .carrito-flotante-banner::after {
+
+                right: 14px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ========================================================
+     HEADER + CATEGORÍAS
+     UN SOLO BLOQUE STICKY
+========================================================= -->
+
+<div class="menu-sticky-header">
+
+
+    {% include 'components/header.html' %}
+
+
+    <div class="categorias-nav-container">
+
+
+        <div
+            class="categorias-scroll"
+            id="categorias-dinamicas"
+        >
+
+            {% include 'components/menuCategorias.html' %}
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<!-- ========================================================
+     MENÚ DE PRODUCTOS
+========================================================= -->
+
+<main class="menu-container">
+
+
+    <h1 class="menu-title">
+
+        Nuestro Menú
+
+    </h1>
+
+
+    <div id="menu-dinamico">
+
+        {% include 'components/menuProductos.html' %}
+
+    </div>
+
+
+</main>
+
+
+
+<!-- ========================================================
+     CARRITO FLOTANTE
+========================================================= -->
+
+{% if request.session.carrito %}
+
+    <a
+        href="{% url 'ver_carrito' %}"
+        class="carrito-flotante-banner"
+        aria-label="Ver mi pedido"
+    >
+
+        <div class="carrito-flotante-info">
+
+
+            <i class="fa-solid fa-bag-shopping"></i>
+
+
+            <div class="carrito-flotante-texto">
+
+
+                <span>
+                    Tienes productos agregados
+                </span>
+
+
+                <strong>
+                    Ver mi pedido
+                </strong>
+
+
+            </div>
+
+
+        </div>
+
+    </a>
+
+{% endif %}
+
+
+
+<!-- ========================================================
+     URL DE ACTUALIZACIONES
+========================================================= -->
+
+<script>
+
+    window.MENU_ACTUALIZACIONES_URL =
+        "{% url 'menu_actualizaciones' %}";
+
+</script>
+
+
+
+<!-- ========================================================
+     JAVASCRIPT DEL MENÚ
+========================================================= -->
+
+<script
+    src="{% static 'java/menu.js' %}"
+></script>
+
+
+</body>
+
+</html>

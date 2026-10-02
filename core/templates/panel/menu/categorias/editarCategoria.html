@@ -1,27 +1,367 @@
 {% extends 'panel/base.html' %}
+
 {% block title %}Zona-Burger | Editar categoría{% endblock %}
 
 {% block content %}
-<div class="form-container" style="max-width: 600px; background: #181818; padding: 25px; border-radius: 8px; border: 1px solid #333;">
-    <h1 style="margin-bottom: 20px; font-size: 1.5rem;">Editar categoría</h1>
 
-    {% if errores %}
-        <ul class="errores" style="color: #ff6b6b; margin-bottom: 15px;">
-            {% for error in errores %}<li>{{ error }}</li>{% endfor %}
-        </ul>
-    {% endif %}
+<style>
+    .categoria-edit-page {
+        max-width: 650px;
+        margin: 0 auto;
+    }
 
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-group" style="margin-bottom: 15px;">
-            <label for="nombre" style="display: block; margin-bottom: 5px; color: #ccc;">Nombre</label>
-            <input type="text" id="nombre" name="nombre" class="form-control" value="{{ categoria.nombre }}" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;" required>
+    .categoria-edit-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 18px;
+        transition: color 0.2s;
+    }
+
+    .categoria-edit-back:hover {
+        color: #fff;
+    }
+
+    .categoria-edit-card {
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .categoria-edit-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 28px;
+        border-bottom: 1px solid #333;
+    }
+
+    .categoria-edit-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 8px;
+        background: rgba(46, 204, 113, 0.12);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2ecc71;
+        flex-shrink: 0;
+    }
+
+    .categoria-edit-header-text h1 {
+        margin: 0 0 5px;
+        color: #fff;
+        font-size: 1.4rem;
+    }
+
+    .categoria-edit-header-text p {
+        margin: 0;
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .categoria-edit-body {
+        padding: 28px;
+    }
+
+    .categoria-current {
+        background: #202020;
+        border: 1px solid #333;
+        border-radius: 7px;
+        padding: 15px 17px;
+        margin-bottom: 22px;
+    }
+
+    .categoria-current-label {
+        color: #777;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+
+    .categoria-current-name {
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 600;
+    }
+
+    .categoria-form-group {
+        margin-bottom: 20px;
+    }
+
+    .categoria-form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #ccc;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .categoria-form-control {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 13px;
+        background: #222;
+        border: 1px solid #444;
+        color: #fff;
+        border-radius: 5px;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .categoria-form-control:focus {
+        border-color: #2ecc71;
+        box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.12);
+    }
+
+    .categoria-form-control::placeholder {
+        color: #666;
+    }
+
+    .categoria-errors {
+        background: rgba(255, 71, 87, 0.08);
+        border: 1px solid rgba(255, 71, 87, 0.25);
+        border-radius: 7px;
+        padding: 13px 16px;
+        margin-bottom: 20px;
+        color: #ff6b6b;
+        font-size: 0.88rem;
+    }
+
+    .categoria-errors ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .categoria-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 22px;
+        border-top: 1px solid #333;
+        flex-wrap: wrap;
+    }
+
+    .categoria-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .categoria-save-btn {
+        background: #2ecc71;
+        border: 1px solid #2ecc71;
+        color: #111;
+    }
+
+    .categoria-save-btn:hover {
+        background: #27ae60;
+        border-color: #27ae60;
+    }
+
+    .categoria-cancel-btn {
+        background: #333;
+        border: 1px solid #444;
+        color: #fff;
+    }
+
+    .categoria-cancel-btn:hover {
+        background: #3d3d3d;
+    }
+
+    @media (max-width: 600px) {
+        .categoria-edit-header,
+        .categoria-edit-body {
+            padding: 20px;
+        }
+
+        .categoria-actions {
+            flex-direction: column-reverse;
+        }
+
+        .categoria-action-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+
+<div class="categoria-edit-page">
+
+    <!-- Volver al listado -->
+    <a href="{% url 'categoria_lista' %}" class="categoria-edit-back">
+
+        <svg width="18" height="18"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+
+        </svg>
+
+        Volver a categorías
+
+    </a>
+
+
+    <div class="categoria-edit-card">
+
+        <!-- Encabezado -->
+        <div class="categoria-edit-header">
+
+            <div class="categoria-edit-icon">
+
+                <svg width="27" height="27"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <path d="M4 5h16"></path>
+                    <path d="M4 12h16"></path>
+                    <path d="M4 19h16"></path>
+
+                    <circle cx="8" cy="5" r="2"></circle>
+                    <circle cx="16" cy="12" r="2"></circle>
+                    <circle cx="10" cy="19" r="2"></circle>
+
+                </svg>
+
+            </div>
+
+            <div class="categoria-edit-header-text">
+
+                <h1>Editar categoría</h1>
+
+                <p>
+                    Modifica la información de la categoría.
+                </p>
+
+            </div>
+
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button type="submit" class="btn btn-primary" style="padding: 10px 20px; background: #00d26a; border: none; color: #000; font-weight: bold; border-radius: 4px; cursor: pointer;">Guardar cambios</button>
-            <a href="{% url 'categoria_lista' %}" class="btn" style="padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;">Cancelar</a>
+
+        <div class="categoria-edit-body">
+
+            <!-- Categoría actual -->
+            <div class="categoria-current">
+
+                <div class="categoria-current-label">
+                    Categoría seleccionada
+                </div>
+
+                <div class="categoria-current-name">
+                    {{ categoria.nombre }}
+                </div>
+
+            </div>
+
+
+            <!-- Errores -->
+            {% if errores %}
+
+                <div class="categoria-errors">
+
+                    <ul>
+                        {% for error in errores %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- Formulario -->
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="categoria-form-group">
+
+                    <label for="nombre">
+                        Nombre de la categoría
+                    </label>
+
+                    <input
+                        type="text"
+                        id="nombre"
+                        name="nombre"
+                        class="categoria-form-control"
+                        value="{{ categoria.nombre }}"
+                        placeholder="Ej. Hamburguesas"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- Acciones -->
+                <div class="categoria-actions">
+
+                    <a
+                        href="{% url 'categoria_lista' %}"
+                        class="categoria-action-btn categoria-cancel-btn"
+                    >
+                        Cancelar
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="categoria-action-btn categoria-save-btn"
+                    >
+
+                        <svg width="17" height="17"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+
+                        </svg>
+
+                        Guardar cambios
+
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
-    </form>
+
+    </div>
+
 </div>
+
 {% endblock %}

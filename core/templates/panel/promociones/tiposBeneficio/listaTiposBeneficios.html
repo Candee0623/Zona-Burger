@@ -1,0 +1,597 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Zona-Burger | Tipos de beneficio{% endblock %}
+
+{% block content %}
+
+<style>
+    .beneficios-list-page {
+        width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
+        color: #fff;
+    }
+
+    .beneficios-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 18px;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.88rem;
+        transition: color 0.2s ease;
+    }
+
+    .beneficios-back:hover {
+        color: #fff;
+    }
+
+    .beneficios-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .beneficios-list-title {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .beneficios-list-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(52, 152, 219, 0.10);
+        border: 1px solid rgba(52, 152, 219, 0.25);
+        border-radius: 8px;
+        color: #3498db;
+    }
+
+    .beneficios-list-title h1 {
+        margin: 0;
+        color: #fff;
+        font-size: 1.6rem;
+        font-weight: 600;
+    }
+
+    .beneficios-list-title p {
+        margin: 4px 0 0;
+        color: #888;
+        font-size: 0.88rem;
+        line-height: 1.4;
+    }
+
+    .btn-nuevo-beneficio {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 10px 16px;
+        box-sizing: border-box;
+        background: #2ecc71;
+        color: #111;
+        border: 1px solid #2ecc71;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+        transition:
+            background 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .btn-nuevo-beneficio:hover {
+        background: #27ae60;
+        transform: translateY(-1px);
+    }
+
+    .beneficios-table-container {
+        width: 100%;
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .beneficios-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .beneficios-table thead {
+        background: #222;
+    }
+
+    .beneficios-table th {
+        padding: 13px 14px;
+        color: #aaa;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #333;
+    }
+
+    .beneficios-table td {
+        padding: 13px 14px;
+        color: #ccc;
+        font-size: 0.88rem;
+        border-bottom: 1px solid #292929;
+        vertical-align: middle;
+    }
+
+    .beneficios-table tbody tr {
+        transition: background 0.2s ease;
+    }
+
+    .beneficios-table tbody tr:hover {
+        background: #202020;
+    }
+
+    .beneficios-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .beneficio-id {
+        color: #777 !important;
+        font-size: 0.82rem !important;
+        white-space: nowrap;
+    }
+
+    .beneficio-codigo {
+        color: #aaa !important;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+    .beneficio-nombre {
+        color: #fff !important;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .beneficio-comportamiento {
+        color: #3498db !important;
+        font-size: 0.84rem !important;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+    .beneficio-descripcion {
+        color: #aaa !important;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .beneficio-acciones {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .btn-beneficio-accion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 34px;
+        padding: 6px 10px;
+        box-sizing: border-box;
+        background: #292929;
+        border: 1px solid #444;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 600;
+        transition:
+            background 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .btn-beneficio-accion:hover {
+        transform: translateY(-1px);
+    }
+
+    .btn-beneficio-editar {
+        margin-right: 5px;
+        color: #3498db;
+    }
+
+    .btn-beneficio-editar:hover {
+        background: rgba(52, 152, 219, 0.10);
+        border-color: rgba(52, 152, 219, 0.35);
+    }
+
+    .btn-beneficio-eliminar {
+        color: #ff4757;
+    }
+
+    .btn-beneficio-eliminar:hover {
+        background: rgba(255, 71, 87, 0.10);
+        border-color: rgba(255, 71, 87, 0.35);
+    }
+
+    .beneficios-empty {
+        padding: 35px 20px !important;
+        text-align: center;
+        color: #666 !important;
+        font-size: 0.9rem !important;
+        font-style: italic;
+    }
+
+    @media (max-width: 900px) {
+        .beneficios-table th,
+        .beneficios-table td {
+            padding: 11px 9px;
+        }
+
+        .beneficios-table {
+            font-size: 0.82rem;
+        }
+
+        .btn-beneficio-accion {
+            padding: 6px 8px;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .beneficios-list-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .beneficios-list-title {
+            align-items: flex-start;
+        }
+
+        .beneficios-list-title h1 {
+            font-size: 1.45rem;
+        }
+
+        .beneficios-list-title p {
+            line-height: 1.4;
+        }
+
+        .btn-nuevo-beneficio {
+            width: 100%;
+        }
+
+        .beneficios-table-container {
+            background: transparent;
+            border: none;
+            overflow: visible;
+        }
+
+        .beneficios-table {
+            display: block;
+            width: 100%;
+        }
+
+        .beneficios-table thead {
+            display: none;
+        }
+
+        .beneficios-table tbody {
+            display: block;
+            width: 100%;
+        }
+
+        .beneficios-table tbody tr {
+            display: block;
+            width: 100%;
+            margin-bottom: 12px;
+            padding: 12px;
+            box-sizing: border-box;
+            background: #181818;
+            border: 1px solid #303030 !important;
+            border-radius: 10px;
+        }
+
+        .beneficios-table tbody tr:hover {
+            background: #1b1b1b;
+        }
+
+        .beneficios-table tbody td {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 2px;
+            border-bottom: 1px solid #292929;
+            white-space: normal;
+        }
+
+        .beneficios-table tbody td:last-child {
+            border-bottom: none;
+        }
+
+        .beneficio-id {
+            font-size: 0.78rem !important;
+        }
+
+        .beneficio-nombre {
+            font-size: 1.05rem !important;
+            line-height: 1.4;
+        }
+
+        .beneficio-comportamiento {
+            line-height: 1.4;
+        }
+
+        .beneficio-descripcion {
+            line-height: 1.45;
+        }
+
+        .beneficio-acciones {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px;
+            width: 100%;
+            padding-top: 12px !important;
+            padding-bottom: 2px !important;
+            box-sizing: border-box;
+            text-align: initial !important;
+        }
+
+        .btn-beneficio-accion {
+            width: 100%;
+            min-width: 0;
+            min-height: 40px;
+            margin: 0 !important;
+            padding: 7px 8px;
+            box-sizing: border-box;
+            white-space: normal;
+            text-align: center;
+        }
+
+        .beneficios-table tbody tr:has(.beneficios-empty) {
+            display: block;
+            width: 100%;
+            padding: 0;
+        }
+
+        .beneficios-empty {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box;
+            padding: 25px 15px !important;
+            overflow-wrap: anywhere;
+        }
+    }
+
+    @media (max-width: 430px) {
+        .beneficios-list-icon {
+            width: 42px;
+            height: 42px;
+        }
+
+        .beneficios-list-title h1 {
+            font-size: 1.3rem;
+        }
+
+        .beneficios-list-title p {
+            font-size: 0.8rem;
+        }
+
+        .beneficio-nombre {
+            font-size: 1rem !important;
+        }
+
+        .beneficio-descripcion {
+            font-size: 0.84rem;
+        }
+
+        .beneficio-acciones {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-beneficio-accion {
+            min-height: 40px;
+        }
+    }
+</style>
+
+<div class="beneficios-list-page">
+
+    <a href="{% url 'promociones_panel' %}" class="beneficios-back">
+
+        <svg width="16" height="16" viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round"
+             aria-hidden="true">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+
+        Volver al menú
+    </a>
+
+    <div class="beneficios-list-header">
+
+        <div class="beneficios-list-title">
+
+            <div class="beneficios-list-icon">
+
+                <svg width="24" height="24"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+                    <path d="M20 12V7.5L12 3 4 7.5V12"></path>
+                    <path d="M4 12l8 4.5 8-4.5"></path>
+                    <path d="M12 16.5V21"></path>
+                    <path d="M8 5.25L16 9.75"></path>
+                    <path d="M16 5.25L8 9.75"></path>
+                </svg>
+
+            </div>
+
+            <div>
+
+                <h1>
+                    Tipos de beneficio
+                </h1>
+
+                <p>
+                    Gestioná los tipos de beneficio disponibles para las promociones.
+                </p>
+
+            </div>
+
+        </div>
+
+        <a
+            href="{% url 'panel_crear_tipo_beneficio' %}"
+            class="btn-nuevo-beneficio"
+        >
+
+            <svg width="17" height="17"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+            </svg>
+
+            Nuevo tipo de beneficio
+
+        </a>
+
+    </div>
+
+    <div class="beneficios-table-container">
+
+        <table class="beneficios-table">
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Comportamiento</th>
+                    <th>Descripción</th>
+                    <th style="text-align: right;">Acciones</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for tipo in tipos %}
+
+                <tr>
+
+                    <td class="beneficio-id">
+                        #{{ tipo.pk }}
+                    </td>
+
+                    <td class="beneficio-codigo">
+                        {{ tipo.codigo|default:"Sin código" }}
+                    </td>
+
+                    <td class="beneficio-nombre">
+                        {{ tipo.nombre|default:"Sin nombre" }}
+                    </td>
+
+                    <td class="beneficio-comportamiento">
+                        {{ tipo.get_comportamiento_display }}
+                    </td>
+
+                    <td class="beneficio-descripcion">
+                        {{ tipo.descripcion|default:"Sin descripción" }}
+                    </td>
+
+                    <td class="beneficio-acciones">
+
+                        <a
+                            href="{% url 'panel_editar_tipo_beneficio' tipo.pk %}"
+                            class="btn-beneficio-accion btn-beneficio-editar"
+                        >
+
+                            <svg width="15" height="15"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
+                            </svg>
+
+                            Editar
+
+                        </a>
+
+                        <a
+                            href="{% url 'panel_eliminar_tipo_beneficio' tipo.pk %}"
+                            class="btn-beneficio-accion btn-beneficio-eliminar"
+                        >
+
+                            <svg width="15" height="15"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+                                <path d="M3 6h18"></path>
+                                <path d="M8 6V4h8v2"></path>
+                                <path d="M19 6l-1 14H6L5 6"></path>
+                                <path d="M10 11v5"></path>
+                                <path d="M14 11v5"></path>
+                            </svg>
+
+                            Eliminar
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        class="beneficios-empty"
+                    >
+                        No hay tipos de beneficio cargados actualmente.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,402 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Zona-Burger | Nuevo tipo de beneficio{% endblock %}
+
+{% block content %}
+
+<style>
+    .tipo-beneficio-create-page {
+        max-width: 650px;
+        margin: 0 auto;
+        color: #fff;
+    }
+
+    .tipo-beneficio-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+        transition: color 0.2s ease;
+    }
+
+    .tipo-beneficio-back:hover {
+        color: #fff;
+    }
+
+    .tipo-beneficio-card {
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    .tipo-beneficio-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .tipo-beneficio-icon {
+        width: 58px;
+        height: 58px;
+        flex-shrink: 0;
+        border-radius: 13px;
+        background: rgba(52, 152, 219, 0.12);
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tipo-beneficio-icon svg {
+        width: 31px;
+        height: 31px;
+        stroke: #3498db;
+    }
+
+    .tipo-beneficio-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #fff;
+    }
+
+    .tipo-beneficio-header p {
+        margin: 5px 0 0;
+        color: #888;
+        font-size: 0.88rem;
+    }
+
+    .tipo-beneficio-messages {
+        color: #ffb3b3;
+        margin-bottom: 18px;
+    }
+
+    .tipo-beneficio-messages ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .tipo-beneficio-errors {
+        color: #ffb3b3;
+        background: rgba(255, 71, 87, 0.08);
+        border: 1px solid rgba(255, 71, 87, 0.25);
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+    }
+
+    .tipo-beneficio-errors ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .tipo-beneficio-field {
+        margin-bottom: 17px;
+    }
+
+    .tipo-beneficio-field label {
+        display: block;
+        margin-bottom: 6px;
+        color: #ccc;
+        font-size: 0.9rem;
+    }
+
+    .tipo-beneficio-field input,
+    .tipo-beneficio-field select,
+    .tipo-beneficio-field textarea {
+        width: 100%;
+        padding: 10px;
+        background: #222;
+        border: 1px solid #444;
+        color: #fff;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 0.9rem;
+        outline: none;
+    }
+
+    .tipo-beneficio-field input:focus,
+    .tipo-beneficio-field select:focus,
+    .tipo-beneficio-field textarea:focus {
+        border-color: #3498db;
+    }
+
+    .tipo-beneficio-field textarea {
+        resize: vertical;
+    }
+
+    .tipo-beneficio-help {
+        display: block;
+        margin-top: 5px;
+        color: #777;
+        font-size: 0.78rem;
+    }
+
+    .tipo-beneficio-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .tipo-beneficio-btn {
+        padding: 10px 20px;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: none;
+        box-sizing: border-box;
+    }
+
+    .tipo-beneficio-btn-save {
+        background: #00d26a;
+        color: #000;
+    }
+
+    .tipo-beneficio-btn-save:hover {
+        background: #00bd5e;
+    }
+
+    .tipo-beneficio-btn-cancel {
+        background: #333;
+        color: #fff;
+    }
+
+    .tipo-beneficio-btn-cancel:hover {
+        background: #444;
+    }
+
+    @media (max-width: 600px) {
+        .tipo-beneficio-card {
+            padding: 22px 18px;
+        }
+
+        .tipo-beneficio-header {
+            align-items: flex-start;
+        }
+
+        .tipo-beneficio-actions {
+            flex-direction: column;
+        }
+
+        .tipo-beneficio-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="tipo-beneficio-create-page">
+
+    <!-- Volver atrás -->
+    <a
+        href="{% url 'panel_lista_tipos_beneficio' %}"
+        class="tipo-beneficio-back"
+    >
+        <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+
+        Volver a tipos de beneficio
+    </a>
+
+    <div class="tipo-beneficio-card">
+
+        <!-- Encabezado -->
+        <div class="tipo-beneficio-header">
+
+            <div class="tipo-beneficio-icon">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+            </div>
+
+            <div>
+                <h1>Nuevo tipo de beneficio</h1>
+                <p>Configura un nuevo beneficio para tus promociones.</p>
+            </div>
+
+        </div>
+
+        {% if messages %}
+            <div class="tipo-beneficio-messages">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if errores %}
+            <div class="tipo-beneficio-errors">
+                <ul>
+                    {% for error in errores %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <!-- Código -->
+            <div class="tipo-beneficio-field">
+
+                <label for="codigo">
+                    Código
+                </label>
+
+                <input
+                    type="text"
+                    id="codigo"
+                    name="codigo"
+                    maxlength="50"
+                    placeholder="Ej: DESCUENTO_20"
+                >
+
+                <small class="tipo-beneficio-help">
+                    Si lo dejas vacío, se generará automáticamente a partir del nombre.
+                </small>
+
+            </div>
+
+            <!-- Nombre -->
+            <div class="tipo-beneficio-field">
+
+                <label for="nombre">
+                    Nombre
+                </label>
+
+                <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    maxlength="100"
+                    placeholder="Ej: Descuento 20%"
+                    required
+                >
+
+            </div>
+
+            <!-- Comportamiento -->
+            <div class="tipo-beneficio-field">
+
+                <label for="comportamiento">
+                    Comportamiento (Regla de negocio)
+                </label>
+
+                <select
+                    id="comportamiento"
+                    name="comportamiento"
+                    required
+                >
+
+                    <option value="SIN_VALOR">
+                        Sin valor (Ej: 2x1, 3x2, Producto de regalo)
+                    </option>
+
+                    <option value="PORCENTAJE">
+                        Descuento porcentual (%)
+                    </option>
+
+                    <option value="MONTO_FIJO">
+                        Descuento en dinero fijo ($)
+                    </option>
+
+                </select>
+
+                <small class="tipo-beneficio-help">
+                    Define si al crear una promoción con este tipo se le exigirá o no un número de valor.
+                </small>
+
+            </div>
+
+            <!-- Descripción -->
+            <div class="tipo-beneficio-field">
+
+                <label for="descripcion">
+                    Descripción
+                </label>
+
+                <textarea
+                    id="descripcion"
+                    name="descripcion"
+                    maxlength="255"
+                    rows="4"
+                    placeholder="Describe el tipo de beneficio..."
+                ></textarea>
+
+            </div>
+
+            <!-- Acciones -->
+            <div class="tipo-beneficio-actions">
+
+                <button
+                    type="submit"
+                    class="tipo-beneficio-btn tipo-beneficio-btn-save"
+                >
+                    <svg
+                        width="17"
+                        height="17"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+
+                    Guardar
+                </button>
+
+                <a
+                    href="{% url 'panel_lista_tipos_beneficio' %}"
+                    class="tipo-beneficio-btn tipo-beneficio-btn-cancel"
+                >
+                    Cancelar
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

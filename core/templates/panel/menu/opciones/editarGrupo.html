@@ -2,90 +2,715 @@
 {% block title %}Zona-Burger | Editar grupo de opciones{% endblock %}
 
 {% block content %}
-<div class="form-container" style="max-width: 750px; background: #181818; padding: 30px; border-radius: 8px; border: 1px solid #333; margin: auto;">
-    <h1 style="margin-bottom: 20px; font-size: 1.5rem; color: #fff;">Editar grupo de opciones</h1>
 
-    {% if errores %}
-        <ul class="errores" style="color: #ff6b6b; margin-bottom: 15px; list-style: inside;">
-            {% for error in errores %}<li>{{ error }}</li>{% endfor %}
-        </ul>
-    {% endif %}
+<style>
+    .grupo-edit-page {
+        max-width: 800px;
+        margin: 0 auto;
+    }
 
-    <form method="post">
-        {% csrf_token %}
+    .grupo-edit-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 18px;
+        transition: color 0.2s;
+    }
 
-        <div class="form-group" style="margin-bottom: 15px;">
-            <label for="nombre" style="display: block; margin-bottom: 6px; color: #ccc;">Nombre del grupo</label>
-            <input type="text" id="nombre" name="nombre" class="form-control" value="{{ grupo.nombre }}" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;" required>
-        </div>
+    .grupo-edit-back:hover {
+        color: #fff;
+    }
 
-        <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <div class="form-group" style="flex: 1;">
-                <label for="minselecciones" style="display: block; margin-bottom: 6px; color: #ccc;">Mín. selecciones</label>
-                <input type="number" id="minselecciones" name="minselecciones" class="form-control" min="0" value="{{ grupo.minselecciones|default:0 }}" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+    .grupo-edit-card {
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .grupo-edit-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 28px;
+        border-bottom: 1px solid #333;
+    }
+
+    .grupo-edit-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 8px;
+        background: rgba(52, 152, 219, 0.15);
+        border: 1px solid rgba(52, 152, 219, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3498db;
+        flex-shrink: 0;
+    }
+
+    .grupo-edit-header-text h1 {
+        margin: 0 0 5px;
+        color: #fff;
+        font-size: 1.45rem;
+    }
+
+    .grupo-edit-header-text p {
+        margin: 0;
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .grupo-edit-body {
+        padding: 28px;
+    }
+
+    .grupo-edit-errors {
+        background: rgba(255, 107, 107, 0.12);
+        border: 1px solid rgba(255, 107, 107, 0.45);
+        padding: 13px 16px;
+        border-radius: 7px;
+        margin-bottom: 22px;
+    }
+
+    .grupo-edit-errors ul {
+        color: #ff6b6b;
+        margin: 0;
+        padding-left: 20px;
+        font-size: 0.9rem;
+    }
+
+    .grupo-edit-field {
+        margin-bottom: 20px;
+    }
+
+    .grupo-edit-label {
+        display: block;
+        margin-bottom: 7px;
+        color: #ccc;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .grupo-edit-input {
+        width: 100%;
+        padding: 10px 11px;
+        background: #222;
+        border: 1px solid #444;
+        color: #fff;
+        border-radius: 5px;
+        box-sizing: border-box;
+        font-size: 0.9rem;
+    }
+
+    .grupo-edit-input:focus {
+        outline: none;
+        border-color: #3498db;
+    }
+
+    .grupo-edit-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 24px;
+    }
+
+    .grupo-edit-row .grupo-edit-field {
+        flex: 1;
+        margin-bottom: 0;
+    }
+
+    .grupo-edit-section {
+        border-top: 1px solid #333;
+        padding-top: 25px;
+        margin-top: 25px;
+    }
+
+    .grupo-edit-section-header {
+        margin-bottom: 16px;
+    }
+
+    .grupo-edit-section-title {
+        margin: 0;
+        color: #ddd;
+        font-size: 1.05rem;
+    }
+
+    .grupo-edit-section-description {
+        color: #777;
+        font-size: 0.8rem;
+        margin: 4px 0 0;
+    }
+
+    .grupo-edit-table-wrapper {
+        overflow-x: auto;
+        border: 1px solid #333;
+        border-radius: 7px;
+    }
+
+    .grupo-edit-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+
+    .grupo-edit-table th {
+        padding: 11px 12px;
+        text-align: left;
+        color: #888;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-bottom: 1px solid #333;
+        background: #1d1d1d;
+    }
+
+    .grupo-edit-table th:last-child {
+        text-align: center;
+    }
+
+    .grupo-edit-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #252525;
+    }
+
+    .grupo-edit-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .grupo-edit-table .grupo-edit-input {
+        padding: 8px 9px;
+    }
+
+    /* Eliminar opción existente */
+    .grupo-delete-option {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .grupo-delete-option input {
+        display: none;
+    }
+
+    .grupo-delete-option span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 10px;
+        border: 1px solid #444;
+        border-radius: 5px;
+        background: #252525;
+        color: #999;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+    }
+
+    .grupo-delete-option span:hover {
+        background: rgba(255, 71, 87, 0.12);
+        border-color: #ff4757;
+        color: #ff4757;
+    }
+
+    .grupo-delete-option input:checked + span {
+        background: rgba(255, 71, 87, 0.15);
+        border-color: #ff4757;
+        color: #ff4757;
+    }
+
+    /* Botón agregar */
+    .grupo-add-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #2b2b2b;
+        color: #3498db;
+        border: 1px solid #444;
+        padding: 8px 14px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        margin-top: 14px;
+    }
+
+    .grupo-add-option:hover {
+        background: #333;
+        border-color: #3498db;
+    }
+
+    /* Botón quitar opción nueva */
+    .grupo-remove-new-option {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 10px;
+        background: #252525;
+        border: 1px solid #444;
+        border-radius: 5px;
+        color: #999;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .grupo-remove-new-option:hover {
+        background: rgba(255, 71, 87, 0.12);
+        border-color: #ff4757;
+        color: #ff4757;
+    }
+
+    .grupo-edit-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid #333;
+        flex-wrap: wrap;
+    }
+
+    .grupo-edit-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .grupo-edit-save {
+        background: #00d26a;
+        border: 1px solid #00d26a;
+        color: #000;
+    }
+
+    .grupo-edit-save:hover {
+        background: #00bd5f;
+        border-color: #00bd5f;
+    }
+
+    .grupo-edit-cancel {
+        background: #333;
+        border: 1px solid #444;
+        color: #fff;
+    }
+
+    .grupo-edit-cancel:hover {
+        background: #3d3d3d;
+    }
+
+    @media (max-width: 650px) {
+        .grupo-edit-header,
+        .grupo-edit-body {
+            padding: 20px;
+        }
+
+        .grupo-edit-row {
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .grupo-edit-row .grupo-edit-field {
+            margin-bottom: 0;
+        }
+
+        .grupo-edit-actions {
+            flex-direction: column;
+        }
+
+        .grupo-edit-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="grupo-edit-page">
+
+    <!-- Volver al listado -->
+    <a href="{% url 'grupo_lista' %}" class="grupo-edit-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+
+        Volver a grupos de opciones
+    </a>
+
+    <div class="grupo-edit-card">
+
+        <!-- Encabezado -->
+        <div class="grupo-edit-header">
+
+            <div class="grupo-edit-icon">
+                <svg width="27" height="27" viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <circle cx="12" cy="12" r="3"></circle>
+
+                    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.42 1.42-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-2v-.08a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.42-1.42.06-.06A1.7 1.7 0 0 0 9.4 15a1.7 1.7 0 0 0-1.56-1.03H7v-2h.84A1.7 1.7 0 0 0 9.4 10a1.7 1.7 0 0 0-.34-1.88L9 8.06l1.42-1.42.06.06A1.7 1.7 0 0 0 12.36 7.04 1.7 1.7 0 0 0 13.39 5.48V5h2v.48A1.7 1.7 0 0 0 16.42 7.04a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.42 1.42-.06.06A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.56 1.03H21v2h-.04A1.7 1.7 0 0 0 19.4 15z"></path>
+                </svg>
             </div>
-            <div class="form-group" style="flex: 1;">
-                <label for="maxselecciones" style="display: block; margin-bottom: 6px; color: #ccc;">Máx. selecciones</label>
-                <input type="number" id="maxselecciones" name="maxselecciones" class="form-control" min="1" value="{{ grupo.maxselecciones|default:1 }}" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+
+            <div class="grupo-edit-header-text">
+                <h1>{{ grupo.nombre }}</h1>
+                <p>Editar configuración y opciones del grupo.</p>
             </div>
+
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #333; margin: 25px 0;">
-        <h3 style="font-size: 1.1rem; color: #ddd; margin-bottom: 15px;">Opciones (ej: Coca-Cola, Sprite...)</h3>
+        <div class="grupo-edit-body">
 
-        <table id="tabla-opciones" class="tabla-panel" style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
-            <thead>
-                <tr style="text-align: left; color: #888; font-size: 0.85rem; border-bottom: 1px solid #333;">
-                    <th style="padding: 10px;">Nombre</th>
-                    <th style="padding: 10px;">Precio adicional</th>
-                    <th style="padding: 10px; text-align: center;">Eliminar</th>
-                </tr>
-            </thead>
-            <tbody id="filas-opciones">
-                {% for opcion in opciones %}
-                <tr style="border-bottom: 1px solid #222;">
-                    <td style="padding: 10px;">
-                        <input type="hidden" name="opcion_id[]" value="{{ opcion.idopcion }}">
-                        <input type="text" name="opcion_nombre[]" class="form-control" value="{{ opcion.nombre }}" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
-                    </td>
-                    <td style="padding: 10px;">
-                        <input type="number" step="0.01" name="opcion_precio[]" class="form-control" value="{{ opcion.precioadicional|default:0 }}" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
-                    </td>
-                    <td style="padding: 10px; text-align: center;">
-                        <input type="checkbox" name="opcion_eliminar[]" value="{{ opcion.idopcion }}" style="accent-color: #ff6b6b; transform: scale(1.2);">
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            {% if errores %}
+                <div class="grupo-edit-errors">
+                    <ul>
+                        {% for error in errores %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
 
-        <button type="button" id="btn-agregar-opcion" class="btn" style="background: #2b2b2b; color: #3498db; border: 1px solid #444; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-bottom: 25px;">+ Agregar opción</button>
+            <form method="post">
+                {% csrf_token %}
 
-        <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 20px;">
-        
-        <div style="display: flex; gap: 10px;">
-            <button type="submit" class="btn btn-primary" style="padding: 10px 20px; background: #00d26a; border: none; color: #000; font-weight: bold; border-radius: 4px; cursor: pointer;">Guardar cambios</button>
-            <a href="{% url 'grupo_lista' %}" class="btn" style="padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;">Cancelar</a>
+                <!-- Datos principales del grupo -->
+                <div class="grupo-edit-field">
+
+                    <label for="nombre" class="grupo-edit-label">
+                        Nombre del grupo
+                    </label>
+
+                    <input
+                        type="text"
+                        id="nombre"
+                        name="nombre"
+                        class="grupo-edit-input"
+                        value="{{ grupo.nombre }}"
+                        required
+                    >
+
+                </div>
+
+                <div class="grupo-edit-row">
+
+                    <div class="grupo-edit-field">
+
+                        <label for="minselecciones" class="grupo-edit-label">
+                            Mín. selecciones
+                        </label>
+
+                        <input
+                            type="number"
+                            id="minselecciones"
+                            name="minselecciones"
+                            class="grupo-edit-input"
+                            min="0"
+                            value="{{ grupo.minselecciones|default:0 }}"
+                        >
+
+                    </div>
+
+                    <div class="grupo-edit-field">
+
+                        <label for="maxselecciones" class="grupo-edit-label">
+                            Máx. selecciones
+                        </label>
+
+                        <input
+                            type="number"
+                            id="maxselecciones"
+                            name="maxselecciones"
+                            class="grupo-edit-input"
+                            min="1"
+                            value="{{ grupo.maxselecciones|default:1 }}"
+                        >
+
+                    </div>
+
+                </div>
+
+                <!-- Opciones -->
+                <div class="grupo-edit-section">
+
+                    <div class="grupo-edit-section-header">
+
+                        <h3 class="grupo-edit-section-title">
+                            Opciones
+                        </h3>
+
+                        <p class="grupo-edit-section-description">
+                            Ej: Coca-Cola, Sprite, Fanta, etc.
+                        </p>
+
+                    </div>
+
+                    <div class="grupo-edit-table-wrapper">
+
+                        <table id="tabla-opciones" class="grupo-edit-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Precio adicional</th>
+                                    <th>Eliminar</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="filas-opciones">
+
+                                {% for opcion in opciones %}
+
+                                    <tr>
+
+                                        <td>
+                                            <input
+                                                type="hidden"
+                                                name="opcion_id[]"
+                                                value="{{ opcion.idopcion }}"
+                                            >
+
+                                            <input
+                                                type="text"
+                                                name="opcion_nombre[]"
+                                                class="grupo-edit-input"
+                                                value="{{ opcion.nombre }}"
+                                            >
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                name="opcion_precio[]"
+                                                class="grupo-edit-input"
+                                                value="{{ opcion.precioadicional|default:0 }}"
+                                            >
+                                        </td>
+
+                                        <td style="text-align: center;">
+
+                                            <label class="grupo-delete-option">
+
+                                                <input
+                                                    type="checkbox"
+                                                    name="opcion_eliminar[]"
+                                                    value="{{ opcion.idopcion }}"
+                                                    class="grupo-delete-checkbox"
+                                                >
+
+                                                <span>
+
+                                                    <svg width="15" height="15"
+                                                         viewBox="0 0 24 24"
+                                                         fill="none"
+                                                         stroke="currentColor"
+                                                         stroke-width="2"
+                                                         stroke-linecap="round"
+                                                         stroke-linejoin="round">
+
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6l-1 14H6L5 6"></path>
+                                                        <path d="M10 11v6"></path>
+                                                        <path d="M14 11v6"></path>
+                                                        <path d="M9 6V4h6v2"></path>
+
+                                                    </svg>
+
+                                                    Eliminar
+
+                                                </span>
+
+                                            </label>
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <!-- Agregar opción -->
+                    <button
+                        type="button"
+                        id="btn-agregar-opcion"
+                        class="grupo-add-option"
+                    >
+
+                        <svg width="17" height="17"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+
+                        </svg>
+
+                        Agregar opción
+
+                    </button>
+
+                </div>
+
+                <!-- Acciones -->
+                <div class="grupo-edit-actions">
+
+                    <button
+                        type="submit"
+                        class="grupo-edit-btn grupo-edit-save"
+                    >
+
+                        <svg width="17" height="17"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+
+                        </svg>
+
+                        Guardar cambios
+
+                    </button>
+
+                    <a
+                        href="{% url 'grupo_lista' %}"
+                        class="grupo-edit-btn grupo-edit-cancel"
+                    >
+                        Cancelar
+                    </a>
+
+                </div>
+
+            </form>
+
         </div>
-    </form>
+
+    </div>
+
 </div>
+
 
 <script>
 document.getElementById('btn-agregar-opcion').addEventListener('click', function () {
+
     const tbody = document.getElementById('filas-opciones');
+
     const fila = document.createElement('tr');
-    fila.style.borderBottom = "1px solid #222";
+
     fila.innerHTML = `
-        <td style="padding: 10px;">
-            <input type="hidden" name="opcion_id[]" value="">
-            <input type="text" name="opcion_nombre[]" class="form-control" placeholder="Ej: Sprite" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+        <td style="padding: 10px 12px; border-bottom: 1px solid #252525;">
+
+            <input
+                type="hidden"
+                name="opcion_id[]"
+                value=""
+            >
+
+            <input
+                type="text"
+                name="opcion_nombre[]"
+                class="grupo-edit-input"
+                placeholder="Ej: Sprite"
+            >
+
         </td>
-        <td style="padding: 10px;">
-            <input type="number" step="0.01" name="opcion_precio[]" class="form-control" value="0" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;">
+
+        <td style="padding: 10px 12px; border-bottom: 1px solid #252525;">
+
+            <input
+                type="number"
+                step="0.01"
+                name="opcion_precio[]"
+                class="grupo-edit-input"
+                value="0"
+            >
+
         </td>
-        <td style="padding: 10px; text-align: center;">-</td>
+
+        <td style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #252525;">
+
+            <button
+                type="button"
+                class="grupo-remove-new-option"
+                title="Quitar opción"
+            >
+
+                <svg width="15" height="15"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14H6L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4h6v2"></path>
+
+                </svg>
+
+                Quitar
+
+            </button>
+
+        </td>
     `;
+
     tbody.appendChild(fila);
 });
+
+
+/*
+ * Las opciones nuevas todavía no existen en la base de datos.
+ * Por eso el botón "Quitar" simplemente elimina la fila.
+ */
+document.getElementById('filas-opciones').addEventListener('click', function (event) {
+
+    const boton = event.target.closest('.grupo-remove-new-option');
+
+    if (!boton) {
+        return;
+    }
+
+    const fila = boton.closest('tr');
+
+    if (fila) {
+        fila.remove();
+    }
+
+});
 </script>
+
 {% endblock %}

@@ -1,19 +1,255 @@
-<footer>
-    <h3>{{ negocio.nombre|default:"Zona Burger" }}</h3>
-    
-    <div class="socials" style="margin-top: 15px; display: flex; justify-content: center; gap: 20px; align-items: center;">
-        {% if negocio.telefono %}
-            <a href="https://wa.me/{{ negocio.telefono }}" target="_blank" style="color: #ffcc00; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> WhatsApp
-            </a>
-        {% endif %}
+<footer class="site-footer">
 
-        {% if instagram %}
-            <a href="{{ instagram.enlace }}" target="_blank" style="color: #ffcc00; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fab fa-instagram" style="font-size: 1.2rem;"></i> Instagram
-            </a>
-        {% endif %}
+    <div class="footer-content">
+
+        <div class="footer-text">
+            <span class="footer-kicker">ZONA BURGER</span>
+
+            <h3>Seguinos y enterate de nuestras novedades</h3>
+
+            <p>
+                Promociones, novedades y mucho sabor. Encontranos en nuestras redes.
+            </p>
+        </div>
+
+
+        <div class="footer-socials">
+
+            {% if negocio.telefono %}
+                <a
+                    href="https://wa.me/{{ negocio.telefono }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="footer-social whatsapp"
+                >
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                </a>
+            {% endif %}
+
+            {% if instagram %}
+                <a
+                    href="{{ instagram.enlace }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="footer-social instagram"
+                >
+                    <i class="fab fa-instagram"></i>
+                    <span>Instagram</span>
+                </a>
+            {% endif %}
+
+        </div>
+
     </div>
-    
-    <p style="margin-top: 20px; font-size: 0.8rem; color: #777;">&copy; 2026 {{ negocio.nombre|default:"Zona Burger" }}. Todos los derechos reservados.</p>
+
+
+    <div class="footer-bottom">
+
+        <p>
+            &copy; 2026
+            {{ negocio.nombre|default:"Zona Burger" }}.
+            Todos los derechos reservados.
+        </p>
+
+    </div>
+
 </footer>
+
+
+<style>
+
+    .site-footer {
+        width: 100%;
+        box-sizing: border-box;
+
+        background:
+            linear-gradient(
+                180deg,
+                #0d0d0d 0%,
+                #080808 100%
+            );
+
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+
+        padding: 42px 20px 18px;
+
+        color: #fff;
+    }
+
+
+    /* CONTENIDO */
+
+    .footer-content {
+        width: min(900px, 100%);
+
+        margin: 0 auto;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 35px;
+    }
+
+
+    /* TEXTO */
+
+    .footer-text {
+        text-align: left;
+    }
+
+    .footer-kicker {
+        display: block;
+
+        margin-bottom: 7px;
+
+        color: #d82505;
+
+        font-size: .58rem;
+        font-weight: 900;
+
+        letter-spacing: 2.5px;
+    }
+
+    .footer-text h3 {
+        margin: 0;
+
+        color: #ffffff;
+
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    .footer-text p {
+        margin: 7px 0 0;
+
+        color: #777;
+
+        font-size: .75rem;
+        line-height: 1.5;
+    }
+
+
+    /* ENLACES */
+
+    .footer-socials {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        gap: 10px;
+
+        flex-shrink: 0;
+    }
+
+    .footer-social {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 8px;
+
+        padding: 10px 16px;
+
+        color: #bdbdbd;
+
+        background: #121212;
+
+        border: 1px solid #292929;
+        border-radius: 7px;
+
+        text-decoration: none;
+
+        font-size: .78rem;
+        font-weight: 700;
+
+        transition:
+            color .2s ease,
+            border-color .2s ease,
+            background .2s ease,
+            transform .2s ease;
+    }
+
+    .footer-social i {
+        font-size: 1rem;
+    }
+
+    .footer-social:hover {
+        background: #181818;
+
+        transform: translateY(-2px);
+    }
+
+    .footer-social.whatsapp:hover {
+        color: #25d366;
+        border-color: #25d366;
+    }
+
+    .footer-social.instagram:hover {
+        color: #e1306c;
+        border-color: #e1306c;
+    }
+
+
+    /* COPYRIGHT */
+
+    .footer-bottom {
+        width: min(900px, 100%);
+
+        margin: 28px auto 0;
+        padding-top: 16px;
+
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+        text-align: center;
+    }
+
+    .footer-bottom p {
+        margin: 0;
+
+        color: #555;
+
+        font-size: .7rem;
+    }
+
+
+    /* MÓVIL */
+
+    @media (max-width: 700px) {
+
+        .site-footer {
+            padding: 35px 18px 18px;
+        }
+
+        .footer-content {
+            flex-direction: column;
+
+            text-align: center;
+
+            gap: 22px;
+        }
+
+        .footer-text {
+            text-align: center;
+        }
+
+        .footer-text h3 {
+            font-size: 1rem;
+        }
+
+        .footer-socials {
+            width: 100%;
+        }
+    }
+
+
+    @media (max-width: 400px) {
+
+        .footer-social {
+            flex: 1;
+        }
+
+    }
+
+</style>

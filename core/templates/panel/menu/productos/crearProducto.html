@@ -1,155 +1,797 @@
 {% extends 'panel/base.html' %}
+
 {% block title %}Zona-Burger | Nuevo Producto{% endblock %}
 
 {% block content %}
-<div class="form-container" style="max-width: 850px; background: #181818; padding: 30px; border-radius: 8px; border: 1px solid #333; margin: 0 auto;">
-    <h1 style="margin-bottom: 20px; font-size: 1.6rem; color: #fff;">Nuevo Producto</h1>
-    <p style="color: #888; font-size: 0.9rem; margin-top: -15px; margin-bottom: 25px;">
-        Completá los datos del producto y seleccioná los grupos de opciones y extras disponibles para el cliente.
-    </p>
 
-    {% if errores %}
-        <div style="background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; padding: 12px 16px; border-radius: 6px; margin-bottom: 25px;">
-            <ul style="color: #ff6b6b; margin: 0; padding-left: 20px; font-size: 0.9rem;">
-                {% for error in errores %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
+<style>
+    .producto-create-page {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .producto-create-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 18px;
+        transition: color 0.2s;
+    }
+
+    .producto-create-back:hover {
+        color: #fff;
+    }
+
+    .producto-create-card {
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .producto-create-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 28px;
+        border-bottom: 1px solid #333;
+    }
+
+    .producto-create-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 8px;
+        background: rgba(46, 204, 113, 0.12);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2ecc71;
+        flex-shrink: 0;
+    }
+
+    .producto-create-header-text h1 {
+        margin: 0 0 5px;
+        color: #fff;
+        font-size: 1.4rem;
+    }
+
+    .producto-create-header-text p {
+        margin: 0;
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .producto-create-body {
+        padding: 28px;
+    }
+
+    .producto-errors {
+        background: rgba(255, 71, 87, 0.08);
+        border: 1px solid rgba(255, 71, 87, 0.25);
+        border-radius: 7px;
+        padding: 13px 16px;
+        margin-bottom: 22px;
+        color: #ff6b6b;
+        font-size: 0.88rem;
+    }
+
+    .producto-errors ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .producto-form-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .producto-form-grid-half {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .producto-form-group {
+        min-width: 0;
+    }
+
+    .producto-form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #ccc;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .producto-form-control {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 13px;
+        background: #222;
+        border: 1px solid #444;
+        color: #fff;
+        border-radius: 5px;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .producto-form-control:focus {
+        border-color: #2ecc71;
+        box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.12);
+    }
+
+    .producto-form-control::placeholder {
+        color: #666;
+    }
+
+    textarea.producto-form-control {
+        resize: vertical;
+        min-height: 90px;
+        line-height: 1.5;
+    }
+
+    select.producto-form-control {
+        cursor: pointer;
+    }
+
+    input[type="file"].producto-form-control {
+        padding: 8px;
+    }
+
+    .producto-section {
+        background: #202020;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 22px;
+    }
+
+    .producto-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 8px;
+    }
+
+    .producto-section-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+    }
+
+    .producto-section-title.grupos {
+        color: #3498db;
+    }
+
+    .producto-section-title.extras {
+        color: #f39c12;
+    }
+
+    .producto-section-title svg {
+        flex-shrink: 0;
+    }
+
+    .producto-section-example {
+        color: #777;
+        font-size: 0.78rem;
+        white-space: nowrap;
+    }
+
+    .producto-section-description {
+        color: #aaa;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin: 0 0 16px;
+    }
+
+    .producto-options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 12px;
+    }
+
+    .producto-option-card {
+        background: #181818;
+        border: 1px solid #383838;
+        padding: 13px;
+        border-radius: 6px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+    }
+
+    .producto-option-card:hover {
+        background: #1c1c1c;
+    }
+
+    .producto-option-card.grupo:hover {
+        border-color: #3498db;
+    }
+
+    .producto-option-card.extra:hover {
+        border-color: #f39c12;
+    }
+
+    .producto-option-card input[type="checkbox"] {
+        margin-top: 3px;
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    .producto-option-card.grupo input[type="checkbox"] {
+        accent-color: #3498db;
+    }
+
+    .producto-option-card.extra input[type="checkbox"] {
+        accent-color: #f39c12;
+    }
+
+    .producto-option-content {
+        min-width: 0;
+    }
+
+    .producto-option-name {
+        display: block;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+
+    .producto-option-details {
+        display: block;
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+
+    .producto-option-items {
+        display: block;
+        color: #666;
+        font-size: 0.75rem;
+        margin-top: 5px;
+        line-height: 1.4;
+    }
+
+    .producto-option-price {
+        display: block;
+        color: #2ecc71;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+
+    .producto-empty {
+        color: #777;
+        font-style: italic;
+        font-size: 0.85rem;
+        margin: 0;
+        grid-column: 1 / -1;
+        line-height: 1.5;
+    }
+
+    .producto-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 22px;
+        border-top: 1px solid #333;
+        flex-wrap: wrap;
+    }
+
+    .producto-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .producto-save-btn {
+        background: #2ecc71;
+        border: 1px solid #2ecc71;
+        color: #111;
+    }
+
+    .producto-save-btn:hover {
+        background: #27ae60;
+        border-color: #27ae60;
+    }
+
+    .producto-cancel-btn {
+        background: #333;
+        border: 1px solid #444;
+        color: #fff;
+    }
+
+    .producto-cancel-btn:hover {
+        background: #3d3d3d;
+    }
+
+    @media (max-width: 700px) {
+        .producto-form-grid,
+        .producto-form-grid-half {
+            grid-template-columns: 1fr;
+        }
+
+        .producto-section-header {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 6px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .producto-create-header,
+        .producto-create-body {
+            padding: 20px;
+        }
+
+        .producto-actions {
+            flex-direction: column-reverse;
+        }
+
+        .producto-action-btn {
+            width: 100%;
+        }
+
+        .producto-options-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+
+<div class="producto-create-page">
+
+    <!-- Volver al listado -->
+    <a href="{% url 'producto_lista' %}" class="producto-create-back">
+
+        <svg width="18" height="18"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+
+        </svg>
+
+        Volver a productos
+
+    </a>
+
+
+    <div class="producto-create-card">
+
+        <!-- Encabezado -->
+        <div class="producto-create-header">
+
+            <div class="producto-create-icon">
+
+                <svg width="27" height="27"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                    <rect x="4" y="4" width="16" height="16" rx="3"></rect>
+
+                </svg>
+
+            </div>
+
+            <div class="producto-create-header-text">
+
+                <h1>Nuevo producto</h1>
+
+                <p>
+                    Completá los datos del producto y configurá sus opciones
+                    y extras disponibles.
+                </p>
+
+            </div>
+
         </div>
-    {% endif %}
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
 
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
-            <!-- Nombre -->
-            <div class="form-group">
-                <label for="nombre" style="display: block; margin-bottom: 6px; color: #ccc; font-weight: 500;">
-                    Nombre del Producto *
-                </label>
-                <input type="text" id="nombre" name="nombre" value="{{ datos_previos.nombre|default:'' }}" class="form-control" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;" placeholder="Ej: Hamburguesa Doble Bacon" required>
-            </div>
+        <div class="producto-create-body">
 
-            <!-- Precio -->
-            <div class="form-group">
-                <label for="precio" style="display: block; margin-bottom: 6px; color: #ccc; font-weight: 500;">
-                    Precio Base ($) *
-                </label>
-                <input type="number" id="precio" name="precio" step="0.01" min="0" value="{{ datos_previos.precio|default:'' }}" class="form-control" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;" placeholder="0.00" required>
-            </div>
-        </div>
+            <!-- Errores -->
+            {% if errores %}
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-            <!-- Categoría -->
-            <div class="form-group">
-                <label for="idcategoria" style="display: block; margin-bottom: 6px; color: #ccc; font-weight: 500;">
-                    Categoría *
-                </label>
-                <select id="idcategoria" name="idcategoria" class="form-control" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;">
-                    <option value="">-- Seleccionar categoría --</option>
-                    {% for cat in categorias %}
-                        <option value="{{ cat.idcategoria }}" {% if datos_previos.idcategoria|stringformat:"s" == cat.idcategoria|stringformat:"s" %}selected{% endif %}>
-                            {{ cat.nombre }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+                <div class="producto-errors">
 
-            <!-- Imagen -->
-            <div class="form-group">
-                <label for="imagen" style="display: block; margin-bottom: 6px; color: #ccc; font-weight: 500;">
-                    Imagen del Producto
-                </label>
-                <input type="file" id="imagen" name="imagen" accept="image/*" class="form-control" style="width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;">
-            </div>
-        </div>
+                    <ul>
+                        {% for error in errores %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
 
-        <!-- Descripción -->
-        <div class="form-group" style="margin-bottom: 25px;">
-            <label for="descripcion" style="display: block; margin-bottom: 6px; color: #ccc; font-weight: 500;">
-                Descripción
-            </label>
-            <textarea id="descripcion" name="descripcion" rows="3" class="form-control" style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;" placeholder="Ingredientes, presentación y detalles del producto...">{{ datos_previos.descripcion|default:'' }}</textarea>
-        </div>
+                </div>
 
-        <!-- SECCIÓN 1: RELACIÓN CON GRUPOS DE OPCIONES -->
-        <div style="background: #202020; border: 1px solid #333; border-radius: 6px; padding: 20px; margin-bottom: 25px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="margin: 0; font-size: 1.1rem; color: #3498db;">
-                    ➕ Grupos de Opciones Relacionados
-                </h3>
-                <span style="font-size: 0.8rem; color: #888;">(Ej: Panes, Puntos de cocción, Salsas)</span>
-            </div>
-            <p style="color: #aaa; font-size: 0.85rem; margin-top: 0; margin-bottom: 15px;">
-                Marcá los grupos de opciones que el cliente podrá elegir obligatoria u opcionalmente al comprar este producto:
-            </p>
+            {% endif %}
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;">
-                {% for grupo in grupos %}
-                    <label style="background: #181818; border: 1px solid #383838; padding: 12px; border-radius: 6px; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#383838'">
-                        <input type="checkbox" name="grupos" value="{{ grupo.idgrupo }}" {% if grupo.idgrupo in grupos_seleccionados %}checked{% endif %} style="margin-top: 3px; accent-color: #3498db; width: 18px; height: 18px;">
-                        <div>
-                            <strong style="color: #fff; display: block; font-size: 0.95rem;">{{ grupo.nombre }}</strong>
-                            <small style="color: #888; display: block; font-size: 0.8rem; margin-top: 3px;">
-                                (Mín: {{ grupo.minselecciones|default:0 }} - Máx: {{ grupo.maxselecciones|default:1 }})
-                            </small>
-                            {% with ops=grupo.opcion_set.all %}
-                                {% if ops %}
-                                    <small style="color: #666; display: block; font-size: 0.75rem; margin-top: 4px;">
-                                        {% for op in ops|slice:":3" %}{{ op.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if ops|length > 3 %}...{% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+
+                <!-- Datos principales -->
+                <div class="producto-form-grid">
+
+                    <!-- Nombre -->
+                    <div class="producto-form-group">
+
+                        <label for="nombre">
+                            Nombre del producto *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            value="{{ datos_previos.nombre|default:'' }}"
+                            class="producto-form-control"
+                            placeholder="Ej. Hamburguesa Doble Bacon"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Precio -->
+                    <div class="producto-form-group">
+
+                        <label for="precio">
+                            Precio base ($) *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="precio"
+                            name="precio"
+                            step="0.01"
+                            min="0"
+                            value="{{ datos_previos.precio|default:'' }}"
+                            class="producto-form-control"
+                            placeholder="0.00"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Categoría + Imagen -->
+                <div class="producto-form-grid-half">
+
+                    <!-- Categoría -->
+                    <div class="producto-form-group">
+
+                        <label for="idcategoria">
+                            Categoría *
+                        </label>
+
+                        <select
+                            id="idcategoria"
+                            name="idcategoria"
+                            class="producto-form-control"
+                        >
+
+                            <option value="">
+                                -- Seleccionar categoría --
+                            </option>
+
+                            {% for cat in categorias %}
+
+                                <option
+                                    value="{{ cat.idcategoria }}"
+                                    {% if datos_previos.idcategoria|stringformat:"s" == cat.idcategoria|stringformat:"s" %}selected{% endif %}
+                                >
+                                    {{ cat.nombre }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- Imagen -->
+                    <div class="producto-form-group">
+
+                        <label for="imagen">
+                            Imagen del producto
+                        </label>
+
+                        <input
+                            type="file"
+                            id="imagen"
+                            name="imagen"
+                            accept="image/*"
+                            class="producto-form-control"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Descripción -->
+                <div
+                    class="producto-form-group"
+                    style="margin-bottom: 25px;"
+                >
+
+                    <label for="descripcion">
+                        Descripción
+                    </label>
+
+                    <textarea
+                        id="descripcion"
+                        name="descripcion"
+                        rows="3"
+                        class="producto-form-control"
+                        placeholder="Ingredientes, presentación y detalles del producto..."
+                    >{{ datos_previos.descripcion|default:'' }}</textarea>
+
+                </div>
+
+
+                <!-- SECCIÓN 1: GRUPOS DE OPCIONES -->
+                <div class="producto-section">
+
+                    <div class="producto-section-header">
+
+                        <h3 class="producto-section-title grupos">
+
+                            <svg width="21" height="21"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.41 1.41-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-2v-.49a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.41-1.41.06-.06A1.7 1.7 0 0 0 9.4 15a1.7 1.7 0 0 0-1.56-1.03H7v-2h.84A1.7 1.7 0 0 0 9.4 11a1.7 1.7 0 0 0-.34-1.88L9 9.06l1.41-1.41.06.06A1.7 1.7 0 0 0 12.35 8.05 1.7 1.7 0 0 0 13.38 6.5V6h2v.5a1.7 1.7 0 0 0 1.03 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.41 1.41-.06.06A1.7 1.7 0 0 0 19.4 11c.24.6.82.99 1.47.99H21v2h-.13c-.65 0-1.23.39-1.47 1.01z"></path>
+
+                            </svg>
+
+                            Grupos de opciones relacionados
+
+                        </h3>
+
+                        <span class="producto-section-example">
+                            Ej: Panes, puntos de cocción, salsas
+                        </span>
+
+                    </div>
+
+
+                    <p class="producto-section-description">
+                        Marcá los grupos de opciones que el cliente podrá
+                        elegir obligatoria u opcionalmente al comprar este producto.
+                    </p>
+
+
+                    <div class="producto-options-grid">
+
+                        {% for grupo in grupos %}
+
+                            <label class="producto-option-card grupo">
+
+                                <input
+                                    type="checkbox"
+                                    name="grupos"
+                                    value="{{ grupo.idgrupo }}"
+                                    {% if grupo.idgrupo in grupos_seleccionados %}checked{% endif %}
+                                >
+
+                                <div class="producto-option-content">
+
+                                    <strong class="producto-option-name">
+                                        {{ grupo.nombre }}
+                                    </strong>
+
+                                    <small class="producto-option-details">
+                                        Mín: {{ grupo.minselecciones|default:0 }}
+                                        -
+                                        Máx: {{ grupo.maxselecciones|default:1 }}
                                     </small>
-                                {% endif %}
-                            {% endwith %}
-                        </div>
-                    </label>
-                {% empty %}
-                    <p style="color: #777; font-style: italic; font-size: 0.85rem; grid-column: 1 / -1; margin: 0;">
-                        No hay grupos de opciones creados en el menú. Podés crearlos desde "Menú > Grupos de Opciones".
+
+                                    {% with ops=grupo.opcion_set.all %}
+
+                                        {% if ops %}
+
+                                            <small class="producto-option-items">
+
+                                                {% for op in ops|slice:":3" %}
+                                                    {{ op.nombre }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+
+                                                {% if ops|length > 3 %}
+                                                    ...
+                                                {% endif %}
+
+                                            </small>
+
+                                        {% endif %}
+
+                                    {% endwith %}
+
+                                </div>
+
+                            </label>
+
+                        {% empty %}
+
+                            <p class="producto-empty">
+                                No hay grupos de opciones creados en el menú.
+                                Podés crearlos desde "Menú &gt; Grupos de Opciones".
+                            </p>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- SECCIÓN 2: EXTRAS -->
+                <div class="producto-section">
+
+                    <div class="producto-section-header">
+
+                        <h3 class="producto-section-title extras">
+
+                            <svg width="21" height="21"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+
+                                <path d="M12 3v18"></path>
+                                <path d="M3 12h18"></path>
+                                <circle cx="12" cy="12" r="8"></circle>
+
+                            </svg>
+
+                            Extras disponibles para este producto
+
+                        </h3>
+
+                        <span class="producto-section-example">
+                            Ej: Cheddar extra, bacon extra, huevo
+                        </span>
+
+                    </div>
+
+
+                    <p class="producto-section-description">
+                        Marcá los extras que el cliente podrá agregar al producto
+                        con su correspondiente costo adicional.
                     </p>
-                {% endfor %}
-            </div>
+
+
+                    <div class="producto-options-grid">
+
+                        {% for extra in extras %}
+
+                            <label class="producto-option-card extra">
+
+                                <input
+                                    type="checkbox"
+                                    name="extras"
+                                    value="{{ extra.idextra }}"
+                                    {% if extra.idextra in extras_seleccionados %}checked{% endif %}
+                                >
+
+                                <div class="producto-option-content">
+
+                                    <strong class="producto-option-name">
+                                        {{ extra.nombre }}
+                                    </strong>
+
+                                    <span class="producto-option-price">
+                                        +${{ extra.precio }}
+                                    </span>
+
+                                </div>
+
+                            </label>
+
+                        {% empty %}
+
+                            <p class="producto-empty">
+                                No hay extras creados en el menú.
+                                Podés crearlos desde "Menú &gt; Extras".
+                            </p>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- Acciones -->
+                <div class="producto-actions">
+
+                    <a
+                        href="{% url 'producto_lista' %}"
+                        class="producto-action-btn producto-cancel-btn"
+                    >
+                        Cancelar
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="producto-action-btn producto-save-btn"
+                    >
+
+                        <svg width="17" height="17"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M12 5v14"></path>
+                            <path d="M5 12h14"></path>
+
+                        </svg>
+
+                        Guardar producto
+
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
 
-        <!-- SECCIÓN 2: RELACIÓN CON EXTRAS -->
-        <div style="background: #202020; border: 1px solid #333; border-radius: 6px; padding: 20px; margin-bottom: 25px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="margin: 0; font-size: 1.1rem; color: #f39c12;">
-                    🥓 Extras Disponibles para este Producto
-                </h3>
-                <span style="font-size: 0.8rem; color: #888;">(Ej: Cheddar extra, Bacon extra, Huevo)</span>
-            </div>
-            <p style="color: #aaa; font-size: 0.85rem; margin-top: 0; margin-bottom: 15px;">
-                Marcá los extras que el cliente podrá agregar al producto con su correspondiente costo adicional:
-            </p>
+    </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;">
-                {% for extra in extras %}
-                    <label style="background: #181818; border: 1px solid #383838; padding: 12px; border-radius: 6px; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#f39c12'" onmouseout="this.style.borderColor='#383838'">
-                        <input type="checkbox" name="extras" value="{{ extra.idextra }}" {% if extra.idextra in extras_seleccionados %}checked{% endif %} style="margin-top: 3px; accent-color: #f39c12; width: 18px; height: 18px;">
-                        <div>
-                            <strong style="color: #fff; display: block; font-size: 0.95rem;">{{ extra.nombre }}</strong>
-                            <span style="color: #00d26a; font-weight: 600; font-size: 0.85rem; display: block; margin-top: 3px;">
-                                +${{ extra.precio }}
-                            </span>
-                        </div>
-                    </label>
-                {% empty %}
-                    <p style="color: #777; font-style: italic; font-size: 0.85rem; grid-column: 1 / -1; margin: 0;">
-                        No hay extras creados en el menú. Podés crearlos desde "Menú > Extras".
-                    </p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Botones de Acción -->
-        <div style="display: flex; gap: 15px; margin-top: 30px;">
-            <button type="submit" class="btn btn-primary" style="padding: 12px 26px; background: #00d26a; border: none; color: #000; font-weight: 700; font-size: 1rem; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
-                Guardar Producto
-            </button>
-            <a href="{% url 'producto_lista' %}" class="btn" style="padding: 12px 22px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;">
-                Cancelar
-            </a>
-        </div>
-    </form>
 </div>
+
 {% endblock %}

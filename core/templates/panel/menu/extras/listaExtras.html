@@ -5,63 +5,83 @@
 {% block content %}
 
 <style>
-    /* =========================================================
-       ENCABEZADO
-       ========================================================= */
+    .extras-page {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .extras-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 22px;
+        padding: 7px 11px;
+        border: 1px solid #303030;
+        border-radius: 8px;
+        background: #191919;
+        color: #929292;
+        text-decoration: none;
+        font-size: .84rem;
+        transition: .2s ease;
+    }
+
+    .extras-back:hover {
+        color: #00d26a;
+        border-color: rgba(0,210,106,.35);
+    }
 
     .extras-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        gap: 15px;
+        align-items: flex-end;
+        gap: 20px;
         margin-bottom: 25px;
     }
 
-    .extras-header-info h1 {
+    .extras-header h1 {
         margin: 0;
         color: #fff;
-        font-size: 1.8rem;
-        font-weight: 600;
+        font-size: 2rem;
+        font-weight: 700;
     }
 
-    .extras-header-info p {
-        margin: 5px 0 0;
-        color: #888;
-        font-size: 0.9rem;
-        line-height: 1.4;
+    .extras-header p {
+        margin: 7px 0 0;
+        max-width: 700px;
+        color: #858585;
+        font-size: .9rem;
+        line-height: 1.5;
     }
 
-    .btn-nuevo-extra {
+    .btn-extra-nuevo {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-
-        min-height: 40px;
-        padding: 10px 18px;
-        box-sizing: border-box;
-
+        gap: 8px;
+        padding: 11px 17px;
+        border-radius: 9px;
         background: #00d26a;
-        color: #000;
-
         border: 1px solid #00d26a;
-        border-radius: 6px;
-
+        color: #06150d;
         text-decoration: none;
-        font-size: 0.95rem;
-        font-weight: 600;
-
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-
-        transition:
-            background 0.2s ease,
-            transform 0.2s ease;
+        font-size: .88rem;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: .2s ease;
     }
 
-    .btn-nuevo-extra:hover {
+    .btn-extra-nuevo:hover {
         background: #00e879;
         transform: translateY(-1px);
     }
 
+    .btn-extra-nuevo svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+    }
 
     /* =========================================================
        MENSAJES
@@ -72,262 +92,269 @@
     }
 
     .extras-message {
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin-bottom: 10px;
-        font-size: 0.9rem;
-        line-height: 1.4;
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        border-radius: 9px;
+        font-size: .85rem;
     }
 
     .extras-message-success {
-        background: rgba(0, 210, 106, 0.15);
-        border: 1px solid #00d26a;
         color: #00d26a;
+        background: rgba(0,210,106,.08);
+        border: 1px solid rgba(0,210,106,.25);
     }
 
     .extras-message-error {
-        background: rgba(255, 107, 107, 0.15);
-        border: 1px solid #ff6b6b;
         color: #ff6b6b;
+        background: rgba(255,107,107,.08);
+        border: 1px solid rgba(255,107,107,.25);
     }
 
+    /* =========================================================
+       RESUMEN
+       ========================================================= */
+
+    .extras-summary {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        color: #777;
+        font-size: .78rem;
+    }
+
+    .extras-summary-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #00d26a;
+        box-shadow: 0 0 8px rgba(0,210,106,.4);
+    }
 
     /* =========================================================
        TABLA
        ========================================================= */
 
-    .extras-table-container {
-        width: 100%;
-        background: #181818;
-        border: 1px solid #333;
-        border-radius: 8px;
+    .extras-card {
+        background: #161616;
+        border: 1px solid #303030;
+        border-radius: 12px;
         overflow: hidden;
+        box-shadow: 0 8px 28px rgba(0,0,0,.13);
+    }
+
+    .extras-table-scroll {
+        overflow-x: auto;
     }
 
     .extras-table {
         width: 100%;
+        min-width: 800px;
         border-collapse: collapse;
-        text-align: left;
     }
 
-    .extras-table thead tr {
-        background: #222;
-        border-bottom: 2px solid #333;
-        color: #aaa;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    .extras-table thead {
+        background: #1e1e1e;
     }
 
     .extras-table th {
-        padding: 14px 16px;
-        font-weight: 600;
-    }
-
-    .extras-table tbody tr {
-        border-bottom: 1px solid #252525;
-        transition: background 0.2s ease;
-    }
-
-    .extras-table tbody tr:last-child {
-        border-bottom: none;
-    }
-
-    .extras-table tbody tr:hover {
-        background: #1f1f1f;
+        padding: 13px 16px;
+        color: #777;
+        font-size: .7rem;
+        font-weight: 700;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: .65px;
+        border-bottom: 1px solid #303030;
     }
 
     .extras-table td {
-        padding: 14px 16px;
+        padding: 15px 16px;
+        border-bottom: 1px solid #242424;
+        vertical-align: middle;
     }
 
+    .extras-table tbody tr {
+        transition: background .18s ease;
+    }
 
-    /* =========================================================
-       DATOS DEL EXTRA
-       ========================================================= */
+    .extras-table tbody tr:hover {
+        background: #1b1b1b;
+    }
+
+    .extras-table tbody tr:last-child td {
+        border-bottom: none;
+    }
 
     .extra-id {
-        color: #888;
-        font-weight: 500;
-        white-space: nowrap;
+        color: #555;
+        font-size: .75rem;
+    }
+
+    .extra-nombre-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+    }
+
+    .extra-icon {
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: rgba(243,156,18,.08);
+        border: 1px solid rgba(243,156,18,.22);
+        color: #f3a33b;
+    }
+
+    .extra-icon svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
     }
 
     .extra-nombre {
         color: #fff;
-        font-weight: 600;
+        font-size: .88rem;
+        font-weight: 700;
         overflow-wrap: anywhere;
     }
 
     .extra-precio {
         color: #00d26a;
-        font-weight: 600;
-        font-size: 1rem;
+        font-size: 1.05rem;
+        font-weight: 800;
         white-space: nowrap;
-    }
-
-    .extra-productos {
-        color: #bbb;
-        font-size: 0.9rem;
     }
 
     .extra-productos-badge {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 7px;
+        padding: 6px 10px;
+        border-radius: 20px;
+        background: rgba(52,152,219,.08);
+        border: 1px solid rgba(52,152,219,.2);
+        color: #5dade2;
+        font-size: .72rem;
+        white-space: nowrap;
+    }
 
-        max-width: 100%;
-        box-sizing: border-box;
-
-        background: #2a2a2a;
-        color: #f1c40f;
-
-        padding: 4px 10px;
-        border-radius: 12px;
-
-        font-size: 0.8rem;
-
-        border: 1px solid #444;
-
-        overflow-wrap: anywhere;
+    .extra-productos-badge svg {
+        width: 14px;
+        height: 14px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
     }
 
     .extra-sin-asignar {
-        color: #666;
+        color: #555;
+        font-size: .75rem;
         font-style: italic;
     }
-
-
-    /* =========================================================
-       ACCIONES
-       ========================================================= */
 
     .extra-acciones {
         text-align: right;
         white-space: nowrap;
     }
 
-    .btn-extra-accion {
+    .extra-actions-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+    }
+
+    .btn-extra {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-
+        gap: 6px;
         min-height: 34px;
-        padding: 6px 12px;
-        box-sizing: border-box;
-
-        background: #2b2b2b;
-        border: 1px solid #444;
-        border-radius: 4px;
-
+        padding: 6px 10px;
+        border-radius: 7px;
+        background: #222;
+        border: 1px solid #383838;
         text-decoration: none;
-        font-size: 0.85rem;
-        font-weight: 600;
-
-        transition:
-            background 0.2s ease,
-            border-color 0.2s ease,
-            transform 0.2s ease;
+        font-size: .75rem;
+        font-weight: 700;
+        transition: .2s ease;
     }
 
-    .btn-extra-accion:hover {
-        background: #333;
+    .btn-extra:hover {
+        background: #2a2a2a;
         transform: translateY(-1px);
     }
 
-    .btn-extra-editar {
-        color: #3498db;
-        margin-right: 6px;
+    .btn-extra svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
     }
 
-    .btn-extra-eliminar {
+    .btn-extra-edit {
+        color: #5dade2;
+    }
+
+    .btn-extra-delete {
         color: #ff6b6b;
     }
 
-
-    /* =========================================================
-       ESTADO VACÍO
-       ========================================================= */
-
     .extras-empty {
-        padding: 35px !important;
+        padding: 55px 20px !important;
         text-align: center;
-        color: #777;
-        font-style: italic;
-        line-height: 1.5;
+        color: #666;
+        font-size: .85rem;
     }
 
-
     /* =========================================================
-       TABLET
+       RESPONSIVE
        ========================================================= */
 
-    @media (max-width: 850px) {
-
+    @media (max-width: 800px) {
         .extras-header {
-            align-items: flex-start;
+            align-items: stretch;
+            flex-direction: column;
         }
 
-        .extras-header-info h1 {
-            font-size: 1.6rem;
+        .btn-extra-nuevo {
+            justify-content: center;
         }
-
-        .extras-table th,
-        .extras-table td {
-            padding: 12px;
-        }
-
     }
-
-
-    /* =========================================================
-       MOBILE
-       La tabla se convierte en tarjetas.
-       ========================================================= */
 
     @media (max-width: 700px) {
 
-        .extras-header {
-            flex-direction: column;
-            align-items: stretch;
-            width: 100%;
-            margin-bottom: 18px;
+        .extras-header h1 {
+            font-size: 1.6rem;
         }
 
-        .extras-header-info {
-            width: 100%;
-        }
-
-        .extras-header-info h1 {
-            font-size: 1.45rem;
-        }
-
-        .extras-header-info p {
-            font-size: 0.82rem;
-        }
-
-        .btn-nuevo-extra {
-            width: 100%;
-            min-height: 42px;
-        }
-
-
-        /* Contenedor */
-
-        .extras-table-container {
-            width: 100%;
+        .extras-card {
             background: transparent;
             border: none;
-            overflow: visible !important;
+            box-shadow: none;
+            overflow: visible;
         }
 
-
-        /* Tabla */
+        .extras-table-scroll {
+            overflow: visible;
+        }
 
         .extras-table {
             display: block;
-            width: 100% !important;
-            min-width: 0 !important;
-            table-layout: auto;
+            min-width: 0;
         }
 
         .extras-table thead {
@@ -336,399 +363,270 @@
 
         .extras-table tbody {
             display: block;
-            width: 100%;
         }
-
-
-        /* Cada fila pasa a ser una tarjeta */
 
         .extras-table tbody tr {
             display: block;
-
-            width: 100% !important;
-            min-width: 0 !important;
-
-            margin: 0 0 12px;
-            padding: 12px;
-
-            box-sizing: border-box;
-
-            background: #181818;
-
-            border: 1px solid #303030 !important;
-            border-radius: 10px;
-
-            overflow: visible;
+            margin-bottom: 12px;
+            padding: 8px 10px;
+            background: #161616;
+            border: 1px solid #303030;
+            border-radius: 11px;
         }
-
-        .extras-table tbody tr:hover {
-            background: #1b1b1b;
-        }
-
-
-        /* Celdas */
 
         .extras-table tbody td {
-            display: block;
-
-            width: 100% !important;
-            min-width: 0 !important;
-            max-width: none !important;
-
-            box-sizing: border-box;
-
-            padding: 10px 2px;
-
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 11px 4px;
             border-bottom: 1px solid #292929;
+        }
 
-            overflow: visible;
-            white-space: normal;
+        .extras-table tbody td::before {
+            content: attr(data-label);
+            flex-shrink: 0;
+            color: #5f5f5f;
+            font-size: .64rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
         }
 
         .extras-table tbody td:last-child {
             border-bottom: none;
-            padding-bottom: 2px;
         }
 
-
-        /* ID */
-
-        .extras-table tbody td:first-child {
-            padding-top: 2px;
+        .extra-nombre-wrapper {
+            justify-content: flex-end;
+            min-width: 0;
         }
-
-        .extra-id {
-            display: block;
-            width: 100%;
-            font-size: 0.78rem;
-        }
-
-
-        /* Nombre */
 
         .extra-nombre {
-            display: block;
-            width: 100%;
-
-            font-size: 1.05rem;
-            line-height: 1.4;
-
-            overflow-wrap: anywhere;
-            word-break: break-word;
+            text-align: right;
         }
 
-
-        /* Precio */
-
-        .extra-precio {
-            display: block;
+        .extra-actions-wrapper {
             width: 100%;
-
-            font-size: 1.1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
         }
 
-
-        /* Productos asociados */
-
-        .extra-productos {
+        .btn-extra {
             width: 100%;
         }
-
-        .extra-productos-badge {
-            max-width: 100%;
-            white-space: normal;
-            line-height: 1.35;
-            overflow-wrap: anywhere;
-        }
-
-
-        /* Acciones */
 
         .extra-acciones {
-            display: grid !important;
-
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-
-            width: 100% !important;
-
-            gap: 7px;
-
-            padding-top: 10px !important;
-            padding-bottom: 2px !important;
-
-            box-sizing: border-box;
-
-            text-align: initial !important;
-        }
-
-        .btn-extra-accion {
-            width: 100%;
-            min-width: 0;
-
-            min-height: 40px;
-
-            margin: 0 !important;
-            padding: 7px 8px;
-
-            box-sizing: border-box;
-
-            white-space: normal;
-            text-align: center;
-        }
-
-
-        /* Fila vacía */
-
-        .extras-table tbody tr:has(.extras-empty) {
-            display: block;
-            width: 100% !important;
-
-            padding: 0;
-
-            background: #181818;
-        }
-
-        .extras-empty {
-            display: block !important;
-
-            width: 100% !important;
-
-            box-sizing: border-box;
-
-            padding: 25px 15px !important;
-
-            white-space: normal;
-            overflow-wrap: anywhere;
+            flex-direction: column;
+            align-items: stretch !important;
         }
     }
 
-
-    /* =========================================================
-       MOBILE CHICO
-       ========================================================= */
-
     @media (max-width: 430px) {
 
-        .extras-header-info h1 {
-            font-size: 1.35rem;
+        .extras-table tbody td {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 7px;
         }
 
-        .extras-header-info p {
-            font-size: 0.8rem;
-            line-height: 1.45;
+        .extras-table tbody td::before {
+            order: 0;
         }
 
-        .btn-nuevo-extra {
-            width: 100%;
+        .extra-nombre-wrapper {
+            justify-content: flex-start;
         }
 
         .extra-nombre {
-            font-size: 1rem;
+            text-align: left;
         }
 
-        .extra-productos-badge {
-            font-size: 0.75rem;
-            padding: 4px 7px;
-        }
-
-        .extra-acciones {
+        .extra-actions-wrapper {
             grid-template-columns: 1fr;
-        }
-
-        .btn-extra-accion {
-            min-height: 40px;
         }
     }
 </style>
 
+<div class="extras-page">
 
-<!-- =========================================================
-     ENCABEZADO
-     ========================================================= -->
+    <a href="{% url 'menu_panel' %}" class="extras-back">
+        ← Volver al inicio
+    </a>
 
-<div class="extras-header">
+    <div class="extras-header">
 
-    <div class="extras-header-info">
+        <div>
+            <h1>Extras</h1>
 
-        <h1>
-            Extras
-        </h1>
+            <p>
+                Administrá los adicionales que tus clientes pueden
+                agregar a sus productos.
+            </p>
+        </div>
 
-        <p>
-            Gestioná los extras y adicionales del menú: creá, editá precios y asignalos a los productos.
-        </p>
+        <a href="{% url 'extra_crear' %}" class="btn-extra-nuevo">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 5v14"/>
+                <path d="M5 12h14"/>
+            </svg>
+            Nuevo extra
+        </a>
 
     </div>
 
+    {% if messages %}
 
-    <a
-        href="{% url 'extra_crear' %}"
-        class="btn-nuevo-extra"
-    >
-        + Nuevo extra
-    </a>
+        <div class="extras-messages">
 
-</div>
+            {% for message in messages %}
 
-
-<!-- =========================================================
-     MENSAJES
-     ========================================================= -->
-
-{% if messages %}
-
-<div class="extras-messages">
-
-    {% for message in messages %}
-
-        <div
-            class="
-                extras-message
-                {% if message.tags == 'success' %}
-                    extras-message-success
-                {% else %}
-                    extras-message-error
-                {% endif %}
-            "
-        >
-            {{ message }}
-        </div>
-
-    {% endfor %}
-
-</div>
-
-{% endif %}
-
-
-<!-- =========================================================
-     TABLA / TARJETAS DE EXTRAS
-     ========================================================= -->
-
-<div class="extras-table-container">
-
-    <table class="extras-table">
-
-        <thead>
-
-            <tr>
-
-                <th>
-                    ID
-                </th>
-
-                <th>
-                    Nombre del Extra
-                </th>
-
-                <th>
-                    Precio Adicional
-                </th>
-
-                <th>
-                    Productos Asociados
-                </th>
-
-                <th style="text-align: right;">
-                    Acciones
-                </th>
-
-            </tr>
-
-        </thead>
-
-
-        <tbody>
-
-            {% for item in extras_con_conteo %}
-
-            <tr>
-
-                <!-- ID -->
-
-                <td class="extra-id">
-                    #{{ item.extra.idextra }}
-                </td>
-
-
-                <!-- Nombre -->
-
-                <td class="extra-nombre">
-                    🥓 {{ item.extra.nombre }}
-                </td>
-
-
-                <!-- Precio -->
-
-                <td class="extra-precio">
-                    ${{ item.extra.precio }}
-                </td>
-
-
-                <!-- Productos asociados -->
-
-                <td class="extra-productos">
-
-                    {% if item.cant_productos > 0 %}
-
-                        <span class="extra-productos-badge">
-                            🍔
-                            {{ item.cant_productos }}
-                            producto{{ item.cant_productos|pluralize }}
-                        </span>
-
-                    {% else %}
-
-                        <span class="extra-sin-asignar">
-                            Sin asignar
-                        </span>
-
-                    {% endif %}
-
-                </td>
-
-
-                <!-- Acciones -->
-
-                <td class="extra-acciones">
-
-                    <a
-                        href="{% url 'extra_editar' item.extra.idextra %}"
-                        class="btn-extra-accion btn-extra-editar"
-                    >
-                        ✏️ Editar
-                    </a>
-
-                    <a
-                        href="{% url 'extra_eliminar' item.extra.idextra %}"
-                        class="btn-extra-accion btn-extra-eliminar"
-                    >
-                        🗑️ Eliminar
-                    </a>
-
-                </td>
-
-            </tr>
-
-            {% empty %}
-
-            <tr>
-
-                <td
-                    colspan="5"
-                    class="extras-empty"
-                >
-                    No hay extras registrados actualmente.
-                    ¡Hacé clic en "+ Nuevo extra" para comenzar!
-                </td>
-
-            </tr>
+                <div class="extras-message {% if message.tags == 'success' %}extras-message-success{% else %}extras-message-error{% endif %}">
+                    {{ message }}
+                </div>
 
             {% endfor %}
 
-        </tbody>
+        </div>
 
-    </table>
+    {% endif %}
+
+    <div class="extras-summary">
+        <span class="extras-summary-dot"></span>
+        Extras disponibles para el menú
+    </div>
+
+    <div class="extras-card">
+
+        <div class="extras-table-scroll">
+
+            <table class="extras-table">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Extra</th>
+                        <th>Precio</th>
+                        <th>Productos asociados</th>
+                        <th style="text-align:right;">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item in extras_con_conteo %}
+
+                    <tr>
+
+                        <td class="extra-id" data-label="ID">
+                            #{{ item.extra.idextra }}
+                        </td>
+
+                        <td data-label="Extra">
+
+                            <div class="extra-nombre-wrapper">
+
+                                <div class="extra-icon">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M4 12c0-4 3-7 8-7s8 3 8 7"/>
+                                        <path d="M4 12c0 4 3 7 8 7s8-3 8-7"/>
+                                        <path d="M8 9h.01"/>
+                                        <path d="M16 15h.01"/>
+                                    </svg>
+                                </div>
+
+                                <span class="extra-nombre">
+                                    {{ item.extra.nombre }}
+                                </span>
+
+                            </div>
+
+                        </td>
+
+                        <td class="extra-precio" data-label="Precio">
+                            ${{ item.extra.precio }}
+                        </td>
+
+                        <td data-label="Productos">
+
+                            {% if item.cant_productos > 0 %}
+
+                                <span class="extra-productos-badge">
+
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M5 20h14"/>
+                                        <path d="M6 20V9l6-5 6 5v11"/>
+                                        <path d="M9 20v-5h6v5"/>
+                                    </svg>
+
+                                    {{ item.cant_productos }}
+                                    producto{{ item.cant_productos|pluralize }}
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="extra-sin-asignar">
+                                    Sin asignar
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td class="extra-acciones" data-label="Acciones">
+
+                            <div class="extra-actions-wrapper">
+
+                                <a
+                                    href="{% url 'extra_editar' item.extra.idextra %}"
+                                    class="btn-extra btn-extra-edit"
+                                >
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M12 20h9"/>
+                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                                    </svg>
+                                    Editar
+                                </a>
+
+                                <a
+                                    href="{% url 'extra_eliminar' item.extra.idextra %}"
+                                    class="btn-extra btn-extra-delete"
+                                >
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M3 6h18"/>
+                                        <path d="M8 6V4h8v2"/>
+                                        <path d="M19 6l-1 14H6L5 6"/>
+                                        <path d="M10 11v5"/>
+                                        <path d="M14 11v5"/>
+                                    </svg>
+                                    Eliminar
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="5" class="extras-empty">
+                            No hay extras registrados actualmente.
+                            Creá el primero para comenzar.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
 
 </div>
 

@@ -1,0 +1,1850 @@
+{% load static l10n %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ producto.nombre }} - {{ negocio.nombre|default:"Zona Burger" }}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/Index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/productos/detalleProducto.css' %}">
+
+    <style>
+
+        /* =========================================================
+           BASE
+           ========================================================= */
+
+        :root {
+            --zb-rojo: #d82505;
+            --zb-rojo-claro: #f03816;
+            --zb-rojo-hover: #ff5635;
+            --zb-rojo-oscuro: #9e1c06;
+
+            --zb-negro: #070707;
+            --zb-fondo: #0b0b0b;
+            --zb-card: #111111;
+            --zb-card-2: #151515;
+
+            --zb-borde: rgba(255,255,255,.08);
+            --zb-borde-fuerte: rgba(255,255,255,.12);
+
+            --zb-texto: #ffffff;
+            --zb-texto-suave: #b8b8b8;
+            --zb-texto-muted: #777;
+
+            --zb-verde: #2ecc71;
+            --zb-rojo-error: #ff4757;
+        }
+
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            background:
+                radial-gradient(circle at top center, rgba(216,37,5,.055), transparent 420px),
+                var(--zb-negro);
+            color: var(--zb-texto);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+
+        /* =========================================================
+           CONTENEDOR PRINCIPAL
+           ========================================================= */
+
+        .menu-container {
+            width: min(760px, calc(100% - 30px));
+            margin: 0 auto;
+            padding: 34px 0 70px;
+        }
+
+
+        /* =========================================================
+           CABECERA DE DETALLE
+           ========================================================= */
+
+        .detalle-header-links {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+
+        .detalle-header-links .detalle-titulo {
+            position: relative;
+            margin: 0 !important;
+            padding-left: 14px;
+            color: #fff;
+            font-size: 1.55rem !important;
+            font-weight: 900;
+            letter-spacing: -.5px;
+        }
+
+
+        .detalle-header-links .detalle-titulo::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 4px;
+            bottom: 4px;
+            width: 4px;
+            border-radius: 4px;
+            background: linear-gradient(
+                180deg,
+                var(--zb-rojo-hover),
+                var(--zb-rojo-oscuro)
+            );
+        }
+
+
+        .btn-volver {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            min-height: 40px;
+            padding: 0 15px;
+
+            color: #bdbdbd;
+            background: #111;
+            border: 1px solid #292929;
+            border-radius: 7px;
+
+            text-decoration: none;
+
+            font-size: .72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+
+            transition:
+                color .2s ease,
+                border-color .2s ease,
+                background .2s ease,
+                transform .2s ease;
+        }
+
+
+        .btn-volver i {
+            color: var(--zb-rojo);
+            transition: color .2s ease;
+        }
+
+
+        .btn-volver:hover {
+            color: #fff;
+            background: #171717;
+            border-color: rgba(216,37,5,.55);
+            transform: translateY(-1px);
+        }
+
+
+        .btn-volver:hover i {
+            color: var(--zb-rojo-hover);
+        }
+
+
+        /* =========================================================
+           TARJETA DEL PRODUCTO
+           ========================================================= */
+
+        .producto-card {
+            position: relative;
+            overflow: hidden;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(255,255,255,.025),
+                    rgba(255,255,255,0) 180px
+                ),
+                #101010;
+
+            border: 1px solid var(--zb-borde);
+            border-radius: 14px;
+
+            padding: 22px;
+
+            box-shadow:
+                0 18px 50px rgba(0,0,0,.42),
+                0 0 0 1px rgba(255,255,255,.015);
+
+            isolation: isolate;
+        }
+
+
+        .producto-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+
+            background: linear-gradient(
+                90deg,
+                var(--zb-rojo-oscuro),
+                var(--zb-rojo),
+                var(--zb-rojo-hover),
+                var(--zb-rojo)
+            );
+
+            z-index: 2;
+        }
+
+
+        /* =========================================================
+           IMAGEN
+           ========================================================= */
+
+        .detalle-imagen {
+            display: block;
+
+            width: 100%;
+            height: 300px;
+
+            object-fit: cover;
+
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,.07);
+
+            background: #181818;
+
+            box-shadow:
+                0 12px 30px rgba(0,0,0,.35);
+
+            margin-bottom: 20px;
+        }
+
+
+        .producto-imagen-placeholder {
+            width: 100%;
+            height: 300px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin-bottom: 20px;
+
+            border-radius: 10px;
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    rgba(216,37,5,.14),
+                    transparent 55%
+                ),
+                #181818;
+
+            border: 1px solid rgba(255,255,255,.07);
+
+            font-size: 5rem;
+        }
+
+
+        /* =========================================================
+           INFORMACIÓN DEL PRODUCTO
+           ========================================================= */
+
+        .producto-card > .detalle-titulo {
+            margin: 0 0 8px;
+
+            color: #fff;
+
+            font-size: 1.65rem;
+            line-height: 1.2;
+            font-weight: 900;
+
+            letter-spacing: -.5px;
+        }
+
+
+        .detalle-descripcion {
+            margin: 0 0 14px;
+
+            color: #999;
+
+            font-size: .84rem;
+            line-height: 1.65;
+        }
+
+
+        .detalle-precio-base {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 2px;
+
+            margin-top: 4px;
+
+            color: var(--zb-rojo-hover);
+
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: -.5px;
+        }
+
+
+        .detalle-precio-base::before {
+            content: "";
+        }
+
+
+        .detalle-divider {
+            height: 1px;
+            border: 0;
+
+            margin: 22px 0;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(216,37,5,.65),
+                    rgba(255,255,255,.08),
+                    transparent
+                );
+        }
+
+
+        /* =========================================================
+           GRUPOS DE OPCIONES
+           ========================================================= */
+
+        .grupo-opcion-seccion {
+            position: relative;
+
+            margin-bottom: 18px;
+            padding: 18px;
+
+            background: #141414;
+
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 10px;
+
+            transition:
+                border-color .25s ease,
+                background .25s ease,
+                box-shadow .25s ease;
+
+            scroll-margin-top: 110px;
+        }
+
+
+        .grupo-opcion-seccion:hover {
+            border-color: rgba(255,255,255,.11);
+            background: #161616;
+        }
+
+
+        .grupo-titulo {
+            margin: 0;
+
+            color: #fff;
+
+            font-size: .98rem;
+            font-weight: 900;
+
+            letter-spacing: .2px;
+        }
+
+
+        .grupo-estado {
+            margin: 6px 0 14px;
+
+            color: #777;
+
+            font-size: .73rem;
+            line-height: 1.5;
+        }
+
+
+        .grupo-obligatorio {
+            color: #ff7063;
+            font-weight: 700;
+        }
+
+
+        .grupo-obligatorio i {
+            margin-right: 3px;
+        }
+
+
+        /* =========================================================
+           LISTA DE OPCIONES
+           ========================================================= */
+
+        .opciones-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+
+        .opcion-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            min-height: 49px;
+            padding: 8px 10px;
+
+            background: #0e0e0e;
+
+            border: 1px solid rgba(255,255,255,.055);
+            border-radius: 7px;
+
+            transition:
+                background .18s ease,
+                border-color .18s ease,
+                transform .18s ease;
+        }
+
+
+        .opcion-item:hover {
+            background: #171717;
+            border-color: rgba(216,37,5,.28);
+            transform: translateX(2px);
+        }
+
+
+        .opcion-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            flex: 1;
+            min-width: 0;
+
+            color: #ddd;
+
+            cursor: pointer;
+
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+
+        .opcion-label span {
+            overflow-wrap: anywhere;
+        }
+
+
+        /* =========================================================
+           RADIO / CHECKBOX
+           ========================================================= */
+
+        .opcion-input {
+            flex: 0 0 auto;
+
+            width: 18px;
+            height: 18px;
+
+            margin: 0;
+
+            accent-color: var(--zb-rojo);
+
+            cursor: pointer;
+        }
+
+
+        .opcion-input:focus-visible {
+            outline: 2px solid rgba(240,56,22,.65);
+            outline-offset: 3px;
+        }
+
+
+        .opcion-precio-extra {
+            flex-shrink: 0;
+
+            color: var(--zb-rojo-hover);
+
+            font-size: .72rem;
+            font-weight: 800;
+
+            white-space: nowrap;
+        }
+
+
+        /* =========================================================
+           CANTIDAD DE EXTRAS
+           ========================================================= */
+
+        .cantidad-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+
+            flex-shrink: 0;
+
+            margin-left: 4px;
+        }
+
+
+        .cantidad-label {
+            color: #777;
+            font-size: .65rem;
+            font-weight: 700;
+        }
+
+
+        .cantidad-extra {
+            width: 52px;
+            height: 32px;
+
+            padding: 4px 6px;
+
+            color: #fff;
+            background: #181818;
+
+            border: 1px solid #363636;
+            border-radius: 5px;
+
+            text-align: center;
+
+            font-family: 'Montserrat', sans-serif;
+            font-size: .75rem;
+            font-weight: 700;
+
+            transition:
+                border-color .2s ease,
+                box-shadow .2s ease;
+        }
+
+
+        .cantidad-extra:focus {
+            outline: none;
+            border-color: var(--zb-rojo);
+            box-shadow: 0 0 0 3px rgba(216,37,5,.10);
+        }
+
+
+        /* =========================================================
+           VALIDACIÓN
+           ========================================================= */
+
+        .grupo-incompleto {
+            border: 1px solid var(--zb-rojo-error) !important;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(255,71,87,.055),
+                    rgba(255,71,87,.015)
+                ),
+                #141414;
+
+            box-shadow:
+                0 0 0 1px rgba(255,71,87,.08),
+                0 0 20px rgba(255,71,87,.07);
+        }
+
+
+        .grupo-completo {
+            border-color: rgba(46,204,113,.5) !important;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(46,204,113,.035),
+                    transparent
+                ),
+                #141414;
+        }
+
+
+        .mensaje-validacion-grupo {
+            display: none;
+
+            margin-top: 10px;
+            padding: 9px 11px;
+
+            color: #ff6b76;
+
+            background: rgba(255,71,87,.06);
+            border-radius: 6px;
+
+            font-size: .72rem;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+
+        .mensaje-validacion-grupo i {
+            margin-right: 4px;
+        }
+
+
+        .grupo-incompleto .mensaje-validacion-grupo {
+            display: block;
+        }
+
+
+        @keyframes sacudir {
+            0%, 100% {
+                transform: translateX(0);
+            }
+
+            20%, 60% {
+                transform: translateX(-6px);
+            }
+
+            40%, 80% {
+                transform: translateX(6px);
+            }
+        }
+
+
+        .grupo-sacudir {
+            animation: sacudir .4s ease;
+
+            box-shadow:
+                0 0 18px rgba(255,71,87,.45) !important;
+        }
+
+
+        /* =========================================================
+           RESUMEN TOTAL
+           ========================================================= */
+
+        .resumen-total-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+
+            margin-top: 24px;
+            padding: 17px 18px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(216,37,5,.10),
+                    rgba(216,37,5,.025)
+                ),
+                #121212;
+
+            border: 1px solid rgba(216,37,5,.25);
+            border-radius: 9px;
+        }
+
+
+        .resumen-total-box > span:first-child {
+            color: #aaa;
+
+            font-size: .78rem;
+            font-weight: 700;
+        }
+
+
+        .resumen-total-box .monto {
+            color: var(--zb-rojo-hover);
+
+            font-size: 1.45rem;
+            font-weight: 900;
+
+            white-space: nowrap;
+        }
+
+
+        /* =========================================================
+           BOTÓN CONFIRMAR
+           ========================================================= */
+
+        .btn-confirmar-pedido {
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+
+            min-height: 52px;
+
+            margin-top: 12px;
+
+            padding: 0 20px;
+
+            color: #fff;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--zb-rojo),
+                    var(--zb-rojo-claro)
+                );
+
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 8px;
+
+            box-shadow:
+                0 8px 20px rgba(216,37,5,.18);
+
+            font-family: 'Montserrat', sans-serif;
+            font-size: .82rem;
+            font-weight: 900;
+
+            text-transform: uppercase;
+            letter-spacing: .7px;
+
+            cursor: pointer;
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease,
+                filter .2s ease;
+        }
+
+
+        .btn-confirmar-pedido i {
+            font-size: .95rem;
+        }
+
+
+        .btn-confirmar-pedido:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 12px 28px rgba(216,37,5,.28);
+
+            filter: brightness(1.08);
+        }
+
+
+        .btn-confirmar-pedido:active {
+            transform: translateY(0);
+        }
+
+
+        .btn-confirmar-pedido:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            filter: grayscale(.4);
+            box-shadow: none;
+            transform: none;
+        }
+
+
+        /* =========================================================
+           AVISO FLOTANTE
+           ========================================================= */
+
+        .aviso-obligatorio {
+            position: fixed;
+
+            left: 50%;
+            bottom: 24px;
+
+            transform: translateX(-50%) translateY(20px);
+
+            width: max-content;
+            max-width: calc(100% - 32px);
+
+            padding: 12px 18px;
+
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 8px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #d82505,
+                    #9e1c06
+                );
+
+            color: #fff;
+
+            font-size: .76rem;
+            font-weight: 800;
+            line-height: 1.4;
+
+            text-align: center;
+
+            box-shadow:
+                0 10px 30px rgba(0,0,0,.45),
+                0 4px 20px rgba(216,37,5,.22);
+
+            opacity: 0;
+            pointer-events: none;
+
+            transition:
+                opacity .25s ease,
+                transform .25s ease;
+
+            z-index: 5000;
+        }
+
+
+        .aviso-obligatorio.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 700px) {
+
+            .menu-container {
+                width: calc(100% - 20px);
+                padding-top: 22px;
+                padding-bottom: 50px;
+            }
+
+
+            .detalle-header-links {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+
+            .detalle-header-links .detalle-titulo {
+                font-size: 1.35rem !important;
+            }
+
+
+            .btn-volver {
+                width: 100%;
+            }
+
+
+            .producto-card {
+                padding: 14px;
+                border-radius: 11px;
+            }
+
+
+            .detalle-imagen,
+            .producto-imagen-placeholder {
+                height: 230px;
+                margin-bottom: 16px;
+                border-radius: 8px;
+            }
+
+
+            .producto-imagen-placeholder {
+                font-size: 4rem;
+            }
+
+
+            .producto-card > .detalle-titulo {
+                font-size: 1.35rem;
+            }
+
+
+            .detalle-descripcion {
+                font-size: .78rem;
+            }
+
+
+            .detalle-precio-base {
+                font-size: 1.35rem;
+            }
+
+
+            .grupo-opcion-seccion {
+                padding: 14px;
+                margin-bottom: 12px;
+                border-radius: 8px;
+                scroll-margin-top: 85px;
+            }
+
+
+            .grupo-titulo {
+                font-size: .9rem;
+            }
+
+
+            .opcion-item {
+                align-items: flex-start;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 9px;
+            }
+
+
+            .opcion-label {
+                min-width: calc(100% - 30px);
+                font-size: .74rem;
+            }
+
+
+            .opcion-precio-extra {
+                margin-left: 28px;
+            }
+
+
+            .cantidad-container {
+                margin-left: auto;
+            }
+
+
+            .resumen-total-box {
+                padding: 14px;
+            }
+
+
+            .resumen-total-box .monto {
+                font-size: 1.25rem;
+            }
+
+
+            .btn-confirmar-pedido {
+                min-height: 50px;
+                font-size: .76rem;
+            }
+        }
+
+
+        @media (max-width: 430px) {
+
+            .menu-container {
+                width: calc(100% - 14px);
+            }
+
+
+            .producto-card {
+                padding: 11px;
+            }
+
+
+            .detalle-imagen,
+            .producto-imagen-placeholder {
+                height: 205px;
+            }
+
+
+            .grupo-opcion-seccion {
+                padding: 12px;
+            }
+
+
+            .opcion-item {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                align-items: center;
+            }
+
+
+            .opcion-label {
+                grid-column: 1 / -1;
+            }
+
+
+            .opcion-precio-extra {
+                margin-left: 0;
+            }
+
+
+            .cantidad-container {
+                margin-left: 0;
+            }
+
+
+            .resumen-total-box {
+                align-items: flex-end;
+            }
+
+
+            .resumen-total-box > span:first-child {
+                font-size: .7rem;
+            }
+
+
+            .resumen-total-box .monto {
+                font-size: 1.15rem;
+            }
+
+
+            .aviso-obligatorio {
+                bottom: 14px;
+                font-size: .7rem;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+{% include 'components/header.html' %}
+
+<main class="menu-container">
+
+    <div class="detalle-header-links">
+
+        <h1 class="detalle-titulo">
+            {% if edit_item_id %}
+                Editar Producto
+            {% else %}
+                Personalizar
+            {% endif %}
+        </h1>
+
+        <a href="{% url 'menu' %}" class="btn-volver">
+            <i class="fa-solid fa-arrow-left"></i>
+            Volver al Menú
+        </a>
+
+    </div>
+
+
+    <div class="producto-card">
+
+        {% if producto.imagen %}
+
+            <img
+                src="{{ producto.imagen.url }}"
+                alt="{{ producto.nombre }}"
+                class="detalle-imagen"
+            >
+
+        {% else %}
+
+            <div class="producto-imagen-placeholder">
+                🍔
+            </div>
+
+        {% endif %}
+
+
+        <h2 class="detalle-titulo">
+            {{ producto.nombre }}
+        </h2>
+
+
+        {% if producto.descripcion %}
+
+            <p class="detalle-descripcion">
+                {{ producto.descripcion }}
+            </p>
+
+        {% endif %}
+
+
+        {# data-precio-base va sin localizar: el JS necesita punto decimal, no coma #}
+
+        <div
+            class="detalle-precio-base"
+            data-precio-base="{{ producto.precio|unlocalize }}"
+        >
+            $<span id="base-val">{{ producto.precio }}</span>
+        </div>
+
+
+        <hr class="detalle-divider">
+
+
+        <form
+            id="form-personalizar"
+            method="POST"
+            action="{% url 'agregar_al_carrito' producto.idproducto %}"
+        >
+
+            {% csrf_token %}
+
+
+            {# Si se está editando un ítem del carrito, se envía su ID para reemplazarlo #}
+
+            {% if edit_item_id %}
+
+                <input
+                    type="hidden"
+                    name="edit_id"
+                    value="{{ edit_item_id }}"
+                >
+
+            {% endif %}
+
+
+            {# Grupos de opciones #}
+
+            {% for item in grupos_opciones %}
+
+                {% with grupo=item.grupo %}
+
+                <div
+                    class="grupo-opcion-seccion"
+                    data-min="{{ grupo.minselecciones|default:0 }}"
+                    data-max="{{ grupo.maxselecciones|default:0 }}"
+                    data-nombre="{{ grupo.nombre }}"
+                >
+
+                    <h3 class="grupo-titulo">
+                        {{ grupo.nombre }}
+                    </h3>
+
+
+                    {% if grupo.minselecciones > 0 %}
+
+                        <p class="grupo-estado grupo-obligatorio">
+
+                            <i class="fa-solid fa-circle-exclamation"></i>
+
+                            Obligatorio: seleccioná al menos
+                            {{ grupo.minselecciones }}
+
+                            {% if grupo.minselecciones == 1 %}
+                                opción
+                            {% else %}
+                                opciones
+                            {% endif %}
+
+                        </p>
+
+                    {% else %}
+
+                        <p class="grupo-estado">
+                            (Opcional)
+                        </p>
+
+                    {% endif %}
+
+
+                    <div class="opciones-lista">
+
+                        {% for opcion in item.opciones %}
+
+                            <div class="opcion-item">
+
+                                <label class="opcion-label">
+
+                                    {# Radio si el grupo permite una sola opción; checkbox si permite varias #}
+
+                                    <input
+                                        type="{% if grupo.maxselecciones == 1 %}radio{% else %}checkbox{% endif %}"
+                                        name="grupo_{{ grupo.idgrupo }}"
+                                        value="{{ opcion.idopcion }}"
+                                        data-precio="{{ opcion.precioadicional|default:0|unlocalize }}"
+                                        class="opcion-input"
+
+                                        {% if item_editando and opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}
+                                            checked
+                                        {% endif %}
+                                    >
+
+                                    <span>
+                                        {{ opcion.nombre }}
+                                    </span>
+
+                                </label>
+
+
+                                {% if opcion.precioadicional > 0 %}
+
+                                    <span class="opcion-precio-extra">
+                                        +${{ opcion.precioadicional }}
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% empty %}
+
+                            <p class="grupo-estado">
+                                No hay opciones disponibles.
+                            </p>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    {% if grupo.minselecciones > 0 %}
+
+                        <div
+                            class="mensaje-validacion-grupo"
+                            role="alert"
+                        >
+
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+
+                            Este grupo es obligatorio: tenés que seleccionar
+                            al menos {{ grupo.minselecciones }}
+
+                            {% if grupo.minselecciones == 1 %}
+                                opción
+                            {% else %}
+                                opciones
+                            {% endif %}
+
+                            para continuar.
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+                {% endwith %}
+
+            {% empty %}
+
+                <p class="grupo-estado">
+                    Este producto no tiene opciones de personalización.
+                </p>
+
+            {% endfor %}
+
+
+            {# Ingredientes que el cliente puede quitar #}
+
+            {% if insumos_removibles %}
+
+                <div class="grupo-opcion-seccion">
+
+                    <h3 class="grupo-titulo">
+                        Quitar ingredientes
+                    </h3>
+
+                    <p class="grupo-estado">
+                        (Opcional)
+                    </p>
+
+
+                    <div class="opciones-lista">
+
+                        {% for item in insumos_removibles %}
+
+                            <div class="opcion-item">
+
+                                <label class="opcion-label">
+
+                                    <input
+                                        type="checkbox"
+                                        name="sin_insumo_{{ item.idinsumo.idinsumo }}"
+                                        value="{{ item.idinsumo.idinsumo }}"
+                                        class="opcion-input"
+
+                                        {% if item_editando and item.idinsumo.idinsumo|stringformat:"s" in item_editando.insumos_quitados_ids %}
+                                            checked
+                                        {% endif %}
+                                    >
+
+                                    <span>
+                                        Sin {{ item.idinsumo.nombreinsumo }}
+                                    </span>
+
+                                </label>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            {# Extras, cada uno con su cantidad (1 a 5) #}
+
+            {% if extras_producto %}
+
+                <div class="grupo-opcion-seccion">
+
+                    <h3 class="grupo-titulo">
+                        Agregá Extras
+                    </h3>
+
+                    <p class="grupo-estado">
+                        (Opcional)
+                    </p>
+
+
+                    <div class="opciones-lista">
+
+                        {% for extra in extras_producto %}
+
+                            <div class="opcion-item">
+
+                                <label class="opcion-label">
+
+                                    <input
+                                        type="checkbox"
+                                        name="extra_{{ extra.idextra }}"
+                                        value="{{ extra.idextra }}"
+                                        data-precio="{{ extra.precio|unlocalize }}"
+                                        class="opcion-input extra-checkbox"
+
+                                        {% if item_editando and extra.idextra|stringformat:"s" in item_editando.extras_ids %}
+                                            checked
+                                        {% endif %}
+                                    >
+
+                                    <span>
+                                        {{ extra.nombre }}
+                                    </span>
+
+                                </label>
+
+
+                                <span class="opcion-precio-extra">
+                                    +${{ extra.precio }}
+                                </span>
+
+
+                                <div class="cantidad-container">
+
+                                    <label
+                                        class="cantidad-label"
+                                        for="cantidad-extra-{{ extra.idextra }}"
+                                    >
+                                        Cant:
+                                    </label>
+
+                                    <input
+                                        id="cantidad-extra-{{ extra.idextra }}"
+                                        type="number"
+                                        name="cantidad_extra_{{ extra.idextra }}"
+                                        value="1"
+                                        min="1"
+                                        max="5"
+                                        class="cantidad-extra"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            {# RESUMEN DEL TOTAL #}
+
+            <div class="resumen-total-box">
+
+                <span>
+                    Total del producto:
+                </span>
+
+                <span class="monto">
+                    $<span id="precio-total">{{ producto.precio }}</span>
+                </span>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="btn-confirmar-pedido"
+                id="btn-confirmar-pedido"
+            >
+
+                <i class="fa-solid fa-cart-shopping"></i>
+
+                {% if edit_item_id %}
+                    Guardar Cambios
+                {% else %}
+                    Añadir al Pedido
+                {% endif %}
+
+            </button>
+
+        </form>
+
+    </div>
+
+</main>
+
+
+{# Aviso flotante que se muestra cuando falta completar un grupo obligatorio #}
+
+<div
+    id="aviso-obligatorio"
+    class="aviso-obligatorio"
+    role="alert"
+    aria-live="assertive"
+></div>
+
+
+{% include 'components/footer.html' %}
+
+
+<script src="{% static 'java/header.js' %}"></script>
+
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const MAX_CANTIDAD_EXTRA = 5;
+
+    const elementoPrecioBase =
+        document.querySelector('.detalle-precio-base');
+
+    const precioBase = elementoPrecioBase
+        ? parseFloat(
+            elementoPrecioBase.getAttribute('data-precio-base')
+        ) || 0
+        : 0;
+
+    const spanTotal =
+        document.getElementById('precio-total');
+
+    const form =
+        document.getElementById('form-personalizar');
+
+    const aviso =
+        document.getElementById('aviso-obligatorio');
+
+
+    // Solo los grupos de opciones tienen data-min
+    // (extras e ingredientes no).
+
+    const gruposSecciones =
+        document.querySelectorAll(
+            '.grupo-opcion-seccion[data-min]'
+        );
+
+    const inputsOpciones =
+        document.querySelectorAll(
+            '#form-personalizar input.opcion-input'
+        );
+
+    const inputsCantidad =
+        document.querySelectorAll('.cantidad-extra');
+
+
+    // Los grupos solo se marcan en rojo
+    // después de intentar enviar el formulario.
+
+    let intentoEnvio = false;
+    let temporizadorAviso = null;
+
+
+    function obtenerNumero(valor) {
+
+        const numero = parseFloat(valor);
+
+        return Number.isFinite(numero)
+            ? numero
+            : 0;
+    }
+
+
+    // Lleva la cantidad de un extra
+    // al rango 1..MAX_CANTIDAD_EXTRA.
+
+    function limitarCantidad(valor) {
+
+        const cantidad = parseInt(valor, 10);
+
+        if (Number.isNaN(cantidad) || cantidad < 1) {
+            return 1;
+        }
+
+        return Math.min(
+            cantidad,
+            MAX_CANTIDAD_EXTRA
+        );
+    }
+
+
+    function calcularTotal() {
+
+        let total = precioBase;
+
+
+        inputsOpciones.forEach(function (input) {
+
+            if (!input.checked) {
+                return;
+            }
+
+
+            let cantidad = 1;
+
+
+            // Los extras se multiplican
+            // por la cantidad elegida en su fila.
+
+            if (
+                input.classList.contains(
+                    'extra-checkbox'
+                )
+            ) {
+
+                const inputCantidad =
+                    input
+                        .closest('.opcion-item')
+                        .querySelector(
+                            '.cantidad-extra'
+                        );
+
+
+                if (inputCantidad) {
+
+                    cantidad =
+                        limitarCantidad(
+                            inputCantidad.value
+                        );
+                }
+            }
+
+
+            total +=
+                obtenerNumero(
+                    input.getAttribute(
+                        'data-precio'
+                    )
+                ) * cantidad;
+
+        });
+
+
+        if (spanTotal) {
+
+            spanTotal.textContent =
+                total.toFixed(2);
+        }
+    }
+
+
+    function seleccionadasEnGrupo(seccion) {
+
+        return seccion.querySelectorAll(
+            'input[type="radio"]:checked, input[type="checkbox"]:checked'
+        ).length;
+    }
+
+
+    // Devuelve los grupos obligatorios
+    // que todavía no alcanzan su mínimo.
+
+    function validarGrupos() {
+
+        const incompletos = [];
+
+
+        gruposSecciones.forEach(function (seccion) {
+
+            const min =
+                parseInt(
+                    seccion.getAttribute(
+                        'data-min'
+                    ),
+                    10
+                ) || 0;
+
+
+            const incompleto =
+                min > 0 &&
+                seleccionadasEnGrupo(seccion) < min;
+
+
+            if (incompleto) {
+                incompletos.push(seccion);
+            }
+
+
+            seccion.classList.toggle(
+                'grupo-incompleto',
+                intentoEnvio && incompleto
+            );
+
+
+            seccion.classList.toggle(
+                'grupo-completo',
+                intentoEnvio &&
+                min > 0 &&
+                !incompleto
+            );
+
+        });
+
+
+        return incompletos;
+    }
+
+
+    function mostrarAviso(texto) {
+
+        aviso.textContent = texto;
+
+        aviso.classList.add('visible');
+
+
+        clearTimeout(
+            temporizadorAviso
+        );
+
+
+        temporizadorAviso =
+            setTimeout(function () {
+
+                aviso.classList.remove(
+                    'visible'
+                );
+
+            }, 4000);
+    }
+
+
+    // Lleva al cliente al grupo
+    // que le falta completar.
+
+    function irAlGrupoIncompleto(seccion) {
+
+        const min =
+            parseInt(
+                seccion.getAttribute(
+                    'data-min'
+                ),
+                10
+            ) || 0;
+
+
+        const nombre =
+            seccion.getAttribute(
+                'data-nombre'
+            ) || 'Este grupo';
+
+
+        seccion.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+
+        // Reinicia la animación
+        // aunque ya estuviera aplicada.
+
+        seccion.classList.remove(
+            'grupo-sacudir'
+        );
+
+
+        void seccion.offsetWidth;
+
+
+        seccion.classList.add(
+            'grupo-sacudir'
+        );
+
+
+        setTimeout(function () {
+
+            seccion.classList.remove(
+                'grupo-sacudir'
+            );
+
+        }, 2000);
+
+
+        const primerInput =
+            seccion.querySelector('input');
+
+
+        if (primerInput) {
+
+            primerInput.focus({
+                preventScroll: true
+            });
+        }
+
+
+        mostrarAviso(
+            '"' +
+            nombre +
+            '" es obligatorio: elegí al menos ' +
+            min +
+            (min === 1
+                ? ' opción.'
+                : ' opciones.')
+        );
+    }
+
+
+    // Cambios en las opciones:
+    // se respeta el máximo del grupo
+    // y se recalcula.
+
+    gruposSecciones.forEach(function (seccion) {
+
+        const max =
+            parseInt(
+                seccion.getAttribute(
+                    'data-max'
+                ),
+                10
+            ) || 0;
+
+
+        const inputs =
+            seccion.querySelectorAll(
+                'input[type="radio"], input[type="checkbox"]'
+            );
+
+
+        inputs.forEach(function (input) {
+
+            input.addEventListener(
+                'change',
+                function () {
+
+                    if (
+                        max > 0 &&
+                        input.type === 'checkbox'
+                    ) {
+
+                        const marcados =
+                            seccion.querySelectorAll(
+                                'input[type="checkbox"]:checked'
+                            );
+
+
+                        if (
+                            marcados.length > max
+                        ) {
+
+                            input.checked =
+                                false;
+
+
+                            mostrarAviso(
+                                'En "' +
+                                (
+                                    seccion.getAttribute(
+                                        'data-nombre'
+                                    ) ||
+                                    'este grupo'
+                                ) +
+                                '" podés elegir como máximo ' +
+                                max +
+                                ' opciones.'
+                            );
+                        }
+                    }
+
+
+                    calcularTotal();
+                    validarGrupos();
+                }
+            );
+
+        });
+
+    });
+
+
+    // Los extras también recalculan el total.
+
+    document
+        .querySelectorAll('.extra-checkbox')
+        .forEach(function (input) {
+
+            input.addEventListener(
+                'change',
+                calcularTotal
+            );
+
+        });
+
+
+    inputsCantidad.forEach(function (input) {
+
+        // Mientras se escribe no se fuerza
+        // el 1 si el campo queda vacío.
+
+        input.addEventListener(
+            'input',
+            function () {
+
+                const cantidad =
+                    parseInt(
+                        input.value,
+                        10
+                    );
+
+
+                if (!Number.isNaN(cantidad)) {
+
+                    input.value =
+                        limitarCantidad(
+                            cantidad
+                        );
+                }
+
+
+                calcularTotal();
+            }
+        );
+
+
+        input.addEventListener(
+            'change',
+            function () {
+
+                input.value =
+                    limitarCantidad(
+                        input.value
+                    );
+
+
+                calcularTotal();
+            }
+        );
+
+    });
+
+
+    // Al enviar:
+    // si falta un grupo obligatorio,
+    // se frena el envío.
+
+    form.addEventListener(
+        'submit',
+        function (event) {
+
+            intentoEnvio = true;
+
+
+            const incompletos =
+                validarGrupos();
+
+
+            if (incompletos.length === 0) {
+                return;
+            }
+
+
+            event.preventDefault();
+
+
+            irAlGrupoIncompleto(
+                incompletos[0]
+            );
+        }
+    );
+
+
+    calcularTotal();
+
+});
+
+</script>
+
+</body>
+</html>

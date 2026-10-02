@@ -1,114 +1,609 @@
 {% extends 'panel/base.html' %}
-<<<<<<< HEAD
-<<<<<<< HEAD
-{% block title %}Zona-Burger | {% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}Habilitar{% else %}Deshabilitar{% endif %} Producto{% endblock %}
+
+{% block title %}
+    Zona-Burger | {% if esta_eliminado %}Restaurar{% else %}Eliminar{% endif %} Producto
+{% endblock %}
 
 {% block content %}
-<div class="form-container" style="max-width: 600px; background: #181818; padding: 30px; border-radius: 8px; border: 1px solid #333; text-align: center; margin: 0 auto;">
-    <div style="font-size: 3rem; margin-bottom: 15px;">{% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}✅{% else %}⚠️{% endif %}</div>
 
-    <h1 style="margin-bottom: 15px; font-size: 1.6rem; color: {% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}#2ed573{% else %}#ff6b6b{% endif %};">
-        {% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}
-            Habilitar Producto
-        {% else %}
-            Deshabilitar Producto
-        {% endif %}
-    </h1>
-    
-    <p style="margin-bottom: 20px; color: #ccc; font-size: 1.05rem;">
-        {% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}
-            ¿Deseas volver a habilitar el producto <strong>"{{ producto.nombre }}"</strong>? Volverá a estar visible para los clientes en la tienda.
-        {% else %}
-            ¿Estás seguro de que deseas deshabilitar el producto <strong>"{{ producto.nombre }}"</strong>?<br>
-            <span style="font-size: 0.9rem; color: #aaa; margin-top: 5px; display: inline-block;">
-                El producto dejará de estar visible en el menú para los clientes, pero se conservará en el sistema protegiendo pedidos históricos y recetas.
-            </span>
-        {% endif %}
-=======
-{% block title %}Zona-Burger | Eliminar Producto{% endblock %}
-=======
-{% block title %}Zona-Burger | {% if esta_eliminado %}Restaurar{% else %}Eliminar{% endif %} Producto{% endblock %}
->>>>>>> b8cce5f (Actualización panel administrativo, corrección de errores y comienzo de diseño responsive)
+<style>
+    .producto-delete-page {
+        max-width: 650px;
+        margin: 0 auto;
+    }
 
-{% block content %}
-<div class="form-container" style="max-width: 600px; background: #181818; padding: 30px; border-radius: 8px; border: 1px solid #333; text-align: center; margin: 0 auto;">
-    <div style="font-size: 3rem; margin-bottom: 15px;">
-        {% if esta_eliminado %}♻️{% else %}⚠️{% endif %}
-    </div>
+    .producto-delete-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-bottom: 18px;
+        transition: color 0.2s;
+    }
 
-    <h1 style="margin-bottom: 15px; font-size: 1.6rem; color: {% if esta_eliminado %}#00d26a{% else %}#ff6b6b{% endif %};">
-        {% if esta_eliminado %}Restaurar Producto{% else %}Eliminar Producto{% endif %}
-    </h1>
+    .producto-delete-back:hover {
+        color: #fff;
+    }
 
-    <p style="margin-bottom: 20px; color: #ccc; font-size: 1.1rem;">
-<<<<<<< HEAD
-        ¿Estás seguro de que deseas eliminar el producto <strong>"{{ producto.nombre }}"</strong>?
->>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
-=======
-        {% if esta_eliminado %}
-            ¿Querés restaurar el producto <strong>"{{ producto.nombre }}"</strong>?
-            Volverá a estar activo y a verse en el menú.
-        {% else %}
-            ¿Estás seguro de que deseas eliminar el producto <strong>"{{ producto.nombre }}"</strong>?
-            Dejará de verse en el menú, pero podrás restaurarlo después.
-        {% endif %}
->>>>>>> b8cce5f (Actualización panel administrativo, corrección de errores y comienzo de diseño responsive)
-    </p>
+    .producto-delete-card {
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 10px;
+        overflow: hidden;
+    }
 
-    <div style="background: #222; border: 1px solid #333; border-radius: 6px; padding: 15px; margin-bottom: 25px; text-align: left; display: flex; align-items: center; gap: 15px;">
-        {% if producto.imagen %}
-            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
-        {% else %}
-            <div style="width: 60px; height: 60px; background: #282828; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;">
-                🍔
-            </div>
-        {% endif %}
-        <div>
-            <strong style="color: #fff; display: block; font-size: 1rem;">{{ producto.nombre }}</strong>
-            <span style="color: #00d26a; font-weight: 600; font-size: 0.95rem;">${{ producto.precio }}</span>
-            {% if producto.idcategoria %}
-                <span style="color: #888; font-size: 0.85rem; margin-left: 10px;">• {{ producto.idcategoria.nombre }}</span>
-            {% endif %}
-<<<<<<< HEAD
-            {% if producto.idestadoproducto %}
-                <span style="color: #e74c3c; font-size: 0.85rem; margin-left: 10px;">[{{ producto.idestadoproducto.descripcion }}]</span>
-            {% endif %}
-=======
->>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
-        </div>
-    </div>
+    .producto-delete-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 28px;
+        border-bottom: 1px solid #333;
+    }
 
-    <form method="post">
-        {% csrf_token %}
-        <div style="display: flex; justify-content: center; gap: 15px;">
-<<<<<<< HEAD
-<<<<<<< HEAD
-            <button type="submit" class="btn" style="padding: 10px 24px; background: {% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}#2ed573; color: #000;{% else %}#ff4757; color: #fff;{% endif %} border: none; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
-                {% if producto.idestadoproducto and producto.idestadoproducto.descripcion|lower == 'deshabilitado' %}
-                    Sí, habilitar producto
+    .producto-delete-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .producto-delete-icon.restaurar {
+        background: rgba(46, 204, 113, 0.12);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+        color: #2ecc71;
+    }
+
+    .producto-delete-icon.eliminar {
+        background: rgba(255, 71, 87, 0.10);
+        border: 1px solid rgba(255, 71, 87, 0.3);
+        color: #ff4757;
+    }
+
+    .producto-delete-header-text h1 {
+        margin: 0 0 5px;
+        font-size: 1.4rem;
+    }
+
+    .producto-delete-header-text h1.restaurar {
+        color: #2ecc71;
+    }
+
+    .producto-delete-header-text h1.eliminar {
+        color: #ff4757;
+    }
+
+    .producto-delete-header-text p {
+        margin: 0;
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .producto-delete-body {
+        padding: 28px;
+    }
+
+    .producto-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: #202020;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .producto-imagen,
+    .producto-placeholder {
+        width: 72px;
+        height: 72px;
+        border-radius: 7px;
+        flex-shrink: 0;
+    }
+
+    .producto-imagen {
+        object-fit: cover;
+        border: 1px solid #3a3a3a;
+    }
+
+    .producto-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #282828;
+        border: 1px solid #3a3a3a;
+        color: #777;
+    }
+
+    .producto-info-content {
+        min-width: 0;
+    }
+
+    .producto-info-label {
+        color: #777;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+
+    .producto-nombre {
+        display: block;
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .producto-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .producto-precio {
+        color: #2ecc71;
+        font-size: 0.92rem;
+        font-weight: 600;
+    }
+
+    .producto-categoria {
+        color: #888;
+        font-size: 0.82rem;
+    }
+
+    .producto-warning {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        border-radius: 7px;
+        padding: 15px;
+        margin-bottom: 22px;
+    }
+
+    .producto-warning.eliminar {
+        background: rgba(255, 71, 87, 0.08);
+        border: 1px solid rgba(255, 71, 87, 0.25);
+    }
+
+    .producto-warning.restaurar {
+        background: rgba(46, 204, 113, 0.07);
+        border: 1px solid rgba(46, 204, 113, 0.22);
+    }
+
+    .producto-warning-icon {
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .producto-warning.eliminar .producto-warning-icon {
+        color: #ff4757;
+    }
+
+    .producto-warning.restaurar .producto-warning-icon {
+        color: #2ecc71;
+    }
+
+    .producto-warning-text {
+        color: #bbb;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    .producto-question {
+        color: #ccc;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin: 0 0 24px;
+        text-align: center;
+    }
+
+    .producto-question strong {
+        color: #fff;
+    }
+
+    .producto-delete-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        padding-top: 22px;
+        border-top: 1px solid #333;
+        flex-wrap: wrap;
+    }
+
+    .producto-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .producto-confirmar {
+        border: 1px solid;
+    }
+
+    .producto-confirmar.restaurar {
+        background: #2ecc71;
+        border-color: #2ecc71;
+        color: #111;
+    }
+
+    .producto-confirmar.restaurar:hover {
+        background: #27ae60;
+        border-color: #27ae60;
+    }
+
+    .producto-confirmar.eliminar {
+        background: #ff4757;
+        border-color: #ff4757;
+        color: #fff;
+    }
+
+    .producto-confirmar.eliminar:hover {
+        background: #e8414f;
+        border-color: #e8414f;
+    }
+
+    .producto-cancelar {
+        background: #333;
+        border: 1px solid #444;
+        color: #fff;
+    }
+
+    .producto-cancelar:hover {
+        background: #3d3d3d;
+    }
+
+    @media (max-width: 600px) {
+        .producto-delete-header,
+        .producto-delete-body {
+            padding: 20px;
+        }
+
+        .producto-info {
+            align-items: flex-start;
+        }
+
+        .producto-delete-actions {
+            flex-direction: column;
+        }
+
+        .producto-action-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+
+<div class="producto-delete-page">
+
+    <!-- Volver al listado -->
+    <a
+        href="{% url cancel_url|default:'producto_lista' %}"
+        class="producto-delete-back"
+    >
+
+        <svg width="18" height="18"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+
+        </svg>
+
+        Volver a productos
+
+    </a>
+
+
+    <div class="producto-delete-card">
+
+        <!-- Encabezado -->
+        <div class="producto-delete-header">
+
+            <div class="producto-delete-icon {% if esta_eliminado %}restaurar{% else %}eliminar{% endif %}">
+
+                {% if esta_eliminado %}
+
+                    <!-- Icono restaurar -->
+                    <svg width="27" height="27"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+                        <polyline points="3 4 3 10 9 10"></polyline>
+
+                    </svg>
+
                 {% else %}
-                    Sí, deshabilitar producto
+
+                    <!-- Icono eliminar -->
+                    <svg width="27" height="27"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+
+                    </svg>
+
                 {% endif %}
-=======
-            <button type="submit" class="btn btn-danger" style="padding: 10px 24px; background: #ff4757; border: none; color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
-                Sí, eliminar producto
->>>>>>> 48a17daf61b5a2a01b242cfe3a93ec2d1683efa3
-            </button>
-=======
-            {% if esta_eliminado %}
-                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; background: #00d26a; border: none; color: #000; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
-                    Sí, restaurar producto
-                </button>
-            {% else %}
-                <button type="submit" class="btn btn-danger" style="padding: 10px 24px; background: #ff4757; border: none; color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
-                    Sí, eliminar producto
-                </button>
-            {% endif %}
->>>>>>> b8cce5f (Actualización panel administrativo, corrección de errores y comienzo de diseño responsive)
-            <a href="{% url 'producto_lista' %}" class="btn" style="padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; display: inline-block;">
-                Cancelar
-            </a>
+
+            </div>
+
+
+            <div class="producto-delete-header-text">
+
+                <h1 class="{% if esta_eliminado %}restaurar{% else %}eliminar{% endif %}">
+                    {% if esta_eliminado %}
+                        Restaurar producto
+                    {% else %}
+                        Eliminar producto
+                    {% endif %}
+                </h1>
+
+                <p>
+                    {% if esta_eliminado %}
+                        El producto volverá a estar activo en el menú.
+                    {% else %}
+                        El producto dejará de mostrarse en el menú.
+                    {% endif %}
+                </p>
+
+            </div>
+
         </div>
-    </form>
+
+
+        <div class="producto-delete-body">
+
+            <!-- Información del producto -->
+            <div class="producto-info">
+
+                {% if producto.imagen %}
+
+                    <img
+                        src="{{ producto.imagen.url }}"
+                        alt="{{ producto.nombre }}"
+                        class="producto-imagen"
+                    >
+
+                {% else %}
+
+                    <div class="producto-placeholder" aria-hidden="true">
+
+                        <svg width="32" height="32"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.7"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M3 11h18"></path>
+                            <path d="M5 11l1 8h12l1-8"></path>
+                            <path d="M7 11V9a5 5 0 0 1 10 0v2"></path>
+                            <path d="M9 15h6"></path>
+
+                        </svg>
+
+                    </div>
+
+                {% endif %}
+
+
+                <div class="producto-info-content">
+
+                    <div class="producto-info-label">
+                        Producto seleccionado
+                    </div>
+
+                    <strong class="producto-nombre">
+                        {{ producto.nombre }}
+                    </strong>
+
+                    <div class="producto-meta">
+
+                        <span class="producto-precio">
+                            ${{ producto.precio }}
+                        </span>
+
+                        {% if producto.idcategoria %}
+
+                            <span class="producto-categoria">
+                                • {{ producto.idcategoria.nombre }}
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Advertencia -->
+            <div class="producto-warning {% if esta_eliminado %}restaurar{% else %}eliminar{% endif %}">
+
+                <div class="producto-warning-icon">
+
+                    {% if esta_eliminado %}
+
+                        <svg width="20" height="20"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <polyline points="12 8 12 12 15 14"></polyline>
+
+                        </svg>
+
+                    {% else %}
+
+                        <svg width="20" height="20"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+
+                        </svg>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="producto-warning-text">
+
+                    {% if esta_eliminado %}
+
+                        Al restaurar este producto volverá a estar activo
+                        y podrá aparecer nuevamente en el menú.
+
+                    {% else %}
+
+                        El producto dejará de aparecer en el menú, pero
+                        podrás restaurarlo posteriormente.
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- Pregunta -->
+            <p class="producto-question">
+
+                {% if esta_eliminado %}
+
+                    ¿Estás seguro de que deseas restaurar
+                    <strong>"{{ producto.nombre }}"</strong>?
+
+                {% else %}
+
+                    ¿Estás seguro de que deseas eliminar
+                    <strong>"{{ producto.nombre }}"</strong>?
+
+                {% endif %}
+
+            </p>
+
+
+            <!-- Acciones -->
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="producto-delete-actions">
+
+                    {% if esta_eliminado %}
+
+                        <button
+                            type="submit"
+                            class="producto-action-btn producto-confirmar restaurar"
+                        >
+
+                            <svg width="17" height="17"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+
+                                <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+                                <polyline points="3 4 3 10 9 10"></polyline>
+
+                            </svg>
+
+                            Sí, restaurar producto
+
+                        </button>
+
+                    {% else %}
+
+                        <button
+                            type="submit"
+                            class="producto-action-btn producto-confirmar eliminar"
+                        >
+
+                            <svg width="17" height="17"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-1 14H6L5 6"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                                <path d="M9 6V4h6v2"></path>
+
+                            </svg>
+
+                            Sí, eliminar producto
+
+                        </button>
+
+                    {% endif %}
+
+
+                    <a
+                        href="{% url cancel_url|default:'producto_lista' %}"
+                        class="producto-action-btn producto-cancelar"
+                    >
+                        Cancelar
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
 </div>
+
 {% endblock %}
