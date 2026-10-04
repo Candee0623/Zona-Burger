@@ -1,220 +1,29 @@
 {% extends 'panel/base.html' %}
+{% load static %}
 
 {% block title %}Zona-Burger | Nueva categoría{% endblock %}
 
 {% block content %}
 
-<style>
-    .categoria-create-page {
-        max-width: 650px;
-        margin: 0 auto;
-    }
-
-    .categoria-create-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: #aaa;
-        text-decoration: none;
-        font-size: 0.9rem;
-        margin-bottom: 18px;
-        transition: color 0.2s;
-    }
-
-    .categoria-create-back:hover {
-        color: #fff;
-    }
-
-    .categoria-create-card {
-        background: #181818;
-        border: 1px solid #333;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .categoria-create-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 24px 28px;
-        border-bottom: 1px solid #333;
-    }
-
-    .categoria-create-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 8px;
-        background: rgba(46, 204, 113, 0.12);
-        border: 1px solid rgba(46, 204, 113, 0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #2ecc71;
-        flex-shrink: 0;
-    }
-
-    .categoria-create-header-text h1 {
-        margin: 0 0 5px;
-        color: #fff;
-        font-size: 1.4rem;
-    }
-
-    .categoria-create-header-text p {
-        margin: 0;
-        color: #888;
-        font-size: 0.9rem;
-    }
-
-    .categoria-create-body {
-        padding: 28px;
-    }
-
-    .categoria-create-info {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        background: rgba(46, 204, 113, 0.06);
-        border: 1px solid rgba(46, 204, 113, 0.18);
-        border-radius: 7px;
-        padding: 14px 16px;
-        margin-bottom: 22px;
-        color: #aaa;
-        font-size: 0.88rem;
-        line-height: 1.5;
-    }
-
-    .categoria-create-info-icon {
-        color: #2ecc71;
-        flex-shrink: 0;
-        margin-top: 1px;
-    }
-
-    .categoria-form-group {
-        margin-bottom: 20px;
-    }
-
-    .categoria-form-group label {
-        display: block;
-        margin-bottom: 8px;
-        color: #ccc;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    .categoria-form-control {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 11px 13px;
-        background: #222;
-        border: 1px solid #444;
-        color: #fff;
-        border-radius: 5px;
-        font-size: 0.95rem;
-        outline: none;
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .categoria-form-control:focus {
-        border-color: #2ecc71;
-        box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.12);
-    }
-
-    .categoria-form-control::placeholder {
-        color: #666;
-    }
-
-    .categoria-errors {
-        background: rgba(255, 71, 87, 0.08);
-        border: 1px solid rgba(255, 71, 87, 0.25);
-        border-radius: 7px;
-        padding: 13px 16px;
-        margin-bottom: 20px;
-        color: #ff6b6b;
-        font-size: 0.88rem;
-    }
-
-    .categoria-errors ul {
-        margin: 0;
-        padding-left: 20px;
-    }
-
-    .categoria-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        padding-top: 22px;
-        border-top: 1px solid #333;
-        flex-wrap: wrap;
-    }
-
-    .categoria-action-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 18px;
-        border-radius: 5px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .categoria-save-btn {
-        background: #2ecc71;
-        border: 1px solid #2ecc71;
-        color: #111;
-    }
-
-    .categoria-save-btn:hover {
-        background: #27ae60;
-        border-color: #27ae60;
-    }
-
-    .categoria-cancel-btn {
-        background: #333;
-        border: 1px solid #444;
-        color: #fff;
-    }
-
-    .categoria-cancel-btn:hover {
-        background: #3d3d3d;
-    }
-
-    @media (max-width: 600px) {
-        .categoria-create-header,
-        .categoria-create-body {
-            padding: 20px;
-        }
-
-        .categoria-actions {
-            flex-direction: column-reverse;
-        }
-
-        .categoria-action-btn {
-            width: 100%;
-        }
-    }
-</style>
-
+<link rel="stylesheet" href="{% static 'css/panel/menu/categorias/crearCategoria.css' %}">
 
 <div class="categoria-create-page">
 
-    <!-- Volver al listado -->
+    <!-- VOLVER AL LISTADO -->
     <a href="{% url 'categoria_lista' %}" class="categoria-create-back">
 
-        <svg width="18" height="18"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2"
-             stroke-linecap="round"
-             stroke-linejoin="round">
-
+        <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
-
         </svg>
 
         Volver a categorías
@@ -224,19 +33,21 @@
 
     <div class="categoria-create-card">
 
-        <!-- Encabezado -->
+        <!-- ENCABEZADO -->
         <div class="categoria-create-header">
 
             <div class="categoria-create-icon">
 
-                <svg width="27" height="27"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="2"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
-
+                <svg
+                    width="27"
+                    height="27"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
                     <path d="M4 5h16"></path>
                     <path d="M4 12h16"></path>
                     <path d="M4 19h16"></path>
@@ -244,12 +55,15 @@
                     <circle cx="8" cy="5" r="2"></circle>
                     <circle cx="16" cy="12" r="2"></circle>
                     <circle cx="10" cy="19" r="2"></circle>
-
                 </svg>
 
             </div>
 
             <div class="categoria-create-header-text">
+
+                <span class="categoria-create-kicker">
+                    Menú / Categorías
+                </span>
 
                 <h1>Nueva categoría</h1>
 
@@ -264,23 +78,24 @@
 
         <div class="categoria-create-body">
 
-            <!-- Información -->
+            <!-- INFORMACIÓN -->
             <div class="categoria-create-info">
 
                 <div class="categoria-create-info-icon">
 
-                    <svg width="19" height="19"
-                         viewBox="0 0 24 24"
-                         fill="none"
-                         stroke="currentColor"
-                         stroke-width="2"
-                         stroke-linecap="round"
-                         stroke-linejoin="round">
-
+                    <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <circle cx="12" cy="12" r="9"></circle>
                         <line x1="12" y1="11" x2="12" y2="16"></line>
                         <line x1="12" y1="8" x2="12.01" y2="8"></line>
-
                     </svg>
 
                 </div>
@@ -293,10 +108,29 @@
             </div>
 
 
-            <!-- Errores -->
+            <!-- ERRORES -->
             {% if errores %}
 
                 <div class="categoria-errors">
+
+                    <div class="categoria-errors-icon">
+
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M12 9v4"></path>
+                            <path d="M12 17h.01"></path>
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        </svg>
+
+                    </div>
 
                     <ul>
                         {% for error in errores %}
@@ -309,7 +143,7 @@
             {% endif %}
 
 
-            <!-- Formulario -->
+            <!-- FORMULARIO -->
             <form method="post">
 
                 {% csrf_token %}
@@ -332,7 +166,7 @@
                 </div>
 
 
-                <!-- Acciones -->
+                <!-- ACCIONES -->
                 <div class="categoria-actions">
 
                     <a
@@ -348,17 +182,18 @@
                         class="categoria-action-btn categoria-save-btn"
                     >
 
-                        <svg width="17" height="17"
-                             viewBox="0 0 24 24"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="2"
-                             stroke-linecap="round"
-                             stroke-linejoin="round">
-
+                        <svg
+                            width="17"
+                            height="17"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="M12 5v14"></path>
                             <path d="M5 12h14"></path>
-
                         </svg>
 
                         Guardar categoría

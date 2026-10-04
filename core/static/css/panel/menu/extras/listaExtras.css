@@ -1,0 +1,494 @@
+.extras-page {
+    width: 100%;
+    min-width: 0;
+}
+
+/* =========================================================
+   VOLVER
+   ========================================================= */
+
+.extras-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    padding: 7px 11px;
+    border: 1px solid #303030;
+    border-radius: 8px;
+    background: #191919;
+    color: #929292;
+    text-decoration: none;
+    font-size: 0.84rem;
+    transition: 0.2s ease;
+}
+
+.extras-back:hover {
+    color: #fff;
+    border-color: #dc2626;
+    background: #202020;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.extras-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.extras-header h1 {
+    margin: 0;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.extras-header p {
+    margin: 7px 0 0;
+    max-width: 700px;
+    color: #858585;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   BOTÓN NUEVO EXTRA
+   ========================================================= */
+
+.btn-extra-nuevo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 17px;
+    border-radius: 9px;
+    background: #dc2626;
+    border: 1px solid #dc2626;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: 0.2s ease;
+}
+
+.btn-extra-nuevo:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.btn-extra-nuevo svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+/* =========================================================
+   MENSAJES
+   ========================================================= */
+
+.extras-messages {
+    margin-bottom: 20px;
+}
+
+.extras-message {
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+}
+
+.extras-message-success {
+    color: #f87171;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+.extras-message-error {
+    color: #f87171;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+/* =========================================================
+   RESUMEN
+   ========================================================= */
+
+.extras-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: #777;
+    font-size: 0.78rem;
+}
+
+.extras-summary-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #dc2626;
+    box-shadow: 0 0 8px rgba(220, 38, 38, 0.4);
+}
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.extras-card {
+    background: #161616;
+    border: 1px solid #303030;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
+}
+
+.extras-table-scroll {
+    overflow-x: auto;
+}
+
+.extras-table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
+}
+
+.extras-table thead {
+    background: #1e1e1e;
+}
+
+.extras-table th {
+    padding: 13px 16px;
+    color: #777;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.65px;
+    border-bottom: 1px solid #303030;
+}
+
+.extras-actions-header {
+    text-align: right !important;
+}
+
+.extras-table td {
+    padding: 15px 16px;
+    border-bottom: 1px solid #242424;
+    vertical-align: middle;
+}
+
+.extras-table tbody tr {
+    transition: background 0.18s ease;
+}
+
+.extras-table tbody tr:hover {
+    background: #1b1b1b;
+}
+
+.extras-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================================================
+   ID
+   ========================================================= */
+
+.extra-id {
+    color: #555;
+    font-size: 0.75rem;
+}
+
+/* =========================================================
+   NOMBRE DEL EXTRA
+   ========================================================= */
+
+.extra-nombre-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.extra-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.22);
+    color: #dc2626;
+}
+
+.extra-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.extra-nombre {
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   PRECIO
+   ========================================================= */
+
+.extra-precio {
+    color: #f87171;
+    font-size: 1.05rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* =========================================================
+   PRODUCTOS ASOCIADOS
+   ========================================================= */
+
+.extra-productos-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    color: #f87171;
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+.extra-productos-badge svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.extra-sin-asignar {
+    color: #555;
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.extra-acciones {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.extra-actions-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.btn-extra {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 6px 10px;
+    border-radius: 7px;
+    background: #222;
+    border: 1px solid #383838;
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+.btn-extra:hover {
+    background: #2a2a2a;
+    transform: translateY(-1px);
+}
+
+.btn-extra svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.btn-extra-edit {
+    color: #f87171;
+}
+
+.btn-extra-edit:hover {
+    border-color: rgba(220, 38, 38, 0.45);
+    color: #ef4444;
+}
+
+.btn-extra-delete {
+    color: #dc2626;
+}
+
+.btn-extra-delete:hover {
+    border-color: rgba(220, 38, 38, 0.55);
+    color: #f87171;
+}
+
+/* =========================================================
+   ESTADO VACÍO
+   ========================================================= */
+
+.extras-empty {
+    padding: 55px 20px !important;
+    text-align: center;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+    .extras-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .btn-extra-nuevo {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 700px) {
+
+    .extras-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .extras-card {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        overflow: visible;
+    }
+
+    .extras-table-scroll {
+        overflow: visible;
+    }
+
+    .extras-table {
+        display: block;
+        min-width: 0;
+    }
+
+    .extras-table thead {
+        display: none;
+    }
+
+    .extras-table tbody {
+        display: block;
+    }
+
+    .extras-table tbody tr {
+        display: block;
+        margin-bottom: 12px;
+        padding: 8px 10px;
+        background: #161616;
+        border: 1px solid #303030;
+        border-radius: 11px;
+    }
+
+    .extras-table tbody td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 11px 4px;
+        border-bottom: 1px solid #292929;
+    }
+
+    .extras-table tbody td::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        color: #5f5f5f;
+        font-size: 0.64rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .extras-table tbody td:last-child {
+        border-bottom: none;
+    }
+
+    .extra-nombre-wrapper {
+        justify-content: flex-end;
+        min-width: 0;
+    }
+
+    .extra-nombre {
+        text-align: right;
+    }
+
+    .extra-actions-wrapper {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .btn-extra {
+        width: 100%;
+    }
+
+    .extra-acciones {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+}
+
+@media (max-width: 430px) {
+
+    .extras-table tbody td {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .extras-table tbody td::before {
+        order: 0;
+    }
+
+    .extra-nombre-wrapper {
+        justify-content: flex-start;
+    }
+
+    .extra-nombre {
+        text-align: left;
+    }
+
+    .extra-actions-wrapper {
+        grid-template-columns: 1fr;
+    }
+}

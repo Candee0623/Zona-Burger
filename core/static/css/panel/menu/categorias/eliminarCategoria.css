@@ -1,0 +1,317 @@
+/* =========================================================
+   PÁGINA
+   ========================================================= */
+
+.categoria-delete-page {
+    width: 100%;
+    min-width: 0;
+}
+
+/* =========================================================
+   VOLVER
+   ========================================================= */
+
+.categoria-delete-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    padding: 7px 11px;
+    border: 1px solid #303030;
+    border-radius: 8px;
+    background: #191919;
+    color: #929292;
+    text-decoration: none;
+    font-size: 0.84rem;
+    transition: 0.2s ease;
+}
+
+.categoria-delete-back:hover {
+    color: #fff;
+    border-color: #dc2626;
+    background: #202020;
+}
+
+/* =========================================================
+   CONTENEDOR
+   ========================================================= */
+
+.categoria-delete-card {
+    max-width: 650px;
+    margin: 0 auto;
+    overflow: hidden;
+    background: #161616;
+    border: 1px solid #303030;
+    border-radius: 13px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.16);
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.categoria-delete-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 22px 24px;
+    background: linear-gradient(135deg, #1e1e1e, #181818);
+    border-bottom: 1px solid #303030;
+}
+
+.categoria-delete-icon {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    color: #dc2626;
+}
+
+.categoria-delete-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.categoria-delete-header-text {
+    min-width: 0;
+}
+
+.categoria-delete-header-text span {
+    display: block;
+    margin-bottom: 3px;
+    color: #777;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.categoria-delete-header-text h1 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.categoria-delete-header-text p {
+    margin: 5px 0 0;
+    color: #858585;
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+/* =========================================================
+   CUERPO
+   ========================================================= */
+
+.categoria-delete-body {
+    padding: 25px 24px;
+}
+
+/* =========================================================
+   INFORMACIÓN
+   ========================================================= */
+
+.categoria-info {
+    margin-bottom: 20px;
+    padding: 17px;
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 9px;
+}
+
+.categoria-label {
+    margin-bottom: 7px;
+    color: #777;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.categoria-name {
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   ADVERTENCIA
+   ========================================================= */
+
+.categoria-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding: 14px 15px;
+    border: 1px solid rgba(220, 38, 38, 0.28);
+    border-radius: 9px;
+    background: rgba(220, 38, 38, 0.07);
+}
+
+.categoria-warning-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #f87171;
+}
+
+.categoria-warning-icon svg {
+    width: 19px;
+    height: 19px;
+}
+
+.categoria-warning-text {
+    color: #bdbdbd;
+    font-size: 0.83rem;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   PREGUNTA
+   ========================================================= */
+
+.categoria-question {
+    margin: 0 0 24px;
+    color: #ccc;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.categoria-question strong {
+    color: #fff;
+    font-weight: 700;
+}
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.categoria-delete-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    border-top: 1px solid #292929;
+}
+
+.categoria-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    box-sizing: border-box;
+    padding: 9px 15px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.categoria-delete-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   CONFIRMAR ELIMINACIÓN
+   ========================================================= */
+
+.categoria-delete-confirm {
+    border: 1px solid #dc2626;
+    background: #dc2626;
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(220, 38, 38, 0.12);
+}
+
+.categoria-delete-confirm:hover {
+    border-color: #b91c1c;
+    background: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 7px 20px rgba(220, 38, 38, 0.18);
+}
+
+/* =========================================================
+   CANCELAR
+   ========================================================= */
+
+.categoria-delete-cancel {
+    border: 1px solid #383838;
+    background: #242424;
+    color: #aaa;
+}
+
+.categoria-delete-cancel:hover {
+    border-color: #464646;
+    background: #2c2c2c;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .categoria-delete-card {
+        max-width: none;
+    }
+
+    .categoria-delete-header {
+        padding: 18px;
+    }
+
+    .categoria-delete-body {
+        padding: 20px 18px;
+    }
+
+    .categoria-delete-header-text h1 {
+        font-size: 1.15rem;
+    }
+
+    .categoria-delete-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .categoria-delete-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 430px) {
+
+    .categoria-delete-header {
+        align-items: flex-start;
+    }
+
+    .categoria-delete-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .categoria-delete-header-text h1 {
+        font-size: 1.05rem;
+    }
+
+    .categoria-warning {
+        gap: 9px;
+    }
+}

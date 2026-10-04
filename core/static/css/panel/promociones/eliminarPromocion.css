@@ -1,0 +1,514 @@
+/* =========================================================
+ELIMINAR PROMOCIÓN - ZONA BURGER
+========================================================= */
+
+.promocion-delete-page {
+width: 100%;
+max-width: 650px;
+margin: 0 auto;
+}
+
+/* =========================================================
+VOLVER
+========================================================= */
+
+.promocion-delete-back {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+
+
+margin-bottom: 20px;
+padding: 7px 11px;
+
+border: 1px solid #303030;
+border-radius: 7px;
+
+background: #191919;
+color: #858585;
+
+text-decoration: none;
+font-size: .84rem;
+
+transition:
+    color .2s ease,
+    background .2s ease,
+    border-color .2s ease,
+    transform .2s ease;
+
+
+}
+
+.promocion-delete-back svg {
+width: 16px;
+height: 16px;
+
+
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+
+
+}
+
+.promocion-delete-back:hover {
+color: #dc2626;
+background: rgba(220, 38, 38, .06);
+border-color: rgba(220, 38, 38, .35);
+
+
+transform: translateX(-2px);
+
+
+}
+
+/* =========================================================
+CARD
+========================================================= */
+
+.promocion-delete-card {
+background: #181818;
+border: 1px solid #303030;
+border-radius: 10px;
+overflow: hidden;
+
+
+box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+
+
+}
+
+/* =========================================================
+HEADER
+========================================================= */
+
+.promocion-delete-header {
+display: flex;
+align-items: center;
+gap: 15px;
+
+
+padding: 23px 27px;
+
+border-bottom: 1px solid #303030;
+
+
+}
+
+.promocion-delete-icon {
+width: 49px;
+height: 49px;
+
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+flex-shrink: 0;
+
+border-radius: 8px;
+
+
+}
+
+.promocion-delete-icon svg {
+width: 25px;
+height: 25px;
+
+
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+
+
+}
+
+/* =========================================================
+ELIMINAR
+========================================================= */
+
+.promocion-delete-icon.eliminar {
+background: rgba(220, 38, 38, .10);
+border: 1px solid rgba(220, 38, 38, .30);
+color: #dc2626;
+}
+
+.promocion-delete-header-text {
+min-width: 0;
+}
+
+.promocion-delete-header-text h1 {
+margin: 0 0 5px;
+
+
+font-size: 1.35rem;
+font-weight: 600;
+line-height: 1.2;
+
+
+}
+
+.promocion-delete-header-text h1.eliminar {
+color: #dc2626;
+}
+
+.promocion-delete-header-text p {
+margin: 0;
+
+
+color: #858585;
+font-size: .84rem;
+line-height: 1.4;
+
+
+}
+
+/* =========================================================
+BODY
+========================================================= */
+
+.promocion-delete-body {
+padding: 27px;
+}
+
+/* =========================================================
+PREGUNTA
+========================================================= */
+
+.promocion-delete-question {
+margin: 0 0 20px;
+
+
+color: #b8b8b8;
+font-size: .9rem;
+line-height: 1.5;
+
+
+}
+
+.promocion-delete-question strong {
+color: #f0f0f0;
+font-weight: 600;
+}
+
+/* =========================================================
+INFORMACIÓN
+========================================================= */
+
+.promocion-info {
+margin-bottom: 20px;
+padding: 15px;
+
+
+background: #202020;
+border: 1px solid #333;
+border-radius: 8px;
+
+
+}
+
+.promocion-info-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+
+
+gap: 20px;
+
+padding: 9px 0;
+
+border-bottom: 1px solid #303030;
+
+
+}
+
+.promocion-info-row:first-child {
+padding-top: 0;
+}
+
+.promocion-info-row:last-child {
+padding-bottom: 0;
+border-bottom: none;
+}
+
+.promocion-info-label {
+color: #626262;
+
+
+font-size: .67rem;
+font-weight: 700;
+
+text-transform: uppercase;
+letter-spacing: .6px;
+
+
+}
+
+.promocion-info-value {
+color: #ddd;
+
+
+font-size: .86rem;
+font-weight: 600;
+
+text-align: right;
+overflow-wrap: anywhere;
+
+
+}
+
+.promocion-info-value.id {
+color: #777;
+font-weight: 500;
+}
+
+/* =========================================================
+ADVERTENCIA
+========================================================= */
+
+.promocion-warning {
+display: flex;
+align-items: flex-start;
+gap: 11px;
+
+
+margin-bottom: 22px;
+padding: 14px;
+
+background: rgba(220, 38, 38, .07);
+border: 1px solid rgba(220, 38, 38, .23);
+border-radius: 7px;
+
+
+}
+
+.promocion-warning-icon {
+flex-shrink: 0;
+margin-top: 1px;
+
+
+color: #dc2626;
+
+
+}
+
+.promocion-warning-icon svg {
+width: 19px;
+height: 19px;
+
+
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+
+
+}
+
+.promocion-warning-text {
+color: #aaa;
+
+
+font-size: .84rem;
+line-height: 1.5;
+
+
+}
+
+/* =========================================================
+ACCIONES
+========================================================= */
+
+.promocion-delete-actions {
+display: flex;
+justify-content: center;
+gap: 9px;
+
+
+padding-top: 21px;
+
+border-top: 1px solid #303030;
+
+flex-wrap: wrap;
+
+
+}
+
+.promocion-action-btn {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+
+
+gap: 7px;
+
+min-height: 38px;
+
+padding: 9px 16px;
+
+box-sizing: border-box;
+
+border-radius: 6px;
+
+font-size: .82rem;
+font-weight: 700;
+
+text-decoration: none;
+
+cursor: pointer;
+
+transition:
+    background .2s ease,
+    border-color .2s ease,
+    color .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease;
+
+
+}
+
+.promocion-action-btn:hover {
+transform: translateY(-1px);
+}
+
+.promocion-action-btn svg {
+width: 16px;
+height: 16px;
+
+
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+
+
+}
+
+/* =========================================================
+CONFIRMAR
+========================================================= */
+
+.promocion-confirmar {
+border: 1px solid #dc2626;
+background: #dc2626;
+color: #fff;
+
+
+box-shadow: 0 5px 14px rgba(220, 38, 38, .10);
+
+
+}
+
+.promocion-confirmar:hover {
+background: #ef3030;
+border-color: #ef3030;
+color: #fff;
+
+
+box-shadow: 0 7px 18px rgba(220, 38, 38, .16);
+
+
+}
+
+/* =========================================================
+CANCELAR
+========================================================= */
+
+.promocion-cancelar {
+background: #222;
+border: 1px solid #3a3a3a;
+color: #aaa;
+}
+
+.promocion-cancelar:hover {
+background: #292929;
+border-color: #4a4a4a;
+color: #eee;
+}
+
+/* =========================================================
+RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+
+
+.promocion-delete-header,
+.promocion-delete-body {
+    padding: 20px;
+}
+
+.promocion-delete-header {
+    gap: 12px;
+}
+
+.promocion-delete-icon {
+    width: 44px;
+    height: 44px;
+}
+
+.promocion-delete-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.promocion-delete-header-text h1 {
+    font-size: 1.18rem;
+}
+
+.promocion-delete-header-text p {
+    font-size: .79rem;
+}
+
+.promocion-info {
+    padding: 13px;
+}
+
+.promocion-info-row {
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.promocion-info-value {
+    text-align: right;
+}
+
+.promocion-delete-actions {
+    flex-direction: column;
+}
+
+.promocion-action-btn {
+    width: 100%;
+}
+
+
+}
+
+@media (max-width: 420px) {
+
+
+.promocion-delete-page {
+    max-width: none;
+}
+
+.promocion-info-row {
+    flex-direction: column;
+    gap: 4px;
+}
+
+.promocion-info-value {
+    text-align: left;
+}
+
+.promocion-warning-text {
+    font-size: .8rem;
+}
+
+
+}

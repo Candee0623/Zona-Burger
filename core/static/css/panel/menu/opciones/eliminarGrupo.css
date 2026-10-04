@@ -1,0 +1,230 @@
+.grupo-delete-page {
+    max-width: 750px;
+    margin: 0 auto;
+}
+
+/* Volver */
+.grupo-delete-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #aaa;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 18px;
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.grupo-delete-back:hover {
+    color: #fff;
+    transform: translateX(-2px);
+}
+
+/* Tarjeta principal */
+.grupo-delete-card {
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Encabezado */
+.grupo-delete-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 28px;
+    border-bottom: 1px solid #333;
+}
+
+.grupo-delete-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.32);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #dc2626;
+    flex-shrink: 0;
+}
+
+.grupo-delete-header-text h1 {
+    margin: 0 0 5px;
+    color: #fff;
+    font-size: 1.45rem;
+}
+
+.grupo-delete-header-text p {
+    margin: 0;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* Cuerpo */
+.grupo-delete-body {
+    padding: 28px;
+}
+
+/* Información del grupo */
+.grupo-info {
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 22px;
+}
+
+.grupo-label {
+    color: #777;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.grupo-name {
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+/* Advertencia */
+.grupo-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    padding: 16px;
+    border-radius: 7px;
+    margin-bottom: 22px;
+}
+
+.grupo-warning-icon {
+    color: #ef4444;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.grupo-warning-content {
+    flex: 1;
+}
+
+.grupo-warning-title {
+    color: #f87171;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin: 0 0 12px;
+    line-height: 1.4;
+}
+
+.grupo-options {
+    margin: 0;
+    padding-left: 20px;
+    color: #bbb;
+    font-size: 0.9rem;
+}
+
+.grupo-options li {
+    margin-bottom: 7px;
+    line-height: 1.4;
+}
+
+.grupo-options li:last-child {
+    margin-bottom: 0;
+}
+
+.grupo-option-price {
+    color: #dc2626;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.grupo-empty {
+    color: #777;
+    font-style: italic;
+}
+
+/* Pregunta */
+.grupo-question {
+    color: #ccc;
+    font-size: 0.95rem;
+    margin: 0 0 22px;
+    text-align: center;
+}
+
+.grupo-question strong {
+    color: #fff;
+}
+
+/* Acciones */
+.grupo-delete-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.grupo-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+/* Confirmar eliminación */
+.grupo-delete-confirm {
+    background: #dc2626;
+    border: 1px solid #dc2626;
+    color: #fff;
+}
+
+.grupo-delete-confirm:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    transform: translateY(-1px);
+}
+
+/* Cancelar */
+.grupo-delete-cancel {
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+}
+
+.grupo-delete-cancel:hover {
+    background: #3d3d3d;
+    border-color: #555;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+
+    .grupo-delete-header,
+    .grupo-delete-body {
+        padding: 20px;
+    }
+
+    .grupo-delete-actions {
+        flex-direction: column;
+    }
+
+    .grupo-delete-btn {
+        width: 100%;
+    }
+}

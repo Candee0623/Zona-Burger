@@ -1,30 +1,63 @@
 {% load static %}
 
 <!DOCTYPE html>
+
 <html lang="es">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
 
-    <title>
-        {% block title %}
-            Zona-Burger | Panel
-        {% endblock %}
-    </title>
+>
 
-    <link
-        rel="stylesheet"
-        href="{% static 'css/panel.css' %}"
-    >
+<title>
+    {% block title %}
+        Zona-Burger | Panel
+    {% endblock %}
+</title>
+
+<!-- FUENTE -->
+
+<link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+>
+
+<link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+>
+
+<!-- ICONOS -->
+
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+>
+
+<!-- CSS DEL PANEL -->
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/panel/base.css' %}"
+>
+
+<!-- CSS ESPECÍFICO DE CADA PÁGINA -->
+
+{% block extra_css %}
+{% endblock %}
 
 </head>
-
 
 <body>
 
@@ -33,433 +66,419 @@
     id="panelContainer"
 >
 
+<!-- ================================================== -->
 
-    <!-- ================================================== -->
-    <!-- SIDEBAR -->
-    <!-- ================================================== -->
+<!-- SIDEBAR -->
 
-    <aside
-        class="sidebar"
-        id="sidebar"
-    >
+<!-- ================================================== -->
 
-        <!-- LOGO -->
+<aside
+    class="sidebar"
+    id="sidebar"
+>
 
-        <div class="sidebar-header">
 
-            <div class="brand">
+<!-- LOGO -->
 
-                <img
-                    src="{% static 'img/logo.png' %}"
-                    alt="Zona-Burger"
-                    class="brand-logo"
-                >
+<div class="sidebar-header">
 
-                <span class="brand-name">
-                    Zona-Burger
-                </span>
+    <div class="brand">
 
-            </div>
+        <img
+            src="{% static 'img/logo.png' %}"
+            alt="Zona-Burger"
+            class="brand-logo"
+        >
 
-        </div>
+        <span class="brand-name">
+            Zona-Burger
+        </span>
 
+    </div>
 
-        <!-- USUARIO -->
+</div>
 
-        <div class="sidebar-user">
 
-            <div class="user-icon">
-                👤
-            </div>
+<!-- USUARIO -->
 
-            <div class="user-info">
+<div class="sidebar-user">
 
-                <strong>
-                    Candela
-                </strong>
+    <div class="user-icon">
+        <i class="fa-solid fa-user"></i>
+    </div>
 
-                <span>
-                    Administrador
-                </span>
+    <div class="user-info">
 
-            </div>
+        <strong>
+            Candela
+        </strong>
 
-        </div>
+        <span>
+            Administrador
+        </span>
 
-
-        <!-- ================================================== -->
-        <!-- MENÚ PRINCIPAL -->
-        <!-- ================================================== -->
-
-        <nav class="sidebar-menu">
-
-
-            <!-- INICIO -->
-
-            <a
-                href="{% url 'panel_inicio' %}"
-                class="menu-item {% if request.resolver_match.url_name == 'panel_inicio' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    📊
-                </span>
-
-                <span class="menu-text">
-                    Inicio
-                </span>
-
-            </a>
-
-
-            <!-- PEDIDOS -->
-
-            <a
-                href="#"
-                class="menu-item {% if request.resolver_match.url_name == 'lista_pedidos' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    🛒
-                </span>
-
-                <span class="menu-text">
-                    Pedidos
-                </span>
-
-            </a>
-
-
-            <!-- MENÚ -->
-
-            <a
-                href="{% url 'menu_panel' %}"
-                class="menu-item {% if 'menu' in request.resolver_match.url_name or 'categoria' in request.resolver_match.url_name or 'grupo' in request.resolver_match.url_name or 'producto' in request.resolver_match.url_name or 'extra' in request.resolver_match.url_name %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    🍔
-                </span>
-
-                <span class="menu-text">
-                    Menú
-                </span>
-
-            </a>
-
-
-            <!-- RECETAS -->
-
-            <a
-                href="{% url 'lista_recetas' %}"
-                class="menu-item {% if 'receta' in request.resolver_match.url_name %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    📜
-                </span>
-
-                <span class="menu-text">
-                    Recetas
-                </span>
-
-            </a>
-
-
-            <!-- STOCK -->
-
-            <a
-                href="#"
-                class="menu-item {% if request.resolver_match.url_name == 'lista_stock' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    📦
-                </span>
-
-                <span class="menu-text">
-                    Stock
-                </span>
-
-            </a>
-
-
-            <!-- REPORTES -->
-
-            <a
-                href="#"
-                class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    📈
-                </span>
-
-                <span class="menu-text">
-                    Reportes
-                </span>
-
-            </a>
-
-
-            <!-- ================================================== -->
-            <!-- ADMINISTRACIÓN -->
-            <!-- ================================================== -->
-
-            <!-- USUARIOS -->
-
-            <a
-                href="#"
-                class="menu-item {% if request.resolver_match.url_name == 'lista_usuarios' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    👥
-                </span>
-
-                <span class="menu-text">
-                    Usuarios
-                </span>
-
-            </a>
-
-
-            <!-- ROLES -->
-
-            <a
-                href="#"
-                class="menu-item {% if request.resolver_match.url_name == 'lista_roles' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    🔐
-                </span>
-
-                <span class="menu-text">
-                    Roles
-                </span>
-
-            </a>
-
-
-            <!-- ================================================== -->
-            <!-- CONFIGURACIÓN -->
-            <!-- ================================================== -->
-
-            <!-- PROMOCIONES -->
-
-            <a
-                href="{% url 'promociones_panel' %}"
-                class="menu-item {% if 'promociones' in request.resolver_match.url_name %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    🎁
-                </span>
-
-                <span class="menu-text">
-                    Promociones
-                </span>
-
-            </a>
-
-
-            <!-- PAGOS -->
-
-            <a
-                href="#"
-                class="menu-item {% if request.resolver_match.url_name == 'pagos' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    💳
-                </span>
-
-                <span class="menu-text">
-                    Pagos
-                </span>
-
-            </a>
-
-
-            <!-- ESTADOS -->
-
-            <a
-                href="#"
-                class="menu-item {% if request.resolver_match.url_name == 'lista_estados' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    📋
-                </span>
-
-                <span class="menu-text">
-                    Estados
-                </span>
-
-            </a>
-
-
-            <!-- NEGOCIO -->
-
-            <a
-                href="#"
-                class="menu-item {% if request.resolver_match.url_name == 'negocio' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    🏪
-                </span>
-
-                <span class="menu-text">
-                    Negocio
-                </span>
-
-            </a>
-
-
-            <!-- ENTREGA -->
-
-            <a
-                href="#"
-                class="menu-item {% if request.resolver_match.url_name == 'entrega' %}active{% endif %}"
-            >
-
-                <span class="menu-icon">
-                    📍
-                </span>
-
-                <span class="menu-text">
-                    Entrega
-                </span>
-
-            </a>
-
-        </nav>
-
-    </aside>
-
-
-    <!-- ================================================== -->
-    <!-- CONTENIDO PRINCIPAL -->
-    <!-- ================================================== -->
-
-    <main class="main-content">
-
-
-        <!-- ================================================== -->
-        <!-- TOPBAR -->
-        <!-- ================================================== -->
-
-        <header class="topbar">
-
-
-            <!-- BOTÓN PARA ABRIR/CERRAR SIDEBAR -->
-
-            <button
-                class="menu-toggle"
-                id="menuToggle"
-                type="button"
-                aria-label="Abrir o cerrar menú lateral"
-                aria-controls="sidebar"
-                aria-expanded="true"
-            >
-                ☰
-            </button>
-
-
-            <!-- NOMBRE DEL PANEL -->
-
-            <div class="topbar-brand">
-                Zona-Burger
-            </div>
-
-
-            <!-- ================================================== -->
-            <!-- USUARIO -->
-            <!-- ================================================== -->
-
-            <div class="topbar-user">
-
-                <button
-                    class="user-button"
-                    id="userButton"
-                    type="button"
-                    aria-label="Abrir menú de usuario"
-                >
-
-                    <span class="user-button-icon">
-                        👤
-                    </span>
-
-                </button>
-
-
-                <!-- DROPDOWN -->
-
-                <div
-                    class="user-dropdown"
-                    id="userDropdown"
-                >
-
-                    <div class="dropdown-header">
-
-                        <strong>
-                            Candela
-                        </strong>
-
-                        <span>
-                            Administrador
-                        </span>
-
-                    </div>
-
-
-                    <a href="#">
-                        👤 Mi perfil
-                    </a>
-
-
-                    <a href="#">
-                        🔐 Cambiar contraseña
-                    </a>
-
-
-                    <div class="dropdown-divider"></div>
-
-
-                    <a
-                        href="#"
-                        class="logout"
-                    >
-                        🚪 Cerrar sesión
-                    </a>
-
-                </div>
-
-            </div>
-
-        </header>
-
-
-        <!-- ================================================== -->
-        <!-- CONTENIDO DE LA PÁGINA -->
-        <!-- ================================================== -->
-
-        <section class="page-content">
-
-            {% block content %}
-            {% endblock %}
-
-        </section>
-
-    </main>
+    </div>
 
 </div>
 
 
 <!-- ================================================== -->
+<!-- MENÚ PRINCIPAL -->
+<!-- ================================================== -->
+
+<nav class="sidebar-menu">
+
+
+    <!-- INICIO -->
+
+    <a
+        href="{% url 'panel_inicio' %}"
+        class="menu-item {% if request.resolver_match.url_name == 'panel_inicio' %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-chart-pie"></i>
+        </span>
+
+        <span class="menu-text">
+            Inicio
+        </span>
+
+    </a>
+
+
+    <!-- PEDIDOS -->
+
+    <a
+        href="#"
+        class="menu-item {% if request.resolver_match.url_name == 'lista_pedidos' %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-cart-shopping"></i>
+        </span>
+
+        <span class="menu-text">
+            Pedidos
+        </span>
+
+    </a>
+
+
+    <!-- MENÚ -->
+
+    <a
+        href="{% url 'menu_panel' %}"
+        class="menu-item {% if 'menu' in request.resolver_match.url_name or 'categoria' in request.resolver_match.url_name or 'grupo' in request.resolver_match.url_name or 'producto' in request.resolver_match.url_name or 'extra' in request.resolver_match.url_name %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-burger"></i>
+        </span>
+
+        <span class="menu-text">
+            Menú
+        </span>
+
+    </a>
+
+
+    <!-- STOCK -->
+
+    <a
+        href="#"
+        class="menu-item {% if request.resolver_match.url_name == 'lista_stock' %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-boxes-stacked"></i>
+        </span>
+
+        <span class="menu-text">
+            Stock
+        </span>
+
+    </a>
+
+
+    <!-- REPORTES -->
+
+    <a
+        href="#"
+        class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-chart-line"></i>
+        </span>
+
+        <span class="menu-text">
+            Reportes
+        </span>
+
+    </a>
+
+
+    <!-- ================================================== -->
+    <!-- ADMINISTRACIÓN -->
+    <!-- ================================================== -->
+
+
+    <!-- USUARIOS -->
+
+    <a
+        href="#"
+        class="menu-item {% if request.resolver_match.url_name == 'lista_usuarios' %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-users"></i>
+        </span>
+
+        <span class="menu-text">
+            Usuarios
+        </span>
+
+    </a>
+
+
+    <!-- ROLES -->
+
+    <a
+        href="#"
+        class="menu-item {% if request.resolver_match.url_name == 'lista_roles' %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-shield-halved"></i>
+        </span>
+
+        <span class="menu-text">
+            Roles
+        </span>
+
+    </a>
+
+
+    <!-- ================================================== -->
+    <!-- CONFIGURACIÓN -->
+    <!-- ================================================== -->
+
+
+    <!-- PROMOCIONES -->
+
+    <a
+        href="{% url 'promociones_panel' %}"
+        class="menu-item {% if 'promociones' in request.resolver_match.url_name %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-gift"></i>
+        </span>
+
+        <span class="menu-text">
+            Promociones
+        </span>
+
+    </a>
+
+
+    <!-- NEGOCIO -->
+
+    <a
+        href="#"
+        class="menu-item {% if request.resolver_match.url_name == 'negocio' %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-store"></i>
+        </span>
+
+        <span class="menu-text">
+            Negocio
+        </span>
+
+    </a>
+
+
+    <!-- ENTREGA -->
+
+    <a
+        href="#"
+        class="menu-item {% if request.resolver_match.url_name == 'entrega' %}active{% endif %}"
+    >
+
+        <span class="menu-icon">
+            <i class="fa-solid fa-location-dot"></i>
+        </span>
+
+        <span class="menu-text">
+            Entrega
+        </span>
+
+    </a>
+
+</nav>
+
+
+</aside>
+
+<!-- ================================================== -->
+
+<!-- CONTENIDO PRINCIPAL -->
+
+<!-- ================================================== -->
+
+<main class="main-content">
+
+
+<!-- ================================================== -->
+<!-- TOPBAR -->
+<!-- ================================================== -->
+
+<header class="topbar">
+
+
+    <!-- BOTÓN SIDEBAR -->
+
+    <button
+        class="menu-toggle"
+        id="menuToggle"
+        type="button"
+        aria-label="Abrir o cerrar menú lateral"
+        aria-controls="sidebar"
+        aria-expanded="true"
+    >
+
+        <i class="fa-solid fa-bars"></i>
+
+    </button>
+
+
+    <!-- NOMBRE DEL PANEL -->
+
+    <div class="topbar-brand">
+
+        <span>
+            Panel de administración
+        </span>
+
+    </div>
+
+
+    <!-- ================================================== -->
+    <!-- USUARIO -->
+    <!-- ================================================== -->
+
+    <div class="topbar-user">
+
+        <button
+            class="user-button"
+            id="userButton"
+            type="button"
+            aria-label="Abrir menú de usuario"
+        >
+
+            <span class="user-button-icon">
+                <i class="fa-solid fa-user"></i>
+            </span>
+
+        </button>
+
+
+        <!-- DROPDOWN -->
+
+        <div
+            class="user-dropdown"
+            id="userDropdown"
+        >
+
+            <div class="dropdown-header">
+
+                <div class="dropdown-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+
+                <div class="dropdown-user-info">
+
+                    <strong>
+                        Candela
+                    </strong>
+
+                    <span>
+                        Administrador
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <a href="#">
+
+                <i class="fa-solid fa-user"></i>
+
+                <span>
+                    Mi perfil
+                </span>
+
+            </a>
+
+
+            <a href="#">
+
+                <i class="fa-solid fa-key"></i>
+
+                <span>
+                    Cambiar contraseña
+                </span>
+
+            </a>
+
+
+            <div class="dropdown-divider"></div>
+
+
+            <a
+                href="#"
+                class="logout"
+            >
+
+                <i class="fa-solid fa-right-from-bracket"></i>
+
+                <span>
+                    Cerrar sesión
+                </span>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- ================================================== -->
+<!-- CONTENIDO DE LA PÁGINA -->
+<!-- ================================================== -->
+
+<section class="page-content">
+
+    {% block content %}
+    {% endblock %}
+
+</section>
+
+
+</main>
+
+</div>
+
+<!-- ================================================== -->
+
 <!-- JAVASCRIPT -->
+
 <!-- ================================================== -->
 
 <script src="{% static 'java/panel.js' %}"></script>

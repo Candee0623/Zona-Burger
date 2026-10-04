@@ -1,314 +1,79 @@
 {% extends 'panel/base.html' %}
+{% load static %}
 
 {% block title %}Zona-Burger | Categorías{% endblock %}
 
 {% block content %}
 
-<style>
-    .categorias-page {
-        width: 100%;
-        min-width: 0;
-    }
-
-    .categorias-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 22px;
-        padding: 7px 11px;
-        border: 1px solid #303030;
-        border-radius: 8px;
-        background: #191919;
-        color: #929292;
-        text-decoration: none;
-        font-size: .84rem;
-        transition: .2s ease;
-    }
-
-    .categorias-back:hover {
-        color: #00d26a;
-        border-color: rgba(0,210,106,.35);
-    }
-
-    .categorias-heading {
-        margin-bottom: 28px;
-    }
-
-    .categorias-heading h1 {
-        margin: 0;
-        color: #fff;
-        font-size: 2rem;
-        font-weight: 700;
-    }
-
-    .categorias-heading p {
-        margin: 7px 0 0;
-        color: #858585;
-        font-size: .9rem;
-        line-height: 1.5;
-    }
-
-    .categorias-toolbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 18px;
-        padding: 14px 16px;
-        background: #161616;
-        border: 1px solid #2d2d2d;
-        border-radius: 10px;
-    }
-
-    .categorias-count {
-        color: #777;
-        font-size: .8rem;
-    }
-
-    .categorias-count strong {
-        color: #ddd;
-    }
-
-    .btn-nueva-categoria {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 9px 14px;
-        border-radius: 8px;
-        background: #00d26a;
-        color: #06150d;
-        border: 1px solid #00d26a;
-        text-decoration: none;
-        font-size: .82rem;
-        font-weight: 700;
-        transition: .2s ease;
-    }
-
-    .btn-nueva-categoria:hover {
-        background: #00e879;
-        transform: translateY(-1px);
-    }
-
-    .btn-nueva-categoria svg {
-        width: 16px;
-        height: 16px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 2;
-        stroke-linecap: round;
-    }
-
-    .categorias-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-    }
-
-    .categoria-card {
-        position: relative;
-        padding: 18px;
-        background: linear-gradient(145deg, #1a1a1a, #151515);
-        border: 1px solid #303030;
-        border-radius: 12px;
-        overflow: hidden;
-        transition: .22s ease;
-    }
-
-    .categoria-card::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        background: #00d26a;
-        opacity: .6;
-    }
-
-    .categoria-card:hover {
-        transform: translateY(-2px);
-        border-color: #404040;
-        box-shadow: 0 10px 25px rgba(0,0,0,.18);
-    }
-
-    .categoria-card-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 18px;
-    }
-
-    .categoria-icon {
-        width: 42px;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 11px;
-        background: rgba(0,210,106,.08);
-        border: 1px solid rgba(0,210,106,.2);
-        color: #00d26a;
-    }
-
-    .categoria-icon svg {
-        width: 20px;
-        height: 20px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
-
-    .categoria-id {
-        color: #555;
-        font-size: .7rem;
-        font-weight: 600;
-    }
-
-    .categoria-nombre {
-        min-height: 48px;
-        color: #fff;
-        font-size: 1.05rem;
-        font-weight: 700;
-        line-height: 1.35;
-        overflow-wrap: anywhere;
-    }
-
-    .categoria-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 7px;
-        margin-top: 18px;
-    }
-
-    .btn-categoria {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        min-height: 35px;
-        padding: 7px 9px;
-        border-radius: 7px;
-        background: #222;
-        border: 1px solid #383838;
-        text-decoration: none;
-        font-size: .75rem;
-        font-weight: 700;
-        transition: .2s ease;
-    }
-
-    .btn-categoria:hover {
-        transform: translateY(-1px);
-        background: #2a2a2a;
-    }
-
-    .btn-categoria svg {
-        width: 15px;
-        height: 15px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
-
-    .btn-categoria-edit {
-        color: #5dade2;
-    }
-
-    .btn-categoria-delete {
-        color: #ff6b6b;
-    }
-
-    .categorias-empty {
-        grid-column: 1 / -1;
-        padding: 60px 20px;
-        text-align: center;
-        background: #161616;
-        border: 1px dashed #333;
-        border-radius: 12px;
-    }
-
-    .categorias-empty-icon {
-        width: 58px;
-        height: 58px;
-        margin: 0 auto 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 16px;
-        background: #222;
-        color: #666;
-        font-size: 1.5rem;
-    }
-
-    .categorias-empty h3 {
-        margin: 0;
-        color: #ddd;
-        font-size: 1rem;
-    }
-
-    .categorias-empty p {
-        margin: 7px 0 0;
-        color: #666;
-        font-size: .82rem;
-    }
-
-    @media (max-width: 950px) {
-        .categorias-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 650px) {
-        .categorias-heading h1 {
-            font-size: 1.6rem;
-        }
-
-        .categorias-toolbar {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 12px;
-        }
-
-        .btn-nueva-categoria {
-            justify-content: center;
-        }
-
-        .categorias-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/panel/menu/categorias/listaCategorias.css' %}">
 
 <div class="categorias-page">
 
+    <!-- VOLVER -->
     <a href="{% url 'menu_panel' %}" class="categorias-back">
-        ← Volver al inicio
+
+        <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+
+        Volver al inicio
+
     </a>
 
+    <!-- ENCABEZADO -->
     <div class="categorias-heading">
+
+        <span class="categorias-kicker">
+            Menú / Administración
+        </span>
+
         <h1>Categorías</h1>
+
         <p>
-            Organizá los productos de tu menú en categorías claras y fáciles de administrar.
+            Organizá los productos de tu menú en categorías claras
+            y fáciles de administrar.
         </p>
+
     </div>
 
+    <!-- TOOLBAR -->
     <div class="categorias-toolbar">
+
         <div class="categorias-count">
-            Categorías disponibles
+
+            <span>
+                Categorías disponibles
+            </span>
+
         </div>
 
-        <a href="{% url 'categoria_crear' %}" class="btn-nueva-categoria">
+        <a
+            href="{% url 'categoria_crear' %}"
+            class="btn-nueva-categoria"
+        >
+
             <svg viewBox="0 0 24 24">
-                <path d="M12 5v14"/>
-                <path d="M5 12h14"/>
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
             </svg>
+
             Nueva categoría
+
         </a>
+
     </div>
 
+    <!-- LISTADO -->
     <div class="categorias-grid">
 
         {% for categoria in categorias %}
@@ -318,11 +83,13 @@
             <div class="categoria-card-top">
 
                 <div class="categoria-icon">
+
                     <svg viewBox="0 0 24 24">
-                        <path d="M4 5h16"/>
-                        <path d="M4 12h16"/>
-                        <path d="M4 19h16"/>
+                        <path d="M4 5h16"></path>
+                        <path d="M4 12h16"></path>
+                        <path d="M4 19h16"></path>
                     </svg>
+
                 </div>
 
                 <span class="categoria-id">
@@ -341,25 +108,31 @@
                     href="{% url 'categoria_editar' categoria.idcategoria %}"
                     class="btn-categoria btn-categoria-edit"
                 >
+
                     <svg viewBox="0 0 24 24">
-                        <path d="M12 20h9"/>
-                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
                     </svg>
+
                     Editar
+
                 </a>
 
                 <a
                     href="{% url 'categoria_eliminar' categoria.idcategoria %}"
                     class="btn-categoria btn-categoria-delete"
                 >
+
                     <svg viewBox="0 0 24 24">
-                        <path d="M3 6h18"/>
-                        <path d="M8 6V4h8v2"/>
-                        <path d="M19 6l-1 14H6L5 6"/>
-                        <path d="M10 11v5"/>
-                        <path d="M14 11v5"/>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4h8v2"></path>
+                        <path d="M19 6l-1 14H6L5 6"></path>
+                        <path d="M10 11v5"></path>
+                        <path d="M14 11v5"></path>
                     </svg>
+
                     Eliminar
+
                 </a>
 
             </div>
@@ -368,10 +141,19 @@
 
         {% empty %}
 
+        <!-- SIN CATEGORÍAS -->
         <div class="categorias-empty">
 
             <div class="categorias-empty-icon">
-                🏷️
+
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"></path>
+                    <path d="M2 7h20"></path>
+                    <path d="M12 7v15"></path>
+                    <path d="M12 7H7.5A2.5 2.5 0 1 1 10 4.5C10 7 12 7 12 7Z"></path>
+                    <path d="M12 7h4.5A2.5 2.5 0 1 0 14 4.5C14 7 12 7 12 7Z"></path>
+                </svg>
+
             </div>
 
             <h3>No hay categorías cargadas</h3>
@@ -379,6 +161,13 @@
             <p>
                 Creá la primera categoría para comenzar a organizar tu menú.
             </p>
+
+            <a
+                href="{% url 'categoria_crear' %}"
+                class="categorias-empty-btn"
+            >
+                Crear categoría
+            </a>
 
         </div>
 

@@ -1,0 +1,493 @@
+/* =========================================================
+   TICKET DE COCINA - ZONA BURGER
+   ========================================================= */
+
+.ticket-cocina {
+    width: 80mm;
+    max-width: 80mm;
+
+    margin: 0 auto;
+    padding: 6mm 5mm;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+    color: #000000;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+
+    line-height: 1.3;
+
+    border: 1px solid #000;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.cocina-header {
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.cocina-logo {
+    font-size: 22px;
+    font-weight: 900;
+
+    letter-spacing: 1.5px;
+    line-height: 1.1;
+}
+
+.cocina-tipo {
+    margin-top: 4px;
+
+    font-size: 10px;
+    font-weight: 900;
+
+    letter-spacing: 1.5px;
+}
+
+.cocina-pedido {
+    margin-top: 12px;
+
+    font-size: 22px;
+    font-weight: 900;
+
+    letter-spacing: 0.5px;
+}
+
+.cocina-fecha {
+    margin-top: 3px;
+
+    font-size: 10px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   INFORMACIÓN GENERAL
+   ========================================================= */
+
+.cocina-info {
+    margin-top: 14px;
+}
+
+.cocina-info-row {
+    display: grid;
+
+    grid-template-columns: 28% 72%;
+
+    gap: 5px;
+
+    padding: 4px 0;
+
+    border-bottom: 1px dotted #999;
+}
+
+.cocina-info-row:last-child {
+    border-bottom: none;
+}
+
+.cocina-info-row span {
+    font-size: 9px;
+    font-weight: 900;
+
+    letter-spacing: 0.5px;
+}
+
+.cocina-info-row strong {
+    font-size: 11px;
+    font-weight: 700;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   HORARIO
+   ========================================================= */
+
+.cocina-horario-row {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.cocina-horario {
+    font-size: 15px !important;
+    font-weight: 900 !important;
+}
+
+
+/* =========================================================
+   SEPARADORES
+   ========================================================= */
+
+.cocina-separator {
+    width: 100%;
+
+    margin: 12px 0;
+
+    border-top: 2px dashed #000;
+}
+
+
+/* =========================================================
+   PRODUCTOS
+   ========================================================= */
+
+.cocina-section-title {
+    margin-bottom: 8px;
+
+    font-size: 13px;
+    font-weight: 900;
+
+    letter-spacing: 1px;
+}
+
+.cocina-producto {
+    padding: 9px 0;
+
+    border-bottom: 1px solid #000;
+
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+
+/* =========================================================
+   CABECERA DEL PRODUCTO
+   ========================================================= */
+
+.cocina-producto-cabecera {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 8px;
+}
+
+.cocina-cantidad {
+    min-width: 30px;
+
+    font-size: 18px;
+    font-weight: 900;
+
+    line-height: 1.1;
+}
+
+.cocina-producto-nombre {
+    flex: 1;
+
+    font-size: 14px;
+    font-weight: 900;
+
+    line-height: 1.25;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   PRECIOS
+   ========================================================= */
+
+/*
+   IMPORTANTE:
+   Antes estaba display:flex horizontal.
+   Ahora cada precio ocupa una fila completa.
+*/
+
+.cocina-precios {
+    display: block;
+
+    margin-top: 7px;
+    margin-left: 38px;
+}
+
+.cocina-precio-row {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+
+    padding: 2px 0;
+}
+
+.cocina-precio-row span {
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 0.3px;
+}
+
+.cocina-precio-row strong {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.cocina-subtotal-row {
+    margin-top: 1px;
+}
+
+.cocina-subtotal-row span {
+    font-weight: 900;
+}
+
+.cocina-subtotal-row strong {
+    font-size: 12px;
+    font-weight: 900;
+}
+
+
+/* =========================================================
+   OBSERVACIÓN DEL PRODUCTO
+   ========================================================= */
+
+.cocina-observacion {
+    margin-top: 8px;
+    padding: 7px;
+
+    border: 1px solid #000;
+
+    background: #f5f5f5;
+
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.cocina-observacion-titulo {
+    margin-bottom: 4px;
+
+    font-size: 9px;
+    font-weight: 900;
+
+    letter-spacing: 0.7px;
+}
+
+.cocina-observacion-texto {
+    font-size: 11px;
+    font-weight: 700;
+
+    line-height: 1.4;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   SIN PRODUCTOS
+   ========================================================= */
+
+.cocina-sin-productos {
+    padding: 12px 0;
+
+    text-align: center;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   COMENTARIO GENERAL DEL PEDIDO
+   ========================================================= */
+
+.cocina-comentarios {
+    margin-top: 12px;
+    padding: 9px;
+
+    border: 2px solid #000;
+
+    background: #ffffff;
+
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.cocina-comentarios-titulo {
+    margin-bottom: 5px;
+
+    font-size: 10px;
+    font-weight: 900;
+
+    letter-spacing: 0.6px;
+}
+
+.cocina-comentarios-texto {
+    font-size: 12px;
+    font-weight: 700;
+
+    line-height: 1.45;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   DESCUENTOS
+   ========================================================= */
+
+.cocina-descuentos {
+    margin-bottom: 8px;
+}
+
+.cocina-resumen-linea {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 3px 0;
+}
+
+.cocina-resumen-linea span {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.cocina-resumen-linea strong {
+    font-size: 11px;
+    font-weight: 900;
+}
+
+
+/* =========================================================
+   TOTAL
+   ========================================================= */
+
+.cocina-total {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    margin-top: 8px;
+    padding-top: 10px;
+
+    border-top: 3px solid #000;
+
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.cocina-total span {
+    font-size: 16px;
+    font-weight: 900;
+
+    letter-spacing: 1px;
+}
+
+.cocina-total strong {
+    font-size: 20px;
+    font-weight: 900;
+}
+
+
+/* =========================================================
+   PIE
+   ========================================================= */
+
+.cocina-footer {
+    margin-top: 16px;
+    padding-top: 8px;
+
+    border-top: 1px dashed #000;
+
+    text-align: center;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    letter-spacing: 0.8px;
+}
+
+
+/* =========================================================
+   IMPRESIÓN
+   ========================================================= */
+
+@media print {
+
+    @page {
+        size: 80mm auto;
+        margin: 0;
+    }
+
+    html,
+    body {
+        width: 80mm;
+
+        margin: 0;
+        padding: 0;
+
+        background: #ffffff;
+    }
+
+    .ticket-cocina {
+        width: 80mm;
+        max-width: 80mm;
+
+        margin: 0;
+        padding: 5mm 4mm;
+
+        border: none;
+
+        box-shadow: none;
+    }
+
+    .cocina-producto,
+    .cocina-observacion,
+    .cocina-comentarios,
+    .cocina-total {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+
+/* =========================================================
+   PANTALLA
+   ========================================================= */
+
+@media screen {
+
+    .ticket-cocina {
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.12);
+    }
+}
+
+/* =========================================================
+   HORA DE ENTREGA DESEADA
+   ========================================================= */
+
+.cocina-hora-entrega {
+    margin-top: 10px;
+    padding: 8px 6px;
+
+    border: 2px solid #000;
+
+    text-align: center;
+}
+
+.cocina-hora-label {
+    display: block;
+
+    margin-bottom: 2px;
+
+    font-size: 9px;
+    font-weight: 900;
+
+    letter-spacing: 1px;
+}
+
+.cocina-hora-valor {
+    display: block;
+
+    font-size: 21px;
+    font-weight: 900;
+
+    line-height: 1.1;
+}

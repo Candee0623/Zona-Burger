@@ -453,7 +453,6 @@ def _items_checkout(carrito):
 
     return items
 
-
 def procesar_checkout(request):
     carrito = request.session.get('carrito', {})
 
@@ -465,11 +464,11 @@ def procesar_checkout(request):
     medios_pago = list(
         MedioPago.objects.values('idmediopago', 'nombremetodo')
     )
+
     zonas_entrega = list(
         ZonasEntrega.objects.values('idzona', 'nombre', 'costoenvio')
     )
 
-    # El checkout consulta estos datos por AJAX para actualizar el formulario.
     es_consulta_json = (
         request.headers.get('x-requested-with') == 'XMLHttpRequest'
         or (
@@ -499,12 +498,8 @@ def procesar_checkout(request):
             'total_estimado': total_carrito,
             'errores': {'codigo_promocion': ''},
             'codigo_promocion': '',
-            'datos_previos': {
-                'nombre': '', 'apellido': '', 'telefono': '', 'calle': '',
-                'numero': '', 'piso': '', 'localidad': '',
-                'horario_entrega': '', 'codigo_promocion': '',
-                'comentario': '',
-            },
+            'datos_previos': {},
+            'hay_datos_previos': False,
             'error_telefono': '',
             'error_medio_pago': '',
             'error_promocion': '',
@@ -512,7 +507,6 @@ def procesar_checkout(request):
             'objeto_promocion': None,
         })
 
-    # ---------------- POST ----------------
     def campo(nombre):
         return (request.POST.get(nombre) or '').strip()
 
@@ -576,23 +570,31 @@ def procesar_checkout(request):
 
     if horario_entrega:
         try:
-            horario_deseado = datetime.strptime(horario_entrega, '%H:%M').time()
+            horario_deseado = datetime.strptime(
+                horario_entrega,
+                '%H:%M'
+            ).time()
         except ValueError:
-            errores['horario_entrega'] = 'El horario de entrega no es válido.'
+            errores['horario_entrega'] = (
+                'El horario de entrega no es válido.'
+            )
 
-    # Costo de envío según la zona elegida.
-    zona = ZonasEntrega.objects.filter(nombre__iexact=localidad).first()
+    zona = ZonasEntrega.objects.filter(
+        nombre__iexact=localidad
+    ).first()
 
     if zona and zona.costoenvio is not None:
         costo_envio = Decimal(str(zona.costoenvio))
+
         costo_envio_texto = (
-            'Envío gratis' if costo_envio == 0 else f'${costo_envio:.2f}'
+            'Envío gratis'
+            if costo_envio == 0
+            else f'${costo_envio:.2f}'
         )
     else:
         costo_envio = Decimal('0.00')
         costo_envio_texto = 'A coordinar'
 
-    # Promoción por palabra clave.
     objeto_promocion = None
     descuento_promocion = Decimal('0.00')
     error_promocion = ''
@@ -604,17 +606,25 @@ def procesar_checkout(request):
 
         if not objeto_promocion:
             error_promocion = 'El código promocional no existe.'
+
         elif not promocion_es_valida(objeto_promocion):
             error_promocion = 'La promoción no está vigente.'
+
         else:
             descuento_promocion, mensaje_promocion = (
-                calcular_descuento_promocion(carrito, objeto_promocion)
+                calcular_descuento_promocion(
+                    carrito,
+                    objeto_promocion
+                )
             )
 
             if descuento_promocion <= 0:
                 error_promocion = (
                     mensaje_promocion
-                    or 'La promoción no aplica a los productos de tu carrito.'
+                    or (
+                        'La promoción no aplica a los productos '
+                        'de tu carrito.'
+                    )
                 )
 
         if error_promocion:
@@ -622,13 +632,15 @@ def procesar_checkout(request):
 
     if any(errores.values()):
         total_estimado = max(
-            Decimal('0.00'), total_carrito - descuento_promocion
+            Decimal('0.00'),
+            total_carrito - descuento_promocion
         )
 
-        return render(request, 'productos/checkout.html', {
+        return render(request, 'publico/checkout.html', {
             **contexto,
             'total_estimado': total_estimado,
             'datos_previos': request.POST,
+            'hay_datos_previos': True,
             'errores': errores,
             'error_telefono': errores.get('telefono', ''),
             'error_medio_pago': errores.get('medio_pago', ''),
@@ -644,8 +656,6 @@ def procesar_checkout(request):
         total_carrito - descuento_promocion + costo_envio,
     )
 
-    # Cliente, dirección, pedido y detalles se guardan en una sola
-    # transacción: si algo falla no queda nada a medias.
     with transaction.atomic():
         cliente = Cliente.objects.create(
             nombre=nombre,
@@ -661,15 +671,19 @@ def procesar_checkout(request):
             localidad=localidad,
         )
 
-        # El estado con ID 1 es el estado inicial de todo pedido nuevo.
-        estado_inicial = get_object_or_404(EstadoPedido, pk=1)
+        estado_inicial = get_object_or_404(
+            EstadoPedido,
+            pk=1
+        )
 
         pedido = Pedido.objects.create(
             idcliente=cliente,
             idmediopago=medio_pago,
             idestadopedido=estado_inicial,
             idpromocion=(
-                objeto_promocion.idpromocion if objeto_promocion else None
+                objeto_promocion.idpromocion
+                if objeto_promocion
+                else None
             ),
             horarioentregadeseado=horario_deseado,
             total=total_general,
@@ -685,7 +699,10 @@ def procesar_checkout(request):
                 continue
 
             cantidad = item.get('cantidad', 1) or 1
-            subtotal_item = Decimal(str(item.get('subtotal', 0)))
+            subtotal_item = Decimal(
+                str(item.get('subtotal', 0))
+            )
+
             detalles = item.get('detalles')
 
             DetallePedido.objects.create(
@@ -694,12 +711,14 @@ def procesar_checkout(request):
                 cantidad=cantidad,
                 preciounitario=subtotal_item / cantidad,
                 observaciones=(
-                    ', '.join(detalles) if isinstance(detalles, list) else ''
+                    ', '.join(detalles)
+                    if isinstance(detalles, list)
+                    else ''
                 ),
             )
 
-    # Mensaje para el WhatsApp del negocio.
     mensaje = '*¡Nuevo Pedido! 🍔*\n\n'
+
     mensaje += '*Datos del Cliente:*\n'
     mensaje += f'• Nombre: {nombre} {apellido}\n'
     mensaje += f'• Teléfono: {telefono}\n\n'
@@ -713,41 +732,72 @@ def procesar_checkout(request):
     mensaje += f'\n• Localidad / Zona: {localidad}\n'
 
     if horario_entrega:
-        mensaje += f'• Horario Deseado: {horario_entrega}\n'
+        mensaje += (
+            f'• Horario Deseado: {horario_entrega}\n'
+        )
 
     if objeto_promocion and descuento_promocion > 0:
-        mensaje += f'• Palabra Clave Promo: {codigo_promo} (Aplicada)\n'
+        mensaje += (
+            f'• Palabra Clave Promo: '
+            f'{codigo_promo} (Aplicada)\n'
+        )
 
     mensaje += '\n*Detalle del Pedido:*\n'
 
     for item in carrito.values():
-        subtotal = Decimal(str(item.get('subtotal', 0)))
+        subtotal = Decimal(
+            str(item.get('subtotal', 0))
+        )
+
         mensaje += (
-            f'• {item.get("cantidad")}x {item.get("nombre")} '
+            f'• {item.get("cantidad")}x '
+            f'{item.get("nombre")} '
             f'(${subtotal:.2f})\n'
         )
 
         for detalle in item.get('detalles', []):
             mensaje += f'   - {detalle}\n'
 
-    mensaje += f'\n• Subtotal Productos: ${total_carrito:.2f}\n'
-
-    if descuento_promocion > 0:
-        mensaje += f'• Descuento Promo: -${descuento_promocion:.2f}\n'
-
-    mensaje += f'• Costo de Envío: {costo_envio_texto}\n'
-    mensaje += f'*Total a Pagar:* ${total_general:.2f}\n'
-    mensaje += f'*Método de Pago:* {medio_pago.nombremetodo}\n'
-
-    if comentario:
-        mensaje += f'*Comentarios:* {comentario}\n'
-
-    negocio = Negocio.objects.first()
-    numero_whatsapp = limpiar_numero_telefono(
-        str(negocio.telefono) if negocio and negocio.telefono else ''
+    mensaje += (
+        f'\n• Subtotal Productos: '
+        f'${total_carrito:.2f}\n'
     )
 
-    # El pedido ya está guardado: se vacía el carrito.
+    if descuento_promocion > 0:
+        mensaje += (
+            f'• Descuento Promo: '
+            f'-${descuento_promocion:.2f}\n'
+        )
+
+    mensaje += (
+        f'• Costo de Envío: '
+        f'{costo_envio_texto}\n'
+    )
+
+    mensaje += (
+        f'*Total a Pagar:* '
+        f'${total_general:.2f}\n'
+    )
+
+    mensaje += (
+        f'*Método de Pago:* '
+        f'{medio_pago.nombremetodo}\n'
+    )
+
+    if comentario:
+        mensaje += (
+            f'*Comentarios:* '
+            f'{comentario}\n'
+        )
+
+    negocio = Negocio.objects.first()
+
+    numero_whatsapp = limpiar_numero_telefono(
+        str(negocio.telefono)
+        if negocio and negocio.telefono
+        else ''
+    )
+
     if 'carrito' in request.session:
         del request.session['carrito']
         request.session.modified = True
@@ -756,20 +806,36 @@ def procesar_checkout(request):
         logger.warning(
             'El negocio no tiene un número de WhatsApp configurado.'
         )
+
         return redirect('menu')
 
     request.session['whatsapp_url'] = (
-        f'https://wa.me/{numero_whatsapp}?text={quote(mensaje)}'
+        f'https://wa.me/{numero_whatsapp}'
+        f'?text={quote(mensaje)}'
     )
+
+    request.session['limpiar_checkout'] = True
+    request.session.modified = True
 
     return redirect('pedido_exitoso')
 
 
+
 def pedido_exitoso(request):
-    return render(request, 'publico/pedidoExitoso.html', {
-        'negocio': Negocio.objects.first(),
-        'whatsapp_url': request.session.get('whatsapp_url'),
-    })
+    limpiar_checkout = request.session.pop(
+        'limpiar_checkout',
+        False
+    )
+
+    return render(
+        request,
+        'publico/pedidoExitoso.html',
+        {
+            'negocio': Negocio.objects.first(),
+            'whatsapp_url': request.session.get('whatsapp_url'),
+            'limpiar_checkout': limpiar_checkout,
+        }
+    )
 
 
 # ============================================================
@@ -795,123 +861,255 @@ def lista_promociones(request):
 
 
 def crear_promocion(request):
+    tipos_beneficio = TipoBeneficio.objects.all()
     productos = Producto.objects.all()
-    tipos = TipoBeneficio.objects.all()
 
     if request.method == 'POST':
-        palabraclave = request.POST.get('palabraclave')
+        palabraclave = request.POST.get('palabraclave', '').strip()
+        tipobeneficio_id = request.POST.get('tipobeneficio')
         producto_id = request.POST.get('producto')
+        descuento = request.POST.get('descuento', '').strip()
         fechainicio = request.POST.get('fechainicio') or None
         fechafin = request.POST.get('fechafin') or None
-        activo = 1 if request.POST.get('activo') == 'on' else 0
+        activo = 1 if request.POST.get('activo') else 0
 
-        tipo_beneficio = get_object_or_404(
-            TipoBeneficio, pk=request.POST.get('tipobeneficio')
-        )
-        valor = _valor_beneficio(tipo_beneficio, request.POST.get('descuento'))
-
-        if fechainicio and fechafin and fechafin < fechainicio:
+        if not palabraclave:
             return render(request, 'panel/promociones/formPromocion.html', {
+                'titulo': 'Crear promoción',
+                'tipos_beneficio': tipos_beneficio,
                 'productos': productos,
-                'titulo': 'Nueva promoción',
-                'tipos_beneficio': tipos,
-                'promocion': request.POST,
-                'producto_seleccionado': (
-                    int(producto_id) if producto_id else None
-                ),
-                'error': (
-                    'La fecha de fin no puede ser anterior '
-                    'a la fecha de inicio.'
-                ),
+                'error': 'Ingresá una palabra clave.',
             })
 
-        promocion = Promocion.objects.create(
+        if not tipobeneficio_id:
+            return render(request, 'panel/promociones/formPromocion.html', {
+                'titulo': 'Crear promoción',
+                'tipos_beneficio': tipos_beneficio,
+                'productos': productos,
+                'error': 'Seleccioná un tipo de beneficio.',
+            })
+
+        if not producto_id:
+            return render(request, 'panel/promociones/formPromocion.html', {
+                'titulo': 'Crear promoción',
+                'tipos_beneficio': tipos_beneficio,
+                'productos': productos,
+                'error': 'Seleccioná un producto.',
+            })
+
+        try:
+            tipo_beneficio = TipoBeneficio.objects.get(pk=tipobeneficio_id)
+        except TipoBeneficio.DoesNotExist:
+            return render(request, 'panel/promociones/formPromocion.html', {
+                'titulo': 'Crear promoción',
+                'tipos_beneficio': tipos_beneficio,
+                'productos': productos,
+                'error': 'El tipo de beneficio seleccionado no existe.',
+            })
+
+        try:
+            producto = Producto.objects.get(pk=producto_id)
+        except Producto.DoesNotExist:
+            return render(request, 'panel/promociones/formPromocion.html', {
+                'titulo': 'Crear promoción',
+                'tipos_beneficio': tipos_beneficio,
+                'productos': productos,
+                'error': 'El producto seleccionado no existe.',
+            })
+
+        valor = None
+
+        if getattr(tipo_beneficio, 'comportamiento', None) != 'SIN_VALOR':
+            if not descuento:
+                return render(request, 'panel/promociones/formPromocion.html', {
+                    'titulo': 'Crear promoción',
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'error': 'Ingresá el valor del beneficio.',
+                })
+
+            try:
+                valor = Decimal(descuento)
+            except (InvalidOperation, TypeError):
+                return render(request, 'panel/promociones/formPromocion.html', {
+                    'titulo': 'Crear promoción',
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'error': 'El valor del beneficio no es válido.',
+                })
+
+            if valor < 0:
+                return render(request, 'panel/promociones/formPromocion.html', {
+                    'titulo': 'Crear promoción',
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'error': 'El valor del beneficio no puede ser negativo.',
+                })
+
+        promocion = Promocion(
             palabraclave=palabraclave,
-            tipo_beneficio=tipo_beneficio,
+            tipobeneficio=tipo_beneficio,
             valor=valor,
             fechainicio=fechainicio,
             fechafin=fechafin,
             activo=activo,
         )
 
-        ProductoPromocion.objects.create(
-            idpromocion=promocion,
-            idproducto=get_object_or_404(Producto, pk=producto_id),
+        # Si tu modelo Promocion tiene relación directa con producto:
+        promocion.producto = producto
+
+        promocion.save()
+
+        messages.success(
+            request,
+            f'La promoción "{palabraclave}" fue creada correctamente.'
         )
 
-        return redirect('lista_promociones')
+        return redirect('panel_lista_promociones')
 
     return render(request, 'panel/promociones/formPromocion.html', {
+        'titulo': 'Crear promoción',
+        'tipos_beneficio': tipos_beneficio,
         'productos': productos,
-        'titulo': 'Nueva promoción',
-        'tipos_beneficio': tipos,
-        'promocion': {},
     })
 
 
 def editar_promocion(request, idpromocion):
-    productos = Producto.objects.all()
-    tipos = TipoBeneficio.objects.all()
-    promocion = get_object_or_404(Promocion, pk=idpromocion)
+    promocion = get_object_or_404(
+        Promocion,
+        idpromocion=idpromocion
+    )
 
-    relacion = ProductoPromocion.objects.filter(idpromocion=promocion).first()
+    tipos_beneficio = TipoBeneficio.objects.all()
+    productos = Producto.objects.all()
+
+    # IMPORTANTE:
+    # El campo correcto es tipobeneficio.
+    # NO promocion.tipo_beneficio
+    tipo_beneficio_seleccionado = (
+        promocion.tipobeneficio.pk
+        if promocion.tipobeneficio
+        else None
+    )
+
+    producto_seleccionado = (
+        promocion.producto.pk
+        if getattr(promocion, 'producto', None)
+        else None
+    )
 
     if request.method == 'POST':
+        palabraclave = request.POST.get('palabraclave', '').strip()
+        tipobeneficio_id = request.POST.get('tipobeneficio')
+        producto_id = request.POST.get('producto')
+        descuento = request.POST.get('descuento', '').strip()
         fechainicio = request.POST.get('fechainicio') or None
         fechafin = request.POST.get('fechafin') or None
-        tipo_id = request.POST.get('tipobeneficio')
+        activo = 1 if request.POST.get('activo') else 0
 
-        if fechainicio and fechafin and fechafin < fechainicio:
+        if not palabraclave:
             return render(request, 'panel/promociones/formPromocion.html', {
+                'titulo': 'Editar promoción',
+                'promocion': promocion,
+                'tipos_beneficio': tipos_beneficio,
                 'productos': productos,
-                'titulo': 'Modificar promoción',
-                'tipos_beneficio': tipos,
-                'promocion': request.POST,
-                'producto_seleccionado': int(request.POST.get('producto') or 0),
-                'tipo_beneficio_seleccionado': int(tipo_id) if tipo_id else None,
-                'error': (
-                    'La fecha de fin no puede ser anterior '
-                    'a la fecha de inicio.'
-                ),
+                'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
+                'producto_seleccionado': producto_seleccionado,
+                'error': 'Ingresá una palabra clave.',
             })
 
-        tipo_beneficio = get_object_or_404(TipoBeneficio, pk=tipo_id)
+        try:
+            tipo_beneficio = TipoBeneficio.objects.get(
+                pk=tipobeneficio_id
+            )
+        except TipoBeneficio.DoesNotExist:
+            return render(request, 'panel/promociones/formPromocion.html', {
+                'titulo': 'Editar promoción',
+                'promocion': promocion,
+                'tipos_beneficio': tipos_beneficio,
+                'productos': productos,
+                'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
+                'producto_seleccionado': producto_seleccionado,
+                'error': 'El tipo de beneficio seleccionado no existe.',
+            })
 
-        promocion.palabraclave = request.POST.get('palabraclave')
-        promocion.tipo_beneficio = tipo_beneficio
-        promocion.valor = _valor_beneficio(
-            tipo_beneficio, request.POST.get('descuento')
-        )
+        try:
+            producto = Producto.objects.get(pk=producto_id)
+        except Producto.DoesNotExist:
+            return render(request, 'panel/promociones/formPromocion.html', {
+                'titulo': 'Editar promoción',
+                'promocion': promocion,
+                'tipos_beneficio': tipos_beneficio,
+                'productos': productos,
+                'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
+                'producto_seleccionado': producto_seleccionado,
+                'error': 'El producto seleccionado no existe.',
+            })
+
+        valor = None
+
+        if getattr(tipo_beneficio, 'comportamiento', None) != 'SIN_VALOR':
+            if not descuento:
+                return render(request, 'panel/promociones/formPromocion.html', {
+                    'titulo': 'Editar promoción',
+                    'promocion': promocion,
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
+                    'producto_seleccionado': producto_seleccionado,
+                    'error': 'Ingresá el valor del beneficio.',
+                })
+
+            try:
+                valor = Decimal(descuento)
+            except (InvalidOperation, TypeError):
+                return render(request, 'panel/promociones/formPromocion.html', {
+                    'titulo': 'Editar promoción',
+                    'promocion': promocion,
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
+                    'producto_seleccionado': producto_seleccionado,
+                    'error': 'El valor del beneficio no es válido.',
+                })
+
+            if valor < 0:
+                return render(request, 'panel/promociones/formPromocion.html', {
+                    'titulo': 'Editar promoción',
+                    'promocion': promocion,
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
+                    'producto_seleccionado': producto_seleccionado,
+                    'error': 'El valor del beneficio no puede ser negativo.',
+                })
+
+        promocion.palabraclave = palabraclave
+        promocion.tipobeneficio = tipo_beneficio
+        promocion.valor = valor
         promocion.fechainicio = fechainicio
         promocion.fechafin = fechafin
-        promocion.activo = 1 if request.POST.get('activo') == 'on' else 0
+        promocion.activo = activo
+
+        # Si tu modelo tiene relación directa con producto:
+        promocion.producto = producto
+
         promocion.save()
 
-        # Se reemplaza la relación actual por el producto elegido.
-        ProductoPromocion.objects.filter(idpromocion=promocion).delete()
+        messages.success(
+            request,
+            f'La promoción "{palabraclave}" fue actualizada correctamente.'
+        )
 
-        producto_id = request.POST.get('producto')
-
-        if producto_id:
-            ProductoPromocion.objects.create(
-                idpromocion=promocion,
-                idproducto=get_object_or_404(Producto, pk=producto_id),
-            )
-
-        return redirect('lista_promociones')
+        return redirect('panel_lista_promociones')
 
     return render(request, 'panel/promociones/formPromocion.html', {
-        'productos': productos,
-        'titulo': 'Modificar promoción',
-        'tipos_beneficio': tipos,
+        'titulo': 'Editar promoción',
         'promocion': promocion,
-        'producto_seleccionado': (
-            relacion.idproducto.pk
-            if relacion and relacion.idproducto else None
-        ),
-        'tipo_beneficio_seleccionado': (
-            promocion.tipo_beneficio.pk if promocion.tipo_beneficio else None
-        ),
+        'tipos_beneficio': tipos_beneficio,
+        'productos': productos,
+        'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
+        'producto_seleccionado': producto_seleccionado,
     })
 
 
@@ -1220,18 +1418,39 @@ def panel_inicio(request):
 
 
 def obtener_ticket_modal(request, idpedido):
-    pedido = get_object_or_404(Pedido, idpedido=idpedido)
-
-    direccion_cliente = (
-        Direccion.objects.filter(idcliente=pedido.idcliente).first()
-        if pedido.idcliente else None
+    pedido = get_object_or_404(
+        Pedido,
+        idpedido=idpedido
     )
 
-    return render(request, 'panel/parcialTicket.html', {
-        'pedido': pedido,
-        'detalles': DetallePedido.objects.filter(idpedido=pedido),
-        'direccion_cliente': direccion_cliente,
-    })
+    direccion_cliente = (
+        Direccion.objects.filter(
+            idcliente=pedido.idcliente
+        ).first()
+        if pedido.idcliente
+        else None
+    )
+
+    detalles = DetallePedido.objects.filter(
+        idpedido=pedido
+    )
+
+    # Calculamos el subtotal de cada producto
+    # únicamente para mostrarlo en el ticket.
+    for detalle in detalles:
+        detalle.subtotal_item = (
+            detalle.preciounitario * detalle.cantidad
+        )
+
+    return render(
+        request,
+        'panel/parcialTicket.html',
+        {
+            'pedido': pedido,
+            'detalles': detalles,
+            'direccion_cliente': direccion_cliente,
+        }
+    )
 
 
 def actualizar_estado_pedido(request, idpedido):
@@ -1795,12 +2014,6 @@ def extra_eliminar(request, idextra):
 # 11. RECETAS
 # ============================================================
 
-def lista_recetas(request):
-    return render(request, 'panel/recetas/listaRecetas.html', {
-        'productos': Producto.objects.all(),
-    })
-
-
 def gestionar_receta(request, idproducto):
     producto = get_object_or_404(Producto, pk=idproducto)
     receta, _ = Receta.objects.get_or_create(idproducto=producto)
@@ -1817,7 +2030,8 @@ def gestionar_receta(request, idproducto):
 
             # Un insumo no puede estar dos veces en la misma receta.
             if not RecetaInsumo.objects.filter(
-                idreceta=receta, idinsumo=insumo
+                idreceta=receta,
+                idinsumo=insumo
             ).exists():
                 RecetaInsumo.objects.create(
                     idreceta=receta,
@@ -1826,16 +2040,24 @@ def gestionar_receta(request, idproducto):
                     es_removible=request.POST.get('es_removible') == 'on',
                 )
 
-            return redirect('gestionar_receta', idproducto=producto.idproducto)
+            return redirect(
+                'gestionar_receta',
+                idproducto=producto.idproducto
+            )
 
-    return render(request, 'panel/recetas/gestionarReceta.html', {
-        'producto': producto,
-        'receta': receta,
-        'detalles_receta': RecetaInsumo.objects.filter(idreceta=receta),
-        'todos_los_insumos': Insumo.objects.all(),
-        'origen': origen,
-    })
-
+    return render(
+        request,
+        'panel/menu/productos/gestionarReceta.html',
+        {
+            'producto': producto,
+            'receta': receta,
+            'detalles_receta': RecetaInsumo.objects.filter(
+                idreceta=receta
+            ),
+            'todos_los_insumos': Insumo.objects.all(),
+            'origen': origen,
+        }
+    )
 
 def eliminar_insumo_receta(request, idrecetainsumo):
     detalle = get_object_or_404(RecetaInsumo, pk=idrecetainsumo)

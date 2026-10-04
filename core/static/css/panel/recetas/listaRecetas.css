@@ -1,0 +1,579 @@
+/* =========================================================
+   PÁGINA
+   ========================================================= */
+
+.recetas-page {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.recetas-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 26px;
+}
+
+.recetas-header-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    color: #dc2626;
+}
+
+.recetas-header-icon svg {
+    display: block;
+}
+
+.recetas-header-text {
+    min-width: 0;
+}
+
+.recetas-header-kicker {
+    display: block;
+    margin-bottom: 3px;
+    color: #777;
+    font-size: 0.67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.recetas-header-text h1 {
+    margin: 0 0 5px;
+    color: #fff;
+    font-size: 1.55rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.recetas-header-text p {
+    margin: 0;
+    color: #888;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   TARJETA PRINCIPAL
+   ========================================================= */
+
+.recetas-card {
+    width: 100%;
+    overflow: hidden;
+    background: #181818;
+    border: 1px solid #303030;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.recetas-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    min-height: 52px;
+    padding: 0 20px;
+    background: #1c1c1c;
+    border-bottom: 1px solid #303030;
+}
+
+.recetas-card-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #ddd;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.recetas-card-title-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #dc2626;
+}
+
+.recetas-card-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 7px;
+    background: #242424;
+    border: 1px solid #383838;
+    border-radius: 5px;
+    color: #888;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.recetas-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #333 #111;
+}
+
+.recetas-table-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.recetas-table-wrapper::-webkit-scrollbar-track {
+    background: #111;
+}
+
+.recetas-table-wrapper::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+}
+
+.recetas-table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+    color: #ddd;
+}
+
+.recetas-table th {
+    padding: 11px 16px;
+    background: #141414;
+    border-bottom: 1px solid #2b2b2b;
+    color: #666;
+    font-size: 0.67rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.recetas-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid #242424;
+    color: #aaa;
+    font-size: 0.82rem;
+    vertical-align: middle;
+}
+
+.recetas-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.recetas-table tbody tr:hover {
+    background: #1d1d1d;
+}
+
+.recetas-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* =========================================================
+   PRODUCTO
+   ========================================================= */
+
+.receta-producto-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.receta-producto-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: rgba(220, 38, 38, 0.07);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    color: #dc2626;
+}
+
+.receta-producto-icon svg {
+    display: block;
+}
+
+.receta-producto {
+    display: block;
+    color: #fff;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.receta-producto-subtitle {
+    margin-top: 3px;
+    color: #666;
+    font-size: 0.68rem;
+}
+
+
+/* =========================================================
+   PRECIO
+   ========================================================= */
+
+.receta-precio {
+    display: inline-flex;
+    align-items: center;
+    color: #fff;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   BOTÓN GESTIONAR
+   ========================================================= */
+
+.btn-gestionar-receta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 7px 12px;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    border-radius: 6px;
+    color: #f87171;
+    text-decoration: none;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.btn-gestionar-receta svg {
+    flex-shrink: 0;
+}
+
+.btn-gestionar-receta:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   ESTADO VACÍO
+   ========================================================= */
+
+.recetas-vacio {
+    padding: 55px 20px !important;
+    text-align: center;
+    color: #555 !important;
+}
+
+.recetas-vacio-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 13px;
+    border-radius: 9px;
+    background: #202020;
+    border: 1px solid #303030;
+    color: #555;
+}
+
+.recetas-vacio-icon svg {
+    display: block;
+}
+
+.recetas-vacio-title {
+    margin: 0 0 5px;
+    color: #888;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.recetas-vacio-text {
+    margin: 0;
+    color: #555;
+    font-size: 0.74rem;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .recetas-page {
+        max-width: 100%;
+    }
+
+    .recetas-header-text h1 {
+        font-size: 1.45rem;
+    }
+
+    .recetas-card-header {
+        padding: 0 16px;
+    }
+
+    .recetas-table th,
+    .recetas-table td {
+        padding: 11px 13px;
+    }
+}
+
+
+/* =========================================================
+   MÓVIL
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .recetas-header {
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .recetas-header-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .recetas-header-text h1 {
+        font-size: 1.3rem;
+    }
+
+    .recetas-header-text p {
+        font-size: 0.8rem;
+    }
+
+
+    /* TARJETA */
+
+    .recetas-card {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        overflow: visible;
+    }
+
+    .recetas-card-header {
+        min-height: 46px;
+        padding: 0 2px;
+        background: transparent;
+        border-bottom: none;
+    }
+
+    .recetas-card-title {
+        font-size: 0.76rem;
+    }
+
+
+    /* TABLA COMO TARJETAS */
+
+    .recetas-table-wrapper {
+        overflow: visible;
+    }
+
+    .recetas-table {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .recetas-table thead {
+        display: none;
+    }
+
+    .recetas-table tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .recetas-table tbody tr {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 13px;
+        box-sizing: border-box;
+        background: #181818;
+        border: 1px solid #333;
+        border-radius: 9px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
+    }
+
+    .recetas-table tbody tr:hover {
+        background: #1b1b1b;
+    }
+
+    .recetas-table tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .recetas-table tbody td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 10px 2px;
+        border-bottom: 1px solid #292929;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .recetas-table tbody td:last-child {
+        border-bottom: none;
+        padding-bottom: 2px;
+    }
+
+
+    /* PRODUCTO */
+
+    .recetas-table tbody td:first-child {
+        display: block;
+        padding-top: 2px;
+        padding-bottom: 12px;
+        text-align: left;
+    }
+
+    .receta-producto-wrapper {
+        width: 100%;
+    }
+
+    .receta-producto {
+        font-size: 0.98rem;
+    }
+
+
+    /* PRECIO */
+
+    .recetas-table tbody td:nth-child(2)::before {
+        content: "Precio";
+        color: #666;
+        font-size: 0.64rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .recetas-table tbody td:nth-child(2) {
+        text-align: right;
+    }
+
+
+    /* ACCIÓN */
+
+    .recetas-table tbody td:last-child {
+        display: block;
+        padding-top: 12px;
+        text-align: left;
+    }
+
+    .recetas-table tbody td:last-child::before {
+        content: "Acciones";
+        display: block;
+        margin-bottom: 8px;
+        color: #666;
+        font-size: 0.64rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .btn-gestionar-receta {
+        display: flex;
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 10px;
+        white-space: normal;
+    }
+
+
+    /* ESTADO VACÍO */
+
+    .recetas-table tbody tr:has(.recetas-vacio) {
+        display: block;
+        padding: 0;
+        background: #181818;
+    }
+
+    .recetas-vacio {
+        display: block !important;
+        padding: 35px 15px !important;
+    }
+}
+
+
+/* =========================================================
+   MÓVIL PEQUEÑO
+   ========================================================= */
+
+@media (max-width: 430px) {
+
+    .recetas-header {
+        gap: 10px;
+    }
+
+    .recetas-header-icon {
+        width: 37px;
+        height: 37px;
+    }
+
+    .recetas-header-text h1 {
+        font-size: 1.2rem;
+    }
+
+    .recetas-header-text p {
+        font-size: 0.76rem;
+    }
+
+    .recetas-card-count {
+        display: none;
+    }
+
+    .recetas-table tbody tr {
+        padding: 11px;
+        border-radius: 8px;
+    }
+
+    .receta-producto {
+        font-size: 0.94rem;
+    }
+
+    .receta-precio {
+        font-size: 0.9rem;
+    }
+
+    .btn-gestionar-receta {
+        min-height: 40px;
+        font-size: 0.72rem;
+    }
+}

@@ -1,0 +1,416 @@
+/* =========================================================
+   PÁGINA
+   ========================================================= */
+
+.categorias-page {
+    width: 100%;
+    min-width: 0;
+}
+
+/* =========================================================
+   VOLVER
+   ========================================================= */
+
+.categorias-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    padding: 7px 11px;
+    border: 1px solid #303030;
+    border-radius: 8px;
+    background: #191919;
+    color: #929292;
+    text-decoration: none;
+    font-size: 0.84rem;
+    transition: 0.2s ease;
+}
+
+.categorias-back:hover {
+    color: #fff;
+    border-color: #dc2626;
+    background: #202020;
+}
+
+.categorias-back svg {
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.categorias-heading {
+    margin-bottom: 28px;
+}
+
+.categorias-kicker {
+    display: block;
+    margin-bottom: 5px;
+    color: #777;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.categorias-heading h1 {
+    margin: 0;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.categorias-heading p {
+    max-width: 700px;
+    margin: 7px 0 0;
+    color: #858585;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   TOOLBAR
+   ========================================================= */
+
+.categorias-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 10px;
+}
+
+.categorias-count {
+    color: #777;
+    font-size: 0.8rem;
+}
+
+.categorias-count span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.categorias-count span::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+
+.btn-nueva-categoria {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 8px 14px;
+    box-sizing: border-box;
+    border: 1px solid #dc2626;
+    border-radius: 8px;
+    background: #dc2626;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+.btn-nueva-categoria:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.15);
+}
+
+.btn-nueva-categoria svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.categorias-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+/* =========================================================
+   TARJETA
+   ========================================================= */
+
+.categoria-card {
+    position: relative;
+    min-width: 0;
+    padding: 18px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #1a1a1a, #151515);
+    border: 1px solid #303030;
+    border-radius: 12px;
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.categoria-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    background: #dc2626;
+    opacity: 0.75;
+}
+
+.categoria-card:hover {
+    transform: translateY(-2px);
+    border-color: #404040;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+}
+
+/* =========================================================
+   PARTE SUPERIOR
+   ========================================================= */
+
+.categoria-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.categoria-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    color: #dc2626;
+}
+
+.categoria-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.categoria-id {
+    color: #555;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* =========================================================
+   NOMBRE
+   ========================================================= */
+
+.categoria-nombre {
+    min-height: 48px;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.categoria-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-top: 18px;
+}
+
+.btn-categoria {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 35px;
+    padding: 7px 9px;
+    border: 1px solid #383838;
+    border-radius: 7px;
+    background: #222;
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+.btn-categoria:hover {
+    transform: translateY(-1px);
+    background: #2a2a2a;
+}
+
+.btn-categoria svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.btn-categoria-edit {
+    color: #fff;
+}
+
+.btn-categoria-edit:hover {
+    border-color: #555;
+    color: #fff;
+}
+
+.btn-categoria-delete {
+    color: #f87171;
+}
+
+.btn-categoria-delete:hover {
+    border-color: rgba(220, 38, 38, 0.35);
+    color: #ff8a8a;
+}
+
+/* =========================================================
+   ESTADO VACÍO
+   ========================================================= */
+
+.categorias-empty {
+    grid-column: 1 / -1;
+    padding: 60px 20px;
+    text-align: center;
+    background: #161616;
+    border: 1px dashed #333;
+    border-radius: 12px;
+}
+
+.categorias-empty-icon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: #222;
+    color: #666;
+}
+
+.categorias-empty-icon svg {
+    width: 27px;
+    height: 27px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.categorias-empty h3 {
+    margin: 0;
+    color: #ddd;
+    font-size: 1rem;
+}
+
+.categorias-empty p {
+    max-width: 420px;
+    margin: 7px auto 0;
+    color: #666;
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.categorias-empty-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 18px;
+    min-height: 37px;
+    padding: 8px 14px;
+    box-sizing: border-box;
+    border: 1px solid #383838;
+    border-radius: 8px;
+    background: #222;
+    color: #bbb;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+.categorias-empty-btn:hover {
+    border-color: #dc2626;
+    background: #dc2626;
+    color: #fff;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 950px) {
+
+    .categorias-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+
+    .categorias-heading h1 {
+        font-size: 1.6rem;
+    }
+
+    .categorias-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .btn-nueva-categoria {
+        width: 100%;
+    }
+
+    .categorias-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 430px) {
+
+    .categorias-heading h1 {
+        font-size: 1.4rem;
+    }
+
+    .categoria-actions {
+        grid-template-columns: 1fr;
+    }
+}

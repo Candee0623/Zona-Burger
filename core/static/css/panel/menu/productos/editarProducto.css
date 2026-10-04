@@ -1,0 +1,665 @@
+/* =========================================================
+   EDITAR PRODUCTO - ZONA BURGER
+   ========================================================= */
+
+.producto-edit-page {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   VOLVER
+   ========================================================= */
+
+.producto-edit-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 7px 11px;
+    border: 1px solid #303030;
+    border-radius: 7px;
+    background: #191919;
+    color: #858585;
+    text-decoration: none;
+    font-size: .84rem;
+    transition:
+        color .2s ease,
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+.producto-edit-back svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.producto-edit-back:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, .06);
+    border-color: rgba(220, 38, 38, .35);
+    transform: translateX(-2px);
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.producto-edit-card {
+    background: #181818;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.producto-edit-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 23px 27px;
+    border-bottom: 1px solid #303030;
+}
+
+.producto-edit-icon {
+    width: 49px;
+    height: 49px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: rgba(220, 38, 38, .08);
+    border: 1px solid rgba(220, 38, 38, .25);
+    color: #dc2626;
+}
+
+.producto-edit-icon svg {
+    width: 25px;
+    height: 25px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.producto-edit-header-text {
+    min-width: 0;
+}
+
+.producto-edit-header-text h1 {
+    margin: 0 0 5px;
+    color: #f1f1f1;
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.producto-edit-header-text p {
+    margin: 0;
+    color: #858585;
+    font-size: .84rem;
+    line-height: 1.4;
+}
+
+.producto-edit-header-text strong {
+    color: #c8c8c8;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   BODY
+   ========================================================= */
+
+.producto-edit-body {
+    padding: 27px;
+}
+
+
+/* =========================================================
+   ERRORES
+   ========================================================= */
+
+.producto-errors {
+    margin-bottom: 22px;
+    padding: 13px 15px;
+    border-radius: 7px;
+    background: rgba(220, 38, 38, .07);
+    border: 1px solid rgba(220, 38, 38, .25);
+    color: #d97878;
+    font-size: .84rem;
+}
+
+.producto-errors-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.producto-errors-title svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.producto-errors ul {
+    margin: 0;
+    padding-left: 25px;
+}
+
+.producto-errors li {
+    margin-bottom: 3px;
+}
+
+.producto-errors li:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   FORMULARIOS
+   ========================================================= */
+
+.producto-form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.producto-form-grid-half {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.producto-form-group {
+    min-width: 0;
+}
+
+.producto-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #c8c8c8;
+    font-size: .84rem;
+    font-weight: 600;
+}
+
+.producto-form-control {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    background: #222;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    color: #f0f0f0;
+    font-size: .88rem;
+    outline: none;
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease;
+}
+
+.producto-form-control:hover {
+    border-color: #484848;
+}
+
+.producto-form-control:focus {
+    border-color: #dc2626;
+    background: #242424;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, .10);
+}
+
+.producto-form-control::placeholder {
+    color: #5f5f5f;
+}
+
+textarea.producto-form-control {
+    min-height: 90px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+select.producto-form-control {
+    cursor: pointer;
+}
+
+select.producto-form-control option {
+    background: #222;
+    color: #eee;
+}
+
+input[type="file"].producto-form-control {
+    padding: 7px;
+    cursor: pointer;
+}
+
+input[type="file"].producto-form-control::file-selector-button {
+    margin-right: 9px;
+    padding: 6px 9px;
+    border: 1px solid #3a3a3a;
+    border-radius: 5px;
+    background: #2a2a2a;
+    color: #ccc;
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   DESCRIPCIÓN
+   ========================================================= */
+
+.producto-description-group {
+    margin-bottom: 25px;
+}
+
+
+/* =========================================================
+   IMAGEN ACTUAL
+   ========================================================= */
+
+.producto-current-image {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+.producto-current-image img {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #444;
+}
+
+.producto-current-image-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.producto-current-image-label {
+    color: #b8b8b8;
+    font-size: .78rem;
+    font-weight: 600;
+}
+
+.producto-current-image-text {
+    color: #666;
+    font-size: .7rem;
+}
+
+
+/* =========================================================
+   SECCIONES DE OPCIONES / EXTRAS
+   ========================================================= */
+
+.producto-section {
+    margin-bottom: 22px;
+    padding: 20px;
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+.producto-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 7px;
+}
+
+.producto-section-header > div {
+    min-width: 0;
+}
+
+.producto-section-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    color: #e5e5e5;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.producto-section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    background: rgba(220, 38, 38, .08);
+    border: 1px solid rgba(220, 38, 38, .2);
+    color: #dc2626;
+}
+
+.producto-section-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.producto-section-example {
+    flex-shrink: 0;
+    padding-top: 6px;
+    color: #606060;
+    font-size: .7rem;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.producto-section-description {
+    margin: 9px 0 16px;
+    color: #858585;
+    font-size: .81rem;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   OPCIONES
+   ========================================================= */
+
+.producto-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.producto-option-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: #181818;
+    border: 1px solid #373737;
+    border-radius: 6px;
+    cursor: pointer;
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+.producto-option-card:hover {
+    background: #1d1d1d;
+    border-color: #4a4a4a;
+    transform: translateY(-1px);
+}
+
+.producto-option-card:has(input:checked) {
+    background: rgba(220, 38, 38, .045);
+    border-color: rgba(220, 38, 38, .42);
+}
+
+.producto-option-card input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    margin: 3px 0 0;
+    cursor: pointer;
+    accent-color: #dc2626;
+}
+
+.producto-option-content {
+    min-width: 0;
+}
+
+.producto-option-name {
+    display: block;
+    color: #e8e8e8;
+    font-size: .86rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.producto-option-details {
+    display: block;
+    margin-top: 4px;
+    color: #777;
+    font-size: .74rem;
+    line-height: 1.4;
+}
+
+.producto-option-items {
+    display: block;
+    margin-top: 5px;
+    color: #5f5f5f;
+    font-size: .71rem;
+    line-height: 1.4;
+}
+
+.producto-option-price {
+    display: block;
+    margin-top: 5px;
+    color: #d0d0d0;
+    font-size: .79rem;
+    font-weight: 700;
+}
+
+.producto-empty {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 10px 0;
+    color: #666;
+    font-size: .82rem;
+    font-style: italic;
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.producto-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    padding-top: 21px;
+    border-top: 1px solid #303030;
+    flex-wrap: wrap;
+}
+
+.producto-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.producto-action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.producto-action-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* GUARDAR */
+
+.producto-save-btn {
+    background: #dc2626;
+    border: 1px solid #dc2626;
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(220, 38, 38, .10);
+}
+
+.producto-save-btn:hover {
+    background: #ef3030;
+    border-color: #ef3030;
+    color: #fff;
+    box-shadow: 0 7px 19px rgba(220, 38, 38, .16);
+}
+
+
+/* CANCELAR */
+
+.producto-cancel-btn {
+    background: #222;
+    border: 1px solid #3a3a3a;
+    color: #aaa;
+}
+
+.producto-cancel-btn:hover {
+    background: #292929;
+    border-color: #4a4a4a;
+    color: #eee;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .producto-form-grid,
+    .producto-form-grid-half {
+        grid-template-columns: 1fr;
+    }
+
+    .producto-section-header {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .producto-section-example {
+        padding-top: 0;
+        text-align: left;
+        white-space: normal;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .producto-edit-header,
+    .producto-edit-body {
+        padding: 20px;
+    }
+
+    .producto-edit-header {
+        gap: 12px;
+    }
+
+    .producto-edit-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .producto-edit-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .producto-edit-header-text h1 {
+        font-size: 1.18rem;
+    }
+
+    .producto-edit-header-text p {
+        font-size: .79rem;
+    }
+
+    .producto-section {
+        padding: 16px;
+    }
+
+    .producto-options-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .producto-actions {
+        flex-direction: column-reverse;
+    }
+
+    .producto-action-btn {
+        width: 100%;
+    }
+
+}
+
+
+@media (max-width: 420px) {
+
+    .producto-current-image {
+        align-items: flex-start;
+    }
+
+    .producto-current-image img {
+        width: 42px;
+        height: 42px;
+    }
+
+    .producto-section-title {
+        font-size: .9rem;
+    }
+
+    .producto-section-description {
+        font-size: .78rem;
+    }
+
+}

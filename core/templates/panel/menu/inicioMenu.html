@@ -1,520 +1,259 @@
 {% extends 'panel/base.html' %}
+{% load static %}
 
 {% block title %}Zona-Burger | Menú{% endblock %}
 
 {% block content %}
 
-<style>
-    .menu-page {
-        max-width: 1100px;
-        margin: 0 auto;
-    }
-
-    /* Encabezado */
-    .menu-header {
-        margin-bottom: 30px;
-    }
-
-    .menu-header-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 0;
-        color: #fff;
-        font-size: 1.8rem;
-        font-weight: 600;
-    }
-
-    .menu-header-icon {
-        width: 42px;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        background: rgba(46, 204, 113, 0.12);
-        border: 1px solid rgba(46, 204, 113, 0.25);
-        color: #2ecc71;
-    }
-
-    .menu-header-description {
-        margin: 8px 0 0 54px;
-        color: #888;
-        font-size: 0.9rem;
-    }
-
-
-    /* Grid */
-    .menu-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 18px;
-    }
-
-
-    /* Tarjetas */
-    .menu-card {
-        position: relative;
-        display: block;
-        min-height: 190px;
-        padding: 24px;
-        background: #181818;
-        border: 1px solid #333;
-        border-radius: 10px;
-        color: inherit;
-        text-decoration: none;
-        overflow: hidden;
-        transition:
-            transform 0.2s ease,
-            border-color 0.2s ease,
-            background 0.2s ease,
-            box-shadow 0.2s ease;
-    }
-
-    .menu-card::after {
-        content: "";
-        position: absolute;
-        width: 130px;
-        height: 130px;
-        right: -45px;
-        bottom: -60px;
-        border-radius: 50%;
-        background: var(--card-accent);
-        opacity: 0.035;
-        pointer-events: none;
-        transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    .menu-card:hover {
-        transform: translateY(-3px);
-        background: #1b1b1b;
-        border-color: var(--card-accent);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.22);
-    }
-
-    .menu-card:hover::after {
-        opacity: 0.08;
-        transform: scale(1.2);
-    }
-
-
-    /* Colores por sección */
-    .menu-card-productos {
-        --card-accent: #2ecc71;
-    }
-
-    .menu-card-categorias {
-        --card-accent: #9b59b6;
-    }
-
-    .menu-card-grupos {
-        --card-accent: #3498db;
-    }
-
-    .menu-card-extras {
-        --card-accent: #f39c12;
-    }
-
-
-    /* Icono */
-    .menu-card-icon {
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        color: var(--card-accent);
-        background: color-mix(
-            in srgb,
-            var(--card-accent) 10%,
-            transparent
-        );
-        border: 1px solid color-mix(
-            in srgb,
-            var(--card-accent) 25%,
-            transparent
-        );
-    }
-
-
-    /* Contenido */
-    .menu-card-title {
-        margin: 0 0 7px;
-        color: #fff;
-        font-size: 1.08rem;
-        font-weight: 600;
-    }
-
-    .menu-card-description {
-        margin: 0;
-        max-width: 360px;
-        color: #888;
-        font-size: 0.88rem;
-        line-height: 1.5;
-    }
-
-
-    /* Flecha */
-    .menu-card-arrow {
-        position: absolute;
-        top: 24px;
-        right: 24px;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        color: #666;
-        background: #222;
-        border: 1px solid #333;
-        transition:
-            color 0.2s ease,
-            background 0.2s ease,
-            transform 0.2s ease;
-    }
-
-    .menu-card:hover .menu-card-arrow {
-        color: var(--card-accent);
-        border-color: var(--card-accent);
-        background: #222;
-        transform: translateX(2px);
-    }
-
-
-    /* Etiqueta superior */
-    .menu-card-label {
-        position: absolute;
-        right: 24px;
-        bottom: 22px;
-        color: #555;
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.7px;
-        font-weight: 600;
-    }
-
-
-    /* Responsive */
-    @media (max-width: 700px) {
-        .menu-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .menu-header-description {
-            margin-left: 0;
-        }
-    }
-
-    @media (max-width: 500px) {
-        .menu-header-title {
-            font-size: 1.5rem;
-        }
-
-        .menu-header-icon {
-            width: 38px;
-            height: 38px;
-        }
-
-        .menu-card {
-            min-height: auto;
-            padding: 20px;
-        }
-
-        .menu-card-arrow {
-            top: 20px;
-            right: 20px;
-        }
-
-        .menu-card-label {
-            display: none;
-        }
-    }
-</style>
-
+<link rel="stylesheet" href="{% static 'css/panel/menu/inicioMenu.css' %}">
 
 <div class="menu-page">
 
     <!-- ENCABEZADO -->
-    <div class="menu-header">
+    <header class="menu-header">
 
-        <h1 class="menu-header-title">
+        <div class="menu-header-icon">
+            <svg width="24" height="24"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="4" y1="12" x2="20" y2="12"></line>
+                <line x1="4" y1="18" x2="20" y2="18"></line>
+                <circle cx="8" cy="6" r="2"></circle>
+                <circle cx="16" cy="12" r="2"></circle>
+                <circle cx="10" cy="18" r="2"></circle>
+            </svg>
+        </div>
 
-            <span class="menu-header-icon">
+        <div class="menu-header-content">
+            <h1>Menú</h1>
 
-                <svg width="23" height="23"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="2"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
+            <p>
+                Seleccioná qué sección del menú querés administrar.
+            </p>
+        </div>
 
-                    <line x1="4" y1="6" x2="20" y2="6"></line>
-                    <line x1="4" y1="12" x2="20" y2="12"></line>
-                    <line x1="4" y1="18" x2="20" y2="18"></line>
-
-                    <circle cx="8" cy="6" r="2"></circle>
-                    <circle cx="16" cy="12" r="2"></circle>
-                    <circle cx="10" cy="18" r="2"></circle>
-
-                </svg>
-
-            </span>
-
-            Menú
-
-        </h1>
-
-        <p class="menu-header-description">
-            Seleccioná qué sección del menú querés administrar.
-        </p>
-
-    </div>
+    </header>
 
 
     <!-- TARJETAS -->
-    <div class="menu-grid">
-
+    <section class="menu-grid">
 
         <!-- PRODUCTOS -->
-        <a
-            href="{% url 'producto_lista' %}"
-            class="menu-card menu-card-productos"
-        >
+        <a href="{% url 'producto_lista' %}"
+           class="menu-card">
 
-            <div class="menu-card-arrow">
+            <div class="menu-card-top">
 
-                <svg width="16" height="16"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="2"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
+                <div class="menu-card-icon">
+                    <svg width="26" height="26"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <path d="M3 11h18"></path>
+                        <path d="M5 11l1 8h12l1-8"></path>
+                        <path d="M7 11V9a5 5 0 0 1 10 0v2"></path>
+                        <path d="M9 15h6"></path>
+                    </svg>
+                </div>
 
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-
-                </svg>
-
-            </div>
-
-
-            <div class="menu-card-icon">
-
-                <svg width="27" height="27"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="1.8"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
-
-                    <path d="M3 11h18"></path>
-                    <path d="M5 11l1 8h12l1-8"></path>
-                    <path d="M7 11V9a5 5 0 0 1 10 0v2"></path>
-                    <path d="M9 15h6"></path>
-
-                </svg>
+                <div class="menu-card-arrow">
+                    <svg width="17" height="17"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
 
             </div>
 
+            <div class="menu-card-content">
 
-            <h2 class="menu-card-title">
-                Productos
-            </h2>
+                <h2>Productos</h2>
 
-            <p class="menu-card-description">
-                Administrá los productos, precios, categorías,
-                imágenes, opciones y extras disponibles.
-            </p>
+                <p>
+                    Administrá los productos, precios, categorías,
+                    imágenes, opciones y extras disponibles.
+                </p>
 
-            <span class="menu-card-label">
-                Catálogo
-            </span>
+            </div>
+
+            <div class="menu-card-footer">
+                <span>Catálogo</span>
+            </div>
 
         </a>
 
 
         <!-- CATEGORÍAS -->
-        <a
-            href="{% url 'categoria_lista' %}"
-            class="menu-card menu-card-categorias"
-        >
+        <a href="{% url 'categoria_lista' %}"
+           class="menu-card">
 
-            <div class="menu-card-arrow">
+            <div class="menu-card-top">
 
-                <svg width="16" height="16"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="2"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
+                <div class="menu-card-icon">
+                    <svg width="26" height="26"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <path d="M20.59 13.41L11 3.82V3H4v7h.82l9.59 9.59a2 2 0 0 0 2.83 0l3.35-3.35a2 2 0 0 0 0-2.83-2.83z"></path>
+                        <circle cx="7.5" cy="6.5" r="1"></circle>
+                    </svg>
+                </div>
 
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-
-                </svg>
-
-            </div>
-
-
-            <div class="menu-card-icon">
-
-                <svg width="27" height="27"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="1.8"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
-
-                    <path d="M20.59 13.41L11 3.82V3H4v7h.82l9.59 9.59a2 2 0 0 0 2.83 0l3.35-3.35a2 2 0 0 0 0-2.83z"></path>
-                    <circle cx="7.5" cy="6.5" r="1"></circle>
-
-                </svg>
+                <div class="menu-card-arrow">
+                    <svg width="17" height="17"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
 
             </div>
 
+            <div class="menu-card-content">
 
-            <h2 class="menu-card-title">
-                Categorías
-            </h2>
+                <h2>Categorías</h2>
 
-            <p class="menu-card-description">
-                Organizá los productos del menú en categorías
-                para facilitar su administración.
-            </p>
+                <p>
+                    Organizá los productos del menú en categorías
+                    para facilitar su administración.
+                </p>
 
-            <span class="menu-card-label">
-                Organización
-            </span>
+            </div>
+
+            <div class="menu-card-footer">
+                <span>Organización</span>
+            </div>
 
         </a>
 
 
         <!-- GRUPOS DE OPCIONES -->
-        <a
-            href="{% url 'grupo_lista' %}"
-            class="menu-card menu-card-grupos"
-        >
+        <a href="{% url 'grupo_lista' %}"
+           class="menu-card">
 
-            <div class="menu-card-arrow">
+            <div class="menu-card-top">
 
-                <svg width="16" height="16"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="2"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
+                <div class="menu-card-icon">
+                    <svg width="26" height="26"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.41 1.41-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-2v-.49a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.41-1.41.06-.06A1.7 1.7 0 0 0 9.4 15a1.7 1.7 0 0 0-1.56-1.03H7v-2h.84A1.7 1.7 0 0 0 9.4 11a1.7 1.7 0 0 0-.34-1.88L9 9.06l1.41-1.41.06.06A1.7 1.7 0 0 0 12.35 8.05 1.7 1.7 0 0 0 13.38 6.5V6h2v.5a1.7 1.7 0 0 0 1.03 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.41 1.41-.06.06A1.7 1.7 0 0 0 19.4 11c.24.6.82.99 1.47.99H21v2h-.13c-.65 0-1.23.39-1.47 1.01z"></path>
+                    </svg>
+                </div>
 
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-
-                </svg>
-
-            </div>
-
-
-            <div class="menu-card-icon">
-
-                <svg width="27" height="27"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="1.8"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
-
-                    <circle cx="12" cy="12" r="3"></circle>
-
-                    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.41 1.41-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-2v-.49a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.41-1.41.06-.06A1.7 1.7 0 0 0 9.4 15a1.7 1.7 0 0 0-1.56-1.03H7v-2h.84A1.7 1.7 0 0 0 9.4 11a1.7 1.7 0 0 0-.34-1.88L9 9.06l1.41-1.41.06.06A1.7 1.7 0 0 0 12.35 8.05 1.7 1.7 0 0 0 13.38 6.5V6h2v.5a1.7 1.7 0 0 0 1.03 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.41 1.41-.06.06A1.7 1.7 0 0 0 19.4 11c.24.6.82.99 1.47.99H21v2h-.13c-.65 0-1.23.39-1.47 1.01z"></path>
-
-                </svg>
+                <div class="menu-card-arrow">
+                    <svg width="17" height="17"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
 
             </div>
 
+            <div class="menu-card-content">
 
-            <h2 class="menu-card-title">
-                Grupos de opciones
-            </h2>
+                <h2>Grupos de opciones</h2>
 
-            <p class="menu-card-description">
-                Configurá variantes y opciones que los clientes
-                podrán seleccionar al comprar un producto.
-            </p>
+                <p>
+                    Configurá variantes y opciones que los clientes
+                    podrán seleccionar al comprar un producto.
+                </p>
 
-            <span class="menu-card-label">
-                Configuración
-            </span>
+            </div>
+
+            <div class="menu-card-footer">
+                <span>Configuración</span>
+            </div>
 
         </a>
 
 
         <!-- EXTRAS -->
-        <a
-            href="{% url 'extra_lista' %}"
-            class="menu-card menu-card-extras"
-        >
+        <a href="{% url 'extra_lista' %}"
+           class="menu-card">
 
-            <div class="menu-card-arrow">
+            <div class="menu-card-top">
 
-                <svg width="16" height="16"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="2"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
+                <div class="menu-card-icon">
+                    <svg width="26" height="26"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <path d="M12 3v18"></path>
+                        <path d="M3 12h18"></path>
+                        <circle cx="12" cy="12" r="8"></circle>
+                    </svg>
+                </div>
 
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-
-                </svg>
-
-            </div>
-
-
-            <div class="menu-card-icon">
-
-                <svg width="27" height="27"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="1.8"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
-
-                    <path d="M12 3v18"></path>
-                    <path d="M3 12h18"></path>
-                    <circle cx="12" cy="12" r="8"></circle>
-
-                </svg>
+                <div class="menu-card-arrow">
+                    <svg width="17" height="17"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </div>
 
             </div>
 
+            <div class="menu-card-content">
 
-            <h2 class="menu-card-title">
-                Extras
-            </h2>
+                <h2>Extras</h2>
 
-            <p class="menu-card-description">
-                Administrá adicionales y complementos con su
-                correspondiente costo extra.
-            </p>
+                <p>
+                    Administrá adicionales y complementos con su
+                    correspondiente costo extra.
+                </p>
 
-            <span class="menu-card-label">
-                Adicionales
-            </span>
+            </div>
+
+            <div class="menu-card-footer">
+                <span>Adicionales</span>
+            </div>
 
         </a>
 
-    </div>
+    </section>
 
 </div>
 

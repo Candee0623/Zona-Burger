@@ -1,228 +1,34 @@
 {% extends 'panel/base.html' %}
+{% load static %}
+
 {% block title %}Zona-Burger | Eliminar {{ titulo }}{% endblock %}
 
 {% block content %}
 
-<style>
-    .grupo-delete-page {
-        max-width: 750px;
-        margin: 0 auto;
-    }
-
-    .grupo-delete-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: #aaa;
-        text-decoration: none;
-        font-size: 0.9rem;
-        margin-bottom: 18px;
-        transition: color 0.2s;
-    }
-
-    .grupo-delete-back:hover {
-        color: #fff;
-    }
-
-    .grupo-delete-card {
-        background: #181818;
-        border: 1px solid #333;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .grupo-delete-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 24px 28px;
-        border-bottom: 1px solid #333;
-    }
-
-    .grupo-delete-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 8px;
-        background: rgba(52, 152, 219, 0.15);
-        border: 1px solid rgba(52, 152, 219, 0.35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #3498db;
-        flex-shrink: 0;
-    }
-
-    .grupo-delete-header-text h1 {
-        margin: 0 0 5px;
-        color: #fff;
-        font-size: 1.45rem;
-    }
-
-    .grupo-delete-header-text p {
-        margin: 0;
-        color: #888;
-        font-size: 0.9rem;
-    }
-
-    .grupo-delete-body {
-        padding: 28px;
-    }
-
-    .grupo-info {
-        background: #202020;
-        border: 1px solid #333;
-        border-radius: 8px;
-        padding: 18px 20px;
-        margin-bottom: 22px;
-    }
-
-    .grupo-label {
-        color: #777;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 6px;
-    }
-
-    .grupo-name {
-        color: #fff;
-        font-size: 1.3rem;
-        font-weight: 700;
-    }
-
-    .grupo-warning {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        background: rgba(255, 107, 107, 0.08);
-        border: 1px solid rgba(255, 107, 107, 0.35);
-        padding: 16px;
-        border-radius: 7px;
-        margin-bottom: 22px;
-    }
-
-    .grupo-warning-icon {
-        color: #ff6b6b;
-        flex-shrink: 0;
-        margin-top: 1px;
-    }
-
-    .grupo-warning-content {
-        flex: 1;
-    }
-
-    .grupo-warning-title {
-        color: #ff6b6b;
-        font-weight: 600;
-        font-size: 0.95rem;
-        margin: 0 0 12px;
-        line-height: 1.4;
-    }
-
-    .grupo-options {
-        margin: 0;
-        padding-left: 20px;
-        color: #bbb;
-        font-size: 0.9rem;
-    }
-
-    .grupo-options li {
-        margin-bottom: 7px;
-        line-height: 1.4;
-    }
-
-    .grupo-options li:last-child {
-        margin-bottom: 0;
-    }
-
-    .grupo-option-price {
-        color: #00d26a;
-        font-weight: 600;
-        margin-left: 4px;
-    }
-
-    .grupo-empty {
-        color: #777;
-        font-style: italic;
-    }
-
-    .grupo-question {
-        color: #ccc;
-        font-size: 0.95rem;
-        margin: 0 0 22px;
-        text-align: center;
-    }
-
-    .grupo-delete-actions {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .grupo-delete-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 20px;
-        border-radius: 5px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .grupo-delete-confirm {
-        background: #ff4757;
-        border: 1px solid #ff4757;
-        color: #fff;
-    }
-
-    .grupo-delete-confirm:hover {
-        background: #e8414f;
-        border-color: #e8414f;
-    }
-
-    .grupo-delete-cancel {
-        background: #333;
-        border: 1px solid #444;
-        color: #fff;
-    }
-
-    .grupo-delete-cancel:hover {
-        background: #3d3d3d;
-    }
-
-    @media (max-width: 600px) {
-        .grupo-delete-header,
-        .grupo-delete-body {
-            padding: 20px;
-        }
-
-        .grupo-delete-actions {
-            flex-direction: column;
-        }
-
-        .grupo-delete-btn {
-            width: 100%;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/panel/menu/opciones/eliminarGrupo.css' %}">
 
 <div class="grupo-delete-page">
 
     <!-- Volver al listado -->
     <a href="{% url cancel_url %}" class="grupo-delete-back">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
+
+        <svg width="18" height="18"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
+
         </svg>
+
         Volver a grupos de opciones
+
     </a>
+
 
     <div class="grupo-delete-card">
 
@@ -230,25 +36,41 @@
         <div class="grupo-delete-header">
 
             <div class="grupo-delete-icon">
-                <svg width="27" height="27" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
+
+                <svg width="27" height="27"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
                     <circle cx="12" cy="12" r="3"></circle>
+
                     <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.42 1.42-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-2v-.08a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.42-1.42.06-.06A1.7 1.7 0 0 0 9.4 15a1.7 1.7 0 0 0-1.56-1.03H7v-2h.84A1.7 1.7 0 0 0 9.4 10a1.7 1.7 0 0 0-.34-1.88L9 8.06l1.42-1.42.06.06A1.7 1.7 0 0 0 12.36 7.04 1.7 1.7 0 0 0 13.39 5.48V5h2v.48A1.7 1.7 0 0 0 16.42 7.04a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.42 1.42-.06.06A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.56 1.03H21v2h-.04A1.7 1.7 0 0 0 19.4 15z"></path>
+
                 </svg>
+
             </div>
 
             <div class="grupo-delete-header-text">
+
                 <h1>Eliminar {{ titulo }}</h1>
-                <p>Esta acción eliminará el grupo y sus opciones.</p>
+
+                <p>
+                    Esta acción eliminará el grupo y sus opciones.
+                </p>
+
             </div>
 
         </div>
+
 
         <!-- Contenido -->
         <div class="grupo-delete-body">
 
             <div class="grupo-info">
+
                 <div class="grupo-label">
                     Grupo seleccionado
                 </div>
@@ -256,19 +78,32 @@
                 <div class="grupo-name">
                     {{ objeto.nombre }}
                 </div>
+
             </div>
+
 
             <div class="grupo-warning">
 
                 <div class="grupo-warning-icon">
-                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" stroke-linejoin="round">
+
+                    <svg width="21" height="21"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+
                         <line x1="12" y1="9" x2="12" y2="13"></line>
+
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
+
                     </svg>
+
                 </div>
+
 
                 <div class="grupo-warning-content">
 
@@ -278,8 +113,11 @@
                     </p>
 
                     <ul class="grupo-options">
+
                         {% for opcion in objeto.opcion_set.all %}
+
                             <li>
+
                                 {{ opcion.nombre }}
 
                                 <span class="grupo-option-price">
@@ -289,50 +127,75 @@
                                         0
                                     {% endif %})
                                 </span>
+
                             </li>
+
                         {% empty %}
+
                             <li class="grupo-empty">
                                 Este grupo no tiene opciones cargadas actualmente.
                             </li>
+
                         {% endfor %}
+
                     </ul>
 
                 </div>
+
             </div>
+
 
             <p class="grupo-question">
                 ¿Estás seguro de que deseas eliminar el grupo
                 <strong>"{{ objeto.nombre }}"</strong>?
             </p>
 
+
             <form method="post">
+
                 {% csrf_token %}
 
                 <div class="grupo-delete-actions">
 
-                    <button type="submit"
-                            class="grupo-delete-btn grupo-delete-confirm">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2"
-                             stroke-linecap="round" stroke-linejoin="round">
+                    <button
+                        type="submit"
+                        class="grupo-delete-btn grupo-delete-confirm"
+                    >
+
+                        <svg width="17" height="17"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6l-1 14H6L5 6"></path>
                             <path d="M10 11v6"></path>
                             <path d="M14 11v6"></path>
                             <path d="M9 6V4h6v2"></path>
+
                         </svg>
+
                         Sí, eliminar todo
+
                     </button>
 
-                    <a href="{% url cancel_url %}"
-                       class="grupo-delete-btn grupo-delete-cancel">
+
+                    <a
+                        href="{% url cancel_url %}"
+                        class="grupo-delete-btn grupo-delete-cancel"
+                    >
                         Cancelar
                     </a>
 
                 </div>
+
             </form>
 
         </div>
+
     </div>
 
 </div>

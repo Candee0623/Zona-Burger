@@ -1,0 +1,445 @@
+/* =========================================================
+   LISTA DE PROMOCIONES - ZONA BURGER
+   ========================================================= */
+
+.promociones-list-page {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   VOLVER
+   ========================================================= */
+
+.promociones-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 18px;
+
+    color: #888;
+
+    text-decoration: none;
+
+    font-size: 0.88rem;
+    font-weight: 600;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.promociones-back:hover {
+    color: #fff;
+    transform: translateX(-3px);
+}
+
+
+/* =========================================================
+   CABECERA
+   ========================================================= */
+
+.promociones-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+.promociones-list-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.promociones-list-icon {
+    width: 48px;
+    height: 48px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(220, 38, 38, 0.10);
+
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    border-radius: 8px;
+
+    color: #dc2626;
+}
+
+.promociones-kicker {
+    margin-bottom: 4px;
+
+    color: #dc2626;
+
+    font-size: 0.68rem;
+    font-weight: 800;
+
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.promociones-list-title h1 {
+    margin: 0;
+
+    color: #fff;
+
+    font-size: 1.6rem;
+    font-weight: 600;
+}
+
+.promociones-list-title p {
+    margin: 4px 0 0;
+
+    color: #888;
+
+    font-size: 0.88rem;
+}
+
+
+/* =========================================================
+   NUEVA PROMOCIÓN
+   ========================================================= */
+
+.btn-nueva-promocion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 10px 16px;
+
+    background: #dc2626;
+
+    border: 1px solid #dc2626;
+    border-radius: 5px;
+
+    color: #fff;
+
+    text-decoration: none;
+
+    font-size: 0.88rem;
+    font-weight: 600;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.btn-nueva-promocion:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.promociones-table-container {
+    width: 100%;
+
+    background: #181818;
+
+    border: 1px solid #333;
+    border-radius: 8px;
+
+    overflow: hidden;
+}
+
+.promociones-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    text-align: left;
+}
+
+.promociones-table thead {
+    background: #222;
+}
+
+.promociones-table th {
+    padding: 13px 14px;
+
+    color: #aaa;
+
+    font-size: 0.78rem;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    border-bottom: 1px solid #333;
+}
+
+.promociones-table td {
+    padding: 13px 14px;
+
+    color: #ccc;
+
+    font-size: 0.88rem;
+
+    border-bottom: 1px solid #292929;
+
+    vertical-align: middle;
+}
+
+.promociones-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.promociones-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.promociones-table tbody tr:hover {
+    background: #202020;
+}
+
+
+/* =========================================================
+   DATOS
+   ========================================================= */
+
+.promocion-id {
+    color: #777 !important;
+
+    font-size: 0.82rem !important;
+
+    white-space: nowrap;
+}
+
+.promocion-palabra {
+    color: #fff !important;
+
+    font-weight: 600;
+}
+
+.promocion-beneficio {
+    color: #aaa !important;
+}
+
+.promocion-valor {
+    color: #f87171 !important;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.promocion-fecha {
+    color: #aaa !important;
+
+    font-size: 0.84rem !important;
+
+    white-space: nowrap;
+}
+
+.promocion-sin-dato {
+    color: #666;
+}
+
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+
+.promocion-estado {
+    white-space: nowrap;
+}
+
+.promocion-activa,
+.promocion-inactiva {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+
+.promocion-activa {
+    color: #f87171;
+}
+
+.promocion-inactiva {
+    color: #777;
+}
+
+.promocion-estado-punto {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: currentColor;
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.promocion-acciones {
+    text-align: right;
+
+    white-space: nowrap;
+}
+
+.btn-promocion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    min-height: 34px;
+
+    padding: 6px 10px;
+
+    background: #292929;
+
+    border: 1px solid #444;
+    border-radius: 4px;
+
+    text-decoration: none;
+
+    font-size: 0.82rem;
+    font-weight: 600;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.btn-promocion:hover {
+    transform: translateY(-1px);
+}
+
+.btn-promocion-editar {
+    margin-right: 5px;
+
+    color: #f87171;
+}
+
+.btn-promocion-editar:hover {
+    background: rgba(220, 38, 38, 0.10);
+
+    border-color: rgba(220, 38, 38, 0.35);
+
+    color: #fff;
+}
+
+.btn-promocion-eliminar {
+    color: #f87171;
+}
+
+.btn-promocion-eliminar:hover {
+    background: #dc2626;
+
+    border-color: #dc2626;
+
+    color: #fff;
+}
+
+
+/* =========================================================
+   VACÍO
+   ========================================================= */
+
+.promociones-empty {
+    padding: 35px 20px !important;
+
+    text-align: center;
+
+    color: #666 !important;
+
+    font-size: 0.9rem !important;
+
+    font-style: italic;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .promociones-table th,
+    .promociones-table td {
+        padding: 11px 9px;
+    }
+
+    .promociones-table {
+        font-size: 0.82rem;
+    }
+
+    .btn-promocion {
+        padding: 6px 8px;
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .promociones-list-header {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+    .promociones-list-title {
+        align-items: flex-start;
+    }
+
+    .promociones-list-title h1 {
+        font-size: 1.45rem;
+    }
+
+    .promociones-list-title p {
+        line-height: 1.4;
+    }
+
+    .btn-nueva-promocion {
+        width: 100%;
+    }
+
+    .promociones-table-container {
+        overflow-x: auto;
+    }
+
+    .promociones-table {
+        min-width: 850px;
+    }
+}
+
+
+@media (max-width: 450px) {
+
+    .promociones-list-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .promociones-list-title h1 {
+        font-size: 1.3rem;
+    }
+
+    .promociones-list-title p {
+        font-size: 0.8rem;
+    }
+}

@@ -1,300 +1,11 @@
 {% extends 'panel/base.html' %}
+{% load static %}
+
 {% block title %}Zona-Burger | Nuevo grupo de opciones{% endblock %}
 
 {% block content %}
 
-<style>
-    .grupo-create-page {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .grupo-create-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: #aaa;
-        text-decoration: none;
-        font-size: 0.9rem;
-        margin-bottom: 18px;
-        transition: color 0.2s;
-    }
-
-    .grupo-create-back:hover {
-        color: #fff;
-    }
-
-    .grupo-create-card {
-        background: #181818;
-        border: 1px solid #333;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .grupo-create-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 24px 28px;
-        border-bottom: 1px solid #333;
-    }
-
-    .grupo-create-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 8px;
-        background: rgba(52, 152, 219, 0.15);
-        border: 1px solid rgba(52, 152, 219, 0.35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #3498db;
-        flex-shrink: 0;
-    }
-
-    .grupo-create-header-text h1 {
-        margin: 0 0 5px;
-        color: #fff;
-        font-size: 1.45rem;
-    }
-
-    .grupo-create-header-text p {
-        margin: 0;
-        color: #888;
-        font-size: 0.9rem;
-    }
-
-    .grupo-create-body {
-        padding: 28px;
-    }
-
-    .grupo-create-errors {
-        background: rgba(255, 107, 107, 0.12);
-        border: 1px solid rgba(255, 107, 107, 0.45);
-        padding: 13px 16px;
-        border-radius: 7px;
-        margin-bottom: 22px;
-    }
-
-    .grupo-create-errors ul {
-        color: #ff6b6b;
-        margin: 0;
-        padding-left: 20px;
-        font-size: 0.9rem;
-    }
-
-    .grupo-create-field {
-        margin-bottom: 20px;
-    }
-
-    .grupo-create-label {
-        display: block;
-        margin-bottom: 7px;
-        color: #ccc;
-        font-weight: 500;
-        font-size: 0.9rem;
-    }
-
-    .grupo-create-input {
-        width: 100%;
-        padding: 10px 11px;
-        background: #222;
-        border: 1px solid #444;
-        color: #fff;
-        border-radius: 5px;
-        box-sizing: border-box;
-        font-size: 0.9rem;
-    }
-
-    .grupo-create-input:focus {
-        outline: none;
-        border-color: #3498db;
-    }
-
-    .grupo-create-row {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 24px;
-    }
-
-    .grupo-create-row .grupo-create-field {
-        flex: 1;
-        margin-bottom: 0;
-    }
-
-    .grupo-create-section {
-        border-top: 1px solid #333;
-        padding-top: 25px;
-        margin-top: 25px;
-    }
-
-    .grupo-create-section-header {
-        margin-bottom: 16px;
-    }
-
-    .grupo-create-section-title {
-        margin: 0;
-        color: #ddd;
-        font-size: 1.05rem;
-    }
-
-    .grupo-create-section-description {
-        color: #777;
-        font-size: 0.8rem;
-        margin: 4px 0 0;
-    }
-
-    .grupo-create-table-wrapper {
-        overflow-x: auto;
-        border: 1px solid #333;
-        border-radius: 7px;
-    }
-
-    .grupo-create-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 600px;
-    }
-
-    .grupo-create-table th {
-        padding: 11px 12px;
-        text-align: left;
-        color: #888;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border-bottom: 1px solid #333;
-        background: #1d1d1d;
-    }
-
-    .grupo-create-table th:last-child {
-        text-align: center;
-    }
-
-    .grupo-create-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #252525;
-    }
-
-    .grupo-create-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .grupo-create-table .grupo-create-input {
-        padding: 8px 9px;
-    }
-
-    /* Botón agregar opción */
-    .grupo-add-option {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        background: #2b2b2b;
-        color: #3498db;
-        border: 1px solid #444;
-        padding: 8px 14px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-        margin-top: 14px;
-    }
-
-    .grupo-add-option:hover {
-        background: #333;
-        border-color: #3498db;
-    }
-
-    /* Botón quitar opción */
-    .grupo-remove-new-option {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 7px 10px;
-        background: #252525;
-        border: 1px solid #444;
-        border-radius: 5px;
-        color: #999;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .grupo-remove-new-option:hover {
-        background: rgba(255, 71, 87, 0.12);
-        border-color: #ff4757;
-        color: #ff4757;
-    }
-
-    .grupo-create-actions {
-        display: flex;
-        gap: 12px;
-        margin-top: 28px;
-        padding-top: 22px;
-        border-top: 1px solid #333;
-        flex-wrap: wrap;
-    }
-
-    .grupo-create-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 20px;
-        border-radius: 5px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .grupo-create-save {
-        background: #00d26a;
-        border: 1px solid #00d26a;
-        color: #000;
-    }
-
-    .grupo-create-save:hover {
-        background: #00bd5f;
-        border-color: #00bd5f;
-    }
-
-    .grupo-create-cancel {
-        background: #333;
-        border: 1px solid #444;
-        color: #fff;
-    }
-
-    .grupo-create-cancel:hover {
-        background: #3d3d3d;
-    }
-
-    @media (max-width: 650px) {
-        .grupo-create-header,
-        .grupo-create-body {
-            padding: 20px;
-        }
-
-        .grupo-create-row {
-            flex-direction: column;
-            gap: 18px;
-        }
-
-        .grupo-create-row .grupo-create-field {
-            margin-bottom: 0;
-        }
-
-        .grupo-create-actions {
-            flex-direction: column;
-        }
-
-        .grupo-create-btn {
-            width: 100%;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/panel/menu/opciones/crearGrupo.css' %}">
 
 <div class="grupo-create-page">
 
@@ -522,7 +233,7 @@
                                     </td>
 
 
-                                    <td style="text-align: center;">
+                                    <td class="grupo-create-action-cell">
 
                                         <button
                                             type="button"
@@ -650,7 +361,7 @@ document.getElementById('btn-agregar-opcion').addEventListener('click', function
     const fila = document.createElement('tr');
 
     fila.innerHTML = `
-        <td>
+        <td class="grupo-new-option-cell">
 
             <input
                 type="text"
@@ -661,7 +372,7 @@ document.getElementById('btn-agregar-opcion').addEventListener('click', function
 
         </td>
 
-        <td>
+        <td class="grupo-new-option-cell">
 
             <input
                 type="number"
@@ -673,7 +384,7 @@ document.getElementById('btn-agregar-opcion').addEventListener('click', function
 
         </td>
 
-        <td style="text-align: center;">
+        <td class="grupo-new-option-action-cell">
 
             <button
                 type="button"

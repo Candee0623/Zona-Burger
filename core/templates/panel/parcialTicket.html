@@ -1,103 +1,302 @@
-<div class="ticket-termico" style="font-family: 'Courier New', Courier, monospace; color: #000; width: 100%; max-width: 300px; margin: 0 auto; background: #fff; padding: 10px;">
-    <!-- ENCABEZADO -->
-    <div style="text-align: center;">
-        <h3 style="margin: 0; font-size: 1.2rem;">🍔 ZONA BURGER 🍔</h3>
-        <p style="font-size: 0.75rem; margin: 2px 0;">Comidas & Hamburguesas</p>
-        <p style="font-size: 0.7rem; color: #555; margin: 0;">Fecha: {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
-    </div>
+{% load static %}
 
-    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
+<link rel="stylesheet" href="{% static 'css/panel/parcialTicket.css' %}">
 
-    <!-- DATOS DEL PEDIDO Y CLIENTE -->
-    <div style="font-size: 0.8rem;">
-        <p style="margin: 2px 0;"><strong>Pedido N°:</strong> #{{ pedido.idpedido }}</p>
-        <p style="margin: 2px 0;"><strong>Cliente:</strong> {{ pedido.idcliente.nombre|default:"General" }} {{ pedido.idcliente.apellido|default:"" }}</p>
-        
-        {% if pedido.idcliente.telefono %}
-        <p style="margin: 2px 0;"><strong>Teléfono:</strong> {{ pedido.idcliente.telefono }}</p>
+<div class="ticket-cocina">
+
+    <!-- =====================================================
+         ENCABEZADO
+         ===================================================== -->
+
+    <header class="cocina-header">
+
+        <div class="cocina-logo">
+            ZONA BURGER
+        </div>
+
+        <div class="cocina-tipo">
+            COMANDA DE COCINA
+        </div>
+
+        <div class="cocina-pedido">
+            PEDIDO #{{ pedido.idpedido }}
+        </div>
+
+        {% if pedido.fecha_creacion %}
+        <div class="cocina-fecha">
+            {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}
+        </div>
         {% endif %}
-        
-        <!-- DIRECCIÓN LIMPIA -->
-        <p style="margin: 2px 0;"><strong>Dirección:</strong> 
-            {% if direccion_cliente and direccion_cliente.calle %}
-                {{ direccion_cliente.calle }} {{ direccion_cliente.numero }}{% if direccion_cliente.piso %}{% if direccion_cliente.piso != 'None' %}, Piso {{ direccion_cliente.piso }}{% endif %}{% endif %}{% if direccion_cliente.localidad and direccion_cliente.localidad != 'A coordinar con el vendedor' %} - {{ direccion_cliente.localidad }}{% endif %}
-            {% else %}
-                Retira en local
-            {% endif %}
-        </p>
 
-        <p style="margin: 2px 0;"><strong>Medio de Pago:</strong> {{ pedido.idmediopago|default:"No especificado" }}</p>
-        
+        <!-- HORA DE ENTREGA DESEADA -->
         {% if pedido.horarioentregadeseado %}
-        <p style="margin: 2px 0;"><strong>Hora Deseada:</strong> {{ pedido.horarioentregadeseado|time:"H:i" }}</p>
+        <div class="cocina-hora-entrega">
+
+            <span class="cocina-hora-label">
+                HORA DE ENTREGA
+            </span>
+
+            <strong class="cocina-hora-valor">
+                {{ pedido.horarioentregadeseado|time:"H:i" }}
+            </strong>
+
+        </div>
         {% endif %}
 
-        {% if pedido.comentarios %}
-        <p style="margin: 2px 0;"><strong>Comentarios:</strong> {{ pedido.comentarios }}</p>
+    </header>
+
+
+    <!-- =====================================================
+         INFORMACIÓN DEL PEDIDO
+         ===================================================== -->
+
+    <section class="cocina-info">
+
+        <!-- CLIENTE -->
+        <div class="cocina-info-row">
+
+            <span>CLIENTE</span>
+
+            <strong>
+                {{ pedido.idcliente.nombre|default:"General" }}
+                {{ pedido.idcliente.apellido|default:"" }}
+            </strong>
+
+        </div>
+
+
+        <!-- TELÉFONO -->
+        {% if pedido.idcliente and pedido.idcliente.telefono %}
+
+        <div class="cocina-info-row">
+
+            <span>TELÉFONO</span>
+
+            <strong>
+                {{ pedido.idcliente.telefono }}
+            </strong>
+
+        </div>
+
         {% endif %}
-    </div>
 
-    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
 
-    <!-- DETALLE DE PRODUCTOS Y OPCIONES -->
-    <div style="font-size: 0.8rem; font-weight: bold; margin-bottom: 4px;">DETALLE DE PRODUCTOS:</div>
+        <!-- DIRECCIÓN -->
+        <div class="cocina-info-row">
 
-    <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
-        <tbody>
-            {% for detalle in detalles %}
-            <tr>
-                <td colspan="2" style="padding: 6px 0; border-bottom: 1px dotted #ccc;">
-                    <strong>{{ detalle.cantidad }}x {{ detalle.idproducto.nombre|default:"Producto" }}</strong>
-                    
-                    <!-- Opciones o extras guardados -->
-                    {% if detalle.observaciones %}
-                        <div style="font-size: 0.75rem; color: #333; padding-left: 10px; margin-top: 2px;">
-                            • {{ detalle.observaciones }}
-                        </div>
+            <span>ENTREGA</span>
+
+            <strong>
+
+                {% if direccion_cliente and direccion_cliente.calle %}
+
+                    {{ direccion_cliente.calle }}
+                    {{ direccion_cliente.numero }}
+
+                    {% if direccion_cliente.piso and direccion_cliente.piso != 'None' %}
+                        , Piso {{ direccion_cliente.piso }}
                     {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <td style="font-size: 0.75rem; color: #555; padding: 2px 0;">Subtotal ítem:</td>
-                <td style="text-align: right; padding: 2px 0; font-weight: bold;">
-                    ${{ detalle.preciounitario|floatformat:2 }}
-                </td>
-            </tr>
-            <tr><td colspan="2" style="border-bottom: 1px solid #eee; padding-bottom: 2px;"></td></tr>
-            {% empty %}
-            <tr>
-                <td colspan="2" style="text-align: center; padding: 5px 0;">Sin detalles registrados</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 
-    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
+                    {% if direccion_cliente.localidad and direccion_cliente.localidad != 'A coordinar con el vendedor' %}
+                        - {{ direccion_cliente.localidad }}
+                    {% endif %}
 
-    <!-- DESCUENTOS O PALABRA CLAVE -->
-    {% if pedido.palabra_clave or pedido.cupon or pedido.descuento %}
-    <div style="font-size: 0.8rem; margin-bottom: 6px;">
-        {% if pedido.palabra_clave or pedido.cupon %}
-        <p style="margin: 2px 0;"><strong>Palabra Clave:</strong> {{ pedido.palabra_clave|default:pedido.cupon }}</p>
-        {% endif %}
-        {% if pedido.descuento %}
-        <p style="margin: 2px 0; color: #c0392b;"><strong>Descuento:</strong> -${{ pedido.descuento|floatformat:2 }}</p>
-        {% endif %}
-    </div>
-    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
+                {% else %}
+
+                    RETIRA EN LOCAL
+
+                {% endif %}
+
+            </strong>
+
+        </div>
+
+
+        <!-- MEDIO DE PAGO -->
+        <div class="cocina-info-row">
+
+            <span>PAGO</span>
+
+            <strong>
+
+                {% if pedido.idmediopago %}
+                    {{ pedido.idmediopago.nombremetodo }}
+                {% else %}
+                    No especificado
+                {% endif %}
+
+            </strong>
+
+        </div>
+
+    </section>
+
+
+    <div class="cocina-separator"></div>
+
+
+    <!-- =====================================================
+         PRODUCTOS
+         ===================================================== -->
+
+    <section class="cocina-productos">
+
+        <div class="cocina-section-title">
+            PEDIDO
+        </div>
+
+
+        {% for detalle in detalles %}
+
+        <article class="cocina-producto">
+
+            <!-- PRODUCTO -->
+            <div class="cocina-producto-cabecera">
+
+                <span class="cocina-cantidad">
+                    {{ detalle.cantidad }}x
+                </span>
+
+                <strong class="cocina-producto-nombre">
+                    {{ detalle.idproducto.nombre|default:"Producto" }}
+                </strong>
+
+            </div>
+
+
+            <!-- PRECIOS -->
+            <div class="cocina-precios">
+
+                <div class="cocina-precio-row">
+
+                    <span>
+                        PRECIO UNITARIO
+                    </span>
+
+                    <strong>
+                        ${{ detalle.preciounitario|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+
+                <div class="cocina-precio-row cocina-subtotal-row">
+
+                    <span>
+                        SUBTOTAL
+                    </span>
+
+                    <strong>
+                        ${{ detalle.subtotal_item|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- OBSERVACIONES DEL PRODUCTO -->
+            {% if detalle.observaciones %}
+
+            <div class="cocina-observacion">
+
+                <div class="cocina-observacion-titulo">
+                    OBSERVACIÓN DEL PRODUCTO
+                </div>
+
+                <div class="cocina-observacion-texto">
+                    {{ detalle.observaciones }}
+                </div>
+
+            </div>
+
+            {% endif %}
+
+        </article>
+
+        {% empty %}
+
+        <div class="cocina-sin-productos">
+            SIN PRODUCTOS REGISTRADOS
+        </div>
+
+        {% endfor %}
+
+    </section>
+
+
+    <!-- =====================================================
+         COMENTARIO GENERAL
+         ===================================================== -->
+
+    {% if pedido.justificacioncancelacion %}
+
+    <section class="cocina-comentarios">
+
+        <div class="cocina-comentarios-titulo">
+            COMENTARIO DEL PEDIDO
+        </div>
+
+        <div class="cocina-comentarios-texto">
+            {{ pedido.justificacioncancelacion }}
+        </div>
+
+    </section>
+
     {% endif %}
 
-    <!-- TOTAL FINAL -->
-    <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold;">
-        <span>TOTAL:</span>
-        <span>${{ pedido.total|default:"0.00"|floatformat:2 }}</span>
-    </div>
 
-    <div style="border-top: 1px dashed #333; margin: 8px 0;"></div>
+    <div class="cocina-separator"></div>
 
-    <!-- PIE DE TICKET -->
-    <div style="text-align: center; font-size: 0.7rem; color: #555;">
-        <p style="margin: 2px 0;">¡Gracias por tu compra!</p>
-        <p style="margin: 2px 0;">zona-burger.com</p>
-    </div>
+
+    <!-- =====================================================
+         PROMOCIÓN
+         ===================================================== -->
+
+    {% if pedido.idpromocion %}
+
+    <section class="cocina-descuentos">
+
+        <div class="cocina-resumen-linea">
+
+            <span>
+                PROMOCIÓN
+            </span>
+
+            <strong>
+                ID {{ pedido.idpromocion }}
+            </strong>
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         TOTAL
+         ===================================================== -->
+
+    <section class="cocina-total">
+
+        <span>
+            TOTAL
+        </span>
+
+        <strong>
+            ${{ pedido.total|default:"0.00"|floatformat:2 }}
+        </strong>
+
+    </section>
+
+
+    <!-- =====================================================
+         PIE
+         ===================================================== -->
+
+    <footer class="cocina-footer">
+        CONTROL INTERNO · ZONA BURGER
+    </footer>
+
 </div>

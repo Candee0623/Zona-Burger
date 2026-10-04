@@ -1,0 +1,716 @@
+/* =========================================================
+   GESTIONAR RECETA - ZONA BURGER
+   ========================================================= */
+
+.receta-page {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   VOLVER
+   ========================================================= */
+
+.receta-back {
+    margin-bottom: 20px;
+}
+
+.receta-back a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    color: #888;
+    text-decoration: none;
+
+    font-size: 0.88rem;
+    font-weight: 600;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.receta-back a:hover {
+    color: #fff;
+    transform: translateX(-3px);
+}
+
+
+/* =========================================================
+   CABECERA
+   ========================================================= */
+
+.receta-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    margin-bottom: 25px;
+}
+
+.receta-header-icon {
+    width: 50px;
+    height: 50px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background: rgba(220, 38, 38, 0.10);
+    border: 1px solid rgba(220, 38, 38, 0.28);
+    border-radius: 9px;
+
+    color: #dc2626;
+}
+
+.receta-kicker {
+    margin-bottom: 5px;
+
+    color: #dc2626;
+
+    font-size: 0.68rem;
+    font-weight: 800;
+
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.receta-header h1 {
+    margin: 0 0 5px;
+
+    color: #fff;
+
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.receta-header h1 span {
+    color: #dc2626;
+}
+
+.receta-header p {
+    margin: 0;
+
+    color: #888;
+
+    font-size: 0.86rem;
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.receta-card {
+    background: #181818;
+
+    border: 1px solid #333;
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    margin-bottom: 30px;
+}
+
+.receta-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    min-height: 54px;
+
+    padding: 0 22px;
+
+    background: #1c1c1c;
+    border-bottom: 1px solid #333;
+}
+
+.receta-card-header svg {
+    color: #dc2626;
+}
+
+.receta-card-header span {
+    color: #ddd;
+
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.receta-card-body {
+    padding: 24px;
+}
+
+
+/* =========================================================
+   FORMULARIO
+   ========================================================= */
+
+.receta-form-group {
+    margin-bottom: 20px;
+}
+
+.receta-form-group label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #ccc;
+
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.receta-input,
+.receta-select {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 11px 13px;
+
+    background: #222;
+
+    border: 1px solid #444;
+    border-radius: 5px;
+
+    color: #fff;
+
+    font-family: inherit;
+    font-size: 0.9rem;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.receta-input::placeholder {
+    color: #666;
+}
+
+.receta-input:focus,
+.receta-select:focus {
+    border-color: #dc2626;
+
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.12);
+}
+
+.receta-select option {
+    background: #222;
+    color: #fff;
+}
+
+.receta-opcional {
+    color: #666;
+    font-weight: 400;
+}
+
+
+/* =========================================================
+   CHECKBOX
+   ========================================================= */
+
+.receta-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    margin-bottom: 22px;
+
+    padding: 13px 15px;
+
+    background: rgba(220, 38, 38, 0.05);
+
+    border: 1px solid rgba(220, 38, 38, 0.18);
+    border-radius: 7px;
+}
+
+.receta-check input {
+    width: 17px;
+    height: 17px;
+
+    margin: 1px 0 0;
+
+    flex-shrink: 0;
+
+    accent-color: #dc2626;
+
+    cursor: pointer;
+}
+
+.receta-check label {
+    margin: 0;
+
+    color: #ccc;
+
+    font-size: 0.82rem;
+    line-height: 1.5;
+
+    cursor: pointer;
+}
+
+.receta-check small {
+    color: #777;
+}
+
+
+/* =========================================================
+   BOTÓN AGREGAR
+   ========================================================= */
+
+.receta-btn-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 38px;
+
+    padding: 9px 17px;
+
+    background: #dc2626;
+
+    border: 1px solid #dc2626;
+    border-radius: 5px;
+
+    color: #fff;
+
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.receta-btn-add:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   LISTA
+   ========================================================= */
+
+.receta-list-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    margin-bottom: 13px;
+}
+
+.receta-list-title svg {
+    color: #dc2626;
+}
+
+.receta-list-title h2 {
+    margin: 0;
+
+    color: #ddd;
+
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.receta-table-card {
+    background: #181818;
+
+    border: 1px solid #333;
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+.receta-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.receta-table {
+    width: 100%;
+    min-width: 650px;
+
+    border-collapse: collapse;
+
+    color: #ddd;
+}
+
+.receta-table th {
+    padding: 12px 16px;
+
+    background: #141414;
+
+    border-bottom: 1px solid #2b2b2b;
+
+    color: #666;
+
+    font-size: 0.66rem;
+    font-weight: 800;
+
+    text-align: left;
+
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.receta-table td {
+    padding: 14px 16px;
+
+    border-bottom: 1px solid #242424;
+
+    color: #aaa;
+
+    font-size: 0.82rem;
+
+    vertical-align: middle;
+}
+
+.receta-table tbody tr:hover {
+    background: #1d1d1d;
+}
+
+.receta-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* =========================================================
+   INSUMO
+   ========================================================= */
+
+.receta-insumo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.receta-insumo-icon {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background: rgba(220, 38, 38, 0.08);
+
+    border: 1px solid rgba(220, 38, 38, 0.20);
+    border-radius: 6px;
+
+    color: #dc2626;
+}
+
+.receta-insumo-name {
+    color: #fff;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   CANTIDAD
+   ========================================================= */
+
+.receta-cantidad {
+    color: #ccc;
+}
+
+.receta-sin-cantidad {
+    color: #666;
+
+    font-size: 0.78rem;
+    font-style: italic;
+}
+
+
+/* =========================================================
+   ESTADO REMOVIBLE
+   ========================================================= */
+
+.receta-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.receta-estado.si {
+    color: #f87171;
+}
+
+.receta-estado.no {
+    color: #888;
+}
+
+.receta-punto {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+}
+
+.receta-estado.si .receta-punto {
+    background: #dc2626;
+}
+
+.receta-estado.no .receta-punto {
+    background: #666;
+}
+
+
+/* =========================================================
+   ELIMINAR
+   ========================================================= */
+
+.receta-btn-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 32px;
+
+    padding: 6px 10px;
+
+    background: rgba(220, 38, 38, 0.08);
+
+    border: 1px solid rgba(220, 38, 38, 0.28);
+    border-radius: 5px;
+
+    color: #f87171;
+
+    text-decoration: none;
+
+    font-size: 0.73rem;
+    font-weight: 700;
+
+    transition: all 0.2s ease;
+}
+
+.receta-btn-delete:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+
+    color: #fff;
+}
+
+
+/* =========================================================
+   VACÍO
+   ========================================================= */
+
+.receta-empty {
+    padding: 45px 20px !important;
+
+    text-align: center;
+
+    color: #666 !important;
+}
+
+.receta-empty-icon {
+    width: 46px;
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 12px;
+
+    background: #202020;
+
+    border: 1px solid #303030;
+    border-radius: 8px;
+
+    color: #555;
+}
+
+.receta-empty strong {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #888;
+
+    font-size: 0.86rem;
+}
+
+.receta-empty span {
+    color: #555;
+
+    font-size: 0.74rem;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+    .receta-header {
+        align-items: flex-start;
+    }
+
+    .receta-header-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .receta-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .receta-header p {
+        font-size: 0.78rem;
+    }
+
+    .receta-card-body {
+        padding: 20px 17px;
+    }
+
+    .receta-table-card {
+        background: transparent;
+        border: none;
+    }
+
+    .receta-table {
+        display: block;
+        min-width: 0;
+    }
+
+    .receta-table thead {
+        display: none;
+    }
+
+    .receta-table tbody {
+        display: block;
+    }
+
+    .receta-table tbody tr {
+        display: block;
+
+        margin-bottom: 10px;
+        padding: 13px;
+
+        background: #181818;
+
+        border: 1px solid #333;
+        border-radius: 9px;
+    }
+
+    .receta-table tbody td {
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 12px;
+
+        padding: 10px 2px;
+
+        border-bottom: 1px solid #292929;
+
+        text-align: right;
+    }
+
+    .receta-table tbody td:first-child {
+        display: block;
+
+        padding-top: 2px;
+
+        text-align: left;
+    }
+
+    .receta-table tbody td:last-child {
+        display: block;
+
+        border-bottom: none;
+
+        text-align: left;
+    }
+
+    .receta-table tbody td:nth-child(2)::before {
+        content: "Cantidad";
+
+        color: #666;
+
+        font-size: 0.63rem;
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+    .receta-table tbody td:nth-child(3)::before {
+        content: "Removible";
+
+        color: #666;
+
+        font-size: 0.63rem;
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+    .receta-table tbody td:last-child::before {
+        content: "Acciones";
+
+        display: block;
+
+        margin-bottom: 8px;
+
+        color: #666;
+
+        font-size: 0.63rem;
+        font-weight: 800;
+
+        text-transform: uppercase;
+    }
+
+    .receta-btn-delete {
+        display: flex;
+
+        width: 100%;
+        min-height: 38px;
+    }
+}
+
+
+@media (max-width: 430px) {
+
+    .receta-header h1 {
+        font-size: 1.15rem;
+    }
+
+    .receta-header p {
+        font-size: 0.74rem;
+    }
+
+    .receta-btn-add {
+        width: 100%;
+    }
+}

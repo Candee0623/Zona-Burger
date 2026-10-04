@@ -1,233 +1,63 @@
 {% extends 'panel/base.html' %}
+{% load static %}
 
 {% block title %}Zona-Burger | Eliminar categoría{% endblock %}
 
 {% block content %}
 
-<style>
-    .categoria-delete-page {
-        max-width: 650px;
-        margin: 0 auto;
-    }
-
-    .categoria-delete-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: #aaa;
-        text-decoration: none;
-        font-size: 0.9rem;
-        margin-bottom: 18px;
-        transition: color 0.2s;
-    }
-
-    .categoria-delete-back:hover {
-        color: #fff;
-    }
-
-    .categoria-delete-card {
-        background: #181818;
-        border: 1px solid #333;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .categoria-delete-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 24px 28px;
-        border-bottom: 1px solid #333;
-    }
-
-    .categoria-delete-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 8px;
-        background: rgba(46, 204, 113, 0.12);
-        border: 1px solid rgba(46, 204, 113, 0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #2ecc71;
-        flex-shrink: 0;
-    }
-
-    .categoria-delete-header-text h1 {
-        margin: 0 0 5px;
-        color: #fff;
-        font-size: 1.4rem;
-    }
-
-    .categoria-delete-header-text p {
-        margin: 0;
-        color: #888;
-        font-size: 0.9rem;
-    }
-
-    .categoria-delete-body {
-        padding: 28px;
-    }
-
-    .categoria-info {
-        background: #202020;
-        border: 1px solid #333;
-        border-radius: 7px;
-        padding: 18px;
-        margin-bottom: 20px;
-    }
-
-    .categoria-label {
-        color: #777;
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 7px;
-    }
-
-    .categoria-name {
-        color: #fff;
-        font-size: 1.2rem;
-        font-weight: 600;
-    }
-
-    .categoria-warning {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-        background: rgba(255, 71, 87, 0.08);
-        border: 1px solid rgba(255, 71, 87, 0.25);
-        border-radius: 7px;
-        padding: 15px;
-        margin-bottom: 22px;
-    }
-
-    .categoria-warning-icon {
-        color: #ff4757;
-        flex-shrink: 0;
-        margin-top: 1px;
-    }
-
-    .categoria-warning-text {
-        color: #bbb;
-        font-size: 0.88rem;
-        line-height: 1.5;
-    }
-
-    .categoria-question {
-        color: #ccc;
-        font-size: 0.95rem;
-        margin: 0 0 24px;
-        text-align: center;
-    }
-
-    .categoria-delete-actions {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        padding-top: 22px;
-        border-top: 1px solid #333;
-        flex-wrap: wrap;
-    }
-
-    .categoria-delete-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .categoria-delete-confirm {
-        background: #ff4757;
-        border: 1px solid #ff4757;
-        color: #fff;
-    }
-
-    .categoria-delete-confirm:hover {
-        background: #e8414f;
-        border-color: #e8414f;
-    }
-
-    .categoria-delete-cancel {
-        background: #333;
-        border: 1px solid #444;
-        color: #fff;
-    }
-
-    .categoria-delete-cancel:hover {
-        background: #3d3d3d;
-    }
-
-    @media (max-width: 600px) {
-        .categoria-delete-header,
-        .categoria-delete-body {
-            padding: 20px;
-        }
-
-        .categoria-delete-actions {
-            flex-direction: column;
-        }
-
-        .categoria-delete-btn {
-            width: 100%;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/panel/menu/categorias/eliminarCategoria.css' %}">
 
 <div class="categoria-delete-page">
 
-    <!-- Volver al listado -->
-    <a href="{% url 'categoria_lista' %}" class="categoria-delete-back">
+    <!-- VOLVER AL LISTADO -->
+    <a
+        href="{% url 'categoria_lista' %}"
+        class="categoria-delete-back"
+    >
 
-        <svg width="18" height="18"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2"
-             stroke-linecap="round"
-             stroke-linejoin="round">
-
+        <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
-
         </svg>
 
         Volver a categorías
 
     </a>
 
-
     <div class="categoria-delete-card">
 
-        <!-- Encabezado -->
+        <!-- ENCABEZADO -->
         <div class="categoria-delete-header">
 
             <div class="categoria-delete-icon">
 
-                <svg width="27" height="27"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="2"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
-
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
                     <path d="M20 12V7a2 2 0 0 0-2-2h-5l-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"></path>
                     <path d="M16 16l5 5"></path>
                     <path d="M21 16l-5 5"></path>
-
                 </svg>
 
             </div>
 
             <div class="categoria-delete-header-text">
+
+                <span>Menú / Categorías</span>
 
                 <h1>Eliminar categoría</h1>
 
@@ -239,10 +69,10 @@
 
         </div>
 
-
+        <!-- CUERPO -->
         <div class="categoria-delete-body">
 
-            <!-- Categoría -->
+            <!-- CATEGORÍA SELECCIONADA -->
             <div class="categoria-info">
 
                 <div class="categoria-label">
@@ -255,24 +85,22 @@
 
             </div>
 
-
-            <!-- Advertencia -->
+            <!-- ADVERTENCIA -->
             <div class="categoria-warning">
 
                 <div class="categoria-warning-icon">
 
-                    <svg width="20" height="20"
-                         viewBox="0 0 24 24"
-                         fill="none"
-                         stroke="currentColor"
-                         stroke-width="2"
-                         stroke-linecap="round"
-                         stroke-linejoin="round">
-
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                         <line x1="12" y1="9" x2="12" y2="13"></line>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
-
                     </svg>
 
                 </div>
@@ -286,7 +114,7 @@
 
             </div>
 
-
+            <!-- CONFIRMACIÓN -->
             <p class="categoria-question">
 
                 ¿Estás seguro de que deseas eliminar
@@ -294,8 +122,7 @@
 
             </p>
 
-
-            <!-- Acciones -->
+            <!-- ACCIONES -->
             <form method="post">
 
                 {% csrf_token %}
@@ -307,34 +134,30 @@
                         class="categoria-delete-btn categoria-delete-confirm"
                     >
 
-                        <svg width="17" height="17"
-                             viewBox="0 0 24 24"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="2"
-                             stroke-linecap="round"
-                             stroke-linejoin="round">
-
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6l-1 14H6L5 6"></path>
                             <path d="M10 11v6"></path>
                             <path d="M14 11v6"></path>
                             <path d="M9 6V4h6v2"></path>
-
                         </svg>
 
                         Sí, eliminar categoría
 
                     </button>
 
-
                     <a
                         href="{% url 'categoria_lista' %}"
                         class="categoria-delete-btn categoria-delete-cancel"
                     >
-
                         Cancelar
-
                     </a>
 
                 </div>

@@ -23,7 +23,7 @@
 
     <link
         rel="preconnect"
-        href="https://fonts.gstatic.com"
+        href="https://fonts.googleapis.com"
         crossorigin
     >
 
@@ -42,1703 +42,1392 @@
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     >
 
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            margin: 0;
-            background:
-                radial-gradient(
-                    circle at top,
-                    #1b1b1b 0%,
-                    #090909 45%,
-                    #000000 100%
-                );
-            color: #ffffff;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        button,
-        input,
-        select,
-        textarea {
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        .checkout-page {
-            width: 100%;
-            min-height: 100vh;
-            padding: 45px 20px 70px;
-        }
-
-        .checkout-container {
-            width: 100%;
-            max-width: 1250px;
-            margin: 0 auto;
-        }
-
-        .checkout-title {
-            margin-bottom: 30px;
-        }
-
-        .checkout-title h2 {
-            margin: 0;
-            color: #ffffff;
-            font-size: clamp(1.8rem, 4vw, 2.7rem);
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -.5px;
-        }
-
-        .checkout-title h2 span {
-            color: #d82505;
-        }
-
-        .checkout-title p {
-            margin: 9px 0 0;
-            color: #a8a8a8;
-            font-size: .9rem;
-            font-weight: 600;
-        }
-
-        .checkout-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.65fr) minmax(320px, .85fr);
-            gap: 25px;
-            align-items: start;
-        }
-
-        .checkout-card {
-            background: #0d0d0d;
-            border: 1px solid #262626;
-            border-radius: 16px;
-            padding: 27px;
-            box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
-        }
-
-        .checkout-card + .checkout-card {
-            margin-top: 20px;
-        }
-
-        .card-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 23px;
-        }
-
-        .card-title i {
-            color: #d82505;
-            font-size: 1.15rem;
-        }
-
-        .card-title h3 {
-            margin: 0;
-            color: #ffffff;
-            font-size: 1rem;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
-        }
-
-        .form-group {
-            min-width: 0;
-        }
-
-        .form-group.full {
-            grid-column: 1 / -1;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #ffffff;
-            font-size: .78rem;
-            font-weight: 800;
-        }
-
-        .form-group label i {
-            margin-right: 5px;
-            color: #d82505;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            border: 2px solid #2d2d2d;
-            border-radius: 9px;
-            outline: none;
-            background: #ffffff;
-            color: #111111;
-            font-size: .88rem;
-            font-weight: 600;
-            transition:
-                border-color .2s ease,
-                box-shadow .2s ease;
-        }
-
-        .form-group input,
-        .form-group select {
-            height: 48px;
-            padding: 0 14px;
-        }
-
-        .form-group textarea {
-            min-height: 110px;
-            padding: 13px 14px;
-            resize: vertical;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            border-color: #d82505;
-            box-shadow:
-                0 0 0 3px rgba(216, 37, 5, .12);
-        }
-
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-            color: #8a8a8a;
-        }
-
-        .field-error {
-            display: flex;
-            align-items: flex-start;
-            gap: 7px;
-            margin-top: 7px;
-            color: #ff5a3c;
-            font-size: .75rem;
-            font-weight: 700;
-            line-height: 1.4;
-        }
-
-        .field-error i {
-            margin-top: 2px;
-        }
-
-        .schedule-info {
-            display: flex;
-            align-items: flex-start;
-            gap: 9px;
-            margin-top: 9px;
-            padding: 11px 13px;
-            border-radius: 9px;
-            background: #111111;
-            border: 1px solid #292929;
-            color: #a9a9a9;
-            font-size: .75rem;
-            font-weight: 600;
-            line-height: 1.45;
-        }
-
-        .schedule-info i {
-            margin-top: 2px;
-            color: #d82505;
-            flex-shrink: 0;
-        }
-
-        /* =========================
-           MAPA
-        ========================= */
-
-        #map {
-            width: 100%;
-            height: 380px;
-            margin-top: 14px;
-            border: 2px solid #222222;
-            border-radius: 14px;
-            overflow: hidden;
-            background: #ffffff;
-        }
-
-        .map-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 12px;
-        }
-
-        .location-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 43px;
-            padding: 0 16px;
-            border: 0;
-            border-radius: 8px;
-            background: #d82505;
-            color: #ffffff;
-            cursor: pointer;
-            font-size: .75rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            transition:
-                background .2s ease,
-                transform .2s ease;
-        }
-
-        .location-button:hover {
-            background: #f03310;
-            transform: translateY(-1px);
-        }
-
-        .map-status {
-            margin-top: 9px;
-            color: #999999;
-            font-size: .75rem;
-            font-weight: 600;
-            line-height: 1.4;
-        }
-
-        /* =========================
-           PAGOS
-        ========================= */
-
-        .payment-options {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .payment-option {
-            position: relative;
-        }
-
-        .payment-option input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .payment-option label {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-height: 65px;
-            padding: 13px 15px;
-            border: 2px solid #292929;
-            border-radius: 11px;
-            background: #111111;
-            color: #ffffff;
-            cursor: pointer;
-            transition:
-                border-color .2s ease,
-                background .2s ease,
-                transform .2s ease;
-        }
-
-        .payment-option label:hover {
-            border-color: #555555;
-            transform: translateY(-1px);
-        }
-
-        .payment-option input:checked + label {
-            border-color: #d82505;
-            background: #210d09;
-        }
-
-        .payment-option label i {
-            width: 22px;
-            color: #d82505;
-            font-size: 1.1rem;
-            text-align: center;
-        }
-
-        .payment-option label span {
-            font-size: .8rem;
-            font-weight: 800;
-        }
-
-        .payment-empty {
-            padding: 16px;
-            border: 1px solid #592018;
-            border-radius: 10px;
-            background: #1a0a08;
-            color: #ff765e;
-            font-size: .8rem;
-            font-weight: 700;
-        }
-
-        /* =========================
-           PROMOCIÓN
-        ========================= */
-
-        .promo-box {
-            margin-top: 22px;
-            padding: 20px;
-            background: #0c0c0c;
-            border: 1px solid #2a2a2a;
-            border-radius: 14px;
-        }
-
-        .promo-box label {
-            display: block;
-            margin-bottom: 10px;
-            color: #ffffff;
-            font-size: .95rem;
-            font-weight: 800;
-        }
-
-        .promo-box label i {
-            margin-right: 6px;
-            color: #d82505;
-        }
-
-        .promo-input-row {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
-
-        .promo-box input {
-            flex: 1;
-            min-width: 0;
-            height: 52px;
-            padding: 0 16px;
-            background: #ffffff;
-            border: 2px solid #333333;
-            border-radius: 9px;
-            color: #111111;
-            font-size: .95rem;
-            font-weight: 700;
-            outline: none;
-        }
-
-        .promo-box input:focus {
-            border-color: #d82505;
-        }
-
-        .promo-box button {
-            min-width: 135px;
-            height: 52px;
-            padding: 0 20px;
-            border: none;
-            border-radius: 9px;
-            background: #d82505;
-            color: #ffffff;
-            cursor: pointer;
-            font-size: .76rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            transition:
-                background .2s ease,
-                transform .2s ease;
-        }
-
-        .promo-box button:hover {
-            background: #f03310;
-            transform: translateY(-1px);
-        }
-
-        .promo-status {
-            min-height: 18px;
-            margin-top: 8px;
-            color: #999999;
-            font-size: .74rem;
-            font-weight: 600;
-        }
-
-        /* =========================
-           RESUMEN
-        ========================= */
-
-        .summary-card {
-            position: sticky;
-            top: 20px;
-        }
-
-        .summary-items {
-            display: flex;
-            flex-direction: column;
-            gap: 13px;
-            max-height: 430px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            padding-bottom: 13px;
-            border-bottom: 1px solid #242424;
-        }
-
-        .summary-item-info {
-            min-width: 0;
-        }
-
-        .summary-item-name {
-            color: #ffffff;
-            font-size: .82rem;
-            font-weight: 800;
-            line-height: 1.35;
-        }
-
-        .summary-item-details {
-            margin-top: 4px;
-            color: #777777;
-            font-size: .68rem;
-            font-weight: 600;
-            line-height: 1.4;
-        }
-
-        .summary-item-price {
-            flex-shrink: 0;
-            color: #ffffff;
-            font-size: .8rem;
-            font-weight: 900;
-        }
-
-        .summary-totals {
-            margin-top: 20px;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            margin-bottom: 11px;
-            color: #a6a6a6;
-            font-size: .8rem;
-            font-weight: 600;
-        }
-
-        .summary-row strong {
-            color: #ffffff;
-            font-weight: 800;
-        }
-
-        .summary-row.discount strong {
-            color: #48c774;
-        }
-
-        .summary-total {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            margin-top: 17px;
-            padding-top: 17px;
-            border-top: 1px solid #343434;
-        }
-
-        .summary-total span {
-            color: #ffffff;
-            font-size: .9rem;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .summary-total strong {
-            color: #d82505;
-            font-size: 1.35rem;
-            font-weight: 900;
-        }
-
-        .checkout-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 25px;
-        }
-
-        .btn-confirm {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 9px;
-            width: 100%;
-            min-height: 54px;
-            padding: 0 20px;
-            border: 0;
-            border-radius: 10px;
-            background: #d82505;
-            color: #ffffff;
-            cursor: pointer;
-            font-size: .82rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            transition:
-                background .2s ease,
-                transform .2s ease;
-        }
-
-        .btn-confirm:hover {
-            background: #f03310;
-            transform: translateY(-1px);
-        }
-
-        .btn-back {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            min-height: 47px;
-            border: 1px solid #333333;
-            border-radius: 10px;
-            background: #111111;
-            color: #ffffff;
-            text-decoration: none;
-            font-size: .76rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            transition:
-                border-color .2s ease,
-                background .2s ease;
-        }
-
-        .btn-back:hover {
-            border-color: #555555;
-            background: #181818;
-        }
-
-        .summary-empty {
-            padding: 15px;
-            border-radius: 10px;
-            background: #111111;
-            color: #888888;
-            font-size: .78rem;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        /* =========================
-           RESPONSIVE
-        ========================= */
-
-        @media (max-width: 900px) {
-
-            .checkout-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .summary-card {
-                position: static;
-            }
-
-        }
-
-        @media (max-width: 650px) {
-
-            .checkout-page {
-                padding: 30px 13px 50px;
-            }
-
-            .checkout-card {
-                padding: 19px;
-                border-radius: 13px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .form-group.full {
-                grid-column: auto;
-            }
-
-            .payment-options {
-                grid-template-columns: 1fr;
-            }
-
-            .promo-input-row {
-                flex-direction: column;
-            }
-
-            .promo-box button {
-                width: 100%;
-            }
-
-            #map {
-                height: 310px;
-            }
-
-            .checkout-title {
-                margin-bottom: 22px;
-            }
-
-        }
-
-    </style>
+    <link
+        rel="stylesheet"
+        href="{% static 'css/publico/checkout.css' %}"
+    >
 
 </head>
 
 <body>
 
-    {% include 'components/header.html' %}
+{% include 'components/header.html' %}
 
-    <main class="checkout-page">
+<main class="checkout-page">
 
-        <div class="checkout-container">
+    <div class="checkout-container">
 
-            <div class="checkout-title">
+        <div class="checkout-title">
 
-                <h2>
-                    Finalizar <span>pedido</span>
-                </h2>
+            <h2>
+                Finalizar <span>pedido</span>
+            </h2>
 
-                <p>
-                    Completá tus datos para recibir tu pedido.
-                </p>
+            <p>
+                Completá tus datos para recibir tu pedido.
+            </p>
+
+        </div>
+
+        <div class="required-info">
+
+            <i class="fa-solid fa-circle-info"></i>
+
+            <div>
+                Los campos marcados con
+                <span class="required-symbol">*</span>
+                son <strong>obligatorios</strong>.
+                Antes de confirmar el pedido verificaremos
+                que todos estén completos.
+            </div>
+
+        </div>
+
+        <div
+            id="restore-notice"
+            class="restore-notice"
+        >
+
+            <div class="restore-notice-content">
+
+                <i class="fa-solid fa-rotate-left"></i>
+
+                <div>
+
+                    <strong>Recuperamos tus datos.</strong>
+
+                    <br>
+
+                    Había información guardada de una sesión
+                    anterior del checkout y la cargamos automáticamente.
+
+                </div>
 
             </div>
 
-            <form
-                id="checkout-form"
-                method="POST"
-                action="{% url 'procesar_checkout' %}"
+            <button
+                type="button"
+                id="clear-saved-data"
+                class="clear-saved-data"
+            >
+                Borrar datos guardados
+            </button>
+
+        </div>
+
+        <form
+            id="checkout-form"
+            method="POST"
+            action="{% url 'procesar_checkout' %}"
+            novalidate
+        >
+
+            {% csrf_token %}
+
+            <div
+                id="validation-summary"
+                class="validation-summary"
+                role="alert"
+                aria-live="assertive"
             >
 
-                {% csrf_token %}
+                <div class="validation-summary-title">
 
-                <div class="checkout-grid">
+                    <i class="fa-solid fa-circle-exclamation"></i>
 
-                    <!-- =====================================
-                         COLUMNA IZQUIERDA
-                    ====================================== -->
+                    <span>
+                        Revisá los siguientes campos:
+                    </span>
 
-                    <div>
+                </div>
 
-                        <!-- DATOS PERSONALES -->
+                <ul id="validation-summary-list"></ul>
 
-                        <section class="checkout-card">
+            </div>
 
-                            <div class="card-title">
+            <div class="checkout-grid">
 
-                                <i class="fa-solid fa-user"></i>
+                <div>
 
-                                <h3>
-                                    Datos personales
-                                </h3>
+                    <section class="checkout-card">
 
-                            </div>
+                        <div class="card-title">
 
-                            <div class="form-grid">
+                            <i class="fa-solid fa-user"></i>
 
-                                <div class="form-group">
+                            <h3>
+                                Datos personales
+                            </h3>
 
-                                    <label for="nombre">
-                                        <i class="fa-solid fa-user"></i>
-                                        Nombre
-                                    </label>
+                        </div>
 
-                                    <input
-                                        type="text"
-                                        id="nombre"
-                                        name="nombre"
-                                        maxlength="100"
-                                        value="{{ datos_previos.nombre|default:'' }}"
-                                        placeholder="Tu nombre"
-                                        required
-                                    >
-
-                                    {% if errores.nombre %}
-                                        <div class="field-error">
-                                            <i class="fa-solid fa-circle-exclamation"></i>
-                                            {{ errores.nombre }}
-                                        </div>
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="form-group">
-
-                                    <label for="apellido">
-                                        <i class="fa-solid fa-user"></i>
-                                        Apellido
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="apellido"
-                                        name="apellido"
-                                        maxlength="100"
-                                        value="{{ datos_previos.apellido|default:'' }}"
-                                        placeholder="Tu apellido"
-                                        required
-                                    >
-
-                                    {% if errores.apellido %}
-                                        <div class="field-error">
-                                            <i class="fa-solid fa-circle-exclamation"></i>
-                                            {{ errores.apellido }}
-                                        </div>
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="form-group full">
-
-                                    <label for="telefono">
-                                        <i class="fa-solid fa-phone"></i>
-                                        Teléfono
-                                    </label>
-
-                                    <input
-                                        type="tel"
-                                        id="telefono"
-                                        name="telefono"
-                                        maxlength="30"
-                                        value="{{ datos_previos.telefono|default:'' }}"
-                                        placeholder="Ej: 1123456789"
-                                        required
-                                    >
-
-                                    {% if errores.telefono %}
-                                        <div class="field-error">
-                                            <i class="fa-solid fa-circle-exclamation"></i>
-                                            {{ errores.telefono }}
-                                        </div>
-                                    {% endif %}
-
-                                </div>
-
-                            </div>
-
-                        </section>
-
-                        <!-- DIRECCIÓN -->
-
-                        <section class="checkout-card">
-
-                            <div class="card-title">
-
-                                <i class="fa-solid fa-location-dot"></i>
-
-                                <h3>
-                                    Dirección de entrega
-                                </h3>
-
-                            </div>
-
-                            <div class="form-grid">
-
-                                <div class="form-group">
-
-                                    <label for="calle">
-                                        <i class="fa-solid fa-road"></i>
-                                        Calle
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="calle"
-                                        name="calle"
-                                        maxlength="150"
-                                        value="{{ datos_previos.calle|default:'' }}"
-                                        placeholder="Ej: Av. Corrientes"
-                                        required
-                                    >
-
-                                    {% if errores.calle %}
-                                        <div class="field-error">
-                                            <i class="fa-solid fa-circle-exclamation"></i>
-                                            {{ errores.calle }}
-                                        </div>
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="form-group">
-
-                                    <label for="numero">
-                                        <i class="fa-solid fa-hashtag"></i>
-                                        Número
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="numero"
-                                        name="numero"
-                                        maxlength="20"
-                                        value="{{ datos_previos.numero|default:'' }}"
-                                        placeholder="Ej: 1234"
-                                        required
-                                    >
-
-                                    {% if errores.numero %}
-                                        <div class="field-error">
-                                            <i class="fa-solid fa-circle-exclamation"></i>
-                                            {{ errores.numero }}
-                                        </div>
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="form-group">
-
-                                    <label for="piso">
-                                        <i class="fa-solid fa-building"></i>
-                                        Piso / Depto
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="piso"
-                                        name="piso"
-                                        maxlength="50"
-                                        value="{{ datos_previos.piso|default:'' }}"
-                                        placeholder="Opcional"
-                                    >
-
-                                </div>
-
-                                <div class="form-group">
-
-                                    <label for="input-localidad">
-                                        <i class="fa-solid fa-map-location-dot"></i>
-                                        Localidad / Zona
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="input-localidad"
-                                        value="{{ datos_previos.localidad|default:'' }}"
-                                        placeholder="Ej: Palermo"
-                                        autocomplete="off"
-                                    >
-
-                                    <input
-                                        type="hidden"
-                                        id="localidad"
-                                        name="localidad"
-                                        value="{{ datos_previos.localidad|default:'' }}"
-                                    >
-
-                                </div>
-
-                            </div>
-
-                            <div
-                                id="map"
-                                aria-label="Mapa de ubicación"
-                            ></div>
-
-                            <div class="map-actions">
-
-                                <button
-                                    type="button"
-                                    id="btn-ubicacion"
-                                    class="location-button"
-                                >
-                                    <i class="fa-solid fa-location-crosshairs"></i>
-                                    Usar mi ubicación
-                                </button>
-
-                            </div>
-
-                            <div
-                                id="map-status"
-                                class="map-status"
-                            ></div>
-
-                        </section>
-
-                        <!-- HORARIO -->
-
-                        <section class="checkout-card">
-
-                            <div class="card-title">
-
-                                <i class="fa-solid fa-clock"></i>
-
-                                <h3>
-                                    Horario de entrega
-                                </h3>
-
-                            </div>
+                        <div class="form-grid">
 
                             <div class="form-group">
 
-                                <label for="horario_entrega">
+                                <label for="nombre">
 
-                                    <i class="fa-solid fa-clock"></i>
+                                    <i class="fa-solid fa-user"></i>
 
-                                    ¿A qué hora querés recibir tu pedido?
+                                    Nombre
+                                    <span class="required-mark">*</span>
 
                                 </label>
 
                                 <input
-                                    type="time"
-                                    id="horario_entrega"
-                                    name="horario_entrega"
-                                    value="{{ datos_previos.horario_entrega|default:'' }}"
+                                    type="text"
+                                    id="nombre"
+                                    name="nombre"
+                                    maxlength="100"
+                                    value="{{ datos_previos.nombre|default:'' }}"
+                                    placeholder="Tu nombre"
                                     required
+                                    autocomplete="given-name"
                                 >
 
-                                {% if errores.horario_entrega %}
+                                {% if errores.nombre %}
 
                                     <div class="field-error">
 
                                         <i class="fa-solid fa-circle-exclamation"></i>
 
-                                        {{ errores.horario_entrega }}
+                                        {{ errores.nombre }}
 
                                     </div>
 
                                 {% endif %}
 
-                                <div class="schedule-info">
-
-                                    <i class="fa-solid fa-circle-info"></i>
-
-                                    <span>
-                                        Ingresá el horario que preferís.
-                                        Al confirmar el pedido verificaremos
-                                        que esté dentro del horario de atención
-                                        del local.
-                                    </span>
-
-                                </div>
-
                             </div>
 
-                        </section>
+                            <div class="form-group">
 
-                        <!-- MEDIO DE PAGO -->
+                                <label for="apellido">
 
-                        <section class="checkout-card">
+                                    <i class="fa-solid fa-user"></i>
 
-                            <div class="card-title">
+                                    Apellido
+                                    <span class="required-mark">*</span>
 
-                                <i class="fa-solid fa-wallet"></i>
+                                </label>
 
-                                <h3>
-                                    Método de pago
-                                </h3>
+                                <input
+                                    type="text"
+                                    id="apellido"
+                                    name="apellido"
+                                    maxlength="100"
+                                    value="{{ datos_previos.apellido|default:'' }}"
+                                    placeholder="Tu apellido"
+                                    required
+                                    autocomplete="family-name"
+                                >
 
-                            </div>
+                                {% if errores.apellido %}
 
-                            <div class="payment-options">
+                                    <div class="field-error">
 
-                                {% for medio in medios_pago %}
+                                        <i class="fa-solid fa-circle-exclamation"></i>
 
-                                    <div class="payment-option">
-
-                                        <input
-                                            type="radio"
-                                            id="pago-{{ medio.idmediopago }}"
-                                            name="medio_pago"
-                                            value="{{ medio.idmediopago }}"
-                                            {% if datos_previos.medio_pago|stringformat:"s" == medio.idmediopago|stringformat:"s" %}
-                                                checked
-                                            {% endif %}
-                                            required
-                                        >
-
-                                        <label
-                                            for="pago-{{ medio.idmediopago }}"
-                                        >
-
-                                            {% if "efectivo" in medio.nombremetodo|lower %}
-
-                                                <i class="fa-solid fa-money-bill-wave"></i>
-
-                                            {% elif "transfer" in medio.nombremetodo|lower %}
-
-                                                <i class="fa-solid fa-building-columns"></i>
-
-                                            {% elif "tarjeta" in medio.nombremetodo|lower %}
-
-                                                <i class="fa-solid fa-credit-card"></i>
-
-                                            {% elif "mercado" in medio.nombremetodo|lower %}
-
-                                                <i class="fa-solid fa-wallet"></i>
-
-                                            {% elif "débito" in medio.nombremetodo|lower or "debito" in medio.nombremetodo|lower %}
-
-                                                <i class="fa-solid fa-credit-card"></i>
-
-                                            {% elif "crédito" in medio.nombremetodo|lower or "credito" in medio.nombremetodo|lower %}
-
-                                                <i class="fa-solid fa-credit-card"></i>
-
-                                            {% else %}
-
-                                                <i class="fa-solid fa-money-check-dollar"></i>
-
-                                            {% endif %}
-
-                                            <span>
-                                                {{ medio.nombremetodo }}
-                                            </span>
-
-                                        </label>
+                                        {{ errores.apellido }}
 
                                     </div>
 
-                                {% empty %}
-
-                                    <div class="payment-empty">
-
-                                        No hay medios de pago disponibles.
-
-                                    </div>
-
-                                {% endfor %}
+                                {% endif %}
 
                             </div>
 
-                            {% if errores.medio_pago %}
+                            <div class="form-group full">
+
+                                <label for="telefono">
+
+                                    <i class="fa-solid fa-phone"></i>
+
+                                    Teléfono
+                                    <span class="required-mark">*</span>
+
+                                </label>
+
+                                <input
+                                    type="tel"
+                                    id="telefono"
+                                    name="telefono"
+                                    maxlength="30"
+                                    value="{{ datos_previos.telefono|default:'' }}"
+                                    placeholder="Ej: 1123456789"
+                                    required
+                                    autocomplete="tel"
+                                >
+
+                                {% if errores.telefono %}
+
+                                    <div class="field-error">
+
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+
+                                        {{ errores.telefono }}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <section class="checkout-card">
+
+                        <div class="card-title">
+
+                            <i class="fa-solid fa-location-dot"></i>
+
+                            <h3>
+                                Dirección de entrega
+                            </h3>
+
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="calle">
+
+                                    <i class="fa-solid fa-road"></i>
+
+                                    Calle
+                                    <span class="required-mark">*</span>
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="calle"
+                                    name="calle"
+                                    maxlength="150"
+                                    value="{{ datos_previos.calle|default:'' }}"
+                                    placeholder="Ej: Av. Corrientes"
+                                    required
+                                    autocomplete="street-address"
+                                >
+
+                                {% if errores.calle %}
+
+                                    <div class="field-error">
+
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+
+                                        {{ errores.calle }}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="numero">
+
+                                    <i class="fa-solid fa-hashtag"></i>
+
+                                    Número
+                                    <span class="required-mark">*</span>
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="numero"
+                                    name="numero"
+                                    maxlength="20"
+                                    value="{{ datos_previos.numero|default:'' }}"
+                                    placeholder="Ej: 1234"
+                                    required
+                                    autocomplete="address-line1"
+                                >
+
+                                {% if errores.numero %}
+
+                                    <div class="field-error">
+
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+
+                                        {{ errores.numero }}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="piso">
+
+                                    <i class="fa-solid fa-building"></i>
+
+                                    Piso / Depto
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="piso"
+                                    name="piso"
+                                    maxlength="50"
+                                    value="{{ datos_previos.piso|default:'' }}"
+                                    placeholder="Opcional"
+                                >
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="input-localidad">
+
+                                    <i class="fa-solid fa-map-location-dot"></i>
+
+                                    Localidad / Zona
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="input-localidad"
+                                    value="{{ datos_previos.localidad|default:'' }}"
+                                    placeholder="Ej: Palermo"
+                                    autocomplete="off"
+                                >
+
+                                <input
+                                    type="hidden"
+                                    id="localidad"
+                                    name="localidad"
+                                    value="{{ datos_previos.localidad|default:'' }}"
+                                >
+
+                            </div>
+
+                        </div>
+
+                        <div
+                            id="map"
+                            aria-label="Mapa de ubicación"
+                        ></div>
+
+                        <div class="map-actions">
+
+                            <button
+                                type="button"
+                                id="btn-ubicacion"
+                                class="location-button"
+                            >
+
+                                <i class="fa-solid fa-location-crosshairs"></i>
+
+                                Usar mi ubicación
+
+                            </button>
+
+                        </div>
+
+                        <div
+                            id="map-status"
+                            class="map-status"
+                        ></div>
+
+                    </section>
+
+
+                    <section class="checkout-card">
+
+                        <div class="card-title">
+
+                            <i class="fa-solid fa-clock"></i>
+
+                            <h3>
+                                Horario de entrega
+                            </h3>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="horario_entrega">
+
+                                <i class="fa-solid fa-clock"></i>
+
+                                ¿A qué hora querés recibir tu pedido?
+
+                            </label>
+
+                            <input
+                                type="time"
+                                id="horario_entrega"
+                                name="horario_entrega"
+                                value="{{ datos_previos.horario_entrega|default:'' }}"
+                            >
+
+                            {% if errores.horario_entrega %}
 
                                 <div class="field-error">
 
                                     <i class="fa-solid fa-circle-exclamation"></i>
 
-                                    {{ errores.medio_pago }}
+                                    {{ errores.horario_entrega }}
 
                                 </div>
 
                             {% endif %}
 
-                        </section>
+                            <div class="schedule-info">
 
-                        <!-- PROMOCIÓN Y COMENTARIO -->
+                                <i class="fa-solid fa-circle-info"></i>
 
-                        <section class="checkout-card">
-
-                            <div class="card-title">
-
-                                <i class="fa-solid fa-tag"></i>
-
-                                <h3>
-                                    Promoción
-                                </h3>
+                                <span>
+                                    Ingresá el horario que preferís.
+                                    Al confirmar el pedido verificaremos
+                                    que esté dentro del horario de atención
+                                    del local.
+                                </span>
 
                             </div>
 
-                            <div class="promo-box">
+                        </div>
 
-                                <label for="codigo_promocion">
+                    </section>
 
-                                    <i class="fa-solid fa-ticket"></i>
 
-                                    Palabra clave promocional
-
-                                </label>
-
-                                <div class="promo-input-row">
-
-                                    <input
-                                        type="text"
-                                        id="codigo_promocion"
-                                        name="codigo_promocion"
-                                        maxlength="100"
-                                        value="{{ datos_previos.codigo_promocion|default:'' }}"
-                                        placeholder="Ingresá tu código"
-                                    >
-
-                                    <button
-                                        type="button"
-                                        id="btn-aplicar-promo"
-                                    >
-                                        Aplicar
-                                    </button>
-
-                                </div>
-
-                                <div
-                                    id="promo-status"
-                                    class="promo-status"
-                                >
-                                    {% if errores.codigo_promocion %}
-                                        {{ errores.codigo_promocion }}
-                                    {% endif %}
-                                </div>
-
-                            </div>
-
-                            <div
-                                class="form-group"
-                                style="margin-top: 20px;"
-                            >
-
-                                <label for="comentario">
-
-                                    <i class="fa-solid fa-comment"></i>
-
-                                    Comentarios
-
-                                </label>
-
-                                <textarea
-                                    id="comentario"
-                                    name="comentario"
-                                    maxlength="500"
-                                    placeholder="Alguna indicación para tu pedido..."
-                                >{{ datos_previos.comentario|default:'' }}</textarea>
-
-                            </div>
-
-                        </section>
-
-                    </div>
-
-                    <!-- =====================================
-                         COLUMNA DERECHA
-                    ====================================== -->
-
-                    <aside class="checkout-card summary-card">
+                    <section class="checkout-card">
 
                         <div class="card-title">
 
-                            <i class="fa-solid fa-receipt"></i>
+                            <i class="fa-solid fa-wallet"></i>
 
                             <h3>
-                                Resumen del pedido
+                                Método de pago
                             </h3>
 
                         </div>
 
-                        <div class="summary-items">
+                        <div class="payment-options">
 
-                            {% for item in carrito_items %}
+                            {% for medio in medios_pago %}
 
-                                <div class="summary-item">
+                                <div class="payment-option">
 
-                                    <div class="summary-item-info">
+                                    <input
+                                        type="radio"
+                                        id="pago-{{ medio.idmediopago }}"
+                                        name="medio_pago"
+                                        value="{{ medio.idmediopago }}"
+                                        {% if datos_previos.medio_pago|stringformat:"s" == medio.idmediopago|stringformat:"s" %}
+                                            checked
+                                        {% endif %}
+                                        required
+                                    >
 
-                                        <div class="summary-item-name">
+                                    <label
+                                        for="pago-{{ medio.idmediopago }}"
+                                    >
 
-                                            {{ item.cantidad }}x
-                                            {{ item.nombre }}
+                                        {% if "efectivo" in medio.nombremetodo|lower %}
 
-                                        </div>
+                                            <i class="fa-solid fa-money-bill-wave"></i>
 
-                                        {% if item.detalles %}
+                                        {% elif "transfer" in medio.nombremetodo|lower %}
 
-                                            <div class="summary-item-details">
+                                            <i class="fa-solid fa-building-columns"></i>
 
-                                                {% for detalle in item.detalles %}
+                                        {% elif "tarjeta" in medio.nombremetodo|lower %}
 
-                                                    {{ detalle }}{% if not forloop.last %}, {% endif %}
+                                            <i class="fa-solid fa-credit-card"></i>
 
-                                                {% endfor %}
+                                        {% elif "mercado" in medio.nombremetodo|lower %}
 
-                                            </div>
+                                            <i class="fa-solid fa-wallet"></i>
+
+                                        {% elif "débito" in medio.nombremetodo|lower or "debito" in medio.nombremetodo|lower %}
+
+                                            <i class="fa-solid fa-credit-card"></i>
+
+                                        {% elif "crédito" in medio.nombremetodo|lower or "credito" in medio.nombremetodo|lower %}
+
+                                            <i class="fa-solid fa-credit-card"></i>
+
+                                        {% else %}
+
+                                            <i class="fa-solid fa-money-check-dollar"></i>
 
                                         {% endif %}
 
-                                    </div>
+                                        <span>
+                                            {{ medio.nombremetodo }}
+                                        </span>
 
-                                    <div class="summary-item-price">
-
-                                        ${{ item.subtotal }}
-
-                                    </div>
+                                    </label>
 
                                 </div>
 
                             {% empty %}
 
-                                <div class="summary-empty">
-
-                                    No hay productos en el carrito.
-
+                                <div class="payment-empty">
+                                    No hay medios de pago disponibles.
                                 </div>
 
                             {% endfor %}
 
                         </div>
 
-                        <div class="summary-totals">
+                        <div
+                            id="payment-required-message"
+                            class="payment-required-message hidden"
+                        >
 
-                            <div class="summary-row">
+                            <i class="fa-solid fa-circle-exclamation"></i>
 
-                                <span>
-                                    Productos
-                                </span>
+                            <span>
+                                Seleccioná un método de pago para continuar.
+                            </span>
 
-                                <strong>
-                                    ${{ total_carrito|default:"0.00" }}
-                                </strong>
+                        </div>
 
-                            </div>
+                        {% if errores.medio_pago %}
 
-                            <div class="summary-row">
+                            <div class="field-error">
 
-                                <span>
-                                    Envío
-                                </span>
+                                <i class="fa-solid fa-circle-exclamation"></i>
 
-                                <strong id="costo-envio">
-
-                                    A coordinar
-
-                                </strong>
+                                {{ errores.medio_pago }}
 
                             </div>
 
-                            {% if descuento_promocion %}
+                        {% endif %}
 
-                                <div class="summary-row discount">
+                    </section>
 
-                                    <span>
-                                        Descuento
-                                    </span>
 
-                                    <strong>
-                                        -${{ descuento_promocion }}
-                                    </strong>
+                    <section class="checkout-card">
 
-                                </div>
+                        <div class="card-title">
 
-                            {% else %}
+                            <i class="fa-solid fa-tag"></i>
 
-                                <div
-                                    class="summary-row discount"
-                                    id="descuento-row"
-                                    style="display:none;"
+                            <h3>
+                                Promoción
+                            </h3>
+
+                        </div>
+
+                        <div class="promo-box">
+
+                            <label for="codigo_promocion">
+
+                                <i class="fa-solid fa-ticket"></i>
+
+                                Palabra clave promocional
+
+                            </label>
+
+                            <div class="promo-input-row">
+
+                                <input
+                                    type="text"
+                                    id="codigo_promocion"
+                                    name="codigo_promocion"
+                                    maxlength="100"
+                                    value="{{ datos_previos.codigo_promocion|default:'' }}"
+                                    placeholder="Ingresá tu código"
                                 >
 
-                                    <span>
-                                        Descuento
-                                    </span>
+                                <button
+                                    type="button"
+                                    id="btn-aplicar-promo"
+                                >
+                                    Aplicar
+                                </button>
 
-                                    <strong id="descuento-valor">
-                                        -$0.00
-                                    </strong>
+                            </div>
 
-                                </div>
+                            <div
+                                id="promo-status"
+                                class="promo-status"
+                            >
 
-                            {% endif %}
-
-                            <div class="summary-total">
-
-                                <span>
-                                    Total
-                                </span>
-
-                                <strong id="total-estimado">
-
-                                    ${{ total_estimado|default:total_carrito }}
-
-                                </strong>
+                                {% if errores.codigo_promocion %}
+                                    {{ errores.codigo_promocion }}
+                                {% endif %}
 
                             </div>
 
                         </div>
 
-                        <div class="checkout-actions">
+                        <div class="form-group promo-comment-group">
 
-                            <button
-                                type="submit"
-                                class="btn-confirm"
-                            >
+                            <label for="comentario">
 
-                                <i class="fa-solid fa-check"></i>
+                                <i class="fa-solid fa-comment"></i>
 
-                                Confirmar pedido
+                                Comentarios
 
-                            </button>
+                            </label>
 
-                            <a
-                                href="{% url 'ver_carrito' %}"
-                                class="btn-back"
-                            >
-
-                                <i class="fa-solid fa-arrow-left"></i>
-
-                                Volver al carrito
-
-                            </a>
+                            <textarea
+                                id="comentario"
+                                name="comentario"
+                                maxlength="500"
+                                placeholder="Alguna indicación para tu pedido..."
+                            >{{ datos_previos.comentario|default:'' }}</textarea>
 
                         </div>
 
-                    </aside>
+                    </section>
 
                 </div>
 
-            </form>
 
-        </div>
+                <aside class="checkout-card summary-card">
 
-    </main>
+                    <div class="card-title">
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    ></script>
+                        <i class="fa-solid fa-receipt"></i>
 
-    {{ zonas_entrega|json_script:"zonas-data" }}
+                        <h3>
+                            Resumen del pedido
+                        </h3>
 
-    <script>
+                    </div>
 
-        document.addEventListener(
-            'DOMContentLoaded',
+                    <div class="summary-items">
+
+                        {% for item in carrito_items %}
+
+                            <div class="summary-item">
+
+                                <div class="summary-item-info">
+
+                                    <div class="summary-item-name">
+
+                                        {{ item.cantidad }}x
+                                        {{ item.nombre }}
+
+                                    </div>
+
+                                    {% if item.detalles %}
+
+                                        <div class="summary-item-details">
+
+                                            {% for detalle in item.detalles %}
+
+                                                {{ detalle }}{% if not forloop.last %}, {% endif %}
+
+                                            {% endfor %}
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="summary-item-price">
+                                    ${{ item.subtotal }}
+                                </div>
+
+                            </div>
+
+                        {% empty %}
+
+                            <div class="summary-empty">
+                                No hay productos en el carrito.
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                    <div class="summary-totals">
+
+                        <div class="summary-row">
+
+                            <span>
+                                Productos
+                            </span>
+
+                            <strong>
+                                ${{ total_carrito|floatformat:"2" }}
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-row">
+
+                            <span>
+                                Envío
+                            </span>
+
+                            <strong id="costo-envio">
+                                A coordinar
+                            </strong>
+
+                        </div>
+
+                        {% if descuento_promocion %}
+
+                            <div class="summary-row discount">
+
+                                <span>
+                                    Descuento
+                                </span>
+
+                                <strong>
+                                    -${{ descuento_promocion }}
+                                </strong>
+
+                            </div>
+
+                        {% else %}
+
+                            <div
+                                class="summary-row discount"
+                                id="descuento-row"
+                                style="display:none;"
+                            >
+
+                                <span>
+                                    Descuento
+                                </span>
+
+                                <strong id="descuento-valor">
+                                    -$0.00
+                                </strong>
+
+                            </div>
+
+                        {% endif %}
+
+                        <div class="summary-total">
+
+                            <span>
+                                Total
+                            </span>
+
+                            <strong id="total-estimado">
+                                ${{ total_estimado|floatformat:"2" }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    <div class="checkout-actions">
+
+                        <button
+                            type="submit"
+                            class="btn-confirm"
+                        >
+
+                            <i class="fa-solid fa-check"></i>
+
+                            Confirmar pedido
+
+                        </button>
+
+                        <a
+                            href="{% url 'ver_carrito' %}"
+                            class="btn-back"
+                        >
+
+                            <i class="fa-solid fa-arrow-left"></i>
+
+                            Volver al carrito
+
+                        </a>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</main>
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
+
+{{ zonas_entrega|json_script:"zonas-data" }}
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const form =
+            document.getElementById(
+                'checkout-form'
+            );
+
+        const calleInput =
+            document.getElementById(
+                'calle'
+            );
+
+        const numeroInput =
+            document.getElementById(
+                'numero'
+            );
+
+        const localidadInput =
+            document.getElementById(
+                'input-localidad'
+            );
+
+        const localidadHidden =
+            document.getElementById(
+                'localidad'
+            );
+
+        const telefonoInput =
+            document.getElementById(
+                'telefono'
+            );
+
+        const promoInput =
+            document.getElementById(
+                'codigo_promocion'
+            );
+
+        const promoButton =
+            document.getElementById(
+                'btn-aplicar-promo'
+            );
+
+        const promoStatus =
+            document.getElementById(
+                'promo-status'
+            );
+
+        const mapStatus =
+            document.getElementById(
+                'map-status'
+            );
+
+        const costoEnvioElement =
+            document.getElementById(
+                'costo-envio'
+            );
+
+        const totalElement =
+            document.getElementById(
+                'total-estimado'
+            );
+
+        const descuentoRow =
+            document.getElementById(
+                'descuento-row'
+            );
+
+        const descuentoValor =
+            document.getElementById(
+                'descuento-valor'
+            );
+
+        const validationSummary =
+            document.getElementById(
+                'validation-summary'
+            );
+
+        const validationSummaryList =
+            document.getElementById(
+                'validation-summary-list'
+            );
+
+        const paymentRequiredMessage =
+            document.getElementById(
+                'payment-required-message'
+            );
+
+        const restoreNotice =
+            document.getElementById(
+                'restore-notice'
+            );
+
+        const clearSavedDataButton =
+            document.getElementById(
+                'clear-saved-data'
+            );
+
+        const subtotal =
+            parseFloat(
+                '{{ total_carrito|floatformat:"2" }}'
+            ) || 0;
+
+        let descuento =
+            parseFloat(
+                '{{ descuento_promocion|default:"0.00" }}'
+            ) || 0;
+
+        let costoEnvio = 0;
+
+        let zonas = [];
+
+        const STORAGE_KEY =
+            'checkout_datos_temporales';
+
+        const tieneDatosPrevios =
+            {{ hay_datos_previos|yesno:"true,false" }};
+
+        try {
+
+            const zonasElement =
+                document.getElementById(
+                    'zonas-data'
+                );
+
+            zonas =
+                JSON.parse(
+                    zonasElement.textContent
+                ) || [];
+
+        } catch (error) {
+
+            zonas = [];
+
+            console.error(
+                'No se pudieron cargar las zonas.',
+                error
+            );
+
+        }
+
+        function normalizarTexto(
+            texto
+        ) {
+
+            return String(
+                texto || ''
+            )
+                .normalize('NFD')
+                .replace(
+                    /[\u0300-\u036f]/g,
+                    ''
+                )
+                .trim()
+                .toLowerCase();
+
+        }
+
+        function actualizarTotal() {
+
+            const total =
+                Math.max(
+                    0,
+                    subtotal
+                    + costoEnvio
+                    - descuento
+                );
+
+            totalElement.textContent =
+                '$' +
+                total.toFixed(2);
+
+            if (
+                costoEnvio === 0
+            ) {
+
+                costoEnvioElement.textContent =
+                    'Envío gratis';
+
+            } else {
+
+                costoEnvioElement.textContent =
+                    '$' +
+                    costoEnvio.toFixed(2);
+
+            }
+
+            if (
+                descuento > 0
+                && descuentoRow
+            ) {
+
+                descuentoRow.style.display =
+                    'flex';
+
+                descuentoValor.textContent =
+                    '-$' +
+                    descuento.toFixed(2);
+
+            } else if (
+                descuentoRow
+            ) {
+
+                descuentoRow.style.display =
+                    'none';
+
+            }
+
+        }
+
+        function aplicarZona(
+            localidad
+        ) {
+
+            const buscada =
+                normalizarTexto(
+                    localidad
+                );
+
+            const zona =
+                zonas.find(
+                    function (item) {
+
+                        return (
+                            normalizarTexto(
+                                item.nombre
+                            )
+                            === buscada
+                        );
+
+                    }
+                );
+
+            if (!zona) {
+
+                costoEnvio = 0;
+
+                costoEnvioElement.textContent =
+                    'A coordinar';
+
+                actualizarTotal();
+
+                return;
+
+            }
+
+            costoEnvio =
+                Number(
+                    zona.costoenvio
+                ) || 0;
+
+            actualizarTotal();
+
+        }
+
+        const mapa =
+            L.map('map').setView(
+                [
+                    -34.6037,
+                    -58.3816
+                ],
+                13
+            );
+
+        L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+            {
+                maxZoom: 19,
+                attribution:
+                    'Tiles &copy; Esri'
+            }
+        ).addTo(mapa);
+
+        let marcador =
+            L.marker(
+                [
+                    -34.6037,
+                    -58.3816
+                ],
+                {
+                    draggable: true
+                }
+            ).addTo(mapa);
+
+        setTimeout(
             function () {
 
-                /* =========================================
-                   ELEMENTOS
-                ========================================== */
+                mapa.invalidateSize();
 
-                const form =
-                    document.getElementById(
-                        'checkout-form'
+            },
+            300
+        );
+
+        setTimeout(
+            function () {
+
+                mapa.invalidateSize();
+
+            },
+            1000
+        );
+
+        async function buscarDireccion(
+            direccion
+        ) {
+
+            if (!direccion.trim()) {
+                return;
+            }
+
+            mapStatus.textContent =
+                'Buscando ubicación...';
+
+            try {
+
+                const url =
+                    'https://nominatim.openstreetmap.org/search?' +
+                    new URLSearchParams({
+                        format: 'json',
+                        addressdetails: '1',
+                        limit: '1',
+                        q: direccion,
+                        'accept-language': 'es'
+                    });
+
+                const respuesta =
+                    await fetch(
+                        url
                     );
 
-                const calleInput =
-                    document.getElementById(
-                        'calle'
-                    );
-
-                const numeroInput =
-                    document.getElementById(
-                        'numero'
-                    );
-
-                const localidadInput =
-                    document.getElementById(
-                        'input-localidad'
-                    );
-
-                const localidadHidden =
-                    document.getElementById(
-                        'localidad'
-                    );
-
-                const telefonoInput =
-                    document.getElementById(
-                        'telefono'
-                    );
-
-                const horarioInput =
-                    document.getElementById(
-                        'horario_entrega'
-                    );
-
-                const promoInput =
-                    document.getElementById(
-                        'codigo_promocion'
-                    );
-
-                const promoButton =
-                    document.getElementById(
-                        'btn-aplicar-promo'
-                    );
-
-                const promoStatus =
-                    document.getElementById(
-                        'promo-status'
-                    );
-
-                const mapStatus =
-                    document.getElementById(
-                        'map-status'
-                    );
-
-                const costoEnvioElement =
-                    document.getElementById(
-                        'costo-envio'
-                    );
-
-                const totalElement =
-                    document.getElementById(
-                        'total-estimado'
-                    );
-
-                const descuentoRow =
-                    document.getElementById(
-                        'descuento-row'
-                    );
-
-                const descuentoValor =
-                    document.getElementById(
-                        'descuento-valor'
-                    );
-
-                /* =========================================
-                   DATOS
-                ========================================== */
-
-                const subtotal =
-                    Number(
-                        '{{ total_carrito|default:"0" }}'
-                    ) || 0;
-
-                let descuento =
-                    Number(
-                        '{{ descuento_promocion|default:"0" }}'
-                    ) || 0;
-
-                let costoEnvio = 0;
-
-                let zonas = [];
-
-                try {
-
-                    const zonasElement =
-                        document.getElementById(
-                            'zonas-data'
-                        );
-
-                    zonas =
-                        JSON.parse(
-                            zonasElement.textContent
-                        ) || [];
-
-                } catch (error) {
-
-                    zonas = [];
-
-                    console.error(
-                        'No se pudieron cargar las zonas.',
-                        error
+                if (!respuesta.ok) {
+                    throw new Error(
+                        'Error de búsqueda'
                     );
                 }
 
-                /* =========================================
-                   NORMALIZAR TEXTO
-                ========================================== */
+                const resultados =
+                    await respuesta.json();
 
-                function normalizarTexto(
-                    texto
+                if (
+                    !resultados.length
                 ) {
-
-                    return String(
-                        texto || ''
-                    )
-                        .normalize('NFD')
-                        .replace(
-                            /[\u0300-\u036f]/g,
-                            ''
-                        )
-                        .trim()
-                        .toLowerCase();
-
-                }
-
-                /* =========================================
-                   TOTAL
-                ========================================== */
-
-                function actualizarTotal() {
-
-                    const total =
-                        Math.max(
-                            0,
-                            subtotal
-                            + costoEnvio
-                            - descuento
-                        );
-
-                    totalElement.textContent =
-                        '$' +
-                        total.toFixed(2);
-
-                    if (
-                        costoEnvio === 0
-                    ) {
-
-                        costoEnvioElement.textContent =
-                            'Envío gratis';
-
-                    } else {
-
-                        costoEnvioElement.textContent =
-                            '$' +
-                            costoEnvio.toFixed(2);
-                    }
-
-                    if (
-                        descuento > 0
-                        && descuentoRow
-                    ) {
-
-                        descuentoRow.style.display =
-                            'flex';
-
-                        descuentoValor.textContent =
-                            '-$' +
-                            descuento.toFixed(2);
-
-                    } else if (
-                        descuentoRow
-                    ) {
-
-                        descuentoRow.style.display =
-                            'none';
-                    }
-                }
-
-                /* =========================================
-                   ZONA
-                ========================================== */
-
-                function aplicarZona(
-                    localidad
-                ) {
-
-                    const buscada =
-                        normalizarTexto(
-                            localidad
-                        );
-
-                    const zona =
-                        zonas.find(
-                            function (item) {
-
-                                return (
-                                    normalizarTexto(
-                                        item.nombre
-                                    )
-                                    === buscada
-                                );
-
-                            }
-                        );
-
-                    if (!zona) {
-
-                        costoEnvio = 0;
-
-                        costoEnvioElement.textContent =
-                            'A coordinar';
-
-                        actualizarTotal();
-
-                        return;
-                    }
-
-                    costoEnvio =
-                        Number(
-                            zona.costoenvio
-                        ) || 0;
-
-                    actualizarTotal();
-                }
-
-                /* =========================================
-                   MAPA
-                ========================================== */
-
-                const mapa =
-                    L.map('map').setView(
-                        [
-                            -34.6037,
-                            -58.3816
-                        ],
-                        13
-                    );
-
-                L.tileLayer(
-                    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-                    {
-                        maxZoom: 19,
-                        attribution:
-                            'Tiles &copy; Esri'
-                    }
-                ).addTo(mapa);
-
-                let marcador =
-                    L.marker(
-                        [
-                            -34.6037,
-                            -58.3816
-                        ],
-                        {
-                            draggable: true
-                        }
-                    ).addTo(mapa);
-
-                setTimeout(
-                    function () {
-
-                        mapa.invalidateSize();
-
-                    },
-                    300
-                );
-
-                setTimeout(
-                    function () {
-
-                        mapa.invalidateSize();
-
-                    },
-                    1000
-                );
-
-                /* =========================================
-                   NOMINATIM
-                ========================================== */
-
-                async function buscarDireccion(
-                    direccion
-                ) {
-
-                    if (!direccion.trim()) {
-                        return;
-                    }
 
                     mapStatus.textContent =
-                        'Buscando ubicación...';
+                        'No se encontró esa dirección.';
 
-                    try {
+                    return;
+                }
 
-                        const url =
-                            'https://nominatim.openstreetmap.org/search?' +
-                            new URLSearchParams({
-                                format: 'json',
-                                addressdetails: '1',
-                                limit: '1',
-                                q: direccion,
-                                'accept-language': 'es'
-                            });
+                const resultado =
+                    resultados[0];
 
-                        const respuesta =
-                            await fetch(
-                                url
-                            );
+                const lat =
+                    Number(
+                        resultado.lat
+                    );
 
-                        if (!respuesta.ok) {
-                            throw new Error(
-                                'Error de búsqueda'
-                            );
-                        }
+                const lon =
+                    Number(
+                        resultado.lon
+                    );
 
-                        const resultados =
-                            await respuesta.json();
+                mapa.setView(
+                    [
+                        lat,
+                        lon
+                    ],
+                    17
+                );
 
-                        if (
-                            !resultados.length
-                        ) {
+                marcador.setLatLng(
+                    [
+                        lat,
+                        lon
+                    ]
+                );
 
-                            mapStatus.textContent =
-                                'No se encontró esa dirección.';
+                actualizarDireccionDesdeMapa(
+                    lat,
+                    lon
+                );
 
-                            return;
-                        }
+                mapStatus.textContent =
+                    'Ubicación encontrada.';
 
-                        const resultado =
-                            resultados[0];
+            } catch (error) {
+
+                console.error(
+                    error
+                );
+
+                mapStatus.textContent =
+                    'No se pudo buscar la dirección.';
+
+            }
+
+        }
+
+        async function actualizarDireccionDesdeMapa(
+            lat,
+            lon
+        ) {
+
+            try {
+
+                const url =
+                    'https://nominatim.openstreetmap.org/reverse?' +
+                    new URLSearchParams({
+                        format: 'json',
+                        lat: lat,
+                        lon: lon,
+                        addressdetails: '1',
+                        'accept-language': 'es'
+                    });
+
+                const respuesta =
+                    await fetch(
+                        url
+                    );
+
+                if (!respuesta.ok) {
+                    throw new Error(
+                        'Error de geocodificación'
+                    );
+                }
+
+                const resultado =
+                    await respuesta.json();
+
+                const direccion =
+                    resultado.address || {};
+
+                const calle =
+                    direccion.road ||
+                    direccion.pedestrian ||
+                    direccion.residential ||
+                    '';
+
+                const numero =
+                    direccion.house_number ||
+                    '';
+
+                const localidad =
+                    direccion.suburb ||
+                    direccion.city_district ||
+                    direccion.city ||
+                    direccion.town ||
+                    direccion.village ||
+                    '';
+
+                if (calle) {
+
+                    calleInput.value =
+                        calle;
+
+                }
+
+                if (numero) {
+
+                    numeroInput.value =
+                        numero;
+
+                }
+
+                if (localidad) {
+
+                    localidadInput.value =
+                        localidad;
+
+                    localidadHidden.value =
+                        localidad;
+
+                    aplicarZona(
+                        localidad
+                    );
+
+                }
+
+                guardarCheckout();
+
+            } catch (error) {
+
+                console.error(
+                    error
+                );
+
+            }
+
+        }
+
+        mapa.on(
+            'click',
+            function (evento) {
+
+                const lat =
+                    evento.latlng.lat;
+
+                const lon =
+                    evento.latlng.lng;
+
+                marcador.setLatLng(
+                    [
+                        lat,
+                        lon
+                    ]
+                );
+
+                actualizarDireccionDesdeMapa(
+                    lat,
+                    lon
+                );
+
+            }
+        );
+
+        marcador.on(
+            'dragend',
+            function () {
+
+                const posicion =
+                    marcador.getLatLng();
+
+                actualizarDireccionDesdeMapa(
+                    posicion.lat,
+                    posicion.lng
+                );
+
+            }
+        );
+
+        const btnUbicacion =
+            document.getElementById(
+                'btn-ubicacion'
+            );
+
+        btnUbicacion.addEventListener(
+            'click',
+            function () {
+
+                if (
+                    !navigator.geolocation
+                ) {
+
+                    mapStatus.textContent =
+                        'Tu navegador no permite obtener la ubicación.';
+
+                    return;
+
+                }
+
+                mapStatus.textContent =
+                    'Obteniendo tu ubicación...';
+
+                navigator.geolocation.getCurrentPosition(
+
+                    function (posicion) {
 
                         const lat =
-                            Number(
-                                resultado.lat
-                            );
+                            posicion.coords.latitude;
 
                         const lon =
-                            Number(
-                                resultado.lon
-                            );
+                            posicion.coords.longitude;
 
                         mapa.setView(
                             [
@@ -1761,567 +1450,923 @@
                         );
 
                         mapStatus.textContent =
-                            'Ubicación encontrada.';
+                            'Ubicación actual encontrada.';
 
-                    } catch (error) {
+                    },
 
-                        console.error(
-                            error
-                        );
+                    function () {
 
                         mapStatus.textContent =
-                            'No se pudo buscar la dirección.';
-                    }
-                }
+                            'No se pudo obtener tu ubicación. Revisá los permisos del navegador.';
 
-                async function actualizarDireccionDesdeMapa(
-                    lat,
-                    lon
-                ) {
+                    },
 
-                    try {
-
-                        const url =
-                            'https://nominatim.openstreetmap.org/reverse?' +
-                            new URLSearchParams({
-                                format: 'json',
-                                lat: lat,
-                                lon: lon,
-                                addressdetails: '1',
-                                'accept-language': 'es'
-                            });
-
-                        const respuesta =
-                            await fetch(
-                                url
-                            );
-
-                        if (!respuesta.ok) {
-                            throw new Error(
-                                'Error de geocodificación'
-                            );
-                        }
-
-                        const resultado =
-                            await respuesta.json();
-
-                        const direccion =
-                            resultado.address || {};
-
-                        const calle =
-                            direccion.road ||
-                            direccion.pedestrian ||
-                            direccion.residential ||
-                            '';
-
-                        const numero =
-                            direccion.house_number ||
-                            '';
-
-                        const localidad =
-                            direccion.suburb ||
-                            direccion.city_district ||
-                            direccion.city ||
-                            direccion.town ||
-                            direccion.village ||
-                            '';
-
-                        if (calle) {
-
-                            calleInput.value =
-                                calle;
-                        }
-
-                        if (numero) {
-
-                            numeroInput.value =
-                                numero;
-                        }
-
-                        if (localidad) {
-
-                            localidadInput.value =
-                                localidad;
-
-                            localidadHidden.value =
-                                localidad;
-
-                            aplicarZona(
-                                localidad
-                            );
-                        }
-
-                    } catch (error) {
-
-                        console.error(
-                            error
-                        );
-                    }
-                }
-
-                /* =========================================
-                   CLICK EN MAPA
-                ========================================== */
-
-                mapa.on(
-                    'click',
-                    function (evento) {
-
-                        const lat =
-                            evento.latlng.lat;
-
-                        const lon =
-                            evento.latlng.lng;
-
-                        marcador.setLatLng(
-                            [
-                                lat,
-                                lon
-                            ]
-                        );
-
-                        actualizarDireccionDesdeMapa(
-                            lat,
-                            lon
-                        );
-
-                    }
-                );
-
-                /* =========================================
-                   ARRASTRAR MARCADOR
-                ========================================== */
-
-                marcador.on(
-                    'dragend',
-                    function () {
-
-                        const posicion =
-                            marcador.getLatLng();
-
-                        actualizarDireccionDesdeMapa(
-                            posicion.lat,
-                            posicion.lng
-                        );
-
-                    }
-                );
-
-                /* =========================================
-                   GEOLOCALIZACIÓN
-                ========================================== */
-
-                const btnUbicacion =
-                    document.getElementById(
-                        'btn-ubicacion'
-                    );
-
-                btnUbicacion.addEventListener(
-                    'click',
-                    function () {
-
-                        if (
-                            !navigator.geolocation
-                        ) {
-
-                            mapStatus.textContent =
-                                'Tu navegador no permite obtener la ubicación.';
-
-                            return;
-                        }
-
-                        mapStatus.textContent =
-                            'Obteniendo tu ubicación...';
-
-                        navigator.geolocation.getCurrentPosition(
-
-                            function (posicion) {
-
-                                const lat =
-                                    posicion.coords.latitude;
-
-                                const lon =
-                                    posicion.coords.longitude;
-
-                                mapa.setView(
-                                    [
-                                        lat,
-                                        lon
-                                    ],
-                                    17
-                                );
-
-                                marcador.setLatLng(
-                                    [
-                                        lat,
-                                        lon
-                                    ]
-                                );
-
-                                actualizarDireccionDesdeMapa(
-                                    lat,
-                                    lon
-                                );
-
-                                mapStatus.textContent =
-                                    'Ubicación actual encontrada.';
-
-                            },
-
-                            function () {
-
-                                mapStatus.textContent =
-                                    'No se pudo obtener tu ubicación. Revisá los permisos del navegador.';
-
-                            },
-
-                            {
-                                enableHighAccuracy: true,
-                                timeout: 10000,
-                                maximumAge: 0
-                            }
-
-                        );
-
-                    }
-                );
-
-                /* =========================================
-                   BUSCAR DIRECCIÓN AUTOMÁTICAMENTE
-                ========================================== */
-
-                let temporizadorBusqueda = null;
-
-                function programarBusqueda() {
-
-                    clearTimeout(
-                        temporizadorBusqueda
-                    );
-
-                    if (
-                        !calleInput.value.trim()
-                        || !numeroInput.value.trim()
-                    ) {
-                        return;
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
                     }
 
-                    temporizadorBusqueda =
-                        setTimeout(
-                            function () {
-
-                                const direccion =
-                                    calleInput.value.trim()
-                                    + ' '
-                                    + numeroInput.value.trim()
-                                    + ', Buenos Aires, Argentina';
-
-                                buscarDireccion(
-                                    direccion
-                                );
-
-                            },
-                            900
-                        );
-                }
-
-                calleInput.addEventListener(
-                    'input',
-                    programarBusqueda
-                );
-
-                numeroInput.addEventListener(
-                    'input',
-                    programarBusqueda
-                );
-
-                /* =========================================
-                   LOCALIDAD
-                ========================================== */
-
-                localidadInput.addEventListener(
-                    'input',
-                    function () {
-
-                        localidadHidden.value =
-                            localidadInput.value;
-
-                        aplicarZona(
-                            localidadInput.value
-                        );
-
-                    }
-                );
-
-                localidadInput.addEventListener(
-                    'change',
-                    function () {
-
-                        localidadHidden.value =
-                            localidadInput.value;
-
-                        aplicarZona(
-                            localidadInput.value
-                        );
-
-                    }
-                );
-
-                /* =========================================
-                   PROMOCIÓN
-                ========================================== */
-
-                promoButton.addEventListener(
-                    'click',
-                    function () {
-
-                        const codigo =
-                            promoInput.value
-                                .trim()
-                                .toUpperCase();
-
-                        if (!codigo) {
-
-                            promoStatus.textContent =
-                                'Ingresá una palabra clave.';
-
-                            return;
-                        }
-
-                        promoStatus.textContent =
-                            'Código ingresado: '
-                            + codigo
-                            + '. Se verificará al confirmar el pedido.';
-
-                    }
-                );
-
-                /* =========================================
-                   LIMPIAR ERRORES
-                ========================================== */
-
-                const campos =
-                    form.querySelectorAll(
-                        'input, select, textarea'
-                    );
-
-                campos.forEach(
-                    function (campo) {
-
-                        campo.addEventListener(
-                            'input',
-                            function () {
-
-                                const grupo =
-                                    campo.closest(
-                                        '.form-group'
-                                    );
-
-                                if (!grupo) {
-                                    return;
-                                }
-
-                                const error =
-                                    grupo.querySelector(
-                                        '.field-error'
-                                    );
-
-                                if (error) {
-                                    error.remove();
-                                }
-
-                            }
-                        );
-
-                        campo.addEventListener(
-                            'change',
-                            function () {
-
-                                const grupo =
-                                    campo.closest(
-                                        '.form-group'
-                                    );
-
-                                if (!grupo) {
-                                    return;
-                                }
-
-                                const error =
-                                    grupo.querySelector(
-                                        '.field-error'
-                                    );
-
-                                if (error) {
-                                    error.remove();
-                                }
-
-                            }
-                        );
-
-                    }
-                );
-
-                /* =========================================
-                   VALIDACIÓN FRONTEND
-                ========================================== */
-
-                form.addEventListener(
-                    'submit',
-                    function (evento) {
-
-                        let valido = true;
-
-                        const nombre =
-                            document.getElementById(
-                                'nombre'
-                            );
-
-                        const apellido =
-                            document.getElementById(
-                                'apellido'
-                            );
-
-                        const telefono =
-                            telefonoInput.value
-                                .replace(
-                                    /\D/g,
-                                    ''
-                                );
-
-                        if (
-                            !nombre.value.trim()
-                        ) {
-
-                            valido = false;
-
-                            nombre.focus();
-
-                            alert(
-                                'Ingresá tu nombre.'
-                            );
-
-                            return;
-                        }
-
-                        if (
-                            !apellido.value.trim()
-                        ) {
-
-                            valido = false;
-
-                            apellido.focus();
-
-                            alert(
-                                'Ingresá tu apellido.'
-                            );
-
-                            return;
-                        }
-
-                        if (
-                            !/^\d{8,13}$/.test(
-                                telefono
-                            )
-                        ) {
-
-                            valido = false;
-
-                            telefonoInput.focus();
-
-                            alert(
-                                'Ingresá un teléfono válido de 8 a 13 números.'
-                            );
-
-                            return;
-                        }
-
-                        telefonoInput.value =
-                            telefono;
-
-                        if (
-                            !calleInput.value.trim()
-                        ) {
-
-                            valido = false;
-
-                            calleInput.focus();
-
-                            alert(
-                                'Ingresá la calle.'
-                            );
-
-                            return;
-                        }
-
-                        if (
-                            !numeroInput.value.trim()
-                        ) {
-
-                            valido = false;
-
-                            numeroInput.focus();
-
-                            alert(
-                                'Ingresá el número de la calle.'
-                            );
-
-                            return;
-                        }
-
-                        if (
-                            !horarioInput.value
-                        ) {
-
-                            valido = false;
-
-                            horarioInput.focus();
-
-                            alert(
-                                'Ingresá un horario de entrega.'
-                            );
-
-                            return;
-                        }
-
-                        const pagoSeleccionado =
-                            form.querySelector(
-                                'input[name="medio_pago"]:checked'
-                            );
-
-                        if (
-                            !pagoSeleccionado
-                        ) {
-
-                            valido = false;
-
-                            alert(
-                                'Seleccioná un método de pago.'
-                            );
-
-                            return;
-                        }
-
-                        if (!valido) {
-                            evento.preventDefault();
-                        }
-
-                    }
-                );
-
-                /* =========================================
-                   INICIALIZACIÓN
-                ========================================== */
-
-                actualizarTotal();
-
-                aplicarZona(
-                    localidadInput.value
                 );
 
             }
         );
 
-    </script>
+        let temporizadorBusqueda = null;
+
+        function programarBusqueda() {
+
+            clearTimeout(
+                temporizadorBusqueda
+            );
+
+            if (
+                !calleInput.value.trim()
+                || !numeroInput.value.trim()
+            ) {
+                return;
+            }
+
+            temporizadorBusqueda =
+                setTimeout(
+                    function () {
+
+                        const direccion =
+                            calleInput.value.trim()
+                            + ' '
+                            + numeroInput.value.trim()
+                            + ', Buenos Aires, Argentina';
+
+                        buscarDireccion(
+                            direccion
+                        );
+
+                    },
+                    900
+                );
+
+        }
+
+        calleInput.addEventListener(
+            'input',
+            programarBusqueda
+        );
+
+        numeroInput.addEventListener(
+            'input',
+            programarBusqueda
+        );
+
+        localidadInput.addEventListener(
+            'input',
+            function () {
+
+                localidadHidden.value =
+                    localidadInput.value;
+
+                aplicarZona(
+                    localidadInput.value
+                );
+
+                guardarCheckout();
+
+            }
+        );
+
+        localidadInput.addEventListener(
+            'change',
+            function () {
+
+                localidadHidden.value =
+                    localidadInput.value;
+
+                aplicarZona(
+                    localidadInput.value
+                );
+
+                guardarCheckout();
+
+            }
+        );
+
+        promoButton.addEventListener(
+            'click',
+            function () {
+
+                const codigo =
+                    promoInput.value
+                        .trim()
+                        .toUpperCase();
+
+                if (!codigo) {
+
+                    promoStatus.textContent =
+                        'Ingresá una palabra clave.';
+
+                    return;
+
+                }
+
+                promoInput.value =
+                    codigo;
+
+                guardarCheckout();
+
+                promoStatus.textContent =
+                    'Código ingresado: '
+                    + codigo
+                    + '. Se verificará al confirmar el pedido.';
+
+            }
+        );
+
+        const camposGuardar = [
+            'nombre',
+            'apellido',
+            'telefono',
+            'calle',
+            'numero',
+            'piso',
+            'input-localidad',
+            'localidad',
+            'horario_entrega',
+            'codigo_promocion',
+            'comentario'
+        ];
+
+        function obtenerDatosCheckout() {
+
+            const datos = {};
+
+            camposGuardar.forEach(
+                function (id) {
+
+                    const campo =
+                        document.getElementById(
+                            id
+                        );
+
+                    if (campo) {
+
+                        datos[id] =
+                            campo.value;
+
+                    }
+
+                }
+            );
+
+            const pagoSeleccionado =
+                form.querySelector(
+                    'input[name="medio_pago"]:checked'
+                );
+
+            datos.medio_pago =
+                pagoSeleccionado
+                    ? pagoSeleccionado.value
+                    : '';
+
+            return datos;
+
+        }
+
+        function guardarCheckout() {
+
+            try {
+
+                const datos =
+                    obtenerDatosCheckout();
+
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    JSON.stringify(
+                        datos
+                    )
+                );
+
+            } catch (error) {
+
+                console.error(
+                    'No se pudieron guardar los datos del checkout.',
+                    error
+                );
+
+            }
+
+        }
+
+        function hayDatosGuardados(
+            datos
+        ) {
+
+            if (!datos) {
+                return false;
+            }
+
+            return Object.keys(
+                datos
+            ).some(
+                function (clave) {
+
+                    return String(
+                        datos[clave] || ''
+                    ).trim() !== '';
+
+                }
+            );
+
+        }
+
+        function recuperarCheckout() {
+
+            if (tieneDatosPrevios) {
+                return;
+            }
+
+            try {
+
+                const datosGuardados =
+                    localStorage.getItem(
+                        STORAGE_KEY
+                    );
+
+                if (!datosGuardados) {
+                    return;
+                }
+
+                const datos =
+                    JSON.parse(
+                        datosGuardados
+                    );
+
+                if (
+                    !hayDatosGuardados(
+                        datos
+                    )
+                ) {
+                    return;
+                }
+
+                camposGuardar.forEach(
+                    function (id) {
+
+                        const campo =
+                            document.getElementById(
+                                id
+                            );
+
+                        if (
+                            campo
+                            && datos[id] !== undefined
+                            && datos[id] !== null
+                        ) {
+
+                            campo.value =
+                                datos[id];
+
+                        }
+
+                    }
+                );
+
+                if (
+                    localidadInput
+                    && localidadHidden
+                ) {
+
+                    localidadHidden.value =
+                        localidadInput.value;
+
+                    aplicarZona(
+                        localidadInput.value
+                    );
+
+                }
+
+                if (
+                    datos.medio_pago
+                ) {
+
+                    const radio =
+                        form.querySelector(
+                            'input[name="medio_pago"][value="' +
+                            datos.medio_pago +
+                            '"]'
+                        );
+
+                    if (radio) {
+
+                        radio.checked =
+                            true;
+
+                    }
+
+                }
+
+                restoreNotice.classList.add(
+                    'visible'
+                );
+
+                actualizarTotal();
+
+            } catch (error) {
+
+                console.error(
+                    'No se pudieron recuperar los datos del checkout.',
+                    error
+                );
+
+            }
+
+        }
+
+        camposGuardar.forEach(
+            function (id) {
+
+                const campo =
+                    document.getElementById(
+                        id
+                    );
+
+                if (!campo) {
+                    return;
+                }
+
+                campo.addEventListener(
+                    'input',
+                    function () {
+
+                        guardarCheckout();
+
+                    }
+                );
+
+                campo.addEventListener(
+                    'change',
+                    function () {
+
+                        guardarCheckout();
+
+                    }
+                );
+
+            }
+        );
+
+        const radiosPago =
+            form.querySelectorAll(
+                'input[name="medio_pago"]'
+            );
+
+        radiosPago.forEach(
+            function (radio) {
+
+                radio.addEventListener(
+                    'change',
+                    function () {
+
+                        limpiarErrorPago();
+
+                        guardarCheckout();
+
+                    }
+                );
+
+            }
+        );
+
+        clearSavedDataButton.addEventListener(
+            'click',
+            function () {
+
+                try {
+
+                    localStorage.removeItem(
+                        STORAGE_KEY
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        error
+                    );
+
+                }
+
+                form.reset();
+
+                localidadHidden.value =
+                    '';
+
+                restoreNotice.classList.remove(
+                    'visible'
+                );
+
+                limpiarTodosLosErrores();
+
+                aplicarZona('');
+
+                actualizarTotal();
+
+            }
+        );
+
+        function limpiarErrorCampo(
+            campo
+        ) {
+
+            if (!campo) {
+                return;
+            }
+
+            const grupo =
+                campo.closest(
+                    '.form-group'
+                );
+
+            if (!grupo) {
+                return;
+            }
+
+            grupo.classList.remove(
+                'input-error'
+            );
+
+            const error =
+                grupo.querySelector(
+                    '.field-error'
+                );
+
+            if (
+                error
+                && error.dataset.frontend === 'true'
+            ) {
+
+                error.remove();
+
+            }
+
+        }
+
+        function mostrarErrorCampo(
+            campo,
+            mensaje
+        ) {
+
+            if (!campo) {
+                return;
+            }
+
+            const grupo =
+                campo.closest(
+                    '.form-group'
+                );
+
+            if (!grupo) {
+                return;
+            }
+
+            grupo.classList.add(
+                'input-error'
+            );
+
+            const errorExistente =
+                grupo.querySelector(
+                    '.field-error[data-frontend="true"]'
+                );
+
+            if (errorExistente) {
+
+                errorExistente.innerHTML =
+                    '<i class="fa-solid fa-circle-exclamation"></i>'
+                    + mensaje;
+
+                return;
+
+            }
+
+            const error =
+                document.createElement(
+                    'div'
+                );
+
+            error.className =
+                'field-error';
+
+            error.dataset.frontend =
+                'true';
+
+            error.innerHTML =
+                '<i class="fa-solid fa-circle-exclamation"></i>'
+                + mensaje;
+
+            grupo.appendChild(
+                error
+            );
+
+        }
+
+        function limpiarTodosLosErrores() {
+
+            const grupos =
+                form.querySelectorAll(
+                    '.form-group'
+                );
+
+            grupos.forEach(
+                function (grupo) {
+
+                    grupo.classList.remove(
+                        'input-error'
+                    );
+
+                    const errores =
+                        grupo.querySelectorAll(
+                            '.field-error[data-frontend="true"]'
+                        );
+
+                    errores.forEach(
+                        function (error) {
+
+                            error.remove();
+
+                        }
+                    );
+
+                }
+            );
+
+            const opcionesPago =
+                form.querySelectorAll(
+                    '.payment-option'
+                );
+
+            opcionesPago.forEach(
+                function (opcion) {
+
+                    opcion.classList.remove(
+                        'payment-error'
+                    );
+
+                }
+            );
+
+            limpiarErrorPago();
+
+            validationSummary.classList.remove(
+                'visible'
+            );
+
+            validationSummaryList.innerHTML =
+                '';
+
+        }
+
+        function limpiarErrorPago() {
+
+            const opcionesPago =
+                form.querySelectorAll(
+                    '.payment-option'
+                );
+
+            opcionesPago.forEach(
+                function (opcion) {
+
+                    opcion.classList.remove(
+                        'payment-error'
+                    );
+
+                }
+            );
+
+            paymentRequiredMessage.classList.add(
+                'hidden'
+            );
+
+        }
+
+        function validarCheckout() {
+
+            limpiarTodosLosErrores();
+
+            const errores = [];
+
+            const nombre =
+                document.getElementById(
+                    'nombre'
+                );
+
+            const apellido =
+                document.getElementById(
+                    'apellido'
+                );
+
+            const telefono =
+                telefonoInput.value
+                    .replace(
+                        /\D/g,
+                        ''
+                    );
+
+            if (
+                !nombre.value.trim()
+            ) {
+
+                mostrarErrorCampo(
+                    nombre,
+                    'Ingresá tu nombre.'
+                );
+
+                errores.push({
+                    campo: nombre,
+                    mensaje: 'Nombre'
+                });
+
+            }
+
+            if (
+                !apellido.value.trim()
+            ) {
+
+                mostrarErrorCampo(
+                    apellido,
+                    'Ingresá tu apellido.'
+                );
+
+                errores.push({
+                    campo: apellido,
+                    mensaje: 'Apellido'
+                });
+
+            }
+
+            if (
+                !telefono
+            ) {
+
+                mostrarErrorCampo(
+                    telefonoInput,
+                    'Ingresá tu teléfono.'
+                );
+
+                errores.push({
+                    campo: telefonoInput,
+                    mensaje: 'Teléfono'
+                });
+
+            } else if (
+                !/^\d{8,13}$/.test(
+                    telefono
+                )
+            ) {
+
+                mostrarErrorCampo(
+                    telefonoInput,
+                    'Ingresá un teléfono válido de 8 a 13 números.'
+                );
+
+                errores.push({
+                    campo: telefonoInput,
+                    mensaje: 'Teléfono válido'
+                });
+
+            } else {
+
+                telefonoInput.value =
+                    telefono;
+
+            }
+
+            if (
+                !calleInput.value.trim()
+            ) {
+
+                mostrarErrorCampo(
+                    calleInput,
+                    'Ingresá la calle.'
+                );
+
+                errores.push({
+                    campo: calleInput,
+                    mensaje: 'Calle'
+                });
+
+            }
+
+            if (
+                !numeroInput.value.trim()
+            ) {
+
+                mostrarErrorCampo(
+                    numeroInput,
+                    'Ingresá el número de la calle.'
+                );
+
+                errores.push({
+                    campo: numeroInput,
+                    mensaje: 'Número de la calle'
+                });
+
+            }
+
+            const pagoSeleccionado =
+                form.querySelector(
+                    'input[name="medio_pago"]:checked'
+                );
+
+            if (
+                !pagoSeleccionado
+            ) {
+
+                const opcionesPago =
+                    form.querySelectorAll(
+                        '.payment-option'
+                    );
+
+                opcionesPago.forEach(
+                    function (opcion) {
+
+                        opcion.classList.add(
+                            'payment-error'
+                        );
+
+                    }
+                );
+
+                paymentRequiredMessage.classList.remove(
+                    'hidden'
+                );
+
+                errores.push({
+                    campo: null,
+                    mensaje: 'Método de pago'
+                });
+
+            }
+
+            if (
+                errores.length
+            ) {
+
+                validationSummaryList.innerHTML =
+                    '';
+
+                errores.forEach(
+                    function (errorItem) {
+
+                        const li =
+                            document.createElement(
+                                'li'
+                            );
+
+                        li.textContent =
+                            errorItem.mensaje;
+
+                        if (
+                            errorItem.campo
+                        ) {
+
+                            li.addEventListener(
+                                'click',
+                                function () {
+
+                                    errorItem.campo.focus();
+
+                                    errorItem.campo.scrollIntoView({
+                                        behavior: 'smooth',
+                                        block: 'center'
+                                    });
+
+                                }
+                            );
+
+                        } else {
+
+                            li.addEventListener(
+                                'click',
+                                function () {
+
+                                    const pago =
+                                        form.querySelector(
+                                            '.payment-option'
+                                        );
+
+                                    if (pago) {
+
+                                        pago.scrollIntoView({
+                                            behavior: 'smooth',
+                                            block: 'center'
+                                        });
+
+                                    }
+
+                                }
+                            );
+
+                        }
+
+                        validationSummaryList.appendChild(
+                            li
+                        );
+
+                    }
+                );
+
+                validationSummary.classList.add(
+                    'visible'
+                );
+
+                validationSummary.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+
+                return false;
+
+            }
+
+            return true;
+
+        }
+
+        const campos =
+            form.querySelectorAll(
+                'input, select, textarea'
+            );
+
+        campos.forEach(
+            function (campo) {
+
+                campo.addEventListener(
+                    'input',
+                    function () {
+
+                        limpiarErrorCampo(
+                            campo
+                        );
+
+                    }
+                );
+
+                campo.addEventListener(
+                    'change',
+                    function () {
+
+                        limpiarErrorCampo(
+                            campo
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+        form.addEventListener(
+            'submit',
+            function (evento) {
+
+                const valido =
+                    validarCheckout();
+
+                if (!valido) {
+
+                    evento.preventDefault();
+
+                    guardarCheckout();
+
+                    return;
+
+                }
+
+                guardarCheckout();
+
+            }
+        );
+
+        actualizarTotal();
+
+        aplicarZona(
+            localidadInput.value
+        );
+
+        recuperarCheckout();
+
+        const pagoInicial =
+            form.querySelector(
+                'input[name="medio_pago"]:checked'
+            );
+
+        if (pagoInicial) {
+
+            limpiarErrorPago();
+
+        }
+
+    }
+);
+
+</script>
 
 </body>
-
 </html>

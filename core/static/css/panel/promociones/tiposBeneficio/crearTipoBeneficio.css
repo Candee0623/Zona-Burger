@@ -1,0 +1,489 @@
+.tipo-beneficio-create-page {
+width: 100%;
+max-width: 650px;
+margin: 0 auto;
+color: #fff;
+}
+
+/* =========================================================
+VOLVER
+========================================================= */
+
+.tipo-beneficio-back {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+
+
+margin-bottom: 20px;
+padding: 7px 11px;
+
+color: #858585;
+background: #191919;
+border: 1px solid #303030;
+border-radius: 7px;
+
+font-size: 0.82rem;
+font-weight: 600;
+text-decoration: none;
+
+transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+
+
+}
+
+.tipo-beneficio-back:hover {
+color: #dc2626;
+background: rgba(220, 38, 38, 0.07);
+border-color: rgba(220, 38, 38, 0.35);
+transform: translateX(-2px);
+}
+
+.tipo-beneficio-back svg {
+flex-shrink: 0;
+}
+
+/* =========================================================
+CARD
+========================================================= */
+
+.tipo-beneficio-card {
+padding: 27px;
+
+
+background: #181818;
+border: 1px solid #303030;
+border-radius: 10px;
+
+box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+overflow: hidden;
+
+
+}
+
+/* =========================================================
+HEADER
+========================================================= */
+
+.tipo-beneficio-header {
+display: flex;
+align-items: center;
+gap: 13px;
+
+
+margin-bottom: 23px;
+
+
+}
+
+.tipo-beneficio-icon {
+width: 49px;
+height: 49px;
+flex-shrink: 0;
+
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+background: rgba(220, 38, 38, 0.10);
+border: 1px solid rgba(220, 38, 38, 0.28);
+border-radius: 8px;
+
+color: #dc2626;
+
+
+}
+
+.tipo-beneficio-icon svg {
+width: 25px;
+height: 25px;
+}
+
+.tipo-beneficio-header-text {
+min-width: 0;
+}
+
+.tipo-beneficio-header h1 {
+margin: 0;
+
+
+color: #fff;
+
+font-size: 1.45rem;
+font-weight: 700;
+line-height: 1.25;
+
+
+}
+
+.tipo-beneficio-header p {
+margin: 5px 0 0;
+
+
+color: #858585;
+
+font-size: 0.82rem;
+line-height: 1.45;
+
+
+}
+
+/* =========================================================
+MENSAJES
+========================================================= */
+
+.tipo-beneficio-messages {
+margin-bottom: 17px;
+
+
+color: #d8a0a0;
+
+font-size: 0.82rem;
+line-height: 1.5;
+
+
+}
+
+.tipo-beneficio-messages ul {
+margin: 0;
+padding-left: 19px;
+}
+
+.tipo-beneficio-messages li {
+margin-bottom: 4px;
+}
+
+.tipo-beneficio-messages li:last-child {
+margin-bottom: 0;
+}
+
+/* =========================================================
+ERRORES
+========================================================= */
+
+.tipo-beneficio-errors {
+margin-bottom: 19px;
+padding: 12px 14px;
+
+
+color: #d8a0a0;
+
+background: rgba(220, 38, 38, 0.07);
+border: 1px solid rgba(220, 38, 38, 0.25);
+border-radius: 7px;
+
+font-size: 0.8rem;
+line-height: 1.5;
+
+
+}
+
+.tipo-beneficio-errors ul {
+margin: 0;
+padding-left: 19px;
+}
+
+.tipo-beneficio-errors li {
+margin-bottom: 4px;
+}
+
+.tipo-beneficio-errors li:last-child {
+margin-bottom: 0;
+}
+
+/* =========================================================
+FORMULARIO
+========================================================= */
+
+.tipo-beneficio-form {
+width: 100%;
+}
+
+.tipo-beneficio-field {
+margin-bottom: 17px;
+}
+
+.tipo-beneficio-field label {
+display: block;
+
+
+margin-bottom: 6px;
+
+color: #c7c7c7;
+
+font-size: 0.82rem;
+font-weight: 600;
+line-height: 1.3;
+
+
+}
+
+.tipo-beneficio-field input,
+.tipo-beneficio-field select,
+.tipo-beneficio-field textarea {
+width: 100%;
+box-sizing: border-box;
+
+
+padding: 9px 10px;
+
+background: #202020;
+border: 1px solid #3a3a3a;
+border-radius: 6px;
+
+color: #fff;
+
+font-family: inherit;
+font-size: 0.82rem;
+line-height: 1.4;
+
+outline: none;
+
+transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+
+
+}
+
+.tipo-beneficio-field input::placeholder,
+.tipo-beneficio-field textarea::placeholder {
+color: #666;
+}
+
+.tipo-beneficio-field input:hover,
+.tipo-beneficio-field select:hover,
+.tipo-beneficio-field textarea:hover {
+border-color: #484848;
+}
+
+.tipo-beneficio-field input:focus,
+.tipo-beneficio-field select:focus,
+.tipo-beneficio-field textarea:focus {
+background: #222;
+border-color: #dc2626;
+box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.10);
+}
+
+.tipo-beneficio-field select {
+cursor: pointer;
+}
+
+.tipo-beneficio-field textarea {
+min-height: 95px;
+resize: vertical;
+}
+
+/* =========================================================
+AYUDA
+========================================================= */
+
+.tipo-beneficio-help {
+display: block;
+
+
+margin-top: 5px;
+
+color: #707070;
+
+font-size: 0.74rem;
+line-height: 1.45;
+
+
+}
+
+/* =========================================================
+ACCIONES
+========================================================= */
+
+.tipo-beneficio-actions {
+display: flex;
+align-items: center;
+gap: 10px;
+
+
+margin-top: 24px;
+
+
+}
+
+.tipo-beneficio-btn {
+min-height: 38px;
+
+
+padding: 8px 17px;
+
+border: 1px solid transparent;
+border-radius: 6px;
+
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 7px;
+
+box-sizing: border-box;
+
+font-family: inherit;
+font-size: 0.82rem;
+font-weight: 700;
+
+line-height: 1;
+text-decoration: none;
+
+cursor: pointer;
+
+transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+
+}
+
+.tipo-beneficio-btn svg {
+flex-shrink: 0;
+}
+
+/* =========================================================
+GUARDAR
+========================================================= */
+
+.tipo-beneficio-btn-save {
+background: #dc2626;
+border-color: #dc2626;
+color: #fff;
+}
+
+.tipo-beneficio-btn-save:hover {
+background: #ef3030;
+border-color: #ef3030;
+
+
+transform: translateY(-1px);
+box-shadow: 0 5px 16px rgba(220, 38, 38, 0.20);
+
+
+}
+
+.tipo-beneficio-btn-save:active {
+transform: translateY(0);
+}
+
+/* =========================================================
+CANCELAR
+========================================================= */
+
+.tipo-beneficio-btn-cancel {
+background: #202020;
+border-color: #3a3a3a;
+color: #b5b5b5;
+}
+
+.tipo-beneficio-btn-cancel:hover {
+background: #292929;
+border-color: #484848;
+color: #fff;
+
+
+transform: translateY(-1px);
+
+
+}
+
+.tipo-beneficio-btn-cancel:active {
+transform: translateY(0);
+}
+
+/* =========================================================
+FOCUS
+========================================================= */
+
+.tipo-beneficio-btn:focus-visible,
+.tipo-beneficio-back:focus-visible,
+.tipo-beneficio-field input:focus-visible,
+.tipo-beneficio-field select:focus-visible,
+.tipo-beneficio-field textarea:focus-visible {
+outline: 2px solid #dc2626;
+outline-offset: 2px;
+}
+
+/* =========================================================
+RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+
+
+.tipo-beneficio-create-page {
+    max-width: 100%;
+}
+
+.tipo-beneficio-card {
+    padding: 22px 18px;
+}
+
+.tipo-beneficio-header {
+    align-items: flex-start;
+    gap: 11px;
+}
+
+.tipo-beneficio-header h1 {
+    font-size: 1.3rem;
+}
+
+.tipo-beneficio-header p {
+    font-size: 0.78rem;
+}
+
+.tipo-beneficio-actions {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.tipo-beneficio-btn {
+    width: 100%;
+}
+
+
+}
+
+@media (max-width: 420px) {
+
+
+.tipo-beneficio-card {
+    padding: 20px 15px;
+}
+
+.tipo-beneficio-back {
+    margin-bottom: 16px;
+    font-size: 0.78rem;
+}
+
+.tipo-beneficio-icon {
+    width: 46px;
+    height: 46px;
+}
+
+.tipo-beneficio-icon svg {
+    width: 23px;
+    height: 23px;
+}
+
+.tipo-beneficio-header h1 {
+    font-size: 1.2rem;
+}
+
+.tipo-beneficio-field {
+    margin-bottom: 15px;
+}
+
+
+}

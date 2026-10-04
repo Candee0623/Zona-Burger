@@ -25,7 +25,7 @@ urlpatterns = [
     path('checkout/', views.procesar_checkout, name='procesar_checkout'),
     path('pedido-exitoso/', views.pedido_exitoso, name='pedido_exitoso'),
 
-    # Promociones 
+    # Promociones
     path('panel/promociones/', views.promociones_panel, name='promociones_panel'),
     path('panel/promociones/lista/', views.lista_promociones, name='panel_lista_promociones'),
     path('panel/promociones/crear/', views.crear_promocion, name='panel_crear_promocion'),
@@ -53,7 +53,7 @@ urlpatterns = [
     path('panel/categorias/<int:idcategoria>/editar/', views.categoria_editar, name='categoria_editar'),
     path('panel/categorias/<int:idcategoria>/eliminar/', views.categoria_eliminar, name='categoria_eliminar'),
 
-    # Menú - Opciones (Grupos + sus opciones inline)
+    # Menú - Opciones
     path('panel/opciones/', views.grupo_lista, name='grupo_lista'),
     path('panel/opciones/crear/', views.grupo_crear, name='grupo_crear'),
     path('panel/opciones/<int:idgrupo>/editar/', views.grupo_editar, name='grupo_editar'),
@@ -68,15 +68,14 @@ urlpatterns = [
     # Menú - Extras
     path('panel/extras/', views.extra_lista, name='extra_lista'),
     path('panel/extras/crear/', views.extra_crear, name='extra_crear'),
-    path('panel/extras/<int:idextra>/editar/', views.extra_editar, name='extra_editar'),
+    path('panel/extras/<int:idextra>/editar/', views.extra_editar, name='panel_extra_editar'),
     path('panel/extras/<int:idextra>/eliminar/', views.extra_eliminar, name='extra_eliminar'),
 
-    # Panel - Recetas e Insumos de la Receta
-    path('panel/recetas/', views.lista_recetas, name='lista_recetas'),
+    # Productos - Gestión de recetas
     path('panel/recetas/producto/<int:idproducto>/', views.gestionar_receta, name='gestionar_receta'),
     path('panel/recetas/insumo/eliminar/<int:idrecetainsumo>/', views.eliminar_insumo_receta, name='eliminar_insumo_receta'),
 
-    # Panel - Pedidos / Tickets (Nuevas rutas añadidas para solucionar el error)
+    # Panel - Pedidos / Tickets
     path('panel/pedidos/<int:idpedido>/ticket/', views.ver_ticket, name='ver_ticket'),
     path('panel/pedidos/<int:idpedido>/imprimir/', views.imprimir_ticket, name='imprimir_ticket'),
     path('panel/pedidos/<int:idpedido>/estado/', views.cambiar_estado_pedido, name='cambiar_estado_pedido'),

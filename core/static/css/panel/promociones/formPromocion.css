@@ -1,0 +1,678 @@
+/* =========================================================
+FORMULARIO DE PROMOCIÓN
+ZONA-BURGER
+========================================================= */
+
+.promocion-form-page {
+width: 100%;
+max-width: 800px;
+margin: 0 auto;
+color: #fff;
+}
+
+/* =========================================================
+VOLVER
+========================================================= */
+
+.promocion-form-back {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+
+
+margin-bottom: 20px;
+padding: 7px 11px;
+
+border: 1px solid #303030;
+border-radius: 7px;
+
+background: #191919;
+color: #858585;
+
+text-decoration: none;
+font-size: .84rem;
+
+transition:
+    color .2s ease,
+    background .2s ease,
+    border-color .2s ease,
+    transform .2s ease;
+
+
+}
+
+.promocion-form-back:hover {
+color: #dc2626;
+background: rgba(220, 38, 38, .06);
+border-color: rgba(220, 38, 38, .35);
+
+
+transform: translateX(-2px);
+
+
+}
+
+.promocion-form-back svg {
+width: 16px;
+height: 16px;
+
+
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+
+
+}
+
+/* =========================================================
+HEADER
+========================================================= */
+
+.promocion-form-header {
+display: flex;
+align-items: center;
+gap: 15px;
+
+
+margin-bottom: 22px;
+
+
+}
+
+.promocion-form-icon {
+width: 49px;
+height: 49px;
+
+
+flex-shrink: 0;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+background: rgba(220, 38, 38, .10);
+border: 1px solid rgba(220, 38, 38, .30);
+border-radius: 8px;
+
+color: #dc2626;
+
+
+}
+
+.promocion-form-icon svg {
+width: 25px;
+height: 25px;
+
+
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+
+
+}
+
+.promocion-form-header-text {
+min-width: 0;
+}
+
+.promocion-form-header h1 {
+margin: 0 0 5px;
+
+
+color: #f0f0f0;
+
+font-size: 1.35rem;
+font-weight: 600;
+line-height: 1.2;
+
+
+}
+
+.promocion-form-header p {
+margin: 0;
+
+
+color: #858585;
+
+font-size: .84rem;
+line-height: 1.4;
+
+
+}
+
+/* =========================================================
+ERROR
+========================================================= */
+
+.promocion-error {
+display: flex;
+align-items: flex-start;
+gap: 11px;
+
+
+margin-bottom: 20px;
+padding: 14px;
+
+background: rgba(220, 38, 38, .07);
+border: 1px solid rgba(220, 38, 38, .23);
+border-radius: 7px;
+
+
+}
+
+.promocion-error-icon {
+flex-shrink: 0;
+margin-top: 1px;
+
+
+color: #dc2626;
+
+
+}
+
+.promocion-error-icon svg {
+width: 19px;
+height: 19px;
+
+
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+
+
+}
+
+.promocion-error-content {
+min-width: 0;
+}
+
+.promocion-error strong {
+display: block;
+
+
+margin-bottom: 4px;
+
+color: #dc2626;
+
+font-size: .84rem;
+font-weight: 700;
+
+
+}
+
+.promocion-error p {
+margin: 0;
+
+
+color: #aaa;
+
+font-size: .84rem;
+line-height: 1.5;
+
+
+}
+
+/* =========================================================
+CARD
+========================================================= */
+
+.promocion-form-card {
+background: #181818;
+
+
+border: 1px solid #303030;
+border-radius: 10px;
+
+overflow: hidden;
+
+box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+
+
+}
+
+/* =========================================================
+FORMULARIO
+========================================================= */
+
+.promocion-form {
+padding: 27px;
+}
+
+/* =========================================================
+TÍTULOS DE SECCIÓN
+========================================================= */
+
+.promocion-form-section-title {
+display: flex;
+align-items: center;
+gap: 9px;
+
+
+margin: 0 0 20px;
+padding-bottom: 13px;
+
+border-bottom: 1px solid #303030;
+
+color: #d8d8d8;
+
+font-size: .88rem;
+font-weight: 700;
+
+text-transform: uppercase;
+letter-spacing: .45px;
+
+
+}
+
+.promocion-form-section-title svg {
+flex-shrink: 0;
+
+
+color: #dc2626;
+
+
+}
+
+.promocion-form-section-secondary {
+margin-top: 27px;
+}
+
+/* =========================================================
+GRUPOS
+========================================================= */
+
+.promocion-form-group {
+margin-bottom: 20px;
+}
+
+/* =========================================================
+LABELS
+========================================================= */
+
+.promocion-form-label {
+display: block;
+
+
+margin-bottom: 7px;
+
+color: #ddd;
+
+font-size: .84rem;
+font-weight: 600;
+
+
+}
+
+/* =========================================================
+INPUTS
+========================================================= */
+
+.promocion-form-input,
+.promocion-form-select {
+width: 100%;
+min-height: 40px;
+
+
+box-sizing: border-box;
+
+padding: 9px 12px;
+
+background: #202020;
+
+border: 1px solid #3a3a3a;
+border-radius: 6px;
+
+color: #f0f0f0;
+
+font-family: inherit;
+font-size: .86rem;
+
+outline: none;
+
+transition:
+    background .2s ease,
+    border-color .2s ease,
+    box-shadow .2s ease;
+
+
+}
+
+.promocion-form-input:hover,
+.promocion-form-select:hover {
+border-color: #4a4a4a;
+}
+
+.promocion-form-input:focus,
+.promocion-form-select:focus {
+background: #222;
+
+
+border-color: #dc2626;
+
+box-shadow: 0 0 0 2px rgba(220, 38, 38, .08);
+
+
+}
+
+.promocion-form-input::placeholder {
+color: #626262;
+}
+
+.promocion-form-select {
+cursor: pointer;
+}
+
+.promocion-form-select option {
+background: #202020;
+color: #f0f0f0;
+}
+
+.promocion-form-input[type="date"] {
+color-scheme: dark;
+}
+
+/* =========================================================
+AYUDA
+========================================================= */
+
+.promocion-form-help {
+margin: 6px 0 0;
+
+
+color: #626262;
+
+font-size: .74rem;
+line-height: 1.4;
+
+
+}
+
+/* =========================================================
+FECHAS
+========================================================= */
+
+.promocion-form-row {
+display: grid;
+
+
+grid-template-columns: 1fr 1fr;
+
+gap: 15px;
+
+margin-bottom: 20px;
+
+
+}
+
+/* =========================================================
+CHECKBOX
+========================================================= */
+
+.promocion-checkbox-box {
+margin-bottom: 25px;
+padding: 13px 15px;
+
+
+background: #202020;
+
+border: 1px solid #333;
+border-radius: 7px;
+
+
+}
+
+.promocion-checkbox-label {
+display: flex;
+align-items: center;
+gap: 10px;
+
+
+margin: 0;
+
+color: #ddd;
+
+font-size: .84rem;
+font-weight: 600;
+
+cursor: pointer;
+
+
+}
+
+.promocion-checkbox {
+width: 17px;
+height: 17px;
+
+
+margin: 0;
+
+accent-color: #dc2626;
+
+cursor: pointer;
+
+
+}
+
+/* =========================================================
+ACCIONES
+========================================================= */
+
+.promocion-form-actions {
+display: flex;
+justify-content: flex-end;
+align-items: center;
+
+
+gap: 9px;
+
+padding-top: 21px;
+
+border-top: 1px solid #303030;
+
+
+}
+
+/* =========================================================
+BOTONES
+========================================================= */
+
+.promocion-action-btn {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+
+
+gap: 7px;
+
+min-height: 38px;
+
+box-sizing: border-box;
+
+padding: 9px 16px;
+
+border-radius: 6px;
+
+font-size: .82rem;
+font-weight: 700;
+
+text-decoration: none;
+
+cursor: pointer;
+
+transition:
+    background .2s ease,
+    border-color .2s ease,
+    color .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease;
+
+
+}
+
+.promocion-action-btn svg {
+width: 16px;
+height: 16px;
+
+
+fill: none;
+stroke: currentColor;
+stroke-width: 1.8;
+stroke-linecap: round;
+stroke-linejoin: round;
+
+
+}
+
+/* =========================================================
+CANCELAR
+========================================================= */
+
+.promocion-cancelar {
+background: #222;
+
+
+border: 1px solid #3a3a3a;
+
+color: #aaa;
+
+
+}
+
+.promocion-cancelar:hover {
+background: #292929;
+
+
+border-color: #4a4a4a;
+
+color: #eee;
+
+transform: translateY(-1px);
+
+
+}
+
+/* =========================================================
+GUARDAR
+========================================================= */
+
+.promocion-guardar {
+background: #dc2626;
+
+
+border: 1px solid #dc2626;
+
+color: #fff;
+
+box-shadow: 0 5px 14px rgba(220, 38, 38, .10);
+
+
+}
+
+.promocion-guardar:hover {
+background: #ef3030;
+
+
+border-color: #ef3030;
+
+color: #fff;
+
+transform: translateY(-1px);
+
+box-shadow: 0 7px 18px rgba(220, 38, 38, .16);
+
+
+}
+
+/* =========================================================
+RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+
+
+.promocion-form-page {
+    max-width: none;
+}
+
+.promocion-form {
+    padding: 20px;
+}
+
+.promocion-form-header {
+    gap: 12px;
+}
+
+.promocion-form-icon {
+    width: 44px;
+    height: 44px;
+}
+
+.promocion-form-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.promocion-form-header h1 {
+    font-size: 1.18rem;
+}
+
+.promocion-form-header p {
+    font-size: .79rem;
+}
+
+.promocion-form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+}
+
+.promocion-form-actions {
+    flex-direction: column-reverse;
+}
+
+.promocion-action-btn {
+    width: 100%;
+}
+
+
+}
+
+@media (max-width: 420px) {
+
+
+.promocion-form {
+    padding: 18px;
+}
+
+.promocion-form-header {
+    align-items: flex-start;
+}
+
+.promocion-form-header h1 {
+    font-size: 1.1rem;
+}
+
+.promocion-form-header p {
+    font-size: .77rem;
+}
+
+.promocion-error {
+    padding: 12px;
+}
+
+.promocion-form-input,
+.promocion-form-select {
+    font-size: .84rem;
+}
+
+.promocion-form-help {
+    font-size: .72rem;
+}
+
+
+}

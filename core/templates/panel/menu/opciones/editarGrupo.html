@@ -1,338 +1,11 @@
 {% extends 'panel/base.html' %}
+{% load static %}
+
 {% block title %}Zona-Burger | Editar grupo de opciones{% endblock %}
 
 {% block content %}
 
-<style>
-    .grupo-edit-page {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .grupo-edit-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: #aaa;
-        text-decoration: none;
-        font-size: 0.9rem;
-        margin-bottom: 18px;
-        transition: color 0.2s;
-    }
-
-    .grupo-edit-back:hover {
-        color: #fff;
-    }
-
-    .grupo-edit-card {
-        background: #181818;
-        border: 1px solid #333;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .grupo-edit-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 24px 28px;
-        border-bottom: 1px solid #333;
-    }
-
-    .grupo-edit-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 8px;
-        background: rgba(52, 152, 219, 0.15);
-        border: 1px solid rgba(52, 152, 219, 0.35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #3498db;
-        flex-shrink: 0;
-    }
-
-    .grupo-edit-header-text h1 {
-        margin: 0 0 5px;
-        color: #fff;
-        font-size: 1.45rem;
-    }
-
-    .grupo-edit-header-text p {
-        margin: 0;
-        color: #888;
-        font-size: 0.9rem;
-    }
-
-    .grupo-edit-body {
-        padding: 28px;
-    }
-
-    .grupo-edit-errors {
-        background: rgba(255, 107, 107, 0.12);
-        border: 1px solid rgba(255, 107, 107, 0.45);
-        padding: 13px 16px;
-        border-radius: 7px;
-        margin-bottom: 22px;
-    }
-
-    .grupo-edit-errors ul {
-        color: #ff6b6b;
-        margin: 0;
-        padding-left: 20px;
-        font-size: 0.9rem;
-    }
-
-    .grupo-edit-field {
-        margin-bottom: 20px;
-    }
-
-    .grupo-edit-label {
-        display: block;
-        margin-bottom: 7px;
-        color: #ccc;
-        font-weight: 500;
-        font-size: 0.9rem;
-    }
-
-    .grupo-edit-input {
-        width: 100%;
-        padding: 10px 11px;
-        background: #222;
-        border: 1px solid #444;
-        color: #fff;
-        border-radius: 5px;
-        box-sizing: border-box;
-        font-size: 0.9rem;
-    }
-
-    .grupo-edit-input:focus {
-        outline: none;
-        border-color: #3498db;
-    }
-
-    .grupo-edit-row {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 24px;
-    }
-
-    .grupo-edit-row .grupo-edit-field {
-        flex: 1;
-        margin-bottom: 0;
-    }
-
-    .grupo-edit-section {
-        border-top: 1px solid #333;
-        padding-top: 25px;
-        margin-top: 25px;
-    }
-
-    .grupo-edit-section-header {
-        margin-bottom: 16px;
-    }
-
-    .grupo-edit-section-title {
-        margin: 0;
-        color: #ddd;
-        font-size: 1.05rem;
-    }
-
-    .grupo-edit-section-description {
-        color: #777;
-        font-size: 0.8rem;
-        margin: 4px 0 0;
-    }
-
-    .grupo-edit-table-wrapper {
-        overflow-x: auto;
-        border: 1px solid #333;
-        border-radius: 7px;
-    }
-
-    .grupo-edit-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 600px;
-    }
-
-    .grupo-edit-table th {
-        padding: 11px 12px;
-        text-align: left;
-        color: #888;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border-bottom: 1px solid #333;
-        background: #1d1d1d;
-    }
-
-    .grupo-edit-table th:last-child {
-        text-align: center;
-    }
-
-    .grupo-edit-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #252525;
-    }
-
-    .grupo-edit-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .grupo-edit-table .grupo-edit-input {
-        padding: 8px 9px;
-    }
-
-    /* Eliminar opción existente */
-    .grupo-delete-option {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-
-    .grupo-delete-option input {
-        display: none;
-    }
-
-    .grupo-delete-option span {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 7px 10px;
-        border: 1px solid #444;
-        border-radius: 5px;
-        background: #252525;
-        color: #999;
-        font-size: 0.8rem;
-        transition: all 0.2s;
-    }
-
-    .grupo-delete-option span:hover {
-        background: rgba(255, 71, 87, 0.12);
-        border-color: #ff4757;
-        color: #ff4757;
-    }
-
-    .grupo-delete-option input:checked + span {
-        background: rgba(255, 71, 87, 0.15);
-        border-color: #ff4757;
-        color: #ff4757;
-    }
-
-    /* Botón agregar */
-    .grupo-add-option {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        background: #2b2b2b;
-        color: #3498db;
-        border: 1px solid #444;
-        padding: 8px 14px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-        margin-top: 14px;
-    }
-
-    .grupo-add-option:hover {
-        background: #333;
-        border-color: #3498db;
-    }
-
-    /* Botón quitar opción nueva */
-    .grupo-remove-new-option {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 7px 10px;
-        background: #252525;
-        border: 1px solid #444;
-        border-radius: 5px;
-        color: #999;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .grupo-remove-new-option:hover {
-        background: rgba(255, 71, 87, 0.12);
-        border-color: #ff4757;
-        color: #ff4757;
-    }
-
-    .grupo-edit-actions {
-        display: flex;
-        gap: 12px;
-        margin-top: 28px;
-        padding-top: 22px;
-        border-top: 1px solid #333;
-        flex-wrap: wrap;
-    }
-
-    .grupo-edit-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 20px;
-        border-radius: 5px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .grupo-edit-save {
-        background: #00d26a;
-        border: 1px solid #00d26a;
-        color: #000;
-    }
-
-    .grupo-edit-save:hover {
-        background: #00bd5f;
-        border-color: #00bd5f;
-    }
-
-    .grupo-edit-cancel {
-        background: #333;
-        border: 1px solid #444;
-        color: #fff;
-    }
-
-    .grupo-edit-cancel:hover {
-        background: #3d3d3d;
-    }
-
-    @media (max-width: 650px) {
-        .grupo-edit-header,
-        .grupo-edit-body {
-            padding: 20px;
-        }
-
-        .grupo-edit-row {
-            flex-direction: column;
-            gap: 18px;
-        }
-
-        .grupo-edit-row .grupo-edit-field {
-            margin-bottom: 0;
-        }
-
-        .grupo-edit-actions {
-            flex-direction: column;
-        }
-
-        .grupo-edit-btn {
-            width: 100%;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/panel/menu/opciones/editarGrupo.css' %}">
 
 <div class="grupo-edit-page">
 
@@ -503,7 +176,7 @@
                                             >
                                         </td>
 
-                                        <td style="text-align: center;">
+                                        <td class="grupo-edit-action-cell">
 
                                             <label class="grupo-delete-option">
 
@@ -628,7 +301,7 @@ document.getElementById('btn-agregar-opcion').addEventListener('click', function
     const fila = document.createElement('tr');
 
     fila.innerHTML = `
-        <td style="padding: 10px 12px; border-bottom: 1px solid #252525;">
+        <td class="grupo-new-option-cell">
 
             <input
                 type="hidden"
@@ -645,7 +318,7 @@ document.getElementById('btn-agregar-opcion').addEventListener('click', function
 
         </td>
 
-        <td style="padding: 10px 12px; border-bottom: 1px solid #252525;">
+        <td class="grupo-new-option-cell">
 
             <input
                 type="number"
@@ -657,7 +330,7 @@ document.getElementById('btn-agregar-opcion').addEventListener('click', function
 
         </td>
 
-        <td style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #252525;">
+        <td class="grupo-new-option-action-cell">
 
             <button
                 type="button"

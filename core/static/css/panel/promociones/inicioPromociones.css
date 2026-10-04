@@ -1,0 +1,309 @@
+/* =========================================================
+   ZONA-BURGER
+   Inicio de Promociones
+   ========================================================= */
+
+.promociones-page {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.promociones-header {
+    margin-bottom: 30px;
+}
+
+.promociones-kicker {
+    display: block;
+    margin-bottom: 8px;
+    color: #dc2626;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+.promociones-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    color: #fff;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.promociones-header-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.28);
+
+    color: #dc2626;
+}
+
+.promociones-header-description {
+    margin: 8px 0 0 54px;
+
+    color: #888;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.promociones-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+
+/* =========================================================
+   TARJETAS
+   ========================================================= */
+
+.promocion-card {
+    --card-accent: #dc2626;
+
+    position: relative;
+
+    display: block;
+
+    min-height: 190px;
+    padding: 24px;
+
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 10px;
+
+    color: inherit;
+    text-decoration: none;
+
+    overflow: hidden;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.promocion-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 130px;
+    height: 130px;
+
+    right: -45px;
+    bottom: -60px;
+
+    border-radius: 50%;
+
+    background: var(--card-accent);
+    opacity: 0.035;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+.promocion-card:hover {
+    transform: translateY(-3px);
+
+    background: #1b1b1b;
+    border-color: var(--card-accent);
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.22);
+}
+
+.promocion-card:hover::after {
+    opacity: 0.08;
+    transform: scale(1.2);
+}
+
+
+/* =========================================================
+   ACENTOS
+   ========================================================= */
+
+.promocion-card-promociones {
+    --card-accent: #dc2626;
+}
+
+.promocion-card-beneficios {
+    --card-accent: #f87171;
+}
+
+
+/* =========================================================
+   ICONOS
+   ========================================================= */
+
+.promocion-card-icon {
+    width: 50px;
+    height: 50px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 20px;
+
+    border-radius: 8px;
+
+    color: var(--card-accent);
+
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.22);
+}
+
+.promocion-card-beneficios .promocion-card-icon {
+    background: rgba(248, 113, 113, 0.07);
+    border-color: rgba(248, 113, 113, 0.2);
+}
+
+
+/* =========================================================
+   CONTENIDO
+   ========================================================= */
+
+.promocion-card-title {
+    margin: 0 0 7px;
+
+    color: #fff;
+
+    font-size: 1.08rem;
+    font-weight: 600;
+}
+
+.promocion-card-description {
+    max-width: 360px;
+
+    margin: 0;
+
+    color: #888;
+
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   FLECHA
+   ========================================================= */
+
+.promocion-card-arrow {
+    position: absolute;
+
+    top: 24px;
+    right: 24px;
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 6px;
+
+    color: #666;
+    background: #222;
+    border: 1px solid #333;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.promocion-card:hover .promocion-card-arrow {
+    color: var(--card-accent);
+    border-color: var(--card-accent);
+    background: #222;
+
+    transform: translateX(2px);
+}
+
+
+/* =========================================================
+   ETIQUETA INFERIOR
+   ========================================================= */
+
+.promocion-card-label {
+    position: absolute;
+
+    right: 24px;
+    bottom: 22px;
+
+    color: #555;
+
+    font-size: 0.7rem;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .promociones-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .promociones-header-description {
+        margin-left: 0;
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    .promociones-header-title {
+        font-size: 1.5rem;
+    }
+
+    .promociones-header-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .promocion-card {
+        min-height: auto;
+        padding: 20px;
+    }
+
+    .promocion-card-arrow {
+        top: 20px;
+        right: 20px;
+    }
+
+    .promocion-card-label {
+        display: none;
+    }
+}
