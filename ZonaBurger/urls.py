@@ -66,10 +66,7 @@ urlpatterns = [
     path('panel/productos/<int:idproducto>/eliminar/', views.producto_eliminar, name='producto_eliminar'),
 
     # Menú - Extras
-    path('panel/extras/', views.extra_lista, name='extra_lista'),
-    path('panel/extras/crear/', views.extra_crear, name='extra_crear'),
-    path('panel/extras/<int:idextra>/editar/', views.extra_editar, name='panel_extra_editar'),
-    path('panel/extras/<int:idextra>/eliminar/', views.extra_eliminar, name='extra_eliminar'),
+    path('panel/extras/', views.extra_lista, name='extra_lista'), path('panel/extras/crear/', views.extra_crear, name='extra_crear'), path('panel/extras/<int:idextra>/editar/', views.extra_editar, name='extra_editar'), path('panel/extras/<int:idextra>/eliminar/', views.extra_eliminar, name='extra_eliminar'),
 
     # Productos - Gestión de recetas
     path('panel/recetas/producto/<int:idproducto>/', views.gestionar_receta, name='gestionar_receta'),
