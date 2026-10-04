@@ -24,6 +24,7 @@ urlpatterns = [
     # Checkout / Pedidos
     path('checkout/', views.procesar_checkout, name='procesar_checkout'),
     path('pedido-exitoso/', views.pedido_exitoso, name='pedido_exitoso'),
+    path('aplicar-promocion/', views.aplicar_promocion, name='aplicar_promocion'),
 
     # Promociones
     path('panel/promociones/', views.promociones_panel, name='promociones_panel'),

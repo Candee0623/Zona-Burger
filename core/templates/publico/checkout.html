@@ -69,6 +69,7 @@
 
         </div>
 
+
         <div class="required-info">
 
             <i class="fa-solid fa-circle-info"></i>
@@ -82,6 +83,7 @@
             </div>
 
         </div>
+
 
         <div
             id="restore-notice"
@@ -115,6 +117,7 @@
 
         </div>
 
+
         <form
             id="checkout-form"
             method="POST"
@@ -123,6 +126,7 @@
         >
 
             {% csrf_token %}
+
 
             <div
                 id="validation-summary"
@@ -145,9 +149,15 @@
 
             </div>
 
+
             <div class="checkout-grid">
 
                 <div>
+
+
+                    <!-- ================================================= -->
+                    <!-- DATOS PERSONALES -->
+                    <!-- ================================================= -->
 
                     <section class="checkout-card">
 
@@ -161,7 +171,9 @@
 
                         </div>
 
+
                         <div class="form-grid">
+
 
                             <div class="form-group">
 
@@ -199,6 +211,7 @@
 
                             </div>
 
+
                             <div class="form-group">
 
                                 <label for="apellido">
@@ -234,6 +247,7 @@
                                 {% endif %}
 
                             </div>
+
 
                             <div class="form-group full">
 
@@ -276,6 +290,10 @@
                     </section>
 
 
+                    <!-- ================================================= -->
+                    <!-- DIRECCIÓN -->
+                    <!-- ================================================= -->
+
                     <section class="checkout-card">
 
                         <div class="card-title">
@@ -288,7 +306,9 @@
 
                         </div>
 
+
                         <div class="form-grid">
+
 
                             <div class="form-group">
 
@@ -326,6 +346,7 @@
 
                             </div>
 
+
                             <div class="form-group">
 
                                 <label for="numero">
@@ -362,6 +383,7 @@
 
                             </div>
 
+
                             <div class="form-group">
 
                                 <label for="piso">
@@ -382,6 +404,7 @@
                                 >
 
                             </div>
+
 
                             <div class="form-group">
 
@@ -412,10 +435,12 @@
 
                         </div>
 
+
                         <div
                             id="map"
                             aria-label="Mapa de ubicación"
                         ></div>
+
 
                         <div class="map-actions">
 
@@ -433,6 +458,7 @@
 
                         </div>
 
+
                         <div
                             id="map-status"
                             class="map-status"
@@ -440,6 +466,10 @@
 
                     </section>
 
+
+                    <!-- ================================================= -->
+                    <!-- HORARIO -->
+                    <!-- ================================================= -->
 
                     <section class="checkout-card">
 
@@ -452,6 +482,7 @@
                             </h3>
 
                         </div>
+
 
                         <div class="form-group">
 
@@ -482,6 +513,7 @@
 
                             {% endif %}
 
+
                             <div class="schedule-info">
 
                                 <i class="fa-solid fa-circle-info"></i>
@@ -500,6 +532,10 @@
                     </section>
 
 
+                    <!-- ================================================= -->
+                    <!-- MÉTODO DE PAGO -->
+                    <!-- ================================================= -->
+
                     <section class="checkout-card">
 
                         <div class="card-title">
@@ -511,6 +547,7 @@
                             </h3>
 
                         </div>
+
 
                         <div class="payment-options">
 
@@ -528,6 +565,7 @@
                                         {% endif %}
                                         required
                                     >
+
 
                                     <label
                                         for="pago-{{ medio.idmediopago }}"
@@ -563,6 +601,7 @@
 
                                         {% endif %}
 
+
                                         <span>
                                             {{ medio.nombremetodo }}
                                         </span>
@@ -581,6 +620,7 @@
 
                         </div>
 
+
                         <div
                             id="payment-required-message"
                             class="payment-required-message hidden"
@@ -593,6 +633,7 @@
                             </span>
 
                         </div>
+
 
                         {% if errores.medio_pago %}
 
@@ -609,6 +650,10 @@
                     </section>
 
 
+                    <!-- ================================================= -->
+                    <!-- PROMOCIÓN -->
+                    <!-- ================================================= -->
+
                     <section class="checkout-card">
 
                         <div class="card-title">
@@ -621,6 +666,7 @@
 
                         </div>
 
+
                         <div class="promo-box">
 
                             <label for="codigo_promocion">
@@ -630,6 +676,7 @@
                                 Palabra clave promocional
 
                             </label>
+
 
                             <div class="promo-input-row">
 
@@ -642,6 +689,7 @@
                                     placeholder="Ingresá tu código"
                                 >
 
+
                                 <button
                                     type="button"
                                     id="btn-aplicar-promo"
@@ -651,9 +699,11 @@
 
                             </div>
 
+
                             <div
                                 id="promo-status"
                                 class="promo-status"
+                                aria-live="polite"
                             >
 
                                 {% if errores.codigo_promocion %}
@@ -663,6 +713,7 @@
                             </div>
 
                         </div>
+
 
                         <div class="form-group promo-comment-group">
 
@@ -688,6 +739,10 @@
                 </div>
 
 
+                <!-- ===================================================== -->
+                <!-- RESUMEN -->
+                <!-- ===================================================== -->
+
                 <aside class="checkout-card summary-card">
 
                     <div class="card-title">
@@ -699,6 +754,7 @@
                         </h3>
 
                     </div>
+
 
                     <div class="summary-items">
 
@@ -714,6 +770,7 @@
                                         {{ item.nombre }}
 
                                     </div>
+
 
                                     {% if item.detalles %}
 
@@ -731,8 +788,11 @@
 
                                 </div>
 
+
                                 <div class="summary-item-price">
+
                                     ${{ item.subtotal }}
+
                                 </div>
 
                             </div>
@@ -747,7 +807,9 @@
 
                     </div>
 
+
                     <div class="summary-totals">
+
 
                         <div class="summary-row">
 
@@ -761,6 +823,7 @@
 
                         </div>
 
+
                         <div class="summary-row">
 
                             <span>
@@ -773,39 +836,37 @@
 
                         </div>
 
-                        {% if descuento_promocion %}
 
-                            <div class="summary-row discount">
+                        <!--
+                            IMPORTANTE:
 
-                                <span>
-                                    Descuento
-                                </span>
+                            Estos IDs SIEMPRE existen.
 
-                                <strong>
-                                    -${{ descuento_promocion }}
-                                </strong>
+                            Antes solamente existían cuando no había
+                            descuento, por lo que JavaScript encontraba
+                            null cuando ya había una promoción.
+                        -->
 
-                            </div>
-
-                        {% else %}
-
-                            <div
-                                class="summary-row discount"
-                                id="descuento-row"
+                        <div
+                            class="summary-row discount"
+                            id="descuento-row"
+                            {% if not descuento_promocion %}
                                 style="display:none;"
-                            >
+                            {% endif %}
+                        >
 
-                                <span>
-                                    Descuento
-                                </span>
+                            <span>
+                                Descuento
+                            </span>
 
-                                <strong id="descuento-valor">
-                                    -$0.00
-                                </strong>
+                            <strong id="descuento-valor">
 
-                            </div>
+                                -${{ descuento_promocion|default:"0.00" }}
 
-                        {% endif %}
+                            </strong>
+
+                        </div>
+
 
                         <div class="summary-total">
 
@@ -814,12 +875,15 @@
                             </span>
 
                             <strong id="total-estimado">
+
                                 ${{ total_estimado|floatformat:"2" }}
+
                             </strong>
 
                         </div>
 
                     </div>
+
 
                     <div class="checkout-actions">
 
@@ -833,6 +897,7 @@
                             Confirmar pedido
 
                         </button>
+
 
                         <a
                             href="{% url 'ver_carrito' %}"
@@ -857,11 +922,14 @@
 
 </main>
 
+
 <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ></script>
 
+
 {{ zonas_entrega|json_script:"zonas-data" }}
+
 
 <script>
 
@@ -869,10 +937,21 @@ document.addEventListener(
     'DOMContentLoaded',
     function () {
 
+        /*
+         * ============================================================
+         * ELEMENTOS
+         * ============================================================
+         */
+
         const form =
             document.getElementById(
                 'checkout-form'
             );
+
+        if (!form) {
+            return;
+        }
+
 
         const calleInput =
             document.getElementById(
@@ -964,25 +1043,44 @@ document.addEventListener(
                 'clear-saved-data'
             );
 
+
+        /*
+         * ============================================================
+         * VALORES INICIALES
+         * ============================================================
+         */
+
         const subtotal =
             parseFloat(
                 '{{ total_carrito|floatformat:"2" }}'
             ) || 0;
+
 
         let descuento =
             parseFloat(
                 '{{ descuento_promocion|default:"0.00" }}'
             ) || 0;
 
+
         let costoEnvio = 0;
 
+
         let zonas = [];
+
 
         const STORAGE_KEY =
             'checkout_datos_temporales';
 
+
         const tieneDatosPrevios =
-            {{ hay_datos_previos|yesno:"true,false" }};
+    '{{ hay_datos_previos|yesno:"true,false" }}' === 'true';
+
+
+        /*
+         * ============================================================
+         * ZONAS DE ENTREGA
+         * ============================================================
+         */
 
         try {
 
@@ -991,10 +1089,14 @@ document.addEventListener(
                     'zonas-data'
                 );
 
-            zonas =
-                JSON.parse(
-                    zonasElement.textContent
-                ) || [];
+            if (zonasElement) {
+
+                zonas =
+                    JSON.parse(
+                        zonasElement.textContent
+                    ) || [];
+
+            }
 
         } catch (error) {
 
@@ -1006,6 +1108,13 @@ document.addEventListener(
             );
 
         }
+
+
+        /*
+         * ============================================================
+         * UTILIDADES
+         * ============================================================
+         */
 
         function normalizarTexto(
             texto
@@ -1024,6 +1133,94 @@ document.addEventListener(
 
         }
 
+
+        /*
+         * Convierte un monto que puede venir como número
+         * o como texto ("1500.00", "1.500,00", "1,500.00")
+         * en un número válido de JavaScript.
+         */
+
+        function parsearMonto(
+            valor
+        ) {
+
+            if (
+                typeof valor === 'number'
+            ) {
+
+                return valor;
+
+            }
+
+
+            let s =
+                String(
+                    valor ?? ''
+                )
+                    .trim()
+                    .replace(
+                        /[^0-9.,-]/g,
+                        ''
+                    );
+
+
+            if (
+                s.includes(',')
+                &&
+                s.includes('.')
+            ) {
+
+                if (
+                    s.lastIndexOf(',')
+                    >
+                    s.lastIndexOf('.')
+                ) {
+
+                    s =
+                        s
+                            .replace(
+                                /\./g,
+                                ''
+                            )
+                            .replace(
+                                ',',
+                                '.'
+                            );
+
+                } else {
+
+                    s =
+                        s.replace(
+                            /,/g,
+                            ''
+                        );
+
+                }
+
+            } else if (
+                s.includes(',')
+            ) {
+
+                s =
+                    s.replace(
+                        ',',
+                        '.'
+                    );
+
+            }
+
+
+            return parseFloat(s) || 0;
+
+        }
+
+
+        /*
+         * ============================================================
+         * ACTUALIZAR TOTAL
+         * ============================================================
+         */
+
         function actualizarTotal() {
 
             const total =
@@ -1034,24 +1231,33 @@ document.addEventListener(
                     - descuento
                 );
 
-            totalElement.textContent =
-                '$' +
-                total.toFixed(2);
 
-            if (
-                costoEnvio === 0
-            ) {
+            if (totalElement) {
 
-                costoEnvioElement.textContent =
-                    'Envío gratis';
-
-            } else {
-
-                costoEnvioElement.textContent =
+                totalElement.textContent =
                     '$' +
-                    costoEnvio.toFixed(2);
+                    total.toFixed(2);
 
             }
+
+
+            if (costoEnvioElement) {
+
+                if (costoEnvio === 0) {
+
+                    costoEnvioElement.textContent =
+                        'Envío gratis';
+
+                } else {
+
+                    costoEnvioElement.textContent =
+                        '$' +
+                        costoEnvio.toFixed(2);
+
+                }
+
+            }
+
 
             if (
                 descuento > 0
@@ -1061,9 +1267,14 @@ document.addEventListener(
                 descuentoRow.style.display =
                     'flex';
 
-                descuentoValor.textContent =
-                    '-$' +
-                    descuento.toFixed(2);
+
+                if (descuentoValor) {
+
+                    descuentoValor.textContent =
+                        '-$' +
+                        descuento.toFixed(2);
+
+                }
 
             } else if (
                 descuentoRow
@@ -1072,9 +1283,24 @@ document.addEventListener(
                 descuentoRow.style.display =
                     'none';
 
+
+                if (descuentoValor) {
+
+                    descuentoValor.textContent =
+                        '-$0.00';
+
+                }
+
             }
 
         }
+
+
+        /*
+         * ============================================================
+         * APLICAR ZONA DE ENTREGA
+         * ============================================================
+         */
 
         function aplicarZona(
             localidad
@@ -1085,6 +1311,7 @@ document.addEventListener(
                     localidad
                 );
 
+
             const zona =
                 zonas.find(
                     function (item) {
@@ -1092,19 +1319,25 @@ document.addEventListener(
                         return (
                             normalizarTexto(
                                 item.nombre
-                            )
-                            === buscada
+                            ) === buscada
                         );
 
                     }
                 );
 
+
             if (!zona) {
 
                 costoEnvio = 0;
 
-                costoEnvioElement.textContent =
-                    'A coordinar';
+
+                if (costoEnvioElement) {
+
+                    costoEnvioElement.textContent =
+                        'A coordinar';
+
+                }
+
 
                 actualizarTotal();
 
@@ -1112,23 +1345,35 @@ document.addEventListener(
 
             }
 
+
             costoEnvio =
                 Number(
                     zona.costoenvio
                 ) || 0;
 
+
             actualizarTotal();
 
         }
 
+
+        /*
+         * ============================================================
+         * MAPA
+         * ============================================================
+         */
+
         const mapa =
-            L.map('map').setView(
+            L.map(
+                'map'
+            ).setView(
                 [
                     -34.6037,
                     -58.3816
                 ],
                 13
             );
+
 
         L.tileLayer(
             'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
@@ -1137,7 +1382,10 @@ document.addEventListener(
                 attribution:
                     'Tiles &copy; Esri'
             }
-        ).addTo(mapa);
+        ).addTo(
+            mapa
+        );
+
 
         let marcador =
             L.marker(
@@ -1148,7 +1396,10 @@ document.addEventListener(
                 {
                     draggable: true
                 }
-            ).addTo(mapa);
+            ).addTo(
+                mapa
+            );
+
 
         setTimeout(
             function () {
@@ -1159,6 +1410,7 @@ document.addEventListener(
             300
         );
 
+
         setTimeout(
             function () {
 
@@ -1168,16 +1420,29 @@ document.addEventListener(
             1000
         );
 
+
+        /*
+         * ============================================================
+         * BUSCAR DIRECCIÓN
+         * ============================================================
+         */
+
         async function buscarDireccion(
             direccion
         ) {
 
-            if (!direccion.trim()) {
+            if (
+                !direccion.trim()
+            ) {
+
                 return;
+
             }
+
 
             mapStatus.textContent =
                 'Buscando ubicación...';
+
 
             try {
 
@@ -1191,19 +1456,25 @@ document.addEventListener(
                         'accept-language': 'es'
                     });
 
+
                 const respuesta =
                     await fetch(
                         url
                     );
 
+
                 if (!respuesta.ok) {
+
                     throw new Error(
                         'Error de búsqueda'
                     );
+
                 }
+
 
                 const resultados =
                     await respuesta.json();
+
 
                 if (
                     !resultados.length
@@ -1213,20 +1484,25 @@ document.addEventListener(
                         'No se encontró esa dirección.';
 
                     return;
+
                 }
+
 
                 const resultado =
                     resultados[0];
+
 
                 const lat =
                     Number(
                         resultado.lat
                     );
 
+
                 const lon =
                     Number(
                         resultado.lon
                     );
+
 
                 mapa.setView(
                     [
@@ -1236,6 +1512,7 @@ document.addEventListener(
                     17
                 );
 
+
                 marcador.setLatLng(
                     [
                         lat,
@@ -1243,13 +1520,16 @@ document.addEventListener(
                     ]
                 );
 
+
                 actualizarDireccionDesdeMapa(
                     lat,
                     lon
                 );
 
+
                 mapStatus.textContent =
                     'Ubicación encontrada.';
+
 
             } catch (error) {
 
@@ -1257,12 +1537,20 @@ document.addEventListener(
                     error
                 );
 
+
                 mapStatus.textContent =
                     'No se pudo buscar la dirección.';
 
             }
 
         }
+
+
+        /*
+         * ============================================================
+         * OBTENER DIRECCIÓN DESDE MAPA
+         * ============================================================
+         */
 
         async function actualizarDireccionDesdeMapa(
             lat,
@@ -1281,22 +1569,29 @@ document.addEventListener(
                         'accept-language': 'es'
                     });
 
+
                 const respuesta =
                     await fetch(
                         url
                     );
 
+
                 if (!respuesta.ok) {
+
                     throw new Error(
                         'Error de geocodificación'
                     );
+
                 }
+
 
                 const resultado =
                     await respuesta.json();
 
+
                 const direccion =
                     resultado.address || {};
+
 
                 const calle =
                     direccion.road ||
@@ -1304,9 +1599,11 @@ document.addEventListener(
                     direccion.residential ||
                     '';
 
+
                 const numero =
                     direccion.house_number ||
                     '';
+
 
                 const localidad =
                     direccion.suburb ||
@@ -1316,12 +1613,14 @@ document.addEventListener(
                     direccion.village ||
                     '';
 
+
                 if (calle) {
 
                     calleInput.value =
                         calle;
 
                 }
+
 
                 if (numero) {
 
@@ -1330,13 +1629,16 @@ document.addEventListener(
 
                 }
 
+
                 if (localidad) {
 
                     localidadInput.value =
                         localidad;
 
+
                     localidadHidden.value =
                         localidad;
+
 
                     aplicarZona(
                         localidad
@@ -1344,7 +1646,9 @@ document.addEventListener(
 
                 }
 
+
                 guardarCheckout();
+
 
             } catch (error) {
 
@@ -1356,6 +1660,13 @@ document.addEventListener(
 
         }
 
+
+        /*
+         * ============================================================
+         * CLICK EN MAPA
+         * ============================================================
+         */
+
         mapa.on(
             'click',
             function (evento) {
@@ -1363,8 +1674,10 @@ document.addEventListener(
                 const lat =
                     evento.latlng.lat;
 
+
                 const lon =
                     evento.latlng.lng;
+
 
                 marcador.setLatLng(
                     [
@@ -1372,6 +1685,7 @@ document.addEventListener(
                         lon
                     ]
                 );
+
 
                 actualizarDireccionDesdeMapa(
                     lat,
@@ -1381,12 +1695,20 @@ document.addEventListener(
             }
         );
 
+
+        /*
+         * ============================================================
+         * MOVER MARCADOR
+         * ============================================================
+         */
+
         marcador.on(
             'dragend',
             function () {
 
                 const posicion =
                     marcador.getLatLng();
+
 
                 actualizarDireccionDesdeMapa(
                     posicion.lat,
@@ -1396,83 +1718,112 @@ document.addEventListener(
             }
         );
 
+
+        /*
+         * ============================================================
+         * UBICACIÓN DEL USUARIO
+         * ============================================================
+         */
+
         const btnUbicacion =
             document.getElementById(
                 'btn-ubicacion'
             );
 
-        btnUbicacion.addEventListener(
-            'click',
-            function () {
 
-                if (
-                    !navigator.geolocation
-                ) {
+        if (btnUbicacion) {
 
-                    mapStatus.textContent =
-                        'Tu navegador no permite obtener la ubicación.';
+            btnUbicacion.addEventListener(
+                'click',
+                function () {
 
-                    return;
-
-                }
-
-                mapStatus.textContent =
-                    'Obteniendo tu ubicación...';
-
-                navigator.geolocation.getCurrentPosition(
-
-                    function (posicion) {
-
-                        const lat =
-                            posicion.coords.latitude;
-
-                        const lon =
-                            posicion.coords.longitude;
-
-                        mapa.setView(
-                            [
-                                lat,
-                                lon
-                            ],
-                            17
-                        );
-
-                        marcador.setLatLng(
-                            [
-                                lat,
-                                lon
-                            ]
-                        );
-
-                        actualizarDireccionDesdeMapa(
-                            lat,
-                            lon
-                        );
+                    if (
+                        !navigator.geolocation
+                    ) {
 
                         mapStatus.textContent =
-                            'Ubicación actual encontrada.';
+                            'Tu navegador no permite obtener la ubicación.';
 
-                    },
+                        return;
 
-                    function () {
-
-                        mapStatus.textContent =
-                            'No se pudo obtener tu ubicación. Revisá los permisos del navegador.';
-
-                    },
-
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
                     }
 
-                );
 
-            }
-        );
+                    mapStatus.textContent =
+                        'Obteniendo tu ubicación...';
+
+
+                    navigator.geolocation.getCurrentPosition(
+
+                        function (posicion) {
+
+                            const lat =
+                                posicion.coords.latitude;
+
+
+                            const lon =
+                                posicion.coords.longitude;
+
+
+                            mapa.setView(
+                                [
+                                    lat,
+                                    lon
+                                ],
+                                17
+                            );
+
+
+                            marcador.setLatLng(
+                                [
+                                    lat,
+                                    lon
+                                ]
+                            );
+
+
+                            actualizarDireccionDesdeMapa(
+                                lat,
+                                lon
+                            );
+
+
+                            mapStatus.textContent =
+                                'Ubicación actual encontrada.';
+
+                        },
+
+
+                        function () {
+
+                            mapStatus.textContent =
+                                'No se pudo obtener tu ubicación. Revisá los permisos del navegador.';
+
+                        },
+
+
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 0
+                        }
+
+                    );
+
+                }
+            );
+
+        }
+
+
+        /*
+         * ============================================================
+         * BÚSQUEDA AUTOMÁTICA DE DIRECCIÓN
+         * ============================================================
+         */
 
         let temporizadorBusqueda = null;
+
 
         function programarBusqueda() {
 
@@ -1480,12 +1831,17 @@ document.addEventListener(
                 temporizadorBusqueda
             );
 
+
             if (
                 !calleInput.value.trim()
-                || !numeroInput.value.trim()
+                ||
+                !numeroInput.value.trim()
             ) {
+
                 return;
+
             }
+
 
             temporizadorBusqueda =
                 setTimeout(
@@ -1497,6 +1853,7 @@ document.addEventListener(
                             + numeroInput.value.trim()
                             + ', Buenos Aires, Argentina';
 
+
                         buscarDireccion(
                             direccion
                         );
@@ -1507,15 +1864,24 @@ document.addEventListener(
 
         }
 
+
         calleInput.addEventListener(
             'input',
             programarBusqueda
         );
 
+
         numeroInput.addEventListener(
             'input',
             programarBusqueda
         );
+
+
+        /*
+         * ============================================================
+         * LOCALIDAD
+         * ============================================================
+         */
 
         localidadInput.addEventListener(
             'input',
@@ -1524,14 +1890,17 @@ document.addEventListener(
                 localidadHidden.value =
                     localidadInput.value;
 
+
                 aplicarZona(
                     localidadInput.value
                 );
+
 
                 guardarCheckout();
 
             }
         );
+
 
         localidadInput.addEventListener(
             'change',
@@ -1540,45 +1909,215 @@ document.addEventListener(
                 localidadHidden.value =
                     localidadInput.value;
 
+
                 aplicarZona(
                     localidadInput.value
                 );
 
+
                 guardarCheckout();
 
             }
         );
 
-        promoButton.addEventListener(
-            'click',
-            function () {
 
-                const codigo =
-                    promoInput.value
-                        .trim()
-                        .toUpperCase();
+        /*
+         * ============================================================
+         * PROMOCIÓN
+         *
+         * El botón consulta Django mediante fetch().
+         * Si la promoción es válida:
+         *
+         *   descuento = parsearMonto(datos.descuento)
+         *
+         * y después:
+         *
+         *   actualizarTotal()
+         *
+         * ============================================================
+         */
 
-                if (!codigo) {
+        if (
+            promoButton
+            && promoInput
+        ) {
+
+            promoButton.addEventListener(
+                'click',
+                async function () {
+
+                    const codigo =
+                        promoInput.value
+                            .trim()
+                            .toUpperCase();
+
+
+                    /*
+                     * Si se borra el código,
+                     * también se elimina el descuento visual.
+                     */
+
+                    if (!codigo) {
+
+                        descuento = 0;
+
+
+                        promoStatus.textContent =
+                            'Ingresá una palabra clave.';
+
+
+                        actualizarTotal();
+
+
+                        guardarCheckout();
+
+
+                        return;
+
+                    }
+
+
+                    promoInput.value =
+                        codigo;
+
+
+                    promoButton.disabled =
+                        true;
+
 
                     promoStatus.textContent =
-                        'Ingresá una palabra clave.';
+                        'Verificando promoción...';
 
-                    return;
+
+                    try {
+
+                        const csrfToken =
+                            form.querySelector(
+                                '[name="csrfmiddlewaretoken"]'
+                            ).value;
+
+
+                        const respuesta =
+                            await fetch(
+                                "{% url 'aplicar_promocion' %}",
+                                {
+                                    method: 'POST',
+
+                                    headers: {
+                                        'Content-Type':
+                                            'application/x-www-form-urlencoded; charset=UTF-8',
+
+                                        'X-CSRFToken':
+                                            csrfToken,
+
+                                        'X-Requested-With':
+                                            'XMLHttpRequest'
+                                    },
+
+                                    body:
+                                        new URLSearchParams({
+                                            codigo_promocion:
+                                                codigo
+                                        })
+                                }
+                            );
+
+
+                        if (!respuesta.ok) {
+
+                            throw new Error(
+                                'HTTP ' +
+                                respuesta.status
+                            );
+
+                        }
+
+
+                        const datos =
+                            await respuesta.json();
+
+
+                        /*
+                         * PROMOCIÓN NO VÁLIDA
+                         */
+
+                        if (!datos.ok) {
+
+                            descuento = 0;
+
+
+                            promoStatus.textContent =
+                                datos.mensaje ||
+                                'La promoción no se puede aplicar.';
+
+
+                            actualizarTotal();
+
+
+                            guardarCheckout();
+
+
+                            return;
+
+                        }
+
+
+                        /*
+                         * PROMOCIÓN VÁLIDA
+                         */
+
+                        descuento =
+                            parsearMonto(
+                                datos.descuento
+                            );
+
+
+                        promoStatus.textContent =
+                            datos.mensaje ||
+                            'Promoción aplicada correctamente.';
+
+
+                        actualizarTotal();
+
+
+                        guardarCheckout();
+
+
+                    } catch (error) {
+
+                        console.error(
+                            'Error al aplicar promoción:',
+                            error
+                        );
+
+
+                        descuento = 0;
+
+
+                        promoStatus.textContent =
+                            'No se pudo verificar la promoción.';
+
+
+                        actualizarTotal();
+
+                    } finally {
+
+                        promoButton.disabled =
+                            false;
+
+                    }
 
                 }
+            );
 
-                promoInput.value =
-                    codigo;
+        }
 
-                guardarCheckout();
 
-                promoStatus.textContent =
-                    'Código ingresado: '
-                    + codigo
-                    + '. Se verificará al confirmar el pedido.';
-
-            }
-        );
+        /*
+         * ============================================================
+         * DATOS PARA LOCALSTORAGE
+         * ============================================================
+         */
 
         const camposGuardar = [
             'nombre',
@@ -1594,9 +2133,11 @@ document.addEventListener(
             'comentario'
         ];
 
+
         function obtenerDatosCheckout() {
 
             const datos = {};
+
 
             camposGuardar.forEach(
                 function (id) {
@@ -1605,6 +2146,7 @@ document.addEventListener(
                         document.getElementById(
                             id
                         );
+
 
                     if (campo) {
 
@@ -1616,19 +2158,23 @@ document.addEventListener(
                 }
             );
 
+
             const pagoSeleccionado =
                 form.querySelector(
                     'input[name="medio_pago"]:checked'
                 );
+
 
             datos.medio_pago =
                 pagoSeleccionado
                     ? pagoSeleccionado.value
                     : '';
 
+
             return datos;
 
         }
+
 
         function guardarCheckout() {
 
@@ -1636,6 +2182,7 @@ document.addEventListener(
 
                 const datos =
                     obtenerDatosCheckout();
+
 
                 localStorage.setItem(
                     STORAGE_KEY,
@@ -1655,13 +2202,17 @@ document.addEventListener(
 
         }
 
+
         function hayDatosGuardados(
             datos
         ) {
 
             if (!datos) {
+
                 return false;
+
             }
+
 
             return Object.keys(
                 datos
@@ -1677,11 +2228,21 @@ document.addEventListener(
 
         }
 
+
+        /*
+         * ============================================================
+         * RECUPERAR DATOS
+         * ============================================================
+         */
+
         function recuperarCheckout() {
 
             if (tieneDatosPrevios) {
+
                 return;
+
             }
+
 
             try {
 
@@ -1690,22 +2251,30 @@ document.addEventListener(
                         STORAGE_KEY
                     );
 
+
                 if (!datosGuardados) {
+
                     return;
+
                 }
+
 
                 const datos =
                     JSON.parse(
                         datosGuardados
                     );
 
+
                 if (
                     !hayDatosGuardados(
                         datos
                     )
                 ) {
+
                     return;
+
                 }
+
 
                 camposGuardar.forEach(
                     function (id) {
@@ -1715,10 +2284,13 @@ document.addEventListener(
                                 id
                             );
 
+
                         if (
                             campo
-                            && datos[id] !== undefined
-                            && datos[id] !== null
+                            &&
+                            datos[id] !== undefined
+                            &&
+                            datos[id] !== null
                         ) {
 
                             campo.value =
@@ -1729,19 +2301,23 @@ document.addEventListener(
                     }
                 );
 
+
                 if (
                     localidadInput
-                    && localidadHidden
+                    &&
+                    localidadHidden
                 ) {
 
                     localidadHidden.value =
                         localidadInput.value;
+
 
                     aplicarZona(
                         localidadInput.value
                     );
 
                 }
+
 
                 if (
                     datos.medio_pago
@@ -1754,6 +2330,7 @@ document.addEventListener(
                             '"]'
                         );
 
+
                     if (radio) {
 
                         radio.checked =
@@ -1763,11 +2340,14 @@ document.addEventListener(
 
                 }
 
+
                 restoreNotice.classList.add(
                     'visible'
                 );
 
+
                 actualizarTotal();
+
 
             } catch (error) {
 
@@ -1780,6 +2360,13 @@ document.addEventListener(
 
         }
 
+
+        /*
+         * ============================================================
+         * GUARDADO AUTOMÁTICO
+         * ============================================================
+         */
+
         camposGuardar.forEach(
             function (id) {
 
@@ -1788,9 +2375,13 @@ document.addEventListener(
                         id
                     );
 
+
                 if (!campo) {
+
                     return;
+
                 }
+
 
                 campo.addEventListener(
                     'input',
@@ -1800,6 +2391,7 @@ document.addEventListener(
 
                     }
                 );
+
 
                 campo.addEventListener(
                     'change',
@@ -1813,10 +2405,18 @@ document.addEventListener(
             }
         );
 
+
+        /*
+         * ============================================================
+         * MÉTODO DE PAGO
+         * ============================================================
+         */
+
         const radiosPago =
             form.querySelectorAll(
                 'input[name="medio_pago"]'
             );
+
 
         radiosPago.forEach(
             function (radio) {
@@ -1835,71 +2435,118 @@ document.addEventListener(
             }
         );
 
-        clearSavedDataButton.addEventListener(
-            'click',
-            function () {
 
-                try {
+        /*
+         * ============================================================
+         * BORRAR DATOS GUARDADOS
+         * ============================================================
+         */
 
-                    localStorage.removeItem(
-                        STORAGE_KEY
+        if (clearSavedDataButton) {
+
+            clearSavedDataButton.addEventListener(
+                'click',
+                function () {
+
+                    try {
+
+                        localStorage.removeItem(
+                            STORAGE_KEY
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            error
+                        );
+
+                    }
+
+
+                    form.reset();
+
+
+                    localidadHidden.value =
+                        '';
+
+
+                    descuento = 0;
+
+
+                    if (promoStatus) {
+
+                        promoStatus.textContent =
+                            '';
+
+                    }
+
+
+                    restoreNotice.classList.remove(
+                        'visible'
                     );
 
-                } catch (error) {
 
-                    console.error(
-                        error
+                    limpiarTodosLosErrores();
+
+
+                    aplicarZona(
+                        ''
                     );
+
+
+                    actualizarTotal();
 
                 }
+            );
 
-                form.reset();
+        }
 
-                localidadHidden.value =
-                    '';
 
-                restoreNotice.classList.remove(
-                    'visible'
-                );
-
-                limpiarTodosLosErrores();
-
-                aplicarZona('');
-
-                actualizarTotal();
-
-            }
-        );
+        /*
+         * ============================================================
+         * LIMPIAR ERROR DE CAMPO
+         * ============================================================
+         */
 
         function limpiarErrorCampo(
             campo
         ) {
 
             if (!campo) {
+
                 return;
+
             }
+
 
             const grupo =
                 campo.closest(
                     '.form-group'
                 );
 
+
             if (!grupo) {
+
                 return;
+
             }
+
 
             grupo.classList.remove(
                 'input-error'
             );
+
 
             const error =
                 grupo.querySelector(
                     '.field-error'
                 );
 
+
             if (
                 error
-                && error.dataset.frontend === 'true'
+                &&
+                error.dataset.frontend === 'true'
             ) {
 
                 error.remove();
@@ -1908,32 +2555,48 @@ document.addEventListener(
 
         }
 
+
+        /*
+         * ============================================================
+         * MOSTRAR ERROR
+         * ============================================================
+         */
+
         function mostrarErrorCampo(
             campo,
             mensaje
         ) {
 
             if (!campo) {
+
                 return;
+
             }
+
 
             const grupo =
                 campo.closest(
                     '.form-group'
                 );
 
+
             if (!grupo) {
+
                 return;
+
             }
+
 
             grupo.classList.add(
                 'input-error'
             );
 
+
             const errorExistente =
                 grupo.querySelector(
                     '.field-error[data-frontend="true"]'
                 );
+
 
             if (errorExistente) {
 
@@ -1945,26 +2608,38 @@ document.addEventListener(
 
             }
 
+
             const error =
                 document.createElement(
                     'div'
                 );
 
+
             error.className =
                 'field-error';
+
 
             error.dataset.frontend =
                 'true';
 
+
             error.innerHTML =
                 '<i class="fa-solid fa-circle-exclamation"></i>'
                 + mensaje;
+
 
             grupo.appendChild(
                 error
             );
 
         }
+
+
+        /*
+         * ============================================================
+         * LIMPIAR TODOS LOS ERRORES
+         * ============================================================
+         */
 
         function limpiarTodosLosErrores() {
 
@@ -1973,6 +2648,7 @@ document.addEventListener(
                     '.form-group'
                 );
 
+
             grupos.forEach(
                 function (grupo) {
 
@@ -1980,10 +2656,12 @@ document.addEventListener(
                         'input-error'
                     );
 
+
                     const errores =
                         grupo.querySelectorAll(
                             '.field-error[data-frontend="true"]'
                         );
+
 
                     errores.forEach(
                         function (error) {
@@ -1996,10 +2674,12 @@ document.addEventListener(
                 }
             );
 
+
             const opcionesPago =
                 form.querySelectorAll(
                     '.payment-option'
                 );
+
 
             opcionesPago.forEach(
                 function (opcion) {
@@ -2011,16 +2691,26 @@ document.addEventListener(
                 }
             );
 
+
             limpiarErrorPago();
+
 
             validationSummary.classList.remove(
                 'visible'
             );
 
+
             validationSummaryList.innerHTML =
                 '';
 
         }
+
+
+        /*
+         * ============================================================
+         * LIMPIAR ERROR DE PAGO
+         * ============================================================
+         */
 
         function limpiarErrorPago() {
 
@@ -2029,6 +2719,7 @@ document.addEventListener(
                     '.payment-option'
                 );
 
+
             opcionesPago.forEach(
                 function (opcion) {
 
@@ -2039,27 +2730,39 @@ document.addEventListener(
                 }
             );
 
+
             paymentRequiredMessage.classList.add(
                 'hidden'
             );
 
         }
 
+
+        /*
+         * ============================================================
+         * VALIDAR CHECKOUT
+         * ============================================================
+         */
+
         function validarCheckout() {
 
             limpiarTodosLosErrores();
 
+
             const errores = [];
+
 
             const nombre =
                 document.getElementById(
                     'nombre'
                 );
 
+
             const apellido =
                 document.getElementById(
                     'apellido'
                 );
+
 
             const telefono =
                 telefonoInput.value
@@ -2067,6 +2770,11 @@ document.addEventListener(
                         /\D/g,
                         ''
                     );
+
+
+            /*
+             * NOMBRE
+             */
 
             if (
                 !nombre.value.trim()
@@ -2077,12 +2785,18 @@ document.addEventListener(
                     'Ingresá tu nombre.'
                 );
 
+
                 errores.push({
                     campo: nombre,
                     mensaje: 'Nombre'
                 });
 
             }
+
+
+            /*
+             * APELLIDO
+             */
 
             if (
                 !apellido.value.trim()
@@ -2093,6 +2807,7 @@ document.addEventListener(
                     'Ingresá tu apellido.'
                 );
 
+
                 errores.push({
                     campo: apellido,
                     mensaje: 'Apellido'
@@ -2100,14 +2815,18 @@ document.addEventListener(
 
             }
 
-            if (
-                !telefono
-            ) {
+
+            /*
+             * TELÉFONO
+             */
+
+            if (!telefono) {
 
                 mostrarErrorCampo(
                     telefonoInput,
                     'Ingresá tu teléfono.'
                 );
+
 
                 errores.push({
                     campo: telefonoInput,
@@ -2115,15 +2834,16 @@ document.addEventListener(
                 });
 
             } else if (
-                !/^\d{8,13}$/.test(
+                !/^\d{8,15}$/.test(
                     telefono
                 )
             ) {
 
                 mostrarErrorCampo(
                     telefonoInput,
-                    'Ingresá un teléfono válido de 8 a 13 números.'
+                    'Ingresá un teléfono válido de 8 a 15 números.'
                 );
+
 
                 errores.push({
                     campo: telefonoInput,
@@ -2137,6 +2857,11 @@ document.addEventListener(
 
             }
 
+
+            /*
+             * CALLE
+             */
+
             if (
                 !calleInput.value.trim()
             ) {
@@ -2146,12 +2871,18 @@ document.addEventListener(
                     'Ingresá la calle.'
                 );
 
+
                 errores.push({
                     campo: calleInput,
                     mensaje: 'Calle'
                 });
 
             }
+
+
+            /*
+             * NÚMERO
+             */
 
             if (
                 !numeroInput.value.trim()
@@ -2162,6 +2893,7 @@ document.addEventListener(
                     'Ingresá el número de la calle.'
                 );
 
+
                 errores.push({
                     campo: numeroInput,
                     mensaje: 'Número de la calle'
@@ -2169,10 +2901,38 @@ document.addEventListener(
 
             }
 
+
+            /*
+             * LOCALIDAD
+             */
+
+            if (
+                !localidadHidden.value.trim()
+            ) {
+
+                mostrarErrorCampo(
+                    localidadInput,
+                    'Ingresá tu localidad.'
+                );
+
+
+                errores.push({
+                    campo: localidadInput,
+                    mensaje: 'Localidad'
+                });
+
+            }
+
+
+            /*
+             * MEDIO DE PAGO
+             */
+
             const pagoSeleccionado =
                 form.querySelector(
                     'input[name="medio_pago"]:checked'
                 );
+
 
             if (
                 !pagoSeleccionado
@@ -2182,6 +2942,7 @@ document.addEventListener(
                     form.querySelectorAll(
                         '.payment-option'
                     );
+
 
                 opcionesPago.forEach(
                     function (opcion) {
@@ -2193,9 +2954,11 @@ document.addEventListener(
                     }
                 );
 
+
                 paymentRequiredMessage.classList.remove(
                     'hidden'
                 );
+
 
                 errores.push({
                     campo: null,
@@ -2204,12 +2967,18 @@ document.addEventListener(
 
             }
 
+
+            /*
+             * MOSTRAR RESUMEN DE ERRORES
+             */
+
             if (
                 errores.length
             ) {
 
                 validationSummaryList.innerHTML =
                     '';
+
 
                 errores.forEach(
                     function (errorItem) {
@@ -2219,8 +2988,10 @@ document.addEventListener(
                                 'li'
                             );
 
+
                         li.textContent =
                             errorItem.mensaje;
+
 
                         if (
                             errorItem.campo
@@ -2231,6 +3002,7 @@ document.addEventListener(
                                 function () {
 
                                     errorItem.campo.focus();
+
 
                                     errorItem.campo.scrollIntoView({
                                         behavior: 'smooth',
@@ -2251,6 +3023,7 @@ document.addEventListener(
                                             '.payment-option'
                                         );
 
+
                                     if (pago) {
 
                                         pago.scrollIntoView({
@@ -2265,6 +3038,7 @@ document.addEventListener(
 
                         }
 
+
                         validationSummaryList.appendChild(
                             li
                         );
@@ -2272,27 +3046,39 @@ document.addEventListener(
                     }
                 );
 
+
                 validationSummary.classList.add(
                     'visible'
                 );
+
 
                 validationSummary.scrollIntoView({
                     behavior: 'smooth',
                     block: 'center'
                 });
 
+
                 return false;
 
             }
+
 
             return true;
 
         }
 
+
+        /*
+         * ============================================================
+         * LIMPIAR ERRORES AL ESCRIBIR
+         * ============================================================
+         */
+
         const campos =
             form.querySelectorAll(
                 'input, select, textarea'
             );
+
 
         campos.forEach(
             function (campo) {
@@ -2308,6 +3094,7 @@ document.addEventListener(
                     }
                 );
 
+
                 campo.addEventListener(
                     'change',
                     function () {
@@ -2322,6 +3109,13 @@ document.addEventListener(
             }
         );
 
+
+        /*
+         * ============================================================
+         * SUBMIT
+         * ============================================================
+         */
+
         form.addEventListener(
             'submit',
             function (evento) {
@@ -2329,33 +3123,48 @@ document.addEventListener(
                 const valido =
                     validarCheckout();
 
+
                 if (!valido) {
 
                     evento.preventDefault();
 
+
                     guardarCheckout();
+
 
                     return;
 
                 }
+
 
                 guardarCheckout();
 
             }
         );
 
+
+        /*
+         * ============================================================
+         * INICIALIZACIÓN
+         * ============================================================
+         */
+
         actualizarTotal();
+
 
         aplicarZona(
             localidadInput.value
         );
 
+
         recuperarCheckout();
+
 
         const pagoInicial =
             form.querySelector(
                 'input[name="medio_pago"]:checked'
             );
+
 
         if (pagoInicial) {
 
@@ -2369,4 +3178,5 @@ document.addEventListener(
 </script>
 
 </body>
+
 </html>

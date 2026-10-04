@@ -471,10 +471,10 @@ class Promocion(models.Model):
     )
 
     tipobeneficio = models.ForeignKey(
-        'TipoBeneficio', 
-        on_delete=models.DO_NOTHING, 
-        db_column='IdTipoBeneficio',  
-        blank=True, 
+        'TipoBeneficio',
+        on_delete=models.DO_NOTHING,
+        db_column='IdTipoBeneficio',
+        blank=True,
         null=True
     )
 
@@ -506,27 +506,40 @@ class Promocion(models.Model):
     )
 
     def __str__(self):
-        return f"{self.palabraclave} ({self.tipo_beneficio})"
+        return f"{self.palabraclave} ({self.tipobeneficio})"
+
+    @property
+    def descripcion_amigable(self):
+        tipo = self.tipobeneficio.codigo if self.tipobeneficio else None
+
+        if tipo == 'DESCUENTO_PORCENTAJE':
+            return (
+                f"Descuento del {int(self.valor)}%"
+                if self.valor
+                else "Descuento porcentual"
+            )
+
+        elif tipo == 'DESCUENTO_FIJO':
+            return (
+                f"Descuento de ${self.valor}"
+                if self.valor
+                else "Descuento fijo"
+            )
+
+        elif tipo == 'PRODUCTO_GRATIS':
+            return "¡Llevá un Producto Gratis!"
+
+        elif tipo == '2x1':
+            return "Promoción 2 x 1"
+
+        elif tipo == '3x2':
+            return "Promoción 3 x 2"
+
+        return str(self.tipobeneficio)
 
     class Meta:
         db_table = 'Promocion'
         managed = False
-
-@property
-def descripcion_amigable(self):
-    tipo = self.tipo_beneficio.nombre  # ajustá al campo real de TipoBeneficio
-
-    if tipo == 'DESCUENTO_PORCENTAJE':
-        return f"Descuento del {int(self.valor)}%" if self.valor else "Descuento porcentual"
-    elif tipo == 'DESCUENTO_FIJO':
-        return f"Descuento de ${self.valor}" if self.valor else "Descuento fijo"
-    elif tipo == 'PRODUCTO_GRATIS':
-        return "¡Llevá un Producto Gratis!"
-    return str(self.tipo_beneficio)
-
-class Meta:
-    db_table = 'Promocion'
-    managed = False
  
  
 class ProductoPromocion(models.Model):

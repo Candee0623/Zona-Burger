@@ -11,6 +11,7 @@ from django.db import transaction
 from django.db.models import Prefetch, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 from django.urls import reverse
 from django.utils import timezone
 
@@ -873,79 +874,135 @@ def crear_promocion(request):
         fechafin = request.POST.get('fechafin') or None
         activo = 1 if request.POST.get('activo') else 0
 
+        # =========================
+        # VALIDAR PALABRA CLAVE
+        # =========================
         if not palabraclave:
-            return render(request, 'panel/promociones/formPromocion.html', {
-                'titulo': 'Crear promoción',
-                'tipos_beneficio': tipos_beneficio,
-                'productos': productos,
-                'error': 'Ingresá una palabra clave.',
-            })
-
-        if not tipobeneficio_id:
-            return render(request, 'panel/promociones/formPromocion.html', {
-                'titulo': 'Crear promoción',
-                'tipos_beneficio': tipos_beneficio,
-                'productos': productos,
-                'error': 'Seleccioná un tipo de beneficio.',
-            })
-
-        if not producto_id:
-            return render(request, 'panel/promociones/formPromocion.html', {
-                'titulo': 'Crear promoción',
-                'tipos_beneficio': tipos_beneficio,
-                'productos': productos,
-                'error': 'Seleccioná un producto.',
-            })
-
-        try:
-            tipo_beneficio = TipoBeneficio.objects.get(pk=tipobeneficio_id)
-        except TipoBeneficio.DoesNotExist:
-            return render(request, 'panel/promociones/formPromocion.html', {
-                'titulo': 'Crear promoción',
-                'tipos_beneficio': tipos_beneficio,
-                'productos': productos,
-                'error': 'El tipo de beneficio seleccionado no existe.',
-            })
-
-        try:
-            producto = Producto.objects.get(pk=producto_id)
-        except Producto.DoesNotExist:
-            return render(request, 'panel/promociones/formPromocion.html', {
-                'titulo': 'Crear promoción',
-                'tipos_beneficio': tipos_beneficio,
-                'productos': productos,
-                'error': 'El producto seleccionado no existe.',
-            })
-
-        valor = None
-
-        if getattr(tipo_beneficio, 'comportamiento', None) != 'SIN_VALOR':
-            if not descuento:
-                return render(request, 'panel/promociones/formPromocion.html', {
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
                     'titulo': 'Crear promoción',
                     'tipos_beneficio': tipos_beneficio,
                     'productos': productos,
-                    'error': 'Ingresá el valor del beneficio.',
-                })
+                    'error': 'Ingresá una palabra clave.',
+                }
+            )
+
+        # =========================
+        # VALIDAR TIPO BENEFICIO
+        # =========================
+        if not tipobeneficio_id:
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
+                    'titulo': 'Crear promoción',
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'error': 'Seleccioná un tipo de beneficio.',
+                }
+            )
+
+        # =========================
+        # VALIDAR PRODUCTO
+        # =========================
+        if not producto_id:
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
+                    'titulo': 'Crear promoción',
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'error': 'Seleccioná un producto.',
+                }
+            )
+
+        # =========================
+        # OBTENER TIPO BENEFICIO
+        # =========================
+        try:
+            tipo_beneficio = TipoBeneficio.objects.get(
+                pk=tipobeneficio_id
+            )
+        except TipoBeneficio.DoesNotExist:
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
+                    'titulo': 'Crear promoción',
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'error': 'El tipo de beneficio seleccionado no existe.',
+                }
+            )
+
+        # =========================
+        # OBTENER PRODUCTO
+        # =========================
+        try:
+            producto = Producto.objects.get(pk=producto_id)
+        except Producto.DoesNotExist:
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
+                    'titulo': 'Crear promoción',
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'error': 'El producto seleccionado no existe.',
+                }
+            )
+
+        # =========================
+        # PROCESAR VALOR
+        # =========================
+        valor = None
+
+        if getattr(tipo_beneficio, 'comportamiento', None) != 'SIN_VALOR':
+
+            if not descuento:
+                return render(
+                    request,
+                    'panel/promociones/formPromocion.html',
+                    {
+                        'titulo': 'Crear promoción',
+                        'tipos_beneficio': tipos_beneficio,
+                        'productos': productos,
+                        'error': 'Ingresá el valor del beneficio.',
+                    }
+                )
 
             try:
                 valor = Decimal(descuento)
             except (InvalidOperation, TypeError):
-                return render(request, 'panel/promociones/formPromocion.html', {
-                    'titulo': 'Crear promoción',
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'error': 'El valor del beneficio no es válido.',
-                })
+                return render(
+                    request,
+                    'panel/promociones/formPromocion.html',
+                    {
+                        'titulo': 'Crear promoción',
+                        'tipos_beneficio': tipos_beneficio,
+                        'productos': productos,
+                        'error': 'El valor del beneficio no es válido.',
+                    }
+                )
 
             if valor < 0:
-                return render(request, 'panel/promociones/formPromocion.html', {
-                    'titulo': 'Crear promoción',
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'error': 'El valor del beneficio no puede ser negativo.',
-                })
+                return render(
+                    request,
+                    'panel/promociones/formPromocion.html',
+                    {
+                        'titulo': 'Crear promoción',
+                        'tipos_beneficio': tipos_beneficio,
+                        'productos': productos,
+                        'error': 'El valor del beneficio no puede ser negativo.',
+                    }
+                )
 
+        # =========================
+        # CREAR PROMOCIÓN
+        # =========================
         promocion = Promocion(
             palabraclave=palabraclave,
             tipobeneficio=tipo_beneficio,
@@ -955,10 +1012,15 @@ def crear_promocion(request):
             activo=activo,
         )
 
-        # Si tu modelo Promocion tiene relación directa con producto:
-        promocion.producto = producto
-
         promocion.save()
+
+        # =========================
+        # GUARDAR PRODUCTO
+        # =========================
+        ProductoPromocion.objects.create(
+            idproducto=producto,
+            idpromocion=promocion
+        )
 
         messages.success(
             request,
@@ -967,14 +1029,24 @@ def crear_promocion(request):
 
         return redirect('panel_lista_promociones')
 
-    return render(request, 'panel/promociones/formPromocion.html', {
-        'titulo': 'Crear promoción',
-        'tipos_beneficio': tipos_beneficio,
-        'productos': productos,
-    })
-
+    # =========================
+    # GET
+    # =========================
+    return render(
+        request,
+        'panel/promociones/formPromocion.html',
+        {
+            'titulo': 'Crear promoción',
+            'tipos_beneficio': tipos_beneficio,
+            'productos': productos,
+        }
+    )
 
 def editar_promocion(request, idpromocion):
+
+    # =========================
+    # OBTENER PROMOCIÓN
+    # =========================
     promocion = get_object_or_404(
         Promocion,
         idpromocion=idpromocion
@@ -983,107 +1055,251 @@ def editar_promocion(request, idpromocion):
     tipos_beneficio = TipoBeneficio.objects.all()
     productos = Producto.objects.all()
 
-    # IMPORTANTE:
-    # El campo correcto es tipobeneficio.
-    # NO promocion.tipo_beneficio
+    # =========================
+    # OBTENER TIPO BENEFICIO
+    # =========================
     tipo_beneficio_seleccionado = (
         promocion.tipobeneficio.pk
         if promocion.tipobeneficio
         else None
     )
 
+    # =========================
+    # OBTENER PRODUCTO DESDE
+    # ProductoPromocion
+    # =========================
+    relacion_producto = (
+        ProductoPromocion.objects
+        .filter(idpromocion=promocion)
+        .select_related('idproducto')
+        .first()
+    )
+
     producto_seleccionado = (
-        promocion.producto.pk
-        if getattr(promocion, 'producto', None)
+        relacion_producto.idproducto.pk
+        if relacion_producto and relacion_producto.idproducto
         else None
     )
 
+    # =========================
+    # POST
+    # =========================
     if request.method == 'POST':
-        palabraclave = request.POST.get('palabraclave', '').strip()
-        tipobeneficio_id = request.POST.get('tipobeneficio')
-        producto_id = request.POST.get('producto')
-        descuento = request.POST.get('descuento', '').strip()
-        fechainicio = request.POST.get('fechainicio') or None
-        fechafin = request.POST.get('fechafin') or None
-        activo = 1 if request.POST.get('activo') else 0
 
+        palabraclave = request.POST.get(
+            'palabraclave',
+            ''
+        ).strip()
+
+        tipobeneficio_id = request.POST.get(
+            'tipobeneficio'
+        )
+
+        producto_id = request.POST.get(
+            'producto'
+        )
+
+        descuento = request.POST.get(
+            'descuento',
+            ''
+        ).strip()
+
+        fechainicio = (
+            request.POST.get('fechainicio')
+            or None
+        )
+
+        fechafin = (
+            request.POST.get('fechafin')
+            or None
+        )
+
+        activo = (
+            1
+            if request.POST.get('activo')
+            else 0
+        )
+
+        # =========================
+        # VALIDAR PALABRA CLAVE
+        # =========================
         if not palabraclave:
-            return render(request, 'panel/promociones/formPromocion.html', {
-                'titulo': 'Editar promoción',
-                'promocion': promocion,
-                'tipos_beneficio': tipos_beneficio,
-                'productos': productos,
-                'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
-                'producto_seleccionado': producto_seleccionado,
-                'error': 'Ingresá una palabra clave.',
-            })
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
+                    'titulo': 'Editar promoción',
+                    'promocion': promocion,
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'tipo_beneficio_seleccionado':
+                        tipo_beneficio_seleccionado,
+                    'producto_seleccionado':
+                        producto_seleccionado,
+                    'error': 'Ingresá una palabra clave.',
+                }
+            )
 
+        # =========================
+        # VALIDAR TIPO BENEFICIO
+        # =========================
+        if not tipobeneficio_id:
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
+                    'titulo': 'Editar promoción',
+                    'promocion': promocion,
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'tipo_beneficio_seleccionado':
+                        tipo_beneficio_seleccionado,
+                    'producto_seleccionado':
+                        producto_seleccionado,
+                    'error': 'Seleccioná un tipo de beneficio.',
+                }
+            )
+
+        # =========================
+        # VALIDAR PRODUCTO
+        # =========================
+        if not producto_id:
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
+                    'titulo': 'Editar promoción',
+                    'promocion': promocion,
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'tipo_beneficio_seleccionado':
+                        tipo_beneficio_seleccionado,
+                    'producto_seleccionado':
+                        producto_seleccionado,
+                    'error': 'Seleccioná un producto.',
+                }
+            )
+
+        # =========================
+        # OBTENER TIPO BENEFICIO
+        # =========================
         try:
             tipo_beneficio = TipoBeneficio.objects.get(
                 pk=tipobeneficio_id
             )
         except TipoBeneficio.DoesNotExist:
-            return render(request, 'panel/promociones/formPromocion.html', {
-                'titulo': 'Editar promoción',
-                'promocion': promocion,
-                'tipos_beneficio': tipos_beneficio,
-                'productos': productos,
-                'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
-                'producto_seleccionado': producto_seleccionado,
-                'error': 'El tipo de beneficio seleccionado no existe.',
-            })
-
-        try:
-            producto = Producto.objects.get(pk=producto_id)
-        except Producto.DoesNotExist:
-            return render(request, 'panel/promociones/formPromocion.html', {
-                'titulo': 'Editar promoción',
-                'promocion': promocion,
-                'tipos_beneficio': tipos_beneficio,
-                'productos': productos,
-                'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
-                'producto_seleccionado': producto_seleccionado,
-                'error': 'El producto seleccionado no existe.',
-            })
-
-        valor = None
-
-        if getattr(tipo_beneficio, 'comportamiento', None) != 'SIN_VALOR':
-            if not descuento:
-                return render(request, 'panel/promociones/formPromocion.html', {
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
                     'titulo': 'Editar promoción',
                     'promocion': promocion,
                     'tipos_beneficio': tipos_beneficio,
                     'productos': productos,
-                    'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
-                    'producto_seleccionado': producto_seleccionado,
-                    'error': 'Ingresá el valor del beneficio.',
-                })
+                    'tipo_beneficio_seleccionado':
+                        tipo_beneficio_seleccionado,
+                    'producto_seleccionado':
+                        producto_seleccionado,
+                    'error':
+                        'El tipo de beneficio seleccionado no existe.',
+                }
+            )
+
+        # =========================
+        # OBTENER PRODUCTO
+        # =========================
+        try:
+            producto = Producto.objects.get(
+                pk=producto_id
+            )
+        except Producto.DoesNotExist:
+            return render(
+                request,
+                'panel/promociones/formPromocion.html',
+                {
+                    'titulo': 'Editar promoción',
+                    'promocion': promocion,
+                    'tipos_beneficio': tipos_beneficio,
+                    'productos': productos,
+                    'tipo_beneficio_seleccionado':
+                        tipo_beneficio_seleccionado,
+                    'producto_seleccionado':
+                        producto_seleccionado,
+                    'error':
+                        'El producto seleccionado no existe.',
+                }
+            )
+
+        # =========================
+        # PROCESAR VALOR
+        # =========================
+        valor = None
+
+        if getattr(
+            tipo_beneficio,
+            'comportamiento',
+            None
+        ) != 'SIN_VALOR':
+
+            if not descuento:
+                return render(
+                    request,
+                    'panel/promociones/formPromocion.html',
+                    {
+                        'titulo': 'Editar promoción',
+                        'promocion': promocion,
+                        'tipos_beneficio': tipos_beneficio,
+                        'productos': productos,
+                        'tipo_beneficio_seleccionado':
+                            tipo_beneficio_seleccionado,
+                        'producto_seleccionado':
+                            producto_seleccionado,
+                        'error':
+                            'Ingresá el valor del beneficio.',
+                    }
+                )
 
             try:
                 valor = Decimal(descuento)
             except (InvalidOperation, TypeError):
-                return render(request, 'panel/promociones/formPromocion.html', {
-                    'titulo': 'Editar promoción',
-                    'promocion': promocion,
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
-                    'producto_seleccionado': producto_seleccionado,
-                    'error': 'El valor del beneficio no es válido.',
-                })
+                return render(
+                    request,
+                    'panel/promociones/formPromocion.html',
+                    {
+                        'titulo': 'Editar promoción',
+                        'promocion': promocion,
+                        'tipos_beneficio': tipos_beneficio,
+                        'productos': productos,
+                        'tipo_beneficio_seleccionado':
+                            tipo_beneficio_seleccionado,
+                        'producto_seleccionado':
+                            producto_seleccionado,
+                        'error':
+                            'El valor del beneficio no es válido.',
+                    }
+                )
 
             if valor < 0:
-                return render(request, 'panel/promociones/formPromocion.html', {
-                    'titulo': 'Editar promoción',
-                    'promocion': promocion,
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
-                    'producto_seleccionado': producto_seleccionado,
-                    'error': 'El valor del beneficio no puede ser negativo.',
-                })
+                return render(
+                    request,
+                    'panel/promociones/formPromocion.html',
+                    {
+                        'titulo': 'Editar promoción',
+                        'promocion': promocion,
+                        'tipos_beneficio': tipos_beneficio,
+                        'productos': productos,
+                        'tipo_beneficio_seleccionado':
+                            tipo_beneficio_seleccionado,
+                        'producto_seleccionado':
+                            producto_seleccionado,
+                        'error':
+                            'El valor del beneficio no puede ser negativo.',
+                    }
+                )
 
+        # =========================
+        # ACTUALIZAR PROMOCIÓN
+        # =========================
         promocion.palabraclave = palabraclave
         promocion.tipobeneficio = tipo_beneficio
         promocion.valor = valor
@@ -1091,10 +1307,22 @@ def editar_promocion(request, idpromocion):
         promocion.fechafin = fechafin
         promocion.activo = activo
 
-        # Si tu modelo tiene relación directa con producto:
-        promocion.producto = producto
-
         promocion.save()
+
+        # =========================
+        # ACTUALIZAR PRODUCTO
+        # =========================
+
+        # Eliminamos la relación anterior
+        ProductoPromocion.objects.filter(
+            idpromocion=promocion
+        ).delete()
+
+        # Creamos la nueva relación
+        ProductoPromocion.objects.create(
+            idproducto=producto,
+            idpromocion=promocion
+        )
 
         messages.success(
             request,
@@ -1103,14 +1331,23 @@ def editar_promocion(request, idpromocion):
 
         return redirect('panel_lista_promociones')
 
-    return render(request, 'panel/promociones/formPromocion.html', {
-        'titulo': 'Editar promoción',
-        'promocion': promocion,
-        'tipos_beneficio': tipos_beneficio,
-        'productos': productos,
-        'tipo_beneficio_seleccionado': tipo_beneficio_seleccionado,
-        'producto_seleccionado': producto_seleccionado,
-    })
+    # =========================
+    # GET
+    # =========================
+    return render(
+        request,
+        'panel/promociones/formPromocion.html',
+        {
+            'titulo': 'Editar promoción',
+            'promocion': promocion,
+            'tipos_beneficio': tipos_beneficio,
+            'productos': productos,
+            'tipo_beneficio_seleccionado':
+                tipo_beneficio_seleccionado,
+            'producto_seleccionado':
+                producto_seleccionado,
+        }
+    )
 
 
 def eliminar_promocion(request, idpromocion):
@@ -1258,10 +1495,14 @@ def eliminar_tipo_beneficio(request, pk):
 # ============================================================
 
 def promocion_es_valida(promocion):
-    if not promocion or promocion.activo != 1:
+
+    if not promocion:
         return False
 
-    hoy = date.today()
+    if promocion.activo != 1:
+        return False
+
+    hoy = timezone.localdate()
 
     if promocion.fechainicio and hoy < promocion.fechainicio:
         return False
@@ -1273,84 +1514,461 @@ def promocion_es_valida(promocion):
 
 
 def obtener_productos_promocion(promocion):
+
     return set(
         ProductoPromocion.objects
         .filter(idpromocion=promocion)
-        .values_list('idproducto_id', flat=True)
+        .values_list(
+            'idproducto_id',
+            flat=True
+        )
     )
 
 
 def calcular_descuento_promocion(carrito, promocion):
-    """Devuelve (descuento, mensaje) para la promoción sobre el carrito."""
+
     if not promocion:
         return Decimal('0.00'), ''
 
     if not promocion_es_valida(promocion):
-        return Decimal('0.00'), 'La promoción no está vigente.'
+        return (
+            Decimal('0.00'),
+            'La promoción no está vigente.'
+        )
 
-    productos_validos = obtener_productos_promocion(promocion)
+    productos_validos = obtener_productos_promocion(
+        promocion
+    )
 
     if not productos_validos:
-        return Decimal('0.00'), 'La promoción no tiene productos asociados.'
+        return (
+            Decimal('0.00'),
+            'La promoción no tiene productos asociados.'
+        )
 
-    # Una entrada por cada unidad elegible, para poder aplicar
-    # promociones por cantidad (2x1, 3x2).
     unidades = []
     subtotal_elegible = Decimal('0.00')
 
     for item in carrito.values():
-        if item.get('producto_id') not in productos_validos:
+
+        producto_id = item.get('producto_id')
+
+        if producto_id is None:
             continue
 
-        cantidad = int(item.get('cantidad', 0))
+        try:
+            producto_id = int(producto_id)
+        except (TypeError, ValueError):
+            continue
+
+        if producto_id not in productos_validos:
+            continue
+
+        try:
+            cantidad = int(
+                item.get('cantidad', 0)
+            )
+        except (TypeError, ValueError):
+            cantidad = 0
 
         if cantidad <= 0:
             continue
 
-        precio_unitario = Decimal(str(item.get('precio_unitario', 0)))
-        subtotal_elegible += precio_unitario * cantidad
-        unidades.extend([precio_unitario] * cantidad)
+        try:
+            precio_unitario = Decimal(
+                str(
+                    item.get(
+                        'precio_unitario',
+                        0
+                    )
+                )
+            )
+        except Exception:
+            precio_unitario = Decimal('0.00')
 
-    if not unidades:
-        return (
-            Decimal('0.00'),
-            'La promoción no aplica a los productos del carrito.',
+        if precio_unitario <= 0:
+            continue
+
+        subtotal_elegible += (
+            precio_unitario * cantidad
         )
 
-    tipo = promocion.tipo_beneficio.codigo if promocion.tipo_beneficio else None
+        unidades.extend(
+            [precio_unitario] * cantidad
+        )
+
+    if not unidades:
+
+        return (
+            Decimal('0.00'),
+            'La promoción no aplica a los productos del carrito.'
+        )
+
+    # ==========================================
+    # TIPO DE BENEFICIO
+    # ==========================================
+
+    tipo = None
+
+    if promocion.tipobeneficio:
+
+        tipo = promocion.tipobeneficio.codigo
+
     valor = promocion.valor or Decimal('0.00')
 
+    descuento = Decimal('0.00')
+
+    mensaje = ''
+
+
+    # ==========================================
+    # 2 x 1
+    # ==========================================
+
     if tipo == '2x1':
-        # Las unidades más baratas son las que se regalan.
+
         unidades.sort()
-        descuento = sum(unidades[:len(unidades) // 2], Decimal('0.00'))
+
+        cantidad_gratis = len(unidades) // 2
+
+        descuento = sum(
+            unidades[:cantidad_gratis],
+            Decimal('0.00')
+        )
+
         mensaje = 'Promoción 2 x 1 aplicada.'
 
+
+    # ==========================================
+    # 3 x 2
+    # ==========================================
+
     elif tipo == '3x2':
+
         unidades.sort()
-        descuento = sum(unidades[:len(unidades) // 3], Decimal('0.00'))
+
+        cantidad_gratis = len(unidades) // 3
+
+        descuento = sum(
+            unidades[:cantidad_gratis],
+            Decimal('0.00')
+        )
+
         mensaje = 'Promoción 3 x 2 aplicada.'
 
+
+    # ==========================================
+    # PRODUCTO GRATIS
+    # ==========================================
+
     elif tipo == 'PRODUCTO_GRATIS':
+
         descuento = min(unidades)
+
         mensaje = 'Producto gratis aplicado.'
 
+
+    # ==========================================
+    # DESCUENTO PORCENTUAL
+    # ==========================================
+
     elif tipo == 'DESCUENTO_PORCENTAJE':
-        porcentaje = max(Decimal('0.00'), min(valor, Decimal('100.00')))
-        descuento = subtotal_elegible * porcentaje / Decimal('100')
-        mensaje = f'Descuento del {porcentaje}% aplicado.'
+
+        porcentaje = max(
+            Decimal('0.00'),
+            min(
+                valor,
+                Decimal('100.00')
+            )
+        )
+
+        descuento = (
+            subtotal_elegible *
+            porcentaje /
+            Decimal('100')
+        )
+
+        mensaje = (
+            f'Descuento del {porcentaje}% aplicado.'
+        )
+
+
+    # ==========================================
+    # DESCUENTO FIJO
+    # ==========================================
 
     elif tipo == 'DESCUENTO_FIJO':
-        descuento = min(valor, subtotal_elegible)
-        mensaje = f'Descuento de ${descuento} aplicado.'
+
+        descuento = min(
+            valor,
+            subtotal_elegible
+        )
+
+        mensaje = (
+            f'Descuento de ${descuento} aplicado.'
+        )
+
+
+    # ==========================================
+    # TIPO INVÁLIDO
+    # ==========================================
 
     else:
-        return Decimal('0.00'), 'Tipo de promoción no válido.'
 
-    # El descuento nunca es negativo ni supera lo que cubre la promoción.
-    descuento = max(Decimal('0.00'), min(descuento, subtotal_elegible))
+        return (
+            Decimal('0.00'),
+            'Tipo de promoción no válido.'
+        )
 
-    return descuento.quantize(Decimal('0.01')), mensaje
+
+    # ==========================================
+    # LIMITAR DESCUENTO
+    # ==========================================
+
+    descuento = max(
+        Decimal('0.00'),
+        min(
+            descuento,
+            subtotal_elegible
+        )
+    )
+
+    descuento = descuento.quantize(
+        Decimal('0.01')
+    )
+
+    return descuento, mensaje
+
+def calcular_total_pedido(carrito, promocion=None):
+
+    subtotal = Decimal('0.00')
+
+    for item in carrito.values():
+
+        try:
+            cantidad = int(
+                item.get('cantidad', 0)
+            )
+        except (TypeError, ValueError):
+            cantidad = 0
+
+        try:
+            precio_unitario = Decimal(
+                str(
+                    item.get(
+                        'precio_unitario',
+                        0
+                    )
+                )
+            )
+        except Exception:
+            precio_unitario = Decimal('0.00')
+
+        if cantidad > 0:
+
+            subtotal += (
+                precio_unitario *
+                cantidad
+            )
+
+    descuento, mensaje = (
+        calcular_descuento_promocion(
+            carrito,
+            promocion
+        )
+    )
+
+    total = subtotal - descuento
+
+    if total < Decimal('0.00'):
+        total = Decimal('0.00')
+
+    return {
+
+        'subtotal':
+            subtotal.quantize(
+                Decimal('0.01')
+            ),
+
+        'descuento':
+            descuento.quantize(
+                Decimal('0.01')
+            ),
+
+        'total':
+            total.quantize(
+                Decimal('0.01')
+            ),
+
+        'mensaje':
+            mensaje,
+    }
+
+@require_POST
+def aplicar_promocion(request):
+
+    # ==========================================
+    # OBTENER CÓDIGO
+    # ==========================================
+
+    codigo = request.POST.get(
+        'codigo_promocion',
+        ''
+    ).strip().upper()
+
+
+    if not codigo:
+
+        return JsonResponse({
+
+            'ok': False,
+
+            'mensaje':
+                'Ingresá una palabra clave.'
+
+        })
+
+
+    # ==========================================
+    # BUSCAR PROMOCIÓN
+    # ==========================================
+
+    try:
+
+        promocion = Promocion.objects.get(
+
+            palabraclave__iexact=codigo,
+
+            activo=1
+        )
+
+    except Promocion.DoesNotExist:
+
+        return JsonResponse({
+
+            'ok': False,
+
+            'mensaje':
+                'La promoción no existe o no está activa.'
+
+        })
+
+
+    # ==========================================
+    # VERIFICAR VIGENCIA
+    # ==========================================
+
+    if not promocion_es_valida(promocion):
+
+        return JsonResponse({
+
+            'ok': False,
+
+            'mensaje':
+                'La promoción no está vigente.'
+
+        })
+
+
+    # ==========================================
+    # OBTENER CARRITO
+    # ==========================================
+
+    carrito = request.session.get(
+        'carrito',
+        {}
+    )
+
+
+    if not carrito:
+
+        return JsonResponse({
+
+            'ok': False,
+
+            'mensaje':
+                'El carrito está vacío.'
+
+        })
+
+
+    # ==========================================
+    # CALCULAR TODO
+    # ==========================================
+
+    resultado = calcular_total_pedido(
+
+        carrito,
+
+        promocion
+
+    )
+
+
+    # ==========================================
+    # VERIFICAR QUE REALMENTE APLIQUE
+    # ==========================================
+
+    if resultado['descuento'] <= Decimal('0.00'):
+
+        return JsonResponse({
+
+            'ok': False,
+
+            'mensaje':
+                resultado['mensaje']
+                or
+                'La promoción no aplica al carrito.'
+
+        })
+
+
+    # ==========================================
+    # GUARDAR PROMOCIÓN EN SESIÓN
+    # ==========================================
+
+    request.session['promocion_id'] = (
+        promocion.idpromocion
+    )
+
+    request.session['codigo_promocion'] = (
+        codigo
+    )
+
+    request.session['descuento_promocion'] = (
+        str(resultado['descuento'])
+    )
+
+    request.session.modified = True
+
+
+    # ==========================================
+    # RESPUESTA
+    # ==========================================
+
+    return JsonResponse({
+
+        'ok': True,
+
+        'promocion_id':
+            promocion.idpromocion,
+
+        'codigo':
+            codigo,
+
+        'descuento':
+            float(resultado['descuento']),
+
+        'subtotal':
+            float(resultado['subtotal']),
+
+        'total':
+            float(resultado['total']),
+
+        'mensaje':
+            resultado['mensaje'],
+
+    })
 
 
 # ============================================================
