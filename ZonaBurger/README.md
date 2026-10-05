@@ -1,278 +1,164 @@
-# Zona-Burger
+# Zona Burger
 
-Aplicación web para la gestión de un negocio gastronómico, desarrollada con **Django** y **SQL Server**.
+Aplicación web desarrollada con **Django y SQL Server** para gestionar productos, stock, clientes, pedidos y promociones.
 
-El sistema permite gestionar productos, categorías, extras, opciones, stock, compras, recetas, clientes, pedidos, medios de pago, promociones y demás información relacionada con el funcionamiento de Zona-Burger.
+## Requisitos
 
-## Tecnologías utilizadas
+- Windows y Python 3.13 de 64 bits.
+- Git y VS Code.
+- SQL Server 2022 Express y SSMS.
+- ODBC Driver 17 for SQL Server de 64 bits.
+- Archivo `ZonaBurger.sql` compatible con la versión del proyecto.
 
-* Python
-* Django 6.1
-* Microsoft SQL Server
-* mssql-django
-* pyodbc
-* Pillow
-* django-ckeditor-5
-* django-jazzmin
-* python-dotenv
+## 1. Descargar el proyecto
 
-## Estructura del proyecto
-
-El proyecto está organizado de la siguiente manera:
-
-* `manage.py` — archivo principal para ejecutar comandos de Django.
-* `ZonaBurger/` — configuración principal del proyecto.
-* `core/` — aplicación principal que contiene modelos, vistas, formularios, URLs, templates y comandos personalizados.
-* `core/migrations/` — migraciones de la base de datos.
-* `core/management/commands/cargar_datos_iniciales.py` — comando para cargar automáticamente los datos básicos necesarios para utilizar la aplicación.
-* `.env.example` — ejemplo de las variables de entorno necesarias.
-* `requirements.txt` — dependencias del proyecto.
-* `README.md` — documentación e instrucciones de ejecución.
-
-## Requisitos previos
-
-Antes de ejecutar el proyecto se necesita tener instalado:
-
-* Python 3.x
-* Microsoft SQL Server
-* ODBC Driver para SQL Server
-* Git, en caso de clonar el repositorio
-
-También es necesario disponer de una base de datos SQL Server compatible con la estructura utilizada por el proyecto.
-
-## Clonar el repositorio
-
-Repositorio del proyecto:
-
-https://github.com/Candee0623/Zona-Burger.git
-
-Para descargarlo:
-
+-powershell
 git clone https://github.com/Candee0623/Zona-Burger.git
 
-Luego ingresar a la carpeta del proyecto:
 
+-powershell
 cd Zona-Burger
 
-## Crear y activar el entorno virtual
 
-En Windows:
+Abrir esa carpeta en VS Code. Ejecutar los siguientes comandos desde la carpeta donde está `manage.py`, uno por uno.
 
-python -m venv venv
+## 2. Instalar las dependencias
 
-Activar el entorno virtual:
+-powershell
+py -3.13 -m venv .venv
 
-venv\Scripts\activate
 
-En Linux o macOS:
+-powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
-python3 -m venv venv
 
-source venv/bin/activate
+Estos comandos usan directamente el entorno virtual; no es necesario activarlo.
 
-## Instalar las dependencias
+## 3. Importar la base de datos
 
-Con el entorno virtual activado, ejecutar:
+Conectarse a SQL Server desde SSMS con **Autenticación de Windows**.
 
-pip install -r requirements.txt
+Comprobar si la base ya existe:
 
-## Configuración de la base de datos
+-sql
+SELECT name FROM sys.databases WHERE name = N'ZonaBurger';
 
-El proyecto utiliza SQL Server como motor de base de datos.
 
-La configuración se realiza mediante variables de entorno para evitar guardar credenciales directamente en el código fuente.
+**Si existe, no importar nuevamente el archivo completo.** Revisar la instalación anterior.
 
-Copiar el archivo `.env.example` y crear un archivo llamado `.env`:
+Para una base nueva, abrir `ZonaBurger.sql`. Reemplazar el bloque inicial completo, desde `USE [master]` hasta el `GO` posterior a `SET COMPATIBILITY_LEVEL = 160`, por:
 
-.env.example → .env
+-sql
 
-Configurar en `.env` los datos correspondientes a la instancia de SQL Server.
+USE [master]
+GO
+CREATE DATABASE [ZonaBurger]
+GO
+ALTER DATABASE [ZonaBurger] SET COMPATIBILITY_LEVEL = 160
+GO
 
-Las variables utilizadas por el proyecto son:
 
-DB_NAME
-DB_HOST
-DB_PORT
-DB_DRIVER
-DB_TRUSTED_CONNECTION
+Conservar el resto del archivo y ejecutarlo completo con **F5**. El bloque reemplazado no debe conservar las rutas `.mdf` y `.ldf` ni `LOG ON`.
 
-Un ejemplo de configuración utilizando autenticación de Windows es:
+**Si aparece un error, detenerse y no repetir la importación completa.** El SQL debe corresponder a la versión del código; las migraciones actuales no garantizan toda la estructura desde cero.
 
+## 4. Crear el archivo .env
+
+Crear `.env` junto a `manage.py` con este contenido:
+
+-dotenv
+
+SECRET_KEY=zona-burger-clave-solo-para-pruebas-locales
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
 DB_NAME=ZonaBurger
-DB_HOST=localhost
-DB_PORT=1433
+DB_HOST=NOMBRE-DE-TU-PC\SQLEXPRESS
+DB_PORT=
 DB_DRIVER=ODBC Driver 17 for SQL Server
 DB_TRUSTED_CONNECTION=yes
 
-Los valores deben adaptarse a la instalación local de SQL Server.
+Reemplazar `DB_HOST` por el servidor utilizado en SSMS. Esta clave es solo para pruebas locales. No subir `.env` a GitHub.
 
-El archivo `.env` contiene información de configuración local y no debe subirse al repositorio.
+## 5. Verificar y sincronizar migraciones
 
-## Migraciones
+-powershell
+.\.venv\Scripts\python.exe manage.py check
 
-Una vez configurada la conexión con SQL Server, ejecutar:
+-powershell
+.\.venv\Scripts\python.exe manage.py shell -c "from django.db import connection; connection.ensure_connection(); print('Conexión correcta')"
 
-python manage.py migrate
+-powershell
+.\.venv\Scripts\python.exe manage.py showmigrations
 
-Este comando aplica las migraciones de Django que se encuentran incluidas en el proyecto.
 
-Si las migraciones ya fueron aplicadas, Django mostrará:
+**Solo para una instalación nueva con el SQL compatible importado sin errores y el historial vacío (`[ ]`):**
 
-No migrations to apply.
+-powershell
+.\.venv\Scripts\python.exe manage.py migrate --fake
 
-## Carga automática de datos iniciales
 
-El proyecto incluye un comando personalizado para evitar que el usuario tenga que ingresar manualmente los datos básicos en la base de datos.
+-powershell
+.\.venv\Scripts\python.exe manage.py migrate
+
+
+`--fake` registra las migraciones sin crear tablas. No usarlo sobre una base vacía, una importación parcial o un esquema de otra versión.
+
+## 6. Cargar datos iniciales
 
 Ejecutar:
 
-python manage.py cargar_datos_iniciales
+-powershell
+.\.venv\Scripts\python.exe manage.py cargar_datos_iniciales
 
-El comando carga automáticamente los datos iniciales necesarios para el funcionamiento de Zona-Burger.
 
-Entre ellos se encuentran:
+La carga inicial agrega:
 
-### Estados de productos
+- Estados de productos y pedidos.
+- Medios de pago.
+- Datos del negocio.
+- Zonas de entrega.
 
-* Activo
-* Oculto
-* Eliminado
+**No agrega productos ni categorías:** se cargan después desde el panel. Puede actualizar algunos datos existentes del negocio y las zonas.
 
-Los estados utilizan los identificadores requeridos por la aplicación.
+## 7. Crear un administrador
 
-### Estados de pedidos
+-powershell
+.\.venv\Scripts\python.exe manage.py createsuperuser
 
-* Pendiente
-* En Preparación
-* En proceso
-* Enviado
-* Entregado
-* Cancelado
 
-### Medios de pago
+Seguir las instrucciones de usuario, correo y contraseña. Al escribir la contraseña no se muestran caracteres; es normal.
 
-* Efectivo
-* Transferencia
+## 8. Ejecutar la aplicación
 
-### Negocio
+-powershell
+.\.venv\Scripts\python.exe manage.py runserver 8002
 
-* Nombre: Zona Burger
-* Teléfono: 1152617656
 
-### Zonas de entrega
+| Acceso | Dirección |
+| Aplicación | [Página principal](http://127.0.0.1:8002/) |
+| Panel de Zona Burger | [Panel](http://127.0.0.1:8002/panel/) |
+| Administración de Django | [Administrador](http://127.0.0.1:8002/admin/) |
 
-* Piedra Buena
-* Pirelli
-* Los Perales
-* La Oculta
+Dejar la terminal abierta. Para detener el servidor, presionar **Ctrl + C**. En las próximas sesiones solo hace falta iniciar el servidor.
 
-El comando es seguro de ejecutar nuevamente, ya que verifica la existencia de los datos antes de crearlos.
+## Actualizar el proyecto con Git
 
-Por lo tanto, no es necesario realizar inserciones manuales en la base de datos para estos datos iniciales.
+Detener el servidor. Si `git status --short` no muestra cambios propios, ejecutar:
 
-## Ejecutar la aplicación
+-powershell
+git pull --ff-only
 
-Después de configurar la base de datos y cargar los datos iniciales, ejecutar:
 
-python manage.py runserver
+-powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
-La aplicación estará disponible en:
 
-http://127.0.0.1:8000/
+-powershell
+.\.venv\Scripts\python.exe manage.py check
 
-## Accesos principales
 
-### Aplicación
+-powershell
+.\.venv\Scripts\python.exe manage.py migrate --plan
 
-http://127.0.0.1:8000/
 
-Desde aquí se accede a la aplicación principal.
-
-### Panel de administración de Zona-Burger
-
-http://127.0.0.1:8000/panel/
-
-El proyecto cuenta con un panel de administración propio para gestionar la información del negocio.
-
-Este es el panel principal pensado para la administración de Zona-Burger.
-
-### Administración de Django
-
-http://127.0.0.1:8000/admin/
-
-También se encuentra disponible el panel administrativo nativo de Django.
-
-Para acceder a este panel se necesita contar con un usuario administrador.
-
-## Crear un usuario administrador
-
-Si se necesita acceder al administrador nativo de Django, ejecutar:
-
-python manage.py createsuperuser
-
-Luego seguir las instrucciones que aparecen en la consola.
-
-Una vez creado el usuario, se podrá ingresar desde:
-
-http://127.0.0.1:8000/admin/
-
-## Comandos útiles
-
-Verificar que el proyecto no tenga errores:
-
-python manage.py check
-
-Aplicar migraciones:
-
-python manage.py migrate
-
-Cargar los datos iniciales:
-
-python manage.py cargar_datos_iniciales
-
-Crear un usuario administrador:
-
-python manage.py createsuperuser
-
-Iniciar el servidor:
-
-python manage.py runserver
-
-## Secuencia completa de instalación
-
-Para una instalación nueva, la secuencia recomendada es:
-
-1. Clonar el repositorio.
-2. Crear el entorno virtual.
-3. Activar el entorno virtual.
-4. Instalar las dependencias.
-5. Configurar el archivo `.env`.
-6. Verificar la conexión con SQL Server.
-7. Ejecutar las migraciones.
-8. Ejecutar el comando `cargar_datos_iniciales`.
-9. Iniciar el servidor.
-10. Ingresar a la aplicación desde el navegador.
-
-En Windows:
-
-python -m venv venv
-
-venv\Scripts\activate
-
-pip install -r requirements.txt
-
-python manage.py migrate
-
-python manage.py cargar_datos_iniciales
-
-python manage.py runserver
-
-## Consideraciones
-
-* No se debe subir el archivo `.env` al repositorio.
-* El archivo `.env.example` sirve como plantilla para configurar las variables de entorno.
-* Se necesita una instalación funcional de SQL Server.
-* También es necesario tener instalado un ODBC Driver compatible con SQL Server.
-* El comando `cargar_datos_iniciales` debe ejecutarse después de configurar correctamente la conexión con la base de datos.
-* El servidor iniciado mediante `runserver` es únicamente para desarrollo y presentación local.
-* No es necesario realizar manualmente las inserciones de los datos iniciales indicados en esta documentación.
+Si hay cambios pendientes en la base, seguir las instrucciones de actualización del proyecto. No repetir `--fake` ni importar nuevamente todo el SQL automáticamente.
