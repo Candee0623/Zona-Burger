@@ -1,0 +1,184 @@
+
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} | Zona Burger{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/panel/administracion/roles/rolCrear.css' %}">
+
+<main class="rol-form-page">
+
+    <!-- ENCABEZADO -->
+    <header class="rol-form-header">
+        <div class="rol-form-heading">
+            <h1>{{ titulo }}</h1>
+            <p>Administra los roles y sus niveles de acceso.</p>
+        </div>
+
+        <a href="{% url 'rol_lista' %}" class="rol-btn-volver">
+            <i class="fa-solid fa-arrow-left"></i>
+            Volver a roles
+        </a>
+    </header>
+
+    <!-- MENSAJES -->
+    {% if messages %}
+        <div class="rol-form-messages">
+            {% for mensaje in messages %}
+                <div class="rol-form-message">
+                    {{ mensaje }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- FORMULARIO -->
+    <section class="rol-form-card">
+
+        <div class="rol-form-card-header">
+            <div class="rol-form-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+
+            <div>
+                <h2>Información del rol</h2>
+                <p>Define el nombre y los permisos que tendrá este rol.</p>
+            </div>
+        </div>
+
+        <form method="post" class="rol-form">
+            {% csrf_token %}
+
+            <!-- NOMBRE DEL ROL -->
+            <div class="rol-form-group">
+                <label for="nombrerol">
+                    Nombre del rol <span>*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="nombrerol"
+                    name="nombrerol"
+                    maxlength="50"
+                    placeholder="Ej. Administrador, Cajero, Mesero"
+                    value="{{ rol.nombrerol|default:'' }}"
+                    required
+                    autofocus
+                >
+
+                <small>
+                    Ingresa un nombre descriptivo de hasta 50 caracteres.
+                </small>
+            </div>
+
+            <!-- SELECCIÓN DE PERMISOS: SOLO AL CREAR -->
+            {% if not rol %}
+                <section class="rol-permisos-section">
+
+                    <div class="rol-permisos-heading">
+                        <div>
+                            <h3>Permisos del rol</h3>
+                            <p>
+                                Selecciona las acciones que podrá realizar
+                                este rol dentro del sistema.
+                            </p>
+                        </div>
+
+                        <span class="rol-permisos-count">
+                            {{ permisos|length }} disponibles
+                        </span>
+                    </div>
+
+                    {% regroup permisos by modulo as permisos_por_modulo %}
+
+                    {% for grupo in permisos_por_modulo %}
+                        <div class="rol-permisos-grupo">
+
+                            <h4>
+                                <i class="fa-solid fa-layer-group"></i>
+                                {{ grupo.grouper }}
+                            </h4>
+
+                            <div class="rol-permisos-grid">
+                                {% for permiso in grupo.list %}
+
+                                    <label class="rol-permiso-opcion">
+
+                                        <input
+                                            type="checkbox"
+                                            name="permisos"
+                                            value="{{ permiso.pk }}"
+                                            {% if permiso.pk in permisos_seleccionados %}checked{% endif %}
+                                        >
+
+                                        <span class="rol-permiso-check">
+                                            <i class="fa-solid fa-check"></i>
+                                        </span>
+
+                                        <span class="rol-permiso-texto">
+                                            <strong>{{ permiso.accion }}</strong>
+
+                                            {% if permiso.descripcion %}
+                                                <small>
+                                                    {{ permiso.descripcion }}
+                                                </small>
+                                            {% else %}
+                                                <small>
+                                                    {{ permiso.codigo }}
+                                                </small>
+                                            {% endif %}
+                                        </span>
+
+                                    </label>
+
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                    {% empty %}
+                        <div class="rol-permisos-vacio">
+                            <i class="fa-solid fa-circle-info"></i>
+
+                            <p>
+                                Todavía no hay permisos registrados.
+                                Debes crear permisos antes de poder
+                                asignarlos a un rol.
+                            </p>
+                        </div>
+                    {% endfor %}
+
+                </section>
+            {% endif %}
+
+            <!-- AVISO -->
+            <div class="rol-form-notice">
+                <i class="fa-solid fa-circle-info"></i>
+
+                <p>
+                    Los permisos seleccionados determinarán las acciones
+                    que podrás asociar a este rol. El control efectivo
+                    del acceso debe aplicarse también en las vistas
+                    correspondientes.
+                </p>
+            </div>
+
+            <!-- BOTONES -->
+            <div class="rol-form-actions">
+
+                <a href="{% url 'rol_lista' %}" class="rol-btn-cancelar">
+                    Cancelar
+                </a>
+
+                <button type="submit" class="rol-btn-guardar">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Guardar rol
+                </button>
+
+            </div>
+
+        </form>
+    </section>
+
+</main>
+{% endblock %}

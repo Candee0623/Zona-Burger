@@ -2,47 +2,83 @@ import hashlib
 import logging
 import re
 import urllib.parse
-from datetime import date, datetime, time
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from io import BytesIO
 from urllib.parse import quote
-
+from xml.sax.saxutils import escape
+from django import forms
 from django.contrib import messages
-from django.db import transaction
-from django.db.models import Prefetch, Q, Sum
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
+from django.core.validators import validate_email
+from django.db import IntegrityError, transaction
+from django.db.models import (
+    Avg,
+    Count,
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    Prefetch,
+    Q,
+    Sum,
+)
+from django.db.models.deletion import ProtectedError
+from django.db.models.functions import TruncDate
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
+from django.views.decorators.http import require_POST
+try:
+    from openpyxl import Workbook
+    from openpyxl.chart import BarChart, LineChart, PieChart, Reference
+    from openpyxl.chart.label import DataLabelList
+    from openpyxl.chart.marker import DataPoint, Marker
+    from openpyxl.chart.shapes import GraphicalProperties
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+    from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.properties import PageSetupProperties
 
+    OPENPYXL_DISPONIBLE = True
+except ImportError:
+    OPENPYXL_DISPONIBLE = False
+try:
+    from reportlab.graphics.charts.barcharts import (
+        HorizontalBarChart,
+        VerticalBarChart,
+    )
+    from reportlab.graphics.charts.linecharts import HorizontalLineChart
+    from reportlab.graphics.charts.piecharts import Pie
+    from reportlab.graphics.shapes import Drawing, String
+    from reportlab.graphics.widgets.markers import makeMarker
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_RIGHT
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import mm
+    from reportlab.platypus import (
+        Paragraph,
+        SimpleDocTemplate,
+        Spacer,
+        Table,
+        TableStyle,
+    )
+
+    REPORTLAB_DISPONIBLE = True
+except ImportError:
+    REPORTLAB_DISPONIBLE = False
 from .forms import ExtraForm
 from .models import (
-    AjusteStock,
-    CategoriaProducto,
-    Cliente,
-    Compras,
-    DetalleCompra,
-    DetallePedido,
-    Direccion,
-    EstadoPedido,
-    Extras,
-    GrupoOpcion,
-    Horario,
-    Insumo,
-    MedioPago,
-    Negocio,
-    Opcion,
-    Pedido,
-    Producto,
-    ProductoExtras,
-    ProductoGrupoOpcion,
-    ProductoPromocion,
-    Promocion,
-    Receta,
-    RecetaInsumo,
-    RedesSociales,
-    TipoBeneficio,
-    ZonasEntrega,
+    AjusteStock, CategoriaProducto, Cliente, Compras, DetalleCompra,
+    DetallePedido, Direccion, Empleado, EstadoPedido, Extras, GrupoOpcion,
+    Horario, Insumo, Lote, MedioPago, Negocio, Opcion, Pedido, Permiso,
+    Producto, ProductoExtras, ProductoGrupoOpcion, ProductoPromocion,
+    Promocion, Receta, RecetaInsumo, RedesSociales, Rol, RolPermiso,
+    TipoBeneficio, ZonasEntrega,
 )
 
 logger = logging.getLogger(__name__)
@@ -89,15 +125,17 @@ def es_peticion_ajax(request):
 
 
 def calcular_ingresos_del_dia(pedidos):
-    """Devuelve (efectivo, transferencia) cobrado en los pedidos recibidos."""
-    efectivo = pedidos.filter(
-        idmediopago__nombremetodo__iexact='efectivo',
-        pagado=True,
+    """Devuelve (efectivo, transferencia) cobrado, sin pedidos cancelados."""
+    validos = pedidos.filter(pagado=True).exclude(
+        idestadopedido__descripcion__iexact='Cancelado'
+    )
+
+    efectivo = validos.filter(
+        idmediopago__nombremetodo__iexact='efectivo'
     ).aggregate(suma=Sum('total'))['suma'] or 0
 
-    transferencia = pedidos.filter(
-        idmediopago__nombremetodo__icontains='transferencia',
-        pagado=True,
+    transferencia = validos.filter(
+        idmediopago__nombremetodo__icontains='transferencia'
     ).aggregate(suma=Sum('total'))['suma'] or 0
 
     return efectivo, transferencia
@@ -160,8 +198,8 @@ def menu_actualizaciones(request):
         )
     )
 
-    # Representación del contenido visible: si algo cambia (nombre, precio,
-    # imagen, estado, categoría...) cambia el hash resultante.
+    # Si algo visible cambia (nombre, precio, imagen, estado, categoría...)
+    # cambia el hash resultante.
     datos_menu = []
 
     for categoria in categorias:
@@ -235,8 +273,18 @@ def detalleProducto(request, idproducto):
         if rel.idextra
     ]
 
-    # Si el cliente viene de editar un ítem del carrito, se recupera su
-    # configuración para precargar el formulario.
+    # Ingredientes de la receta que el cliente puede quitar.
+    insumos_removibles = (
+        RecetaInsumo.objects
+        .filter(
+            idreceta__idproducto=producto,
+            es_removible=True,
+            idinsumo__isnull=False,
+        )
+        .select_related('idinsumo')
+    )
+
+    # Si el cliente está editando un ítem, se recupera su configuración.
     edit_item_id = request.session.get('edit_item_id')
     carrito = request.session.get('carrito', {})
     item_editando = carrito.get(edit_item_id) if edit_item_id else None
@@ -245,6 +293,7 @@ def detalleProducto(request, idproducto):
         'producto': producto,
         'grupos_opciones': grupos_opciones,
         'extras_producto': extras_producto,
+        'insumos_removibles': insumos_removibles,
         'negocio': Negocio.objects.first(),
         'instagram': obtener_instagram(),
         'item_editando': item_editando,
@@ -297,7 +346,6 @@ def agregar_al_carrito(request, idproducto):
 
             return redirect('detalleProducto', idproducto=producto.idproducto)
 
-    # Se arma el producto personalizado y se calcula su precio final.
     precio_unitario = float(producto.precio)
     detalle_opciones = []
     opciones_seleccionadas = []
@@ -435,7 +483,220 @@ def eliminar_del_carrito(request, item_id):
 
 
 # ============================================================
-# 3. CHECKOUT Y PEDIDOS
+# 3. LÓGICA DE PROMOCIONES
+# ============================================================
+
+def promocion_es_valida(promocion):
+    if not promocion:
+        return False
+
+    if promocion.activo != 1:
+        return False
+
+    hoy = timezone.localdate()
+
+    if promocion.fechainicio and hoy < promocion.fechainicio:
+        return False
+
+    if promocion.fechafin and hoy > promocion.fechafin:
+        return False
+
+    return True
+
+
+def obtener_productos_promocion(promocion):
+    return set(
+        ProductoPromocion.objects
+        .filter(idpromocion=promocion)
+        .values_list('idproducto_id', flat=True)
+    )
+
+
+def calcular_descuento_promocion(carrito, promocion):
+    """Devuelve (descuento, mensaje) según el tipo de beneficio."""
+    if not promocion:
+        return Decimal('0.00'), ''
+
+    if not promocion_es_valida(promocion):
+        return Decimal('0.00'), 'La promoción no está vigente.'
+
+    productos_validos = obtener_productos_promocion(promocion)
+
+    if not productos_validos:
+        return Decimal('0.00'), 'La promoción no tiene productos asociados.'
+
+    # Una entrada por unidad, para poder aplicar promos tipo 2x1 o 3x2.
+    unidades = []
+    subtotal_elegible = Decimal('0.00')
+
+    for item in carrito.values():
+        producto_id = item.get('producto_id')
+
+        if producto_id is None:
+            continue
+
+        try:
+            producto_id = int(producto_id)
+        except (TypeError, ValueError):
+            continue
+
+        if producto_id not in productos_validos:
+            continue
+
+        try:
+            cantidad = int(item.get('cantidad', 0))
+        except (TypeError, ValueError):
+            cantidad = 0
+
+        if cantidad <= 0:
+            continue
+
+        try:
+            precio_unitario = Decimal(str(item.get('precio_unitario', 0)))
+        except Exception:
+            precio_unitario = Decimal('0.00')
+
+        if precio_unitario <= 0:
+            continue
+
+        subtotal_elegible += precio_unitario * cantidad
+        unidades.extend([precio_unitario] * cantidad)
+
+    if not unidades:
+        return (
+            Decimal('0.00'),
+            'La promoción no aplica a los productos del carrito.',
+        )
+
+    tipo = promocion.tipobeneficio.codigo if promocion.tipobeneficio else None
+    valor = promocion.valor or Decimal('0.00')
+    descuento = Decimal('0.00')
+    mensaje = ''
+
+    if tipo == '2x1':
+        unidades.sort()
+        descuento = sum(unidades[:len(unidades) // 2], Decimal('0.00'))
+        mensaje = 'Promoción 2 x 1 aplicada.'
+
+    elif tipo == '3x2':
+        unidades.sort()
+        descuento = sum(unidades[:len(unidades) // 3], Decimal('0.00'))
+        mensaje = 'Promoción 3 x 2 aplicada.'
+
+    elif tipo == 'PRODUCTO_GRATIS':
+        descuento = min(unidades)
+        mensaje = 'Producto gratis aplicado.'
+
+    elif tipo == 'DESCUENTO_PORCENTAJE':
+        porcentaje = max(Decimal('0.00'), min(valor, Decimal('100.00')))
+        descuento = subtotal_elegible * porcentaje / Decimal('100')
+        mensaje = f'Descuento del {porcentaje}% aplicado.'
+
+    elif tipo == 'DESCUENTO_FIJO':
+        descuento = min(valor, subtotal_elegible)
+        mensaje = f'Descuento de ${descuento} aplicado.'
+
+    else:
+        return Decimal('0.00'), 'Tipo de promoción no válido.'
+
+    descuento = max(Decimal('0.00'), min(descuento, subtotal_elegible))
+    descuento = descuento.quantize(Decimal('0.01'))
+
+    return descuento, mensaje
+
+
+def calcular_total_pedido(carrito, promocion=None):
+    subtotal = Decimal('0.00')
+
+    for item in carrito.values():
+        try:
+            cantidad = int(item.get('cantidad', 0))
+        except (TypeError, ValueError):
+            cantidad = 0
+
+        try:
+            precio_unitario = Decimal(str(item.get('precio_unitario', 0)))
+        except Exception:
+            precio_unitario = Decimal('0.00')
+
+        if cantidad > 0:
+            subtotal += precio_unitario * cantidad
+
+    descuento, mensaje = calcular_descuento_promocion(carrito, promocion)
+
+    total = max(Decimal('0.00'), subtotal - descuento)
+
+    return {
+        'subtotal': subtotal.quantize(Decimal('0.01')),
+        'descuento': descuento.quantize(Decimal('0.01')),
+        'total': total.quantize(Decimal('0.01')),
+        'mensaje': mensaje,
+    }
+
+
+@require_POST
+def aplicar_promocion(request):
+    codigo = request.POST.get('codigo_promocion', '').strip().upper()
+
+    if not codigo:
+        return JsonResponse({
+            'ok': False,
+            'mensaje': 'Ingresá una palabra clave.',
+        })
+
+    try:
+        promocion = Promocion.objects.get(
+            palabraclave__iexact=codigo,
+            activo=1,
+        )
+    except Promocion.DoesNotExist:
+        return JsonResponse({
+            'ok': False,
+            'mensaje': 'La promoción no existe o no está activa.',
+        })
+
+    if not promocion_es_valida(promocion):
+        return JsonResponse({
+            'ok': False,
+            'mensaje': 'La promoción no está vigente.',
+        })
+
+    carrito = request.session.get('carrito', {})
+
+    if not carrito:
+        return JsonResponse({
+            'ok': False,
+            'mensaje': 'El carrito está vacío.',
+        })
+
+    resultado = calcular_total_pedido(carrito, promocion)
+
+    if resultado['descuento'] <= Decimal('0.00'):
+        return JsonResponse({
+            'ok': False,
+            'mensaje': (
+                resultado['mensaje'] or 'La promoción no aplica al carrito.'
+            ),
+        })
+
+    request.session['promocion_id'] = promocion.idpromocion
+    request.session['codigo_promocion'] = codigo
+    request.session['descuento_promocion'] = str(resultado['descuento'])
+    request.session.modified = True
+
+    return JsonResponse({
+        'ok': True,
+        'promocion_id': promocion.idpromocion,
+        'codigo': codigo,
+        'descuento': float(resultado['descuento']),
+        'subtotal': float(resultado['subtotal']),
+        'total': float(resultado['total']),
+        'mensaje': resultado['mensaje'],
+    })
+
+
+# ============================================================
+# 4. CHECKOUT Y PEDIDOS
 # ============================================================
 
 def _items_checkout(carrito):
@@ -453,6 +714,54 @@ def _items_checkout(carrito):
         })
 
     return items
+
+
+def calcular_consumo_insumos(carrito):
+    """Devuelve el consumo total de insumos del carrito según las recetas."""
+    consumo = {}
+
+    for item in carrito.values():
+        producto_id = item.get('producto_id')
+        cantidad_producto = int(item.get('cantidad', 1) or 1)
+
+        if not producto_id or cantidad_producto <= 0:
+            continue
+
+        insumos_quitados = {
+            str(insumo_id)
+            for insumo_id in item.get('insumos_quitados_ids', [])
+        }
+
+        recetas = RecetaInsumo.objects.filter(
+            idreceta__idproducto_id=producto_id,
+            idinsumo__isnull=False,
+            idreceta__isnull=False,
+            idinsumo__descontar_stock_automaticamente=True,
+        ).select_related('idinsumo', 'idreceta')
+
+        for detalle_receta in recetas:
+            insumo = detalle_receta.idinsumo
+
+            if str(insumo.pk) in insumos_quitados:
+                continue
+
+            cantidad_receta = detalle_receta.cantidadinsumo or Decimal('0')
+
+            if cantidad_receta <= 0:
+                continue
+
+            if insumo.pk not in consumo:
+                consumo[insumo.pk] = {
+                    'insumo': insumo,
+                    'cantidad': Decimal('0'),
+                }
+
+            consumo[insumo.pk]['cantidad'] += (
+                cantidad_receta * cantidad_producto
+            )
+
+    return consumo
+
 
 def procesar_checkout(request):
     carrito = request.session.get('carrito', {})
@@ -572,25 +881,17 @@ def procesar_checkout(request):
     if horario_entrega:
         try:
             horario_deseado = datetime.strptime(
-                horario_entrega,
-                '%H:%M'
+                horario_entrega, '%H:%M'
             ).time()
         except ValueError:
-            errores['horario_entrega'] = (
-                'El horario de entrega no es válido.'
-            )
+            errores['horario_entrega'] = 'El horario de entrega no es válido.'
 
-    zona = ZonasEntrega.objects.filter(
-        nombre__iexact=localidad
-    ).first()
+    zona = ZonasEntrega.objects.filter(nombre__iexact=localidad).first()
 
     if zona and zona.costoenvio is not None:
         costo_envio = Decimal(str(zona.costoenvio))
-
         costo_envio_texto = (
-            'Envío gratis'
-            if costo_envio == 0
-            else f'${costo_envio:.2f}'
+            'Envío gratis' if costo_envio == 0 else f'${costo_envio:.2f}'
         )
     else:
         costo_envio = Decimal('0.00')
@@ -613,19 +914,13 @@ def procesar_checkout(request):
 
         else:
             descuento_promocion, mensaje_promocion = (
-                calcular_descuento_promocion(
-                    carrito,
-                    objeto_promocion
-                )
+                calcular_descuento_promocion(carrito, objeto_promocion)
             )
 
             if descuento_promocion <= 0:
                 error_promocion = (
                     mensaje_promocion
-                    or (
-                        'La promoción no aplica a los productos '
-                        'de tu carrito.'
-                    )
+                    or 'La promoción no aplica a los productos de tu carrito.'
                 )
 
         if error_promocion:
@@ -634,7 +929,7 @@ def procesar_checkout(request):
     if any(errores.values()):
         total_estimado = max(
             Decimal('0.00'),
-            total_carrito - descuento_promocion
+            total_carrito - descuento_promocion,
         )
 
         return render(request, 'publico/checkout.html', {
@@ -657,7 +952,28 @@ def procesar_checkout(request):
         total_carrito - descuento_promocion + costo_envio,
     )
 
+    consumo_insumos = calcular_consumo_insumos(carrito)
+
     with transaction.atomic():
+        # Se bloquean los insumos para comprobar y descontar el stock
+        # dentro de la misma transacción.
+        insumos_bloqueados = {}
+
+        for insumo_id in sorted(consumo_insumos.keys()):
+            insumo = Insumo.objects.select_for_update().get(pk=insumo_id)
+            cantidad_necesaria = consumo_insumos[insumo_id]['cantidad']
+
+            if insumo.stockactual < cantidad_necesaria:
+                messages.error(
+                    request,
+                    f'Stock insuficiente de {insumo.nombreinsumo}. '
+                    f'Disponible: {insumo.stockactual}. '
+                    f'Necesario: {cantidad_necesaria}.'
+                )
+                return redirect('ver_carrito')
+
+            insumos_bloqueados[insumo_id] = insumo
+
         cliente = Cliente.objects.create(
             nombre=nombre,
             apellido=apellido,
@@ -672,19 +988,14 @@ def procesar_checkout(request):
             localidad=localidad,
         )
 
-        estado_inicial = get_object_or_404(
-            EstadoPedido,
-            pk=1
-        )
+        estado_inicial = get_object_or_404(EstadoPedido, pk=1)
 
         pedido = Pedido.objects.create(
             idcliente=cliente,
             idmediopago=medio_pago,
             idestadopedido=estado_inicial,
             idpromocion=(
-                objeto_promocion.idpromocion
-                if objeto_promocion
-                else None
+                objeto_promocion.idpromocion if objeto_promocion else None
             ),
             horarioentregadeseado=horario_deseado,
             total=total_general,
@@ -700,10 +1011,7 @@ def procesar_checkout(request):
                 continue
 
             cantidad = item.get('cantidad', 1) or 1
-            subtotal_item = Decimal(
-                str(item.get('subtotal', 0))
-            )
-
+            subtotal_item = Decimal(str(item.get('subtotal', 0)))
             detalles = item.get('detalles')
 
             DetallePedido.objects.create(
@@ -712,11 +1020,14 @@ def procesar_checkout(request):
                 cantidad=cantidad,
                 preciounitario=subtotal_item / cantidad,
                 observaciones=(
-                    ', '.join(detalles)
-                    if isinstance(detalles, list)
-                    else ''
+                    ', '.join(detalles) if isinstance(detalles, list) else ''
                 ),
             )
+
+        for insumo_id, dato in consumo_insumos.items():
+            insumo = insumos_bloqueados[insumo_id]
+            insumo.stockactual -= dato['cantidad']
+            insumo.save(update_fields=['stockactual'])
 
     mensaje = '*¡Nuevo Pedido! 🍔*\n\n'
 
@@ -733,22 +1044,15 @@ def procesar_checkout(request):
     mensaje += f'\n• Localidad / Zona: {localidad}\n'
 
     if horario_entrega:
-        mensaje += (
-            f'• Horario Deseado: {horario_entrega}\n'
-        )
+        mensaje += f'• Horario Deseado: {horario_entrega}\n'
 
     if objeto_promocion and descuento_promocion > 0:
-        mensaje += (
-            f'• Palabra Clave Promo: '
-            f'{codigo_promo} (Aplicada)\n'
-        )
+        mensaje += f'• Palabra Clave Promo: {codigo_promo} (Aplicada)\n'
 
     mensaje += '\n*Detalle del Pedido:*\n'
 
     for item in carrito.values():
-        subtotal = Decimal(
-            str(item.get('subtotal', 0))
-        )
+        subtotal = Decimal(str(item.get('subtotal', 0)))
 
         mensaje += (
             f'• {item.get("cantidad")}x '
@@ -759,44 +1063,22 @@ def procesar_checkout(request):
         for detalle in item.get('detalles', []):
             mensaje += f'   - {detalle}\n'
 
-    mensaje += (
-        f'\n• Subtotal Productos: '
-        f'${total_carrito:.2f}\n'
-    )
+    mensaje += f'\n• Subtotal Productos: ${total_carrito:.2f}\n'
 
     if descuento_promocion > 0:
-        mensaje += (
-            f'• Descuento Promo: '
-            f'-${descuento_promocion:.2f}\n'
-        )
+        mensaje += f'• Descuento Promo: -${descuento_promocion:.2f}\n'
 
-    mensaje += (
-        f'• Costo de Envío: '
-        f'{costo_envio_texto}\n'
-    )
-
-    mensaje += (
-        f'*Total a Pagar:* '
-        f'${total_general:.2f}\n'
-    )
-
-    mensaje += (
-        f'*Método de Pago:* '
-        f'{medio_pago.nombremetodo}\n'
-    )
+    mensaje += f'• Costo de Envío: {costo_envio_texto}\n'
+    mensaje += f'*Total a Pagar:* ${total_general:.2f}\n'
+    mensaje += f'*Método de Pago:* {medio_pago.nombremetodo}\n'
 
     if comentario:
-        mensaje += (
-            f'*Comentarios:* '
-            f'{comentario}\n'
-        )
+        mensaje += f'*Comentarios:* {comentario}\n'
 
     negocio = Negocio.objects.first()
 
     numero_whatsapp = limpiar_numero_telefono(
-        str(negocio.telefono)
-        if negocio and negocio.telefono
-        else ''
+        str(negocio.telefono) if negocio and negocio.telefono else ''
     )
 
     if 'carrito' in request.session:
@@ -807,1167 +1089,24 @@ def procesar_checkout(request):
         logger.warning(
             'El negocio no tiene un número de WhatsApp configurado.'
         )
-
         return redirect('menu')
 
     request.session['whatsapp_url'] = (
-        f'https://wa.me/{numero_whatsapp}'
-        f'?text={quote(mensaje)}'
+        f'https://wa.me/{numero_whatsapp}?text={quote(mensaje)}'
     )
-
     request.session['limpiar_checkout'] = True
     request.session.modified = True
 
     return redirect('pedido_exitoso')
 
 
-
 def pedido_exitoso(request):
-    limpiar_checkout = request.session.pop(
-        'limpiar_checkout',
-        False
-    )
-
-    return render(
-        request,
-        'publico/pedidoExitoso.html',
-        {
-            'negocio': Negocio.objects.first(),
-            'whatsapp_url': request.session.get('whatsapp_url'),
-            'limpiar_checkout': limpiar_checkout,
-        }
-    )
-
-
-# ============================================================
-# 4. PROMOCIONES (PANEL)
-# ============================================================
-
-def _valor_beneficio(tipo_beneficio, valor_raw):
-    """Los beneficios sin valor numérico (ej. 2x1) se guardan como NULL."""
-    if tipo_beneficio.comportamiento == 'SIN_VALOR' or not valor_raw:
-        return None
-
-    return valor_raw
-
-
-def promociones_panel(request):
-    return render(request, 'panel/promociones/inicioPromociones.html')
-
-
-def lista_promociones(request):
-    return render(request, 'panel/promociones/listaPromociones.html', {
-        'promociones': Promocion.objects.all(),
-    })
-
-
-def crear_promocion(request):
-    tipos_beneficio = TipoBeneficio.objects.all()
-    productos = Producto.objects.all()
-
-    if request.method == 'POST':
-        palabraclave = request.POST.get('palabraclave', '').strip()
-        tipobeneficio_id = request.POST.get('tipobeneficio')
-        producto_id = request.POST.get('producto')
-        descuento = request.POST.get('descuento', '').strip()
-        fechainicio = request.POST.get('fechainicio') or None
-        fechafin = request.POST.get('fechafin') or None
-        activo = 1 if request.POST.get('activo') else 0
-
-        # =========================
-        # VALIDAR PALABRA CLAVE
-        # =========================
-        if not palabraclave:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Crear promoción',
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'error': 'Ingresá una palabra clave.',
-                }
-            )
-
-        # =========================
-        # VALIDAR TIPO BENEFICIO
-        # =========================
-        if not tipobeneficio_id:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Crear promoción',
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'error': 'Seleccioná un tipo de beneficio.',
-                }
-            )
-
-        # =========================
-        # VALIDAR PRODUCTO
-        # =========================
-        if not producto_id:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Crear promoción',
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'error': 'Seleccioná un producto.',
-                }
-            )
-
-        # =========================
-        # OBTENER TIPO BENEFICIO
-        # =========================
-        try:
-            tipo_beneficio = TipoBeneficio.objects.get(
-                pk=tipobeneficio_id
-            )
-        except TipoBeneficio.DoesNotExist:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Crear promoción',
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'error': 'El tipo de beneficio seleccionado no existe.',
-                }
-            )
-
-        # =========================
-        # OBTENER PRODUCTO
-        # =========================
-        try:
-            producto = Producto.objects.get(pk=producto_id)
-        except Producto.DoesNotExist:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Crear promoción',
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'error': 'El producto seleccionado no existe.',
-                }
-            )
-
-        # =========================
-        # PROCESAR VALOR
-        # =========================
-        valor = None
-
-        if getattr(tipo_beneficio, 'comportamiento', None) != 'SIN_VALOR':
-
-            if not descuento:
-                return render(
-                    request,
-                    'panel/promociones/formPromocion.html',
-                    {
-                        'titulo': 'Crear promoción',
-                        'tipos_beneficio': tipos_beneficio,
-                        'productos': productos,
-                        'error': 'Ingresá el valor del beneficio.',
-                    }
-                )
-
-            try:
-                valor = Decimal(descuento)
-            except (InvalidOperation, TypeError):
-                return render(
-                    request,
-                    'panel/promociones/formPromocion.html',
-                    {
-                        'titulo': 'Crear promoción',
-                        'tipos_beneficio': tipos_beneficio,
-                        'productos': productos,
-                        'error': 'El valor del beneficio no es válido.',
-                    }
-                )
-
-            if valor < 0:
-                return render(
-                    request,
-                    'panel/promociones/formPromocion.html',
-                    {
-                        'titulo': 'Crear promoción',
-                        'tipos_beneficio': tipos_beneficio,
-                        'productos': productos,
-                        'error': 'El valor del beneficio no puede ser negativo.',
-                    }
-                )
-
-        # =========================
-        # CREAR PROMOCIÓN
-        # =========================
-        promocion = Promocion(
-            palabraclave=palabraclave,
-            tipobeneficio=tipo_beneficio,
-            valor=valor,
-            fechainicio=fechainicio,
-            fechafin=fechafin,
-            activo=activo,
-        )
-
-        promocion.save()
-
-        # =========================
-        # GUARDAR PRODUCTO
-        # =========================
-        ProductoPromocion.objects.create(
-            idproducto=producto,
-            idpromocion=promocion
-        )
-
-        messages.success(
-            request,
-            f'La promoción "{palabraclave}" fue creada correctamente.'
-        )
-
-        return redirect('panel_lista_promociones')
-
-    # =========================
-    # GET
-    # =========================
-    return render(
-        request,
-        'panel/promociones/formPromocion.html',
-        {
-            'titulo': 'Crear promoción',
-            'tipos_beneficio': tipos_beneficio,
-            'productos': productos,
-        }
-    )
-
-def editar_promocion(request, idpromocion):
-
-    # =========================
-    # OBTENER PROMOCIÓN
-    # =========================
-    promocion = get_object_or_404(
-        Promocion,
-        idpromocion=idpromocion
-    )
-
-    tipos_beneficio = TipoBeneficio.objects.all()
-    productos = Producto.objects.all()
-
-    # =========================
-    # OBTENER TIPO BENEFICIO
-    # =========================
-    tipo_beneficio_seleccionado = (
-        promocion.tipobeneficio.pk
-        if promocion.tipobeneficio
-        else None
-    )
-
-    # =========================
-    # OBTENER PRODUCTO DESDE
-    # ProductoPromocion
-    # =========================
-    relacion_producto = (
-        ProductoPromocion.objects
-        .filter(idpromocion=promocion)
-        .select_related('idproducto')
-        .first()
-    )
-
-    producto_seleccionado = (
-        relacion_producto.idproducto.pk
-        if relacion_producto and relacion_producto.idproducto
-        else None
-    )
-
-    # =========================
-    # POST
-    # =========================
-    if request.method == 'POST':
-
-        palabraclave = request.POST.get(
-            'palabraclave',
-            ''
-        ).strip()
-
-        tipobeneficio_id = request.POST.get(
-            'tipobeneficio'
-        )
-
-        producto_id = request.POST.get(
-            'producto'
-        )
-
-        descuento = request.POST.get(
-            'descuento',
-            ''
-        ).strip()
-
-        fechainicio = (
-            request.POST.get('fechainicio')
-            or None
-        )
-
-        fechafin = (
-            request.POST.get('fechafin')
-            or None
-        )
-
-        activo = (
-            1
-            if request.POST.get('activo')
-            else 0
-        )
-
-        # =========================
-        # VALIDAR PALABRA CLAVE
-        # =========================
-        if not palabraclave:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Editar promoción',
-                    'promocion': promocion,
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'tipo_beneficio_seleccionado':
-                        tipo_beneficio_seleccionado,
-                    'producto_seleccionado':
-                        producto_seleccionado,
-                    'error': 'Ingresá una palabra clave.',
-                }
-            )
-
-        # =========================
-        # VALIDAR TIPO BENEFICIO
-        # =========================
-        if not tipobeneficio_id:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Editar promoción',
-                    'promocion': promocion,
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'tipo_beneficio_seleccionado':
-                        tipo_beneficio_seleccionado,
-                    'producto_seleccionado':
-                        producto_seleccionado,
-                    'error': 'Seleccioná un tipo de beneficio.',
-                }
-            )
-
-        # =========================
-        # VALIDAR PRODUCTO
-        # =========================
-        if not producto_id:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Editar promoción',
-                    'promocion': promocion,
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'tipo_beneficio_seleccionado':
-                        tipo_beneficio_seleccionado,
-                    'producto_seleccionado':
-                        producto_seleccionado,
-                    'error': 'Seleccioná un producto.',
-                }
-            )
-
-        # =========================
-        # OBTENER TIPO BENEFICIO
-        # =========================
-        try:
-            tipo_beneficio = TipoBeneficio.objects.get(
-                pk=tipobeneficio_id
-            )
-        except TipoBeneficio.DoesNotExist:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Editar promoción',
-                    'promocion': promocion,
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'tipo_beneficio_seleccionado':
-                        tipo_beneficio_seleccionado,
-                    'producto_seleccionado':
-                        producto_seleccionado,
-                    'error':
-                        'El tipo de beneficio seleccionado no existe.',
-                }
-            )
-
-        # =========================
-        # OBTENER PRODUCTO
-        # =========================
-        try:
-            producto = Producto.objects.get(
-                pk=producto_id
-            )
-        except Producto.DoesNotExist:
-            return render(
-                request,
-                'panel/promociones/formPromocion.html',
-                {
-                    'titulo': 'Editar promoción',
-                    'promocion': promocion,
-                    'tipos_beneficio': tipos_beneficio,
-                    'productos': productos,
-                    'tipo_beneficio_seleccionado':
-                        tipo_beneficio_seleccionado,
-                    'producto_seleccionado':
-                        producto_seleccionado,
-                    'error':
-                        'El producto seleccionado no existe.',
-                }
-            )
-
-        # =========================
-        # PROCESAR VALOR
-        # =========================
-        valor = None
-
-        if getattr(
-            tipo_beneficio,
-            'comportamiento',
-            None
-        ) != 'SIN_VALOR':
-
-            if not descuento:
-                return render(
-                    request,
-                    'panel/promociones/formPromocion.html',
-                    {
-                        'titulo': 'Editar promoción',
-                        'promocion': promocion,
-                        'tipos_beneficio': tipos_beneficio,
-                        'productos': productos,
-                        'tipo_beneficio_seleccionado':
-                            tipo_beneficio_seleccionado,
-                        'producto_seleccionado':
-                            producto_seleccionado,
-                        'error':
-                            'Ingresá el valor del beneficio.',
-                    }
-                )
-
-            try:
-                valor = Decimal(descuento)
-            except (InvalidOperation, TypeError):
-                return render(
-                    request,
-                    'panel/promociones/formPromocion.html',
-                    {
-                        'titulo': 'Editar promoción',
-                        'promocion': promocion,
-                        'tipos_beneficio': tipos_beneficio,
-                        'productos': productos,
-                        'tipo_beneficio_seleccionado':
-                            tipo_beneficio_seleccionado,
-                        'producto_seleccionado':
-                            producto_seleccionado,
-                        'error':
-                            'El valor del beneficio no es válido.',
-                    }
-                )
-
-            if valor < 0:
-                return render(
-                    request,
-                    'panel/promociones/formPromocion.html',
-                    {
-                        'titulo': 'Editar promoción',
-                        'promocion': promocion,
-                        'tipos_beneficio': tipos_beneficio,
-                        'productos': productos,
-                        'tipo_beneficio_seleccionado':
-                            tipo_beneficio_seleccionado,
-                        'producto_seleccionado':
-                            producto_seleccionado,
-                        'error':
-                            'El valor del beneficio no puede ser negativo.',
-                    }
-                )
-
-        # =========================
-        # ACTUALIZAR PROMOCIÓN
-        # =========================
-        promocion.palabraclave = palabraclave
-        promocion.tipobeneficio = tipo_beneficio
-        promocion.valor = valor
-        promocion.fechainicio = fechainicio
-        promocion.fechafin = fechafin
-        promocion.activo = activo
-
-        promocion.save()
-
-        # =========================
-        # ACTUALIZAR PRODUCTO
-        # =========================
-
-        # Eliminamos la relación anterior
-        ProductoPromocion.objects.filter(
-            idpromocion=promocion
-        ).delete()
-
-        # Creamos la nueva relación
-        ProductoPromocion.objects.create(
-            idproducto=producto,
-            idpromocion=promocion
-        )
-
-        messages.success(
-            request,
-            f'La promoción "{palabraclave}" fue actualizada correctamente.'
-        )
-
-        return redirect('panel_lista_promociones')
-
-    # =========================
-    # GET
-    # =========================
-    return render(
-        request,
-        'panel/promociones/formPromocion.html',
-        {
-            'titulo': 'Editar promoción',
-            'promocion': promocion,
-            'tipos_beneficio': tipos_beneficio,
-            'productos': productos,
-            'tipo_beneficio_seleccionado':
-                tipo_beneficio_seleccionado,
-            'producto_seleccionado':
-                producto_seleccionado,
-        }
-    )
-
-
-def eliminar_promocion(request, idpromocion):
-    promocion = get_object_or_404(Promocion, pk=idpromocion)
-
-    if request.method == 'POST':
-        with transaction.atomic():
-            ProductoPromocion.objects.filter(idpromocion=promocion).delete()
-            promocion.delete()
-
-        return redirect('lista_promociones')
-
-    return render(request, 'panel/promociones/EliminarPromocion.html', {
-        'promocion': promocion,
-    })
-
-
-# ============================================================
-# TIPOS DE BENEFICIO
-# ============================================================
-
-def lista_tipos_beneficio(request):
-    return render(request, 'panel/promociones/tiposBeneficio/listaTiposBeneficios.html', {
-        'tipos': TipoBeneficio.objects.all(),
-    })
-
-
-def crear_tipo_beneficio(request):
-    if request.method == 'GET':
-        return render(request, 'panel/promociones/tiposBeneficio/crearTipoBeneficio.html')
-
-    codigo = request.POST.get('codigo', '').strip()
-    nombre = request.POST.get('nombre', '').strip()
-    descripcion = request.POST.get('descripcion', '').strip()
-    comportamiento = request.POST.get('comportamiento', '').strip()
-
-    if not nombre:
-        messages.error(request, 'Debes ingresar un nombre para el beneficio.')
-        return redirect('crear_tipo_beneficio')
-
-    if not comportamiento:
-        messages.error(request, 'Debes seleccionar un comportamiento.')
-        return redirect('crear_tipo_beneficio')
-
-    # Si no se indica código, se genera a partir del nombre.
-    if not codigo:
-        codigo = nombre.upper().replace(' ', '_')
-
-    if TipoBeneficio.objects.filter(codigo__iexact=codigo).exists():
-        messages.error(
-            request, 'Ya existe un tipo de beneficio con ese código.'
-        )
-        return redirect('crear_tipo_beneficio')
-
-    if TipoBeneficio.objects.filter(nombre__iexact=nombre).exists():
-        messages.error(
-            request, 'Ya existe un tipo de beneficio con ese nombre.'
-        )
-        return redirect('crear_tipo_beneficio')
-
-    TipoBeneficio.objects.create(
-        codigo=codigo,
-        nombre=nombre,
-        descripcion=descripcion,
-        comportamiento=comportamiento,
-    )
-
-    messages.success(request, 'Tipo de beneficio creado correctamente.')
-    return redirect('lista_tipos_beneficio')
-
-
-def editar_tipo_beneficio(request, pk):
-    tipo = get_object_or_404(TipoBeneficio, pk=pk)
-
-    if request.method == 'POST':
-        codigo = request.POST.get('codigo', '').strip()
-        nombre = request.POST.get('nombre', '').strip()
-        descripcion = request.POST.get('descripcion', '').strip()
-
-        if not nombre:
-            messages.error(request, 'El nombre no puede estar vacío.')
-            return redirect('editar_tipo_beneficio', pk=pk)
-
-        if not codigo:
-            codigo = nombre.upper().replace(' ', '_')
-
-        # Se excluye el propio registro para poder conservar sus valores.
-        if TipoBeneficio.objects.filter(codigo__iexact=codigo).exclude(pk=pk).exists():
-            messages.error(request, 'Ya existe otro beneficio con ese código.')
-            return redirect('editar_tipo_beneficio', pk=pk)
-
-        if TipoBeneficio.objects.filter(nombre__iexact=nombre).exclude(pk=pk).exists():
-            messages.error(request, 'Ya existe otro beneficio con ese nombre.')
-            return redirect('editar_tipo_beneficio', pk=pk)
-
-        tipo.codigo = codigo
-        tipo.nombre = nombre
-        tipo.descripcion = descripcion
-        tipo.save()
-
-        messages.success(
-            request, 'Tipo de beneficio modificado correctamente.'
-        )
-        return redirect('lista_tipos_beneficio')
-
-    return render(request, 'panel/promociones/tiposBeneficio/editarTipoBeneficio.html', {
-        'tipo': tipo,
-    })
-
-
-def eliminar_tipo_beneficio(request, pk):
-    tipo = get_object_or_404(TipoBeneficio, pk=pk)
-
-    # GET: mostrar la pantalla de confirmación
-    if request.method == 'GET':
-        return render(
-            request,
-            'panel/promociones/tiposBeneficio/eliminarTipoBeneficio.html',
-            {
-                'tipo': tipo,
-            }
-        )
-
-    # POST: verificar si el tipo está siendo utilizado
-    if Promocion.objects.filter(tipobeneficio=tipo).exists():
-        messages.error(
-            request,
-            'No puedes eliminar este beneficio porque tiene promociones asociadas.'
-        )
-        return redirect('panel_lista_tipos_beneficio')
-
-    # Eliminar si no está asociado a ninguna promoción
-    tipo.delete()
-
-    messages.success(
-        request,
-        'Tipo de beneficio eliminado correctamente.'
-    )
-
-    return redirect('panel_lista_tipos_beneficio')
-
-
-# ============================================================
-# VALIDACIÓN Y CÁLCULO DE PROMOCIONES
-# ============================================================
-
-def promocion_es_valida(promocion):
-
-    if not promocion:
-        return False
-
-    if promocion.activo != 1:
-        return False
-
-    hoy = timezone.localdate()
-
-    if promocion.fechainicio and hoy < promocion.fechainicio:
-        return False
-
-    if promocion.fechafin and hoy > promocion.fechafin:
-        return False
-
-    return True
-
-
-def obtener_productos_promocion(promocion):
-
-    return set(
-        ProductoPromocion.objects
-        .filter(idpromocion=promocion)
-        .values_list(
-            'idproducto_id',
-            flat=True
-        )
-    )
-
-
-def calcular_descuento_promocion(carrito, promocion):
-
-    if not promocion:
-        return Decimal('0.00'), ''
-
-    if not promocion_es_valida(promocion):
-        return (
-            Decimal('0.00'),
-            'La promoción no está vigente.'
-        )
-
-    productos_validos = obtener_productos_promocion(
-        promocion
-    )
-
-    if not productos_validos:
-        return (
-            Decimal('0.00'),
-            'La promoción no tiene productos asociados.'
-        )
-
-    unidades = []
-    subtotal_elegible = Decimal('0.00')
-
-    for item in carrito.values():
-
-        producto_id = item.get('producto_id')
-
-        if producto_id is None:
-            continue
-
-        try:
-            producto_id = int(producto_id)
-        except (TypeError, ValueError):
-            continue
-
-        if producto_id not in productos_validos:
-            continue
-
-        try:
-            cantidad = int(
-                item.get('cantidad', 0)
-            )
-        except (TypeError, ValueError):
-            cantidad = 0
-
-        if cantidad <= 0:
-            continue
-
-        try:
-            precio_unitario = Decimal(
-                str(
-                    item.get(
-                        'precio_unitario',
-                        0
-                    )
-                )
-            )
-        except Exception:
-            precio_unitario = Decimal('0.00')
-
-        if precio_unitario <= 0:
-            continue
-
-        subtotal_elegible += (
-            precio_unitario * cantidad
-        )
-
-        unidades.extend(
-            [precio_unitario] * cantidad
-        )
-
-    if not unidades:
-
-        return (
-            Decimal('0.00'),
-            'La promoción no aplica a los productos del carrito.'
-        )
-
-    # ==========================================
-    # TIPO DE BENEFICIO
-    # ==========================================
-
-    tipo = None
-
-    if promocion.tipobeneficio:
-
-        tipo = promocion.tipobeneficio.codigo
-
-    valor = promocion.valor or Decimal('0.00')
-
-    descuento = Decimal('0.00')
-
-    mensaje = ''
-
-
-    # ==========================================
-    # 2 x 1
-    # ==========================================
-
-    if tipo == '2x1':
-
-        unidades.sort()
-
-        cantidad_gratis = len(unidades) // 2
-
-        descuento = sum(
-            unidades[:cantidad_gratis],
-            Decimal('0.00')
-        )
-
-        mensaje = 'Promoción 2 x 1 aplicada.'
-
-
-    # ==========================================
-    # 3 x 2
-    # ==========================================
-
-    elif tipo == '3x2':
-
-        unidades.sort()
-
-        cantidad_gratis = len(unidades) // 3
-
-        descuento = sum(
-            unidades[:cantidad_gratis],
-            Decimal('0.00')
-        )
-
-        mensaje = 'Promoción 3 x 2 aplicada.'
-
-
-    # ==========================================
-    # PRODUCTO GRATIS
-    # ==========================================
-
-    elif tipo == 'PRODUCTO_GRATIS':
-
-        descuento = min(unidades)
-
-        mensaje = 'Producto gratis aplicado.'
-
-
-    # ==========================================
-    # DESCUENTO PORCENTUAL
-    # ==========================================
-
-    elif tipo == 'DESCUENTO_PORCENTAJE':
-
-        porcentaje = max(
-            Decimal('0.00'),
-            min(
-                valor,
-                Decimal('100.00')
-            )
-        )
-
-        descuento = (
-            subtotal_elegible *
-            porcentaje /
-            Decimal('100')
-        )
-
-        mensaje = (
-            f'Descuento del {porcentaje}% aplicado.'
-        )
-
-
-    # ==========================================
-    # DESCUENTO FIJO
-    # ==========================================
-
-    elif tipo == 'DESCUENTO_FIJO':
-
-        descuento = min(
-            valor,
-            subtotal_elegible
-        )
-
-        mensaje = (
-            f'Descuento de ${descuento} aplicado.'
-        )
-
-
-    # ==========================================
-    # TIPO INVÁLIDO
-    # ==========================================
-
-    else:
-
-        return (
-            Decimal('0.00'),
-            'Tipo de promoción no válido.'
-        )
-
-
-    # ==========================================
-    # LIMITAR DESCUENTO
-    # ==========================================
-
-    descuento = max(
-        Decimal('0.00'),
-        min(
-            descuento,
-            subtotal_elegible
-        )
-    )
-
-    descuento = descuento.quantize(
-        Decimal('0.01')
-    )
-
-    return descuento, mensaje
-
-def calcular_total_pedido(carrito, promocion=None):
-
-    subtotal = Decimal('0.00')
-
-    for item in carrito.values():
-
-        try:
-            cantidad = int(
-                item.get('cantidad', 0)
-            )
-        except (TypeError, ValueError):
-            cantidad = 0
-
-        try:
-            precio_unitario = Decimal(
-                str(
-                    item.get(
-                        'precio_unitario',
-                        0
-                    )
-                )
-            )
-        except Exception:
-            precio_unitario = Decimal('0.00')
-
-        if cantidad > 0:
-
-            subtotal += (
-                precio_unitario *
-                cantidad
-            )
-
-    descuento, mensaje = (
-        calcular_descuento_promocion(
-            carrito,
-            promocion
-        )
-    )
-
-    total = subtotal - descuento
-
-    if total < Decimal('0.00'):
-        total = Decimal('0.00')
-
-    return {
-
-        'subtotal':
-            subtotal.quantize(
-                Decimal('0.01')
-            ),
-
-        'descuento':
-            descuento.quantize(
-                Decimal('0.01')
-            ),
-
-        'total':
-            total.quantize(
-                Decimal('0.01')
-            ),
-
-        'mensaje':
-            mensaje,
-    }
-
-@require_POST
-def aplicar_promocion(request):
-
-    # ==========================================
-    # OBTENER CÓDIGO
-    # ==========================================
-
-    codigo = request.POST.get(
-        'codigo_promocion',
-        ''
-    ).strip().upper()
-
-
-    if not codigo:
-
-        return JsonResponse({
-
-            'ok': False,
-
-            'mensaje':
-                'Ingresá una palabra clave.'
-
-        })
-
-
-    # ==========================================
-    # BUSCAR PROMOCIÓN
-    # ==========================================
-
-    try:
-
-        promocion = Promocion.objects.get(
-
-            palabraclave__iexact=codigo,
-
-            activo=1
-        )
-
-    except Promocion.DoesNotExist:
-
-        return JsonResponse({
-
-            'ok': False,
-
-            'mensaje':
-                'La promoción no existe o no está activa.'
-
-        })
-
-
-    # ==========================================
-    # VERIFICAR VIGENCIA
-    # ==========================================
-
-    if not promocion_es_valida(promocion):
-
-        return JsonResponse({
-
-            'ok': False,
-
-            'mensaje':
-                'La promoción no está vigente.'
-
-        })
-
-
-    # ==========================================
-    # OBTENER CARRITO
-    # ==========================================
-
-    carrito = request.session.get(
-        'carrito',
-        {}
-    )
-
-
-    if not carrito:
-
-        return JsonResponse({
-
-            'ok': False,
-
-            'mensaje':
-                'El carrito está vacío.'
-
-        })
-
-
-    # ==========================================
-    # CALCULAR TODO
-    # ==========================================
-
-    resultado = calcular_total_pedido(
-
-        carrito,
-
-        promocion
-
-    )
-
-
-    # ==========================================
-    # VERIFICAR QUE REALMENTE APLIQUE
-    # ==========================================
-
-    if resultado['descuento'] <= Decimal('0.00'):
-
-        return JsonResponse({
-
-            'ok': False,
-
-            'mensaje':
-                resultado['mensaje']
-                or
-                'La promoción no aplica al carrito.'
-
-        })
-
-
-    # ==========================================
-    # GUARDAR PROMOCIÓN EN SESIÓN
-    # ==========================================
-
-    request.session['promocion_id'] = (
-        promocion.idpromocion
-    )
-
-    request.session['codigo_promocion'] = (
-        codigo
-    )
-
-    request.session['descuento_promocion'] = (
-        str(resultado['descuento'])
-    )
-
-    request.session.modified = True
-
-
-    # ==========================================
-    # RESPUESTA
-    # ==========================================
-
-    return JsonResponse({
-
-        'ok': True,
-
-        'promocion_id':
-            promocion.idpromocion,
-
-        'codigo':
-            codigo,
-
-        'descuento':
-            float(resultado['descuento']),
-
-        'subtotal':
-            float(resultado['subtotal']),
-
-        'total':
-            float(resultado['total']),
-
-        'mensaje':
-            resultado['mensaje'],
-
+    limpiar_checkout = request.session.pop('limpiar_checkout', False)
+
+    return render(request, 'publico/pedidoExitoso.html', {
+        'negocio': Negocio.objects.first(),
+        'whatsapp_url': request.session.get('whatsapp_url'),
+        'limpiar_checkout': limpiar_checkout,
     })
 
 
@@ -1982,7 +1121,6 @@ def panel_inicio(request):
     filtro_estado = request.GET.get('estado')
     filtro_cliente = request.GET.get('cliente', '').strip()
 
-    # Resumen: cantidad de pedidos de hoy por estado.
     nombres_estados = [
         'Pendiente',
         'En Preparación',
@@ -1995,7 +1133,9 @@ def panel_inicio(request):
     estados_con_conteo = []
 
     for nombre in nombres_estados:
-        estado = EstadoPedido.objects.filter(descripcion__iexact=nombre).first()
+        estado = EstadoPedido.objects.filter(
+            descripcion__iexact=nombre
+        ).first()
 
         # Si el estado todavía no existe en la base, se omite del resumen.
         if estado:
@@ -2011,8 +1151,7 @@ def panel_inicio(request):
     if filtro_estado:
         pedidos_hoy = pedidos_hoy.filter(idestadopedido_id=filtro_estado)
 
-    # Búsqueda por cliente: cada palabra debe coincidir con el comienzo del
-    # nombre o del apellido, sin distinguir mayúsculas.
+    # Cada palabra debe coincidir con el comienzo del nombre o del apellido.
     if filtro_cliente:
         for termino in filtro_cliente.split():
             pedidos_hoy = pedidos_hoy.filter(
@@ -2036,39 +1175,24 @@ def panel_inicio(request):
 
 
 def obtener_ticket_modal(request, idpedido):
-    pedido = get_object_or_404(
-        Pedido,
-        idpedido=idpedido
-    )
+    pedido = get_object_or_404(Pedido, idpedido=idpedido)
 
     direccion_cliente = (
-        Direccion.objects.filter(
-            idcliente=pedido.idcliente
-        ).first()
-        if pedido.idcliente
-        else None
+        Direccion.objects.filter(idcliente=pedido.idcliente).first()
+        if pedido.idcliente else None
     )
 
-    detalles = DetallePedido.objects.filter(
-        idpedido=pedido
-    )
+    detalles = DetallePedido.objects.filter(idpedido=pedido)
 
-    # Calculamos el subtotal de cada producto
-    # únicamente para mostrarlo en el ticket.
+    # El subtotal de cada producto se calcula solo para mostrarlo en el ticket.
     for detalle in detalles:
-        detalle.subtotal_item = (
-            detalle.preciounitario * detalle.cantidad
-        )
+        detalle.subtotal_item = detalle.preciounitario * detalle.cantidad
 
-    return render(
-        request,
-        'panel/parcialTicket.html',
-        {
-            'pedido': pedido,
-            'detalles': detalles,
-            'direccion_cliente': direccion_cliente,
-        }
-    )
+    return render(request, 'panel/parcialTicket.html', {
+        'pedido': pedido,
+        'detalles': detalles,
+        'direccion_cliente': direccion_cliente,
+    })
 
 
 def actualizar_estado_pedido(request, idpedido):
@@ -2137,7 +1261,6 @@ def toggle_pagado(request, idpedido):
     pedido.pagado = not pedido.pagado
     pedido.save()
 
-    # Se recalculan los ingresos del día tras el cambio.
     ingresos_efectivo, ingresos_transferencia = calcular_ingresos_del_dia(
         Pedido.objects.filter(fecha_creacion__date=timezone.localdate())
     )
@@ -2178,9 +1301,9 @@ def menu_panel(request):
     return render(request, 'panel/menu/inicioMenu.html')
 
 
-# ============================================================
-# 7. CATEGORÍAS
-# ============================================================
+# ------------------------------------------------------------
+# Categorías
+# ------------------------------------------------------------
 
 def categoria_lista(request):
     return render(request, 'panel/menu/categorias/listaCategorias.html', {
@@ -2242,9 +1365,9 @@ def categoria_eliminar(request, idcategoria):
     })
 
 
-# ============================================================
-# 8. GRUPOS DE OPCIONES
-# ============================================================
+# ------------------------------------------------------------
+# Grupos de opciones
+# ------------------------------------------------------------
 
 def grupo_lista(request):
     return render(request, 'panel/menu/opciones/listaOpciones.html', {
@@ -2329,9 +1452,9 @@ def grupo_eliminar(request, idgrupo):
     })
 
 
-# ============================================================
-# 9. PRODUCTOS
-# ============================================================
+# ------------------------------------------------------------
+# Productos
+# ------------------------------------------------------------
 
 def _ids_enviados(request, campo):
     return [int(v) for v in request.POST.getlist(campo) if v.isdigit()]
@@ -2390,14 +1513,10 @@ def producto_lista(request):
 
 
 def producto_crear(request):
-    categorias = CategoriaProducto.objects.all()
-    grupos = GrupoOpcion.objects.prefetch_related('opcion_set').all()
-    extras = Extras.objects.all()
-
     contexto = {
-        'categorias': categorias,
-        'grupos': grupos,
-        'extras': extras,
+        'categorias': CategoriaProducto.objects.all(),
+        'grupos': GrupoOpcion.objects.prefetch_related('opcion_set').all(),
+        'extras': Extras.objects.all(),
         'errores': [],
         'datos_previos': {},
         'grupos_seleccionados': [],
@@ -2545,9 +1664,9 @@ def producto_eliminar(request, idproducto):
     })
 
 
-# ============================================================
-# 10. EXTRAS
-# ============================================================
+# ------------------------------------------------------------
+# Extras
+# ------------------------------------------------------------
 
 def extra_lista(request):
     extras_con_conteo = [
@@ -2613,7 +1732,6 @@ def extra_eliminar(request, idextra):
     if request.method == 'POST':
         nombre_extra = extra.nombre
 
-        # Primero se quitan las relaciones con productos.
         with transaction.atomic():
             ProductoExtras.objects.filter(idextra=extra).delete()
             extra.delete()
@@ -2628,69 +1746,128 @@ def extra_eliminar(request, idextra):
     })
 
 
-# ============================================================
-# 11. RECETAS
-# ============================================================
+# ------------------------------------------------------------
+# Recetas
+# ------------------------------------------------------------
 
 def gestionar_receta(request, idproducto):
     producto = get_object_or_404(Producto, pk=idproducto)
     receta, _ = Receta.objects.get_or_create(idproducto=producto)
 
-    # Permite volver a la pantalla desde la que se llegó.
     origen = request.GET.get('origen') or request.POST.get('origen', '')
 
     if request.method == 'POST':
         id_insumo = request.POST.get('id_insumo')
-        cantidad = request.POST.get('cantidadinsumo')
+        cantidad_texto = request.POST.get('cantidadinsumo', '').strip()
+        es_removible = request.POST.get('es_removible') == 'on'
 
-        if id_insumo and cantidad:
-            insumo = get_object_or_404(Insumo, pk=id_insumo)
+        if not id_insumo:
+            messages.error(request, 'Tenés que seleccionar un insumo.')
 
-            # Un insumo no puede estar dos veces en la misma receta.
-            if not RecetaInsumo.objects.filter(
-                idreceta=receta,
-                idinsumo=insumo
-            ).exists():
-                RecetaInsumo.objects.create(
-                    idreceta=receta,
-                    idinsumo=insumo,
-                    cantidadinsumo=cantidad,
-                    es_removible=request.POST.get('es_removible') == 'on',
+        else:
+            try:
+                cantidad = Decimal(cantidad_texto)
+
+                if (
+                    not cantidad.is_finite()
+                    or cantidad <= 0
+                    or cantidad.as_tuple().exponent < -2
+                ):
+                    raise InvalidOperation
+
+            except (InvalidOperation, ValueError):
+                messages.error(
+                    request,
+                    'Ingresá una cantidad mayor que cero, '
+                    'con hasta dos decimales.'
                 )
 
-            return redirect(
-                'gestionar_receta',
-                idproducto=producto.idproducto
-            )
+            else:
+                insumo = get_object_or_404(Insumo, pk=id_insumo)
 
-    return render(
-        request,
-        'panel/menu/productos/gestionarReceta.html',
-        {
-            'producto': producto,
-            'receta': receta,
-            'detalles_receta': RecetaInsumo.objects.filter(
-                idreceta=receta
-            ),
-            'todos_los_insumos': Insumo.objects.all(),
-            'origen': origen,
-        }
+                existe = RecetaInsumo.objects.filter(
+                    idreceta=receta,
+                    idinsumo=insumo,
+                ).exists()
+
+                if existe:
+                    messages.warning(
+                        request,
+                        f'El insumo "{insumo.nombreinsumo}" '
+                        'ya está en esta receta.'
+                    )
+
+                else:
+                    try:
+                        with transaction.atomic():
+                            RecetaInsumo.objects.create(
+                                idreceta=receta,
+                                idinsumo=insumo,
+                                cantidadinsumo=cantidad,
+                                unidadmedida=insumo.unidadmedidaegreso,
+                                es_removible=es_removible,
+                            )
+
+                        messages.success(
+                            request,
+                            f'"{insumo.nombreinsumo}" '
+                            'se agregó correctamente a la receta.'
+                        )
+
+                    except IntegrityError:
+                        messages.error(
+                            request,
+                            'No se pudo guardar el ingrediente. '
+                            'Verificá que la tabla RecetaInsumo '
+                            'tenga las columnas correctas en SQL Server.'
+                        )
+
+        url = reverse(
+            'gestionar_receta',
+            kwargs={'idproducto': producto.idproducto},
+        )
+
+        if origen:
+            url += f'?origen={quote(origen)}'
+
+        return redirect(url)
+
+    detalles_receta = (
+        RecetaInsumo.objects
+        .filter(idreceta=receta)
+        .select_related('idinsumo')
     )
+
+    return render(request, 'panel/menu/productos/gestionarReceta.html', {
+        'producto': producto,
+        'receta': receta,
+        'detalles_receta': detalles_receta,
+        'todos_los_insumos': Insumo.objects.all(),
+        'origen': origen,
+    })
+
 
 def eliminar_insumo_receta(request, idrecetainsumo):
     detalle = get_object_or_404(RecetaInsumo, pk=idrecetainsumo)
 
     id_producto = detalle.idreceta.idproducto.idproducto
     origen = request.GET.get('origen', '')
+
     nombre_insumo = (
         detalle.idinsumo.nombreinsumo if detalle.idinsumo else 'Insumo'
     )
 
-    detalle.delete()
-
-    messages.success(
-        request, f'Insumo "{nombre_insumo}" quitado de la receta.'
-    )
+    if request.method == 'POST':
+        detalle.delete()
+        messages.success(
+            request,
+            f'Insumo "{nombre_insumo}" quitado de la receta.'
+        )
+    else:
+        messages.warning(
+            request,
+            'Para quitar un ingrediente, se necesita una solicitud POST.'
+        )
 
     url = reverse('gestionar_receta', kwargs={'idproducto': id_producto})
 
@@ -2700,29 +1877,475 @@ def eliminar_insumo_receta(request, idrecetainsumo):
     return redirect(url)
 
 
+def editar_cantidad_insumo_receta(request, idrecetainsumo):
+    detalle = get_object_or_404(
+        RecetaInsumo.objects.select_related(
+            'idreceta',
+            'idreceta__idproducto',
+            'idinsumo',
+        ),
+        pk=idrecetainsumo,
+    )
+
+    producto = detalle.idreceta.idproducto
+
+    origen = request.POST.get('origen', '') or request.GET.get('origen', '')
+
+    if request.method != 'POST':
+        return redirect('gestionar_receta', idproducto=producto.idproducto)
+
+    cantidad_texto = request.POST.get('cantidadinsumo', '').strip()
+
+    try:
+        cantidad = Decimal(cantidad_texto)
+
+        if (
+            not cantidad.is_finite()
+            or cantidad <= 0
+            or cantidad.as_tuple().exponent < -2
+        ):
+            raise InvalidOperation
+
+    except (InvalidOperation, ValueError):
+        messages.error(
+            request,
+            'Ingresá una cantidad mayor que cero, con hasta dos decimales.'
+        )
+
+    else:
+        detalle.cantidadinsumo = cantidad
+        detalle.save(update_fields=['cantidadinsumo'])
+
+        nombre_insumo = (
+            detalle.idinsumo.nombreinsumo if detalle.idinsumo
+            else 'Ingrediente'
+        )
+
+        messages.success(
+            request,
+            f'La cantidad de "{nombre_insumo}" se actualizó correctamente.'
+        )
+
+    url = reverse(
+        'gestionar_receta',
+        kwargs={'idproducto': producto.idproducto},
+    )
+
+    if origen:
+        url += f'?origen={quote(origen)}'
+
+    return redirect(url)
+
+
 # ============================================================
-# 12. STOCK
+# 7. PANEL - PROMOCIONES
+# ============================================================
+
+TEMPLATE_FORM_PROMOCION = 'panel/promociones/formPromocion.html'
+
+
+def _valor_beneficio(tipo_beneficio, valor_raw):
+    """Los beneficios sin valor numérico (ej. 2x1) se guardan como NULL."""
+    if tipo_beneficio.comportamiento == 'SIN_VALOR' or not valor_raw:
+        return None
+
+    return valor_raw
+
+
+def _form_promocion_con_error(request, contexto, mensaje):
+    return render(request, TEMPLATE_FORM_PROMOCION, {
+        **contexto,
+        'error': mensaje,
+    })
+
+
+def promociones_panel(request):
+    return render(request, 'panel/promociones/inicioPromociones.html')
+
+
+def lista_promociones(request):
+    return render(request, 'panel/promociones/listaPromociones.html', {
+        'promociones': Promocion.objects.all(),
+    })
+
+
+def crear_promocion(request):
+    contexto = {
+        'titulo': 'Crear promoción',
+        'tipos_beneficio': TipoBeneficio.objects.all(),
+        'productos': Producto.objects.all(),
+    }
+
+    if request.method != 'POST':
+        return render(request, TEMPLATE_FORM_PROMOCION, contexto)
+
+    palabraclave = request.POST.get('palabraclave', '').strip()
+    tipobeneficio_id = request.POST.get('tipobeneficio')
+    producto_id = request.POST.get('producto')
+    descuento = request.POST.get('descuento', '').strip()
+    fechainicio = request.POST.get('fechainicio') or None
+    fechafin = request.POST.get('fechafin') or None
+    activo = 1 if request.POST.get('activo') else 0
+
+    if not palabraclave:
+        return _form_promocion_con_error(
+            request, contexto, 'Ingresá una palabra clave.'
+        )
+
+    if not tipobeneficio_id:
+        return _form_promocion_con_error(
+            request, contexto, 'Seleccioná un tipo de beneficio.'
+        )
+
+    if not producto_id:
+        return _form_promocion_con_error(
+            request, contexto, 'Seleccioná un producto.'
+        )
+
+    try:
+        tipo_beneficio = TipoBeneficio.objects.get(pk=tipobeneficio_id)
+    except TipoBeneficio.DoesNotExist:
+        return _form_promocion_con_error(
+            request, contexto, 'El tipo de beneficio seleccionado no existe.'
+        )
+
+    try:
+        producto = Producto.objects.get(pk=producto_id)
+    except Producto.DoesNotExist:
+        return _form_promocion_con_error(
+            request, contexto, 'El producto seleccionado no existe.'
+        )
+
+    valor = None
+
+    if getattr(tipo_beneficio, 'comportamiento', None) != 'SIN_VALOR':
+        if not descuento:
+            return _form_promocion_con_error(
+                request, contexto, 'Ingresá el valor del beneficio.'
+            )
+
+        try:
+            valor = Decimal(descuento)
+        except (InvalidOperation, TypeError):
+            return _form_promocion_con_error(
+                request, contexto, 'El valor del beneficio no es válido.'
+            )
+
+        if valor < 0:
+            return _form_promocion_con_error(
+                request, contexto,
+                'El valor del beneficio no puede ser negativo.'
+            )
+
+    promocion = Promocion(
+        palabraclave=palabraclave,
+        tipobeneficio=tipo_beneficio,
+        valor=valor,
+        fechainicio=fechainicio,
+        fechafin=fechafin,
+        activo=activo,
+    )
+    promocion.save()
+
+    ProductoPromocion.objects.create(
+        idproducto=producto,
+        idpromocion=promocion,
+    )
+
+    messages.success(
+        request,
+        f'La promoción "{palabraclave}" fue creada correctamente.'
+    )
+    return redirect('panel_lista_promociones')
+
+
+def editar_promocion(request, idpromocion):
+    promocion = get_object_or_404(Promocion, idpromocion=idpromocion)
+
+    relacion_producto = (
+        ProductoPromocion.objects
+        .filter(idpromocion=promocion)
+        .select_related('idproducto')
+        .first()
+    )
+
+    contexto = {
+        'titulo': 'Editar promoción',
+        'promocion': promocion,
+        'tipos_beneficio': TipoBeneficio.objects.all(),
+        'productos': Producto.objects.all(),
+        'tipo_beneficio_seleccionado': (
+            promocion.tipobeneficio.pk if promocion.tipobeneficio else None
+        ),
+        'producto_seleccionado': (
+            relacion_producto.idproducto.pk
+            if relacion_producto and relacion_producto.idproducto
+            else None
+        ),
+    }
+
+    if request.method != 'POST':
+        return render(request, TEMPLATE_FORM_PROMOCION, contexto)
+
+    palabraclave = request.POST.get('palabraclave', '').strip()
+    tipobeneficio_id = request.POST.get('tipobeneficio')
+    producto_id = request.POST.get('producto')
+    descuento = request.POST.get('descuento', '').strip()
+    fechainicio = request.POST.get('fechainicio') or None
+    fechafin = request.POST.get('fechafin') or None
+    activo = 1 if request.POST.get('activo') else 0
+
+    if not palabraclave:
+        return _form_promocion_con_error(
+            request, contexto, 'Ingresá una palabra clave.'
+        )
+
+    if not tipobeneficio_id:
+        return _form_promocion_con_error(
+            request, contexto, 'Seleccioná un tipo de beneficio.'
+        )
+
+    if not producto_id:
+        return _form_promocion_con_error(
+            request, contexto, 'Seleccioná un producto.'
+        )
+
+    try:
+        tipo_beneficio = TipoBeneficio.objects.get(pk=tipobeneficio_id)
+    except TipoBeneficio.DoesNotExist:
+        return _form_promocion_con_error(
+            request, contexto, 'El tipo de beneficio seleccionado no existe.'
+        )
+
+    try:
+        producto = Producto.objects.get(pk=producto_id)
+    except Producto.DoesNotExist:
+        return _form_promocion_con_error(
+            request, contexto, 'El producto seleccionado no existe.'
+        )
+
+    valor = None
+
+    if getattr(tipo_beneficio, 'comportamiento', None) != 'SIN_VALOR':
+        if not descuento:
+            return _form_promocion_con_error(
+                request, contexto, 'Ingresá el valor del beneficio.'
+            )
+
+        try:
+            valor = Decimal(descuento)
+        except (InvalidOperation, TypeError):
+            return _form_promocion_con_error(
+                request, contexto, 'El valor del beneficio no es válido.'
+            )
+
+        if valor < 0:
+            return _form_promocion_con_error(
+                request, contexto,
+                'El valor del beneficio no puede ser negativo.'
+            )
+
+    promocion.palabraclave = palabraclave
+    promocion.tipobeneficio = tipo_beneficio
+    promocion.valor = valor
+    promocion.fechainicio = fechainicio
+    promocion.fechafin = fechafin
+    promocion.activo = activo
+    promocion.save()
+
+    ProductoPromocion.objects.filter(idpromocion=promocion).delete()
+    ProductoPromocion.objects.create(
+        idproducto=producto,
+        idpromocion=promocion,
+    )
+
+    messages.success(
+        request,
+        f'La promoción "{palabraclave}" fue actualizada correctamente.'
+    )
+    return redirect('panel_lista_promociones')
+
+
+def eliminar_promocion(request, idpromocion):
+    promocion = get_object_or_404(Promocion, pk=idpromocion)
+
+    if request.method == 'POST':
+        with transaction.atomic():
+            ProductoPromocion.objects.filter(idpromocion=promocion).delete()
+            promocion.delete()
+
+        return redirect('lista_promociones')
+
+    return render(request, 'panel/promociones/EliminarPromocion.html', {
+        'promocion': promocion,
+    })
+
+
+# ------------------------------------------------------------
+# Tipos de beneficio
+# ------------------------------------------------------------
+
+def lista_tipos_beneficio(request):
+    return render(
+        request,
+        'panel/promociones/tiposBeneficio/listaTiposBeneficios.html',
+        {'tipos': TipoBeneficio.objects.all()},
+    )
+
+
+def crear_tipo_beneficio(request):
+    if request.method == 'GET':
+        return render(
+            request,
+            'panel/promociones/tiposBeneficio/crearTipoBeneficio.html',
+        )
+
+    codigo = request.POST.get('codigo', '').strip()
+    nombre = request.POST.get('nombre', '').strip()
+    descripcion = request.POST.get('descripcion', '').strip()
+    comportamiento = request.POST.get('comportamiento', '').strip()
+
+    if not nombre:
+        messages.error(request, 'Debes ingresar un nombre para el beneficio.')
+        return redirect('crear_tipo_beneficio')
+
+    if not comportamiento:
+        messages.error(request, 'Debes seleccionar un comportamiento.')
+        return redirect('crear_tipo_beneficio')
+
+    # Si no se indica código, se genera a partir del nombre.
+    if not codigo:
+        codigo = nombre.upper().replace(' ', '_')
+
+    if TipoBeneficio.objects.filter(codigo__iexact=codigo).exists():
+        messages.error(
+            request, 'Ya existe un tipo de beneficio con ese código.'
+        )
+        return redirect('crear_tipo_beneficio')
+
+    if TipoBeneficio.objects.filter(nombre__iexact=nombre).exists():
+        messages.error(
+            request, 'Ya existe un tipo de beneficio con ese nombre.'
+        )
+        return redirect('crear_tipo_beneficio')
+
+    TipoBeneficio.objects.create(
+        codigo=codigo,
+        nombre=nombre,
+        descripcion=descripcion,
+        comportamiento=comportamiento,
+    )
+
+    messages.success(request, 'Tipo de beneficio creado correctamente.')
+    return redirect('lista_tipos_beneficio')
+
+
+def editar_tipo_beneficio(request, pk):
+    tipo = get_object_or_404(TipoBeneficio, pk=pk)
+
+    if request.method == 'POST':
+        codigo = request.POST.get('codigo', '').strip()
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+
+        if not nombre:
+            messages.error(request, 'El nombre no puede estar vacío.')
+            return redirect('editar_tipo_beneficio', pk=pk)
+
+        if not codigo:
+            codigo = nombre.upper().replace(' ', '_')
+
+        # Se excluye el propio registro para poder conservar sus valores.
+        if (
+            TipoBeneficio.objects
+            .filter(codigo__iexact=codigo)
+            .exclude(pk=pk)
+            .exists()
+        ):
+            messages.error(request, 'Ya existe otro beneficio con ese código.')
+            return redirect('editar_tipo_beneficio', pk=pk)
+
+        if (
+            TipoBeneficio.objects
+            .filter(nombre__iexact=nombre)
+            .exclude(pk=pk)
+            .exists()
+        ):
+            messages.error(request, 'Ya existe otro beneficio con ese nombre.')
+            return redirect('editar_tipo_beneficio', pk=pk)
+
+        tipo.codigo = codigo
+        tipo.nombre = nombre
+        tipo.descripcion = descripcion
+        tipo.save()
+
+        messages.success(
+            request, 'Tipo de beneficio modificado correctamente.'
+        )
+        return redirect('lista_tipos_beneficio')
+
+    return render(
+        request,
+        'panel/promociones/tiposBeneficio/editarTipoBeneficio.html',
+        {'tipo': tipo},
+    )
+
+
+def eliminar_tipo_beneficio(request, pk):
+    tipo = get_object_or_404(TipoBeneficio, pk=pk)
+
+    if request.method == 'GET':
+        return render(
+            request,
+            'panel/promociones/tiposBeneficio/eliminarTipoBeneficio.html',
+            {'tipo': tipo},
+        )
+
+    if Promocion.objects.filter(tipobeneficio=tipo).exists():
+        messages.error(
+            request,
+            'No puedes eliminar este beneficio porque tiene '
+            'promociones asociadas.'
+        )
+        return redirect('panel_lista_tipos_beneficio')
+
+    tipo.delete()
+
+    messages.success(request, 'Tipo de beneficio eliminado correctamente.')
+    return redirect('panel_lista_tipos_beneficio')
+
+
+# ============================================================
+# 8. PANEL - STOCK
 # ============================================================
 
 def stock_lista(request):
-    insumos = Insumo.objects.all()
+    insumos = Insumo.objects.all().order_by('nombreinsumo')
 
-    # Críticos: stock actual igual o menor al mínimo configurado.
     insumos_criticos = [
         insumo for insumo in insumos
         if insumo.stockactual <= insumo.stockminimo
     ]
 
-    return render(request, 'panel/stock/stock_lista.html', {
+    lotes = Lote.objects.select_related('idinsumo').order_by(
+        '-fechaingreso', '-idlote'
+    )
+
+    compras = Compras.objects.prefetch_related(
+        'detallecompra_set__idinsumo'
+    ).order_by('-fecha', '-idcompra')
+
+    return render(request, 'panel/stock/stockLista.html', {
         'insumos': insumos,
         'insumos_criticos': insumos_criticos,
+        'lotes': lotes,
+        'compras': compras,
     })
 
 
 def stock_crear(request):
     if request.method == 'POST':
         Insumo.objects.create(
-            codigo=request.POST.get('codigo'),
             nombreinsumo=request.POST.get('nombreinsumo'),
             unidadmedidaingreso=request.POST.get('unidadmedidaingreso'),
             unidadmedidaegreso=request.POST.get('unidadmedidaegreso'),
@@ -2735,38 +2358,107 @@ def stock_crear(request):
         )
         return redirect('stock_lista')
 
-    return render(request, 'panel/stock/stock_form.html')
+    return render(request, 'panel/stock/stockForm.html')
+
+
+def stock_editar(request, idinsumo):
+    insumo = get_object_or_404(Insumo, pk=idinsumo)
+
+    if request.method == 'POST':
+        insumo.nombreinsumo = request.POST.get('nombreinsumo', '').strip()
+        insumo.unidadmedidaingreso = request.POST.get(
+            'unidadmedidaingreso', ''
+        ).strip()
+        insumo.unidadmedidaegreso = request.POST.get(
+            'unidadmedidaegreso', ''
+        ).strip()
+        insumo.stockactual = request.POST.get('stockactual') or 0
+        insumo.stockminimo = request.POST.get('stockminimo') or 5
+        insumo.descontar_stock_automaticamente = (
+            request.POST.get('descontar_stock_automaticamente') == 'on'
+        )
+
+        if (
+            not insumo.nombreinsumo
+            or not insumo.unidadmedidaingreso
+            or not insumo.unidadmedidaegreso
+        ):
+            messages.error(
+                request,
+                'Completá el nombre y las unidades de medida del insumo.'
+            )
+            return render(
+                request, 'panel/stock/editarStock.html', {'insumo': insumo}
+            )
+
+        insumo.save()
+
+        messages.success(request, 'Insumo actualizado correctamente.')
+        return redirect('stock_lista')
+
+    return render(request, 'panel/stock/editarStock.html', {'insumo': insumo})
 
 
 def registrar_compra_insumo(request):
     if request.method == 'POST':
         insumo = get_object_or_404(Insumo, pk=request.POST.get('idinsumo'))
-        cantidad = float(request.POST.get('cantidad', 0))
-        costounitario = float(request.POST.get('costounitario', 0))
+
+        try:
+            cantidad = Decimal(request.POST.get('cantidad', '0'))
+            costo_unitario = Decimal(request.POST.get('costounitario', '0'))
+        except (ValueError, TypeError, ArithmeticError):
+            messages.error(request, 'Ingresa cantidades y costos válidos.')
+            return redirect('registrar_compra_insumo')
+
+        if (
+            not cantidad.is_finite()
+            or not costo_unitario.is_finite()
+            or cantidad <= 0
+            or costo_unitario < 0
+        ):
+            messages.error(
+                request,
+                'La cantidad debe ser mayor que cero y el costo no puede '
+                'ser negativo.',
+            )
+            return redirect('registrar_compra_insumo')
+
+        fecha_compra = datetime.now()
+        precio_total = cantidad * costo_unitario
 
         with transaction.atomic():
+            insumo = Insumo.objects.select_for_update().get(pk=insumo.pk)
+
             compra = Compras.objects.create(
-                fecha=datetime.now(),
-                preciototal=cantidad * costounitario,
-                idempleado=None,
+                fecha=fecha_compra,
+                preciototal=precio_total,
             )
 
             DetalleCompra.objects.create(
                 idcompra=compra,
                 idinsumo=insumo,
                 cantidad=cantidad,
-                costounitario=costounitario,
+                costounitario=costo_unitario,
             )
 
-            insumo.stockactual += Decimal(str(cantidad))
-            insumo.save()
+            Lote.objects.create(
+                idinsumo=insumo,
+                fechaingreso=fecha_compra,
+                cantidadinicial=cantidad,
+                cantidadactual=cantidad,
+            )
+
+            insumo.stockactual += cantidad
+            insumo.save(update_fields=['stockactual'])
 
         messages.success(
-            request, 'Compra registrada y stock actualizado con éxito.'
+            request,
+            'Compra registrada, lote creado y stock actualizado '
+            'correctamente.',
         )
         return redirect('stock_lista')
 
-    return render(request, 'panel/stock/registrar_compra.html', {
+    return render(request, 'panel/stock/registrarCompra.html', {
         'insumos': Insumo.objects.all(),
     })
 
@@ -2775,31 +2467,2282 @@ def ajustar_stock(request, idinsumo):
     insumo = get_object_or_404(Insumo, pk=idinsumo)
 
     if request.method == 'POST':
-        nueva_cantidad = request.POST.get('stockactual')
-        motivo = request.POST.get('motivo')
+        cantidad_nueva_texto = request.POST.get('cantidadnueva', '').strip()
+        motivo = request.POST.get('motivo', '').strip()
 
-        if motivo and motivo.strip():
-            with transaction.atomic():
-                # Se registra el ajuste antes de modificar el stock para
-                # conservar el valor anterior y el motivo.
-                AjusteStock.objects.create(
-                    idinsumo=insumo,
-                    cantidadanterior=insumo.stockactual,
-                    cantidadnueva=nueva_cantidad,
-                    motivo=motivo.strip(),
+        try:
+            cantidad_nueva = Decimal(cantidad_nueva_texto)
+
+            if not cantidad_nueva.is_finite() or cantidad_nueva < 0:
+                raise InvalidOperation
+
+        except (InvalidOperation, ValueError):
+            messages.error(
+                request,
+                'Ingresa una cantidad válida, igual o mayor que cero.'
+            )
+            return redirect('ajustar_stock', idinsumo=idinsumo)
+
+        if not motivo:
+            messages.error(request, 'Debes indicar el motivo del ajuste.')
+            return redirect('ajustar_stock', idinsumo=idinsumo)
+
+        if len(motivo) > 250:
+            messages.error(
+                request,
+                'El motivo no puede superar los 250 caracteres.'
+            )
+            return redirect('ajustar_stock', idinsumo=idinsumo)
+
+        with transaction.atomic():
+            insumo = Insumo.objects.select_for_update().get(pk=idinsumo)
+            cantidad_anterior = insumo.stockactual
+
+            AjusteStock.objects.create(
+                idinsumo=insumo,
+                cantidadanterior=cantidad_anterior,
+                cantidadnueva=cantidad_nueva,
+                motivo=motivo,
+            )
+
+            insumo.stockactual = cantidad_nueva
+            insumo.save(update_fields=['stockactual'])
+
+        messages.success(request, 'Stock ajustado correctamente.')
+        return redirect('stock_lista')
+
+    return render(request, 'panel/stock/ajustarStock.html', {
+        'insumo': insumo,
+    })
+
+
+# ============================================================
+# 9. PANEL - USUARIOS
+# ============================================================
+
+def _error_correo(correo, idempleado=None):
+    """Devuelve un mensaje de error o None si el correo es válido."""
+    if not correo:
+        return 'Debes indicar el correo electrónico.'
+
+    if len(correo) > 254:
+        return 'El correo no puede superar los 254 caracteres.'
+
+    try:
+        validate_email(correo)
+    except ValidationError:
+        return 'Ingresa un correo electrónico válido.'
+
+    repetidos = Empleado.objects.filter(correo__iexact=correo)
+
+    if idempleado is not None:
+        repetidos = repetidos.exclude(pk=idempleado)
+
+    if repetidos.exists():
+        return 'Ya existe un usuario con ese correo.'
+
+    return None
+
+
+def empleado_lista(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
+        idrol = request.POST.get('idrol', '').strip()
+        correo = request.POST.get('correo', '').strip().lower()
+        contrasena = request.POST.get('contrasena', '')
+        repetida = request.POST.get('confirmar_contrasena', '')
+
+        if not nombre or not apellido:
+            messages.error(request, 'Debes indicar el nombre y el apellido.')
+            return redirect('empleado_lista')
+
+        if len(nombre) > 100 or len(apellido) > 100:
+            messages.error(
+                request,
+                'El nombre y el apellido no pueden superar los 100 caracteres.'
+            )
+            return redirect('empleado_lista')
+
+        error_correo = _error_correo(correo)
+        if error_correo:
+            messages.error(request, error_correo)
+            return redirect('empleado_lista')
+
+        try:
+            rol = Rol.objects.get(pk=idrol)
+        except (Rol.DoesNotExist, ValueError, TypeError):
+            messages.error(request, 'Selecciona un rol válido.')
+            return redirect('empleado_lista')
+
+        if not contrasena:
+            messages.error(request, 'Debes indicar una contraseña.')
+            return redirect('empleado_lista')
+
+        if contrasena != repetida:
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return redirect('empleado_lista')
+
+        if len(contrasena) < 8:
+            messages.error(
+                request,
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
+            return redirect('empleado_lista')
+
+        with transaction.atomic():
+            Empleado.objects.create(
+                nombre=nombre,
+                apellido=apellido,
+                correo=correo,
+                id_rol=rol.pk,
+                contrasena=make_password(contrasena),
+            )
+
+        messages.success(request, 'Usuario creado correctamente.')
+        return redirect('empleado_lista')
+
+    empleados = Empleado.objects.order_by('apellido', 'nombre')
+
+    return render(
+        request,
+        'panel/administracion/usuarios/empleadoLista.html',
+        {
+            'empleados': empleados,
+            'roles': Rol.objects.all(),
+        },
+    )
+
+
+def empleado_crear(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
+        correo = request.POST.get('correo', '').strip().lower()
+        idrol = request.POST.get('idrol', '').strip()
+        contrasena = request.POST.get('contrasena', '')
+        repetida = request.POST.get('confirmar_contrasena', '')
+
+        if not nombre or not apellido:
+            messages.error(request, 'Debes indicar el nombre y el apellido.')
+            return redirect('empleado_crear')
+
+        if len(nombre) > 100 or len(apellido) > 100:
+            messages.error(
+                request,
+                'El nombre y el apellido no pueden superar los 100 caracteres.'
+            )
+            return redirect('empleado_crear')
+
+        error_correo = _error_correo(correo)
+        if error_correo:
+            messages.error(request, error_correo)
+            return redirect('empleado_crear')
+
+        try:
+            rol = Rol.objects.get(pk=idrol)
+        except (Rol.DoesNotExist, ValueError, TypeError):
+            messages.error(request, 'Seleccioná un rol válido.')
+            return redirect('empleado_crear')
+
+        if not contrasena:
+            messages.error(request, 'Debes indicar una contraseña.')
+            return redirect('empleado_crear')
+
+        if contrasena != repetida:
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return redirect('empleado_crear')
+
+        if len(contrasena) < 8:
+            messages.error(
+                request,
+                'La contraseña debe tener al menos 8 caracteres.'
+            )
+            return redirect('empleado_crear')
+
+        with transaction.atomic():
+            Empleado.objects.create(
+                nombre=nombre,
+                apellido=apellido,
+                correo=correo,
+                id_rol=rol.pk,
+                contrasena=make_password(contrasena),
+            )
+
+        messages.success(request, 'Usuario creado correctamente.')
+        return redirect('empleado_lista')
+
+    return render(
+        request,
+        'panel/administracion/usuarios/empleadoCrear.html',
+        {'roles': Rol.objects.all()},
+    )
+
+def empleado_editar(request, idempleado):
+    empleado = get_object_or_404(Empleado, pk=idempleado)
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
+        idrol = request.POST.get('idrol', '').strip()
+        correo = request.POST.get('correo', '').strip().lower()
+        contrasena = request.POST.get('contrasena', '')
+        repetida = request.POST.get('confirmar_contrasena', '')
+
+        if not nombre or not apellido:
+            messages.error(
+                request,
+                'Debes indicar el nombre y el apellido.'
+            )
+            return redirect(
+                'empleado_editar',
+                idempleado=empleado.pk
+            )
+
+        if len(nombre) > 100 or len(apellido) > 100:
+            messages.error(
+                request,
+                'El nombre y el apellido no pueden superar los 100 caracteres.'
+            )
+            return redirect(
+                'empleado_editar',
+                idempleado=empleado.pk
+            )
+
+        error_correo = _error_correo(correo, empleado.pk)
+
+        if error_correo:
+            messages.error(request, error_correo)
+            return redirect(
+                'empleado_editar',
+                idempleado=empleado.pk
+            )
+
+        try:
+            rol = Rol.objects.get(pk=idrol)
+        except (Rol.DoesNotExist, ValueError, TypeError):
+            messages.error(request, 'Seleccioná un rol válido.')
+            return redirect(
+                'empleado_editar',
+                idempleado=empleado.pk
+            )
+
+        if contrasena or repetida:
+            if contrasena != repetida:
+                messages.error(
+                    request,
+                    'Las contraseñas no coinciden.'
+                )
+                return redirect(
+                    'empleado_editar',
+                    idempleado=empleado.pk
                 )
 
-                insumo.stockactual = Decimal(str(nueva_cantidad))
-                insumo.save()
+            if len(contrasena) < 8:
+                messages.error(
+                    request,
+                    'La contraseña debe tener al menos 8 caracteres.'
+                )
+                return redirect(
+                    'empleado_editar',
+                    idempleado=empleado.pk
+                )
+
+        with transaction.atomic():
+            empleado = Empleado.objects.select_for_update().get(
+                pk=idempleado
+            )
+
+            empleado.nombre = nombre
+            empleado.apellido = apellido
+            empleado.correo = correo
+            empleado.id_rol = rol.pk
+
+            campos = [
+                'nombre',
+                'apellido',
+                'correo',
+                'id_rol',
+            ]
+
+            if contrasena:
+                empleado.contrasena = make_password(contrasena)
+                campos.append('contrasena')
+
+            empleado.save(update_fields=campos)
+
+        messages.success(
+            request,
+            'Usuario actualizado correctamente.'
+        )
+        return redirect('empleado_lista')
+
+    return render(
+        request,
+        'panel/administracion/usuarios/empleadoModificar.html',
+        {
+            'empleado': empleado,
+            'roles': Rol.objects.all(),
+        },
+    )
+
+def empleado_eliminar(request, idempleado):
+    empleado = get_object_or_404(Empleado, pk=idempleado)
+
+    # Si se confirma el formulario, se elimina el usuario.
+    if request.method == 'POST':
+        nombre_completo = f'{empleado.nombre} {empleado.apellido}'
+
+        try:
+            empleado.delete()
 
             messages.success(
                 request,
-                'Ajuste de stock guardado correctamente con su motivo.',
+                f'El usuario "{nombre_completo}" fue eliminado correctamente.'
             )
-            return redirect('stock_lista')
 
-        messages.error(request, 'El motivo del ajuste es obligatorio.')
+        except IntegrityError:
+            messages.error(
+                request,
+                'No se puede eliminar este usuario porque tiene registros relacionados.'
+            )
 
-    return render(request, 'panel/stock/ajustar_stock.html', {
-        'insumo': insumo,
+        return redirect('empleado_lista')
+
+    # Si se ingresa mediante GET, muestra la página de confirmación.
+    return render(
+        request,
+        'panel/administracion/usuarios/empleadoEliminar.html',
+        {'empleado': empleado}
+    )
+
+
+# ============================================================
+# 10. PANEL - ROLES
+# ============================================================
+
+def rol_lista(request):
+    roles = Rol.objects.all().order_by('nombrerol')
+
+    return render(
+        request,
+        'panel/administracion/roles/rolLista.html',
+        {'roles': roles},
+    )
+
+
+def rol_crear(request):
+    permisos = Permiso.objects.all().order_by('modulo', 'accion')
+    permisos_seleccionados = []
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombrerol', '').strip()
+
+        for valor in request.POST.getlist('permisos'):
+            try:
+                permisos_seleccionados.append(int(valor))
+            except (ValueError, TypeError):
+                continue
+
+        if not nombre:
+            messages.error(request, 'El nombre del rol es obligatorio.')
+
+        elif len(nombre) > 50:
+            messages.error(
+                request,
+                'El nombre del rol no puede superar los 50 caracteres.'
+            )
+
+        elif Rol.objects.filter(nombrerol__iexact=nombre).exists():
+            messages.error(request, 'Ya existe un rol con ese nombre.')
+
+        else:
+            try:
+                with transaction.atomic():
+                    rol = Rol.objects.create(nombrerol=nombre)
+
+                    permisos_validos = Permiso.objects.filter(
+                        pk__in=permisos_seleccionados
+                    )
+
+                    RolPermiso.objects.bulk_create([
+                        RolPermiso(
+                            idrol=rol,
+                            idpermiso=permiso
+                        )
+                        for permiso in permisos_validos
+                    ])
+
+                messages.success(
+                    request,
+                    'Rol creado y permisos asignados correctamente.'
+                )
+                return redirect('rol_lista')
+
+            except Exception:
+                logger.exception(
+                    'Error al crear el rol "%s" y asignar sus permisos.',
+                    nombre
+                )
+                messages.error(
+                    request,
+                    'No se pudo crear el rol. Revisa el error en la consola del servidor.'
+                )
+
+    return render(
+        request,
+        'panel/administracion/roles/rolCrear.html',
+        {
+            'titulo': 'Nuevo rol',
+            'rol': None,
+            'permisos': permisos,
+            'permisos_seleccionados': permisos_seleccionados,
+        }
+    )
+
+
+def rol_editar(request, idrol):
+    rol = get_object_or_404(Rol, pk=idrol)
+
+    # Obtener todos los permisos disponibles
+    permisos = Permiso.objects.all().order_by('modulo', 'accion')
+
+    # Obtener los permisos que ya tiene asignados el rol
+    permisos_seleccionados = list(
+        RolPermiso.objects.filter(
+            idrol=rol
+        ).values_list('idpermiso_id', flat=True)
+    )
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombrerol', '').strip()
+
+        # Obtener las casillas seleccionadas
+        ids_permisos = []
+
+        for valor in request.POST.getlist('permisos'):
+            try:
+                ids_permisos.append(int(valor))
+            except (ValueError, TypeError):
+                continue
+
+        # Validar el nombre
+        if not nombre:
+            messages.error(request, 'El nombre del rol es obligatorio.')
+
+        elif len(nombre) > 50:
+            messages.error(
+                request,
+                'El nombre del rol no puede superar los 50 caracteres.'
+            )
+
+        elif Rol.objects.filter(
+            nombrerol__iexact=nombre
+        ).exclude(pk=rol.pk).exists():
+            messages.error(request, 'Ya existe un rol con ese nombre.')
+
+        else:
+            try:
+                with transaction.atomic():
+                    # Actualizar el nombre
+                    rol.nombrerol = nombre
+                    rol.save(update_fields=['nombrerol'])
+
+                    # Guardar los permisos seleccionados
+                    permisos_validos = Permiso.objects.filter(
+                        pk__in=ids_permisos
+                    )
+
+                    # Quitar las asignaciones anteriores
+                    RolPermiso.objects.filter(idrol=rol).delete()
+
+                    # Crear las nuevas asignaciones
+                    RolPermiso.objects.bulk_create([
+                        RolPermiso(
+                            idrol=rol,
+                            idpermiso=permiso
+                        )
+                        for permiso in permisos_validos
+                    ])
+
+                messages.success(
+                    request,
+                    'Rol y permisos actualizados correctamente.'
+                )
+                return redirect('rol_lista')
+
+            except Exception:
+                logger.exception(
+                    'Error al editar el rol "%s".',
+                    nombre
+                )
+                messages.error(
+                    request,
+                    'No se pudo actualizar el rol y sus permisos. '
+                    'Revisa la consola del servidor.'
+                )
+
+    return render(
+        request,
+        'panel/administracion/roles/rolEditar.html',
+        {
+            'titulo': 'Editar rol',
+            'rol': rol,
+            'permisos': permisos,
+            'permisos_seleccionados': permisos_seleccionados,
+        }
+    )
+
+@require_POST
+def rol_eliminar(request, idrol):
+    rol = get_object_or_404(Rol, pk=idrol)
+    nombre = rol.nombrerol or f"Rol {rol.pk}"
+
+    try:
+        rol.delete()
+        messages.success(
+            request,
+            f'El rol "{nombre}" se eliminó correctamente.'
+        )
+    except ProtectedError:
+        messages.error(
+            request,
+            f'No se puede eliminar el rol "{nombre}" porque está '
+            'asignado a empleados u otros registros relacionados.'
+        )
+    except Exception:
+        messages.error(
+            request,
+            f'No se pudo eliminar el rol "{nombre}".'
+        )
+
+    return redirect('rol_lista')
+
+def rol_permisos(request, idrol):
+    rol = get_object_or_404(Rol, pk=idrol)
+
+    permisos = Permiso.objects.all().order_by('modulo', 'accion')
+
+    permisos_asignados = RolPermiso.objects.filter(
+        idrol=rol
+    ).values_list('idpermiso_id', flat=True)
+
+    return render(
+        request,
+        'panel/administracion/roles/rolPermisos.html',
+        {
+            'rol': rol,
+            'permisos': permisos,
+            'permisos_asignados': list(permisos_asignados),
+        },
+    )
+
+
+ 
+# ============================================================
+# 10. PANEL - REPORTES
+# ============================================================
+
+# ------------------------------------------------------------
+# 10.1 Constantes de diseño
+# ------------------------------------------------------------
+
+BI_OSCURO = "17181D"
+BI_ROJO = "D93632"
+BI_GRIS = "6B7280"
+BI_PALETA = [
+    "D93632", "3B82F6", "10B981", "F59E0B",
+    "8B5CF6", "F97316", "06B6D4", "EC4899",
+]
+
+BI_FORMATO_XLSX = {
+    "moneda": '"$" #,##0.00',
+    "entero": "#,##0",
+    "pct": '0.0"%"',
+    "pct_signo": '+0.0"%";-0.0"%"',
+    "fecha": "DD/MM/YYYY",
+}
+BI_NUMERICOS = {"moneda", "entero", "pct", "pct_signo"}
+
+BI_DIAS_SEMANA = [
+    "Lunes", "Martes", "Miércoles", "Jueves",
+    "Viernes", "Sábado", "Domingo",
+]
+
+
+# ------------------------------------------------------------
+# 10.2 Utilidades de fechas y formato
+# ------------------------------------------------------------
+
+def bi_fechas(request):
+    """Lee y valida el rango de fechas enviado por el usuario."""
+    hoy = timezone.localdate()
+    inicio_default = hoy - timedelta(days=29)
+
+    inicio = parse_date(request.GET.get("fecha_inicio", "")) or inicio_default
+    fin = parse_date(request.GET.get("fecha_fin", "")) or hoy
+
+    if inicio > fin:
+        inicio, fin = fin, inicio
+
+    return inicio, fin
+
+
+def bi_contexto(inicio, fin):
+    return {
+        "fecha_inicio": inicio,
+        "fecha_fin": fin,
+        "periodo": f"{inicio:%d/%m/%Y} al {fin:%d/%m/%Y}",
+    }
+
+
+def bi_periodo_anterior(inicio, fin):
+    """Período de igual duración inmediatamente anterior al actual."""
+    duracion = (fin - inicio).days + 1
+    fin_anterior = inicio - timedelta(days=1)
+    inicio_anterior = fin_anterior - timedelta(days=duracion - 1)
+    return inicio_anterior, fin_anterior, duracion
+
+
+def bi_variacion(actual, anterior):
+    """Variación porcentual; None si no hay base de comparación."""
+    if anterior and anterior > 0:
+        return (actual - anterior) / anterior * Decimal("100")
+    return None
+
+
+def bi_cero(valor):
+    return valor if valor is not None else Decimal("0.00")
+
+
+def bi_pct(parte, total):
+    return float(parte / total * 100) if total else 0.0
+
+
+def bi_numero(valor, decimales=0):
+    """Formato argentino: 1.234,56"""
+    texto = f"{valor:,.{decimales}f}"
+    return texto.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def bi_moneda(valor):
+    return f"$ {bi_numero(bi_cero(valor), 2)}"
+
+
+def bi_formatear(valor, formato=None):
+    if valor is None or valor == "":
+        return "—"
+    if formato == "moneda":
+        return bi_moneda(valor)
+    if formato == "entero":
+        return bi_numero(valor, 0)
+    if formato == "pct":
+        return f"{bi_numero(valor, 1)}%"
+    if formato == "pct_signo":
+        return f"{'+' if valor > 0 else ''}{bi_numero(valor, 1)}%"
+    if formato == "fecha":
+        return valor.strftime("%d/%m/%Y")
+    return str(valor)
+
+
+def bi_valor_excel(valor):
+    if valor is None:
+        return "—"
+    if isinstance(valor, Decimal):
+        return float(valor)
+    return valor
+
+
+# ------------------------------------------------------------
+# 10.3 Consultas base
+# ------------------------------------------------------------
+
+def bi_pedidos_validos():
+    """Pedidos no cancelados (base de las ventas)."""
+    return (
+        Pedido.objects
+        .exclude(idestadopedido__descripcion="Cancelado")
+        .filter(total__isnull=False)
+    )
+
+
+def bi_pedidos_periodo(inicio, fin):
+    return bi_pedidos_validos().filter(
+        fecha_creacion__date__gte=inicio,
+        fecha_creacion__date__lte=fin,
+    )
+
+
+def bi_pedidos_pagados_validos():
+    """Pedidos cobrados y no cancelados (base del dinero recaudado)."""
+    return (
+        Pedido.objects
+        .filter(pagado=True, total__isnull=False)
+        .exclude(idestadopedido__descripcion="Cancelado")
+    )
+
+
+def bi_pedidos_pagados_periodo(inicio, fin):
+    return bi_pedidos_pagados_validos().filter(
+        fecha_creacion__date__gte=inicio,
+        fecha_creacion__date__lte=fin,
+    )
+
+
+# ------------------------------------------------------------
+# 10.4 Cálculos de cada reporte
+# ------------------------------------------------------------
+
+def bi_resumen(inicio, fin):
+    pedidos = bi_pedidos_periodo(inicio, fin)
+
+    indicadores = pedidos.aggregate(
+        total_vendido=Sum("total"),
+        cantidad_pedidos=Count("idpedido"),
+        ticket_promedio=Avg("total"),
+    )
+    indicadores["total_vendido"] = bi_cero(indicadores["total_vendido"])
+    indicadores["cantidad_pedidos"] = indicadores["cantidad_pedidos"] or 0
+    indicadores["ticket_promedio"] = bi_cero(indicadores["ticket_promedio"])
+
+    ventas_diarias = list(
+        pedidos.annotate(dia=TruncDate("fecha_creacion"))
+        .values("dia")
+        .annotate(total=Sum("total"), pedidos=Count("idpedido"))
+        .order_by("dia")
+    )
+
+    maximo = max(
+        (bi_cero(venta["total"]) for venta in ventas_diarias),
+        default=Decimal("0.00"),
+    )
+
+    for venta in ventas_diarias:
+        venta["total"] = bi_cero(venta["total"])
+        venta["pedidos"] = venta["pedidos"] or 0
+        venta["ticket_promedio"] = (
+            venta["total"] / venta["pedidos"]
+            if venta["pedidos"]
+            else Decimal("0.00")
+        )
+        venta["porcentaje"] = (
+            float(venta["total"] / maximo * 100) if maximo > 0 else 0
+        )
+
+    return indicadores, ventas_diarias
+
+
+def bi_metricas_adicionales(inicio, fin, indicadores, ventas_diarias):
+    inicio_anterior, fin_anterior, duracion = bi_periodo_anterior(inicio, fin)
+
+    total_anterior = bi_cero(
+        bi_pedidos_periodo(inicio_anterior, fin_anterior)
+        .aggregate(total=Sum("total"))["total"]
+    )
+    total_actual = indicadores["total_vendido"]
+
+    pedidos_por_estado = list(
+        Pedido.objects.filter(
+            fecha_creacion__date__gte=inicio,
+            fecha_creacion__date__lte=fin,
+        )
+        .values("idestadopedido__descripcion")
+        .annotate(cantidad=Count("idpedido"))
+        .order_by("idestadopedido__descripcion")
+    )
+
+    return {
+        "total_anterior": total_anterior,
+        "inicio_anterior": inicio_anterior,
+        "fin_anterior": fin_anterior,
+        "variacion_porcentual": bi_variacion(total_actual, total_anterior),
+        "promedio_diario": (
+            total_actual / Decimal(duracion) if duracion > 0 else Decimal("0.00")
+        ),
+        "mejor_dia": max(
+            ventas_diarias, key=lambda venta: venta["total"], default=None
+        ),
+        "pedidos_por_estado": pedidos_por_estado,
+    }
+
+
+def bi_top_productos(inicio, fin):
+    importe_linea = ExpressionWrapper(
+        F("cantidad") * F("preciounitario"),
+        output_field=DecimalField(max_digits=14, decimal_places=2),
+    )
+
+    return list(
+        DetallePedido.objects.filter(
+            idpedido__in=bi_pedidos_periodo(inicio, fin),
+            idproducto__isnull=False,
+        )
+        .values("idproducto_id", "idproducto__nombre")
+        .annotate(unidades=Sum("cantidad"), ingresos=Sum(importe_linea))
+        .order_by("-unidades", "-ingresos", "idproducto__nombre")[:10]
+    )
+
+
+def bi_totales_productos(productos):
+    unidades = sum((p["unidades"] or 0) for p in productos)
+    ingresos = sum(
+        (bi_cero(p["ingresos"]) for p in productos), Decimal("0.00")
+    )
+    return unidades, ingresos
+
+
+def bi_datos_dinero(inicio, fin):
+    pedidos = bi_pedidos_pagados_periodo(inicio, fin)
+
+    indicadores = pedidos.aggregate(
+        importe_total=Sum("total"),
+        cantidad_pedidos=Count("idpedido"),
+        ticket_promedio=Avg("total"),
+    )
+    importe_total = bi_cero(indicadores["importe_total"])
+    cantidad_pedidos = indicadores["cantidad_pedidos"] or 0
+    ticket_promedio = bi_cero(indicadores["ticket_promedio"])
+
+    inicio_anterior, fin_anterior, duracion = bi_periodo_anterior(inicio, fin)
+    promedio_diario = (
+        importe_total / Decimal(duracion) if duracion > 0 else Decimal("0.00")
+    )
+
+    # --- Serie diaria (incluye días sin cobros) ---
+    consulta_diaria = list(
+        pedidos.annotate(fecha=TruncDate("fecha_creacion"))
+        .values("fecha")
+        .annotate(importe=Sum("total"), cantidad=Count("idpedido"))
+        .order_by("fecha")
+    )
+    por_fecha = {
+        fila["fecha"]: fila for fila in consulta_diaria if fila["fecha"]
+    }
+    maximo = max(
+        (bi_cero(fila["importe"]) for fila in consulta_diaria),
+        default=Decimal("0.00"),
+    )
+
+    dias = []
+    fecha = inicio
+    while fecha <= fin:
+        fila = por_fecha.get(fecha, {})
+        importe = bi_cero(fila.get("importe"))
+        dias.append({
+            "fecha": fecha,
+            "importe": importe,
+            "cantidad": fila.get("cantidad") or 0,
+            "porcentaje": float(importe / maximo * 100) if maximo > 0 else 0,
+        })
+        fecha += timedelta(days=1)
+
+    dias_con_datos = [dia for dia in dias if dia["cantidad"] > 0]
+    mejor_dia = max(dias_con_datos, key=lambda d: d["importe"], default=None)
+    peor_dia = min(dias_con_datos, key=lambda d: d["importe"], default=None)
+
+    # --- Por día de la semana ---
+    agrupados = {
+        indice: {"dia": nombre, "importe": Decimal("0.00"), "cantidad": 0}
+        for indice, nombre in enumerate(BI_DIAS_SEMANA)
+    }
+    for dia in dias:
+        indice = dia["fecha"].weekday()
+        agrupados[indice]["importe"] += dia["importe"]
+        agrupados[indice]["cantidad"] += dia["cantidad"]
+
+    maximo_semana = max(
+        (fila["importe"] for fila in agrupados.values()),
+        default=Decimal("0.00"),
+    )
+    dias_semana = []
+    for fila in agrupados.values():
+        fila["porcentaje"] = (
+            float(fila["importe"] / maximo_semana * 100)
+            if maximo_semana > 0
+            else 0
+        )
+        dias_semana.append(fila)
+
+    mejor_dia_semana = max(
+        dias_semana, key=lambda d: d["importe"], default=None
+    )
+
+    # --- Por medio de pago ---
+    consulta_medios = list(
+        pedidos.values("idmediopago__nombremetodo")
+        .annotate(cantidad=Count("idpedido"), importe=Sum("total"))
+        .order_by("-importe")
+    )
+    medios_pago = []
+    for medio in consulta_medios:
+        importe = bi_cero(medio["importe"])
+        medios_pago.append({
+            "nombre": medio["idmediopago__nombremetodo"] or "Sin medio de pago",
+            "cantidad": medio["cantidad"],
+            "importe": importe,
+            "porcentaje": bi_pct(importe, importe_total),
+        })
+
+    # --- Comparación con el período anterior ---
+    importe_anterior = bi_cero(
+        bi_pedidos_pagados_periodo(inicio_anterior, fin_anterior)
+        .aggregate(total=Sum("total"))["total"]
+    )
+
+    return {
+        "importe_total": importe_total,
+        "cantidad_pedidos": cantidad_pedidos,
+        "ticket_promedio": ticket_promedio,
+        "promedio_diario": promedio_diario,
+        "dias": dias,
+        "mejor_dia": mejor_dia,
+        "peor_dia": peor_dia,
+        "dias_semana": dias_semana,
+        "mejor_dia_semana": mejor_dia_semana,
+        "medios_pago": medios_pago,
+        "variacion_porcentual": bi_variacion(importe_total, importe_anterior),
+        "importe_anterior": importe_anterior,
+        "inicio_anterior": inicio_anterior,
+        "fin_anterior": fin_anterior,
+    }
+
+
+# ------------------------------------------------------------
+# 10.5 Definición de los reportes exportables
+#      (misma estructura para Excel y PDF)
+# ------------------------------------------------------------
+
+def bi_reporte_ventas(inicio, fin):
+    indicadores, ventas = bi_resumen(inicio, fin)
+    extra = bi_metricas_adicionales(inicio, fin, indicadores, ventas)
+    total = indicadores["total_vendido"]
+    mejor = extra["mejor_dia"]
+    anterior = f"{extra['inicio_anterior']:%d/%m} al {extra['fin_anterior']:%d/%m}"
+
+    estados = [
+        (fila["idestadopedido__descripcion"] or "Sin estado", fila["cantidad"])
+        for fila in extra["pedidos_por_estado"]
+    ]
+    total_estados = sum(cantidad for _, cantidad in estados)
+
+    return {
+        "titulo": "Resumen de ventas",
+        "periodo": f"{inicio:%d/%m/%Y} al {fin:%d/%m/%Y}",
+        "kpis": [
+            {"titulo": "Total vendido", "valor": total, "formato": "moneda",
+             "detalle": "Pedidos no cancelados"},
+            {"titulo": "Pedidos", "valor": indicadores["cantidad_pedidos"],
+             "formato": "entero", "detalle": "Operaciones del período"},
+            {"titulo": "Ticket promedio", "valor": indicadores["ticket_promedio"],
+             "formato": "moneda", "detalle": "Importe por pedido"},
+            {"titulo": "Promedio diario", "valor": extra["promedio_diario"],
+             "formato": "moneda", "detalle": "Ventas por día"},
+            {"titulo": "Variación", "valor": extra["variacion_porcentual"],
+             "formato": "pct_signo", "detalle": f"vs. {anterior}"},
+            {"titulo": "Mejor día", "valor": mejor["dia"] if mejor else None,
+             "formato": "fecha",
+             "detalle": bi_moneda(mejor["total"]) if mejor else "Sin ventas"},
+        ],
+        "graficos": [
+            {"tipo": "linea", "titulo": "Evolución de ventas por día",
+             "etiquetas": [f"{v['dia']:%d/%m}" for v in ventas],
+             "valores": [v["total"] for v in ventas]},
+            {"tipo": "barras", "titulo": "Pedidos por día",
+             "etiquetas": [f"{v['dia']:%d/%m}" for v in ventas],
+             "valores": [v["pedidos"] for v in ventas]},
+            {"tipo": "torta", "titulo": "Pedidos por estado (incluye cancelados)",
+             "etiquetas": [e for e, _ in estados],
+             "valores": [c for _, c in estados]},
+        ],
+        "tablas": [
+            {
+                "titulo": "Detalle diario de ventas",
+                "encabezados": ["Fecha", "Pedidos", "Ticket promedio",
+                                "Total vendido", "% del período"],
+                "formatos": ["fecha", "entero", "moneda", "moneda", "pct"],
+                "filas": [
+                    [v["dia"], v["pedidos"], v["ticket_promedio"], v["total"],
+                     bi_pct(v["total"], total)]
+                    for v in ventas
+                ],
+            },
+            {
+                "titulo": "Pedidos por estado",
+                "encabezados": ["Estado", "Pedidos", "% del total"],
+                "formatos": [None, "entero", "pct"],
+                "filas": [[e, c, bi_pct(c, total_estados)] for e, c in estados],
+            },
+        ],
+    }
+
+
+def bi_reporte_productos(inicio, fin):
+    productos = bi_top_productos(inicio, fin)
+    unidades_total, ingresos_total = bi_totales_productos(productos)
+
+    lider = productos[0] if productos else None
+    mayor_ingreso = max(
+        productos, key=lambda p: bi_cero(p["ingresos"]), default=None
+    )
+    precio_promedio = (
+        ingresos_total / unidades_total if unidades_total else Decimal("0.00")
+    )
+    nombres = [p["idproducto__nombre"] or "Sin nombre" for p in productos]
+
+    return {
+        "titulo": "Productos más vendidos",
+        "periodo": f"{inicio:%d/%m/%Y} al {fin:%d/%m/%Y}",
+        "kpis": [
+            {"titulo": "Unidades (Top 10)", "valor": unidades_total,
+             "formato": "entero", "detalle": "Suma del ranking"},
+            {"titulo": "Ingresos (Top 10)", "valor": ingresos_total,
+             "formato": "moneda", "detalle": "Suma del ranking"},
+            {"titulo": "Precio promedio", "valor": precio_promedio,
+             "formato": "moneda", "detalle": "Ingreso por unidad"},
+            {"titulo": "Más vendido",
+             "valor": lider["idproducto__nombre"] if lider else None,
+             "formato": None,
+             "detalle": f"{lider['unidades']} unidades" if lider else "Sin datos"},
+            {"titulo": "Peso del líder",
+             "valor": bi_pct(lider["unidades"], unidades_total) if lider else None,
+             "formato": "pct", "detalle": "% de unidades del Top 10"},
+            {"titulo": "Mayor ingreso",
+             "valor": mayor_ingreso["idproducto__nombre"] if mayor_ingreso else None,
+             "formato": None,
+             "detalle": bi_moneda(mayor_ingreso["ingresos"]) if mayor_ingreso else "Sin datos"},
+        ],
+        "graficos": [
+            {"tipo": "barras_h", "titulo": "Unidades vendidas por producto",
+             "etiquetas": nombres,
+             "valores": [p["unidades"] or 0 for p in productos]},
+            {"tipo": "barras_h", "titulo": "Ingresos por producto",
+             "etiquetas": nombres,
+             "valores": [bi_cero(p["ingresos"]) for p in productos]},
+        ],
+        "tablas": [
+            {
+                "titulo": "Ranking detallado (participación sobre el Top 10)",
+                "encabezados": ["#", "Producto", "Unidades", "% unidades",
+                                "Ingresos", "% ingresos", "Precio promedio"],
+                "formatos": ["entero", None, "entero", "pct",
+                             "moneda", "pct", "moneda"],
+                "filas": [
+                    [
+                        posicion,
+                        nombre,
+                        p["unidades"] or 0,
+                        bi_pct(p["unidades"] or 0, unidades_total),
+                        bi_cero(p["ingresos"]),
+                        bi_pct(bi_cero(p["ingresos"]), ingresos_total),
+                        (
+                            bi_cero(p["ingresos"]) / p["unidades"]
+                            if p["unidades"]
+                            else Decimal("0.00")
+                        ),
+                    ]
+                    for posicion, (nombre, p) in enumerate(
+                        zip(nombres, productos), start=1
+                    )
+                ],
+            }
+        ],
+    }
+
+
+def bi_reporte_dinero(inicio, fin):
+    d = bi_datos_dinero(inicio, fin)
+    total = d["importe_total"]
+    mejor = d["mejor_dia"]
+    anterior = f"{d['inicio_anterior']:%d/%m} al {d['fin_anterior']:%d/%m}"
+
+    return {
+        "titulo": "Dinero recaudado",
+        "periodo": f"{inicio:%d/%m/%Y} al {fin:%d/%m/%Y}",
+        "kpis": [
+            {"titulo": "Recaudación total", "valor": total,
+             "formato": "moneda", "detalle": "Pedidos pagados"},
+            {"titulo": "Pedidos cobrados", "valor": d["cantidad_pedidos"],
+             "formato": "entero", "detalle": "Operaciones pagadas"},
+            {"titulo": "Ticket promedio", "valor": d["ticket_promedio"],
+             "formato": "moneda", "detalle": "Importe por pedido"},
+            {"titulo": "Promedio diario", "valor": d["promedio_diario"],
+             "formato": "moneda", "detalle": "Cobrado por día"},
+            {"titulo": "Variación", "valor": d["variacion_porcentual"],
+             "formato": "pct_signo", "detalle": f"vs. {anterior}"},
+            {"titulo": "Mejor día", "valor": mejor["fecha"] if mejor else None,
+             "formato": "fecha",
+             "detalle": bi_moneda(mejor["importe"]) if mejor else "Sin cobros"},
+        ],
+        "graficos": [
+            {"tipo": "linea", "titulo": "Recaudación por día",
+             "etiquetas": [f"{x['fecha']:%d/%m}" for x in d["dias"]],
+             "valores": [x["importe"] for x in d["dias"]]},
+            {"tipo": "torta", "titulo": "Recaudación por medio de pago",
+             "etiquetas": [m["nombre"] for m in d["medios_pago"]],
+             "valores": [m["importe"] for m in d["medios_pago"]]},
+            {"tipo": "barras", "titulo": "Recaudación por día de la semana",
+             "etiquetas": [s["dia"] for s in d["dias_semana"]],
+             "valores": [s["importe"] for s in d["dias_semana"]]},
+        ],
+        "tablas": [
+            {
+                "titulo": "Detalle por medio de pago",
+                "encabezados": ["Medio de pago", "Pedidos", "Importe", "% del total"],
+                "formatos": [None, "entero", "moneda", "pct"],
+                "filas": [
+                    [m["nombre"], m["cantidad"], m["importe"], m["porcentaje"]]
+                    for m in d["medios_pago"]
+                ],
+            },
+            {
+                "titulo": "Rendimiento por día de la semana",
+                "encabezados": ["Día", "Pedidos", "Importe", "% del total"],
+                "formatos": [None, "entero", "moneda", "pct"],
+                "filas": [
+                    [s["dia"], s["cantidad"], s["importe"],
+                     bi_pct(s["importe"], total)]
+                    for s in d["dias_semana"]
+                ],
+            },
+            {
+                "titulo": "Detalle diario",
+                "encabezados": ["Fecha", "Pedidos cobrados", "Recaudación"],
+                "formatos": ["fecha", "entero", "moneda"],
+                "filas": [
+                    [x["fecha"], x["cantidad"], x["importe"]]
+                    for x in d["dias"]
+                    if x["cantidad"]
+                ],
+            },
+        ],
+    }
+
+
+# ------------------------------------------------------------
+# 10.6 Exportación a Excel
+# ------------------------------------------------------------
+
+def bi_celda(hoja, rango, valor, fuente, relleno=None,
+             alineacion=None, formato=None):
+    hoja.merge_cells(rango)
+    celda = hoja[rango.split(":")[0]]
+    celda.value = valor
+    celda.font = fuente
+    if relleno:
+        celda.fill = PatternFill("solid", fgColor=relleno)
+    celda.alignment = alineacion or Alignment(
+        horizontal="left", vertical="center", indent=1
+    )
+    if formato:
+        celda.number_format = formato
+    return celda
+
+
+def bi_grafico_excel(grafico, datos, indice):
+    etiquetas = grafico["etiquetas"]
+    valores = grafico["valores"]
+    cantidad = len(etiquetas)
+    if cantidad == 0 or not any(valores):
+        return None
+
+    columna = indice * 3 + 1
+    datos.cell(row=1, column=columna, value="Etiqueta")
+    datos.cell(row=1, column=columna + 1, value=grafico["titulo"])
+    for numero, (etiqueta, valor) in enumerate(zip(etiquetas, valores), start=2):
+        datos.cell(row=numero, column=columna, value=str(etiqueta))
+        datos.cell(row=numero, column=columna + 1, value=float(valor))
+
+    categorias = Reference(datos, min_col=columna, min_row=2, max_row=cantidad + 1)
+    serie = Reference(datos, min_col=columna + 1, min_row=1, max_row=cantidad + 1)
+    tipo = grafico["tipo"]
+
+    if tipo == "torta":
+        objeto = PieChart()
+        objeto.add_data(serie, titles_from_data=True)
+        objeto.set_categories(categorias)
+        objeto.dataLabels = DataLabelList()
+        objeto.dataLabels.showPercent = True
+        objeto.dataLabels.showVal = False
+        objeto.dataLabels.showCatName = False
+        objeto.dataLabels.showSerName = False
+        objeto.dataLabels.showLeaderLines = False
+        for posicion in range(cantidad):
+            objeto.series[0].dPt.append(
+                DataPoint(
+                    idx=posicion,
+                    spPr=GraphicalProperties(
+                        solidFill=BI_PALETA[posicion % len(BI_PALETA)]
+                    ),
+                )
+            )
+    else:
+        objeto = LineChart() if tipo == "linea" else BarChart()
+        if tipo != "linea":
+            objeto.type = "bar" if tipo == "barras_h" else "col"
+            objeto.gapWidth = 60
+        objeto.add_data(serie, titles_from_data=True)
+        objeto.set_categories(categorias)
+        objeto.legend = None
+        objeto.x_axis.delete = False
+        objeto.y_axis.delete = False
+        objeto.y_axis.number_format = "#,##0"
+
+        s = objeto.series[0]
+        if tipo == "linea":
+            s.smooth = True
+            s.graphicalProperties.line.solidFill = BI_ROJO
+            s.graphicalProperties.line.width = 28575
+            s.marker = Marker(
+                symbol="circle", size=6,
+                spPr=GraphicalProperties(solidFill=BI_ROJO),
+            )
+        else:
+            s.graphicalProperties.solidFill = BI_ROJO
+
+        if tipo == "barras_h":
+            objeto.x_axis.scaling.orientation = "maxMin"  # el #1 arriba
+            objeto.y_axis.crosses = "max"                 # eje de valores abajo
+
+    objeto.title = grafico["titulo"]
+    objeto.width = 16
+    objeto.height = 7.5
+    return objeto
+
+
+def bi_exportar_excel(reporte, nombre_archivo):
+    libro = Workbook()
+    hoja = libro.active
+    hoja.title = "Reporte"
+    hoja.sheet_view.showGridLines = False
+    hoja.sheet_properties.tabColor = BI_ROJO
+    datos = libro.create_sheet("Datos")
+
+    COLUMNAS = 12
+    ultima = get_column_letter(COLUMNAS)
+    for numero in range(1, COLUMNAS + 1):
+        hoja.column_dimensions[get_column_letter(numero)].width = 14
+
+    # ---------- Encabezado ----------
+    for fila in (1, 2, 3):
+        for numero in range(1, COLUMNAS + 1):
+            hoja.cell(row=fila, column=numero).fill = PatternFill(
+                "solid", fgColor=BI_OSCURO
+            )
+    bi_celda(hoja, f"A1:{ultima}1", "ZONA BURGER",
+             Font(bold=True, size=20, color="FFFFFF"))
+    bi_celda(hoja, f"A2:{ultima}2", reporte["titulo"],
+             Font(bold=True, size=13, color="FF6B66"))
+    bi_celda(
+        hoja, f"A3:{ultima}3",
+        f"Período: {reporte['periodo']}   |   "
+        f"Generado el {timezone.localdate():%d/%m/%Y}",
+        Font(size=10, color="9CA3AF"),
+    )
+    hoja.row_dimensions[1].height = 34
+    hoja.row_dimensions[2].height = 22
+    hoja.row_dimensions[3].height = 20
+
+    # ---------- Tarjetas de KPI ----------
+    for indice, kpi in enumerate(reporte["kpis"][:6]):
+        c1 = get_column_letter(indice * 2 + 1)
+        c2 = get_column_letter(indice * 2 + 2)
+        formato = kpi.get("formato")
+        valor = bi_valor_excel(kpi["valor"])
+
+        titulo_kpi = bi_celda(
+            hoja, f"{c1}5:{c2}5", kpi["titulo"].upper(),
+            Font(bold=True, size=8, color="9CA3AF"), BI_OSCURO,
+        )
+        numero_kpi = bi_celda(
+            hoja, f"{c1}6:{c2}6", valor,
+            Font(bold=True, size=18, color="FFFFFF"), BI_OSCURO,
+            formato=BI_FORMATO_XLSX.get(formato),
+        )
+        detalle_kpi = bi_celda(
+            hoja, f"{c1}7:{c2}7", kpi.get("detalle", ""),
+            Font(size=8, color="9CA3AF"), BI_OSCURO,
+        )
+        titulo_kpi.border = Border(
+            left=Side(style="thick", color="FFFFFF"),
+            top=Side(style="thick", color=BI_ROJO),
+        )
+        numero_kpi.border = Border(left=Side(style="thick", color="FFFFFF"))
+        detalle_kpi.border = Border(left=Side(style="thick", color="FFFFFF"))
+        hoja[f"{c2}5"].border = Border(top=Side(style="thick", color=BI_ROJO))
+    hoja.row_dimensions[5].height = 20
+    hoja.row_dimensions[6].height = 36
+    hoja.row_dimensions[7].height = 18
+
+    # ---------- Gráficos (2 por fila) ----------
+    fila = 9
+    graficos = reporte.get("graficos", [])
+    for indice, grafico in enumerate(graficos):
+        objeto = bi_grafico_excel(grafico, datos, indice)
+        if objeto is None:
+            continue
+        columna = "A" if indice % 2 == 0 else "G"
+        hoja.add_chart(objeto, f"{columna}{fila + (indice // 2) * 17}")
+    fila += ((len(graficos) + 1) // 2) * 17 + 1
+
+    # ---------- Tablas ----------
+    for tabla in reporte.get("tablas", []):
+        encabezados = tabla["encabezados"]
+        formatos = tabla.get("formatos") or [None] * len(encabezados)
+        ancho = max(len(encabezados), 2)
+
+        bi_celda(
+            hoja, f"A{fila}:{get_column_letter(ancho)}{fila}",
+            tabla["titulo"].upper(),
+            Font(bold=True, size=11, color="FFFFFF"), BI_OSCURO,
+        )
+        hoja.row_dimensions[fila].height = 22
+        fila += 1
+
+        for numero, encabezado in enumerate(encabezados, start=1):
+            celda = hoja.cell(row=fila, column=numero, value=encabezado)
+            celda.font = Font(bold=True, color="FFFFFF")
+            celda.fill = PatternFill("solid", fgColor=BI_ROJO)
+            celda.alignment = Alignment(
+                horizontal="right" if formatos[numero - 1] in BI_NUMERICOS else "left",
+                vertical="center",
+                wrap_text=True,
+            )
+        hoja.row_dimensions[fila].height = 22
+        fila += 1
+
+        borde = Border(bottom=Side(style="thin", color="E5E7EB"))
+        for posicion, datos_fila in enumerate(tabla["filas"]):
+            for numero, valor in enumerate(datos_fila, start=1):
+                formato = formatos[numero - 1]
+                celda = hoja.cell(row=fila, column=numero, value=bi_valor_excel(valor))
+                if formato in BI_FORMATO_XLSX:
+                    celda.number_format = BI_FORMATO_XLSX[formato]
+                celda.alignment = Alignment(
+                    horizontal="right" if formato in BI_NUMERICOS else "left",
+                    vertical="center",
+                )
+                celda.border = borde
+                if posicion % 2:
+                    celda.fill = PatternFill("solid", fgColor="F3F4F6")
+            fila += 1
+        fila += 2
+
+    # ---------- Impresión ----------
+    datos.sheet_state = "hidden"
+    hoja.page_setup.orientation = "landscape"
+    hoja.page_setup.fitToWidth = 1
+    hoja.page_setup.fitToHeight = 0
+    hoja.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+
+    buffer = BytesIO()
+    libro.save(buffer)
+    respuesta = HttpResponse(
+        buffer.getvalue(),
+        content_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+    )
+    respuesta["Content-Disposition"] = f'attachment; filename="{nombre_archivo}"'
+    return respuesta
+
+
+# ------------------------------------------------------------
+# 10.7 Exportación a PDF
+# ------------------------------------------------------------
+
+def bi_dibujo_grafico(grafico, ancho, alto):
+    dibujo = Drawing(ancho, alto)
+    rojo = colors.HexColor("#" + BI_ROJO)
+    etiquetas = [str(e) for e in grafico["etiquetas"]]
+    valores = [float(v) for v in grafico["valores"]]
+
+    if not valores or not any(valores):
+        dibujo.add(String(
+            ancho / 2, alto / 2, "Sin datos para el período",
+            textAnchor="middle", fontSize=9,
+            fillColor=colors.HexColor("#" + BI_GRIS),
+        ))
+        return dibujo
+
+    tipo = grafico["tipo"]
+
+    if tipo == "torta":
+        torta = Pie()
+        torta.width = torta.height = alto - 50
+        torta.x = ancho * 0.30
+        torta.y = 20
+        torta.data = valores
+        torta.labels = [e[:22] for e in etiquetas]
+        torta.sideLabels = True
+        torta.slices.strokeColor = colors.white
+        torta.slices.strokeWidth = 1
+        torta.slices.fontSize = 7
+        for posicion in range(len(valores)):
+            torta.slices[posicion].fillColor = colors.HexColor(
+                "#" + BI_PALETA[posicion % len(BI_PALETA)]
+            )
+        dibujo.add(torta)
+        return dibujo
+
+    if tipo == "barras_h":
+        graf = HorizontalBarChart()
+        graf.x, graf.y = 115, 10
+        graf.width, graf.height = ancho - 135, alto - 20
+        graf.data = [list(reversed(valores))]
+        graf.categoryAxis.categoryNames = [e[:20] for e in reversed(etiquetas)]
+        graf.categoryAxis.labels.fontSize = 7
+        graf.valueAxis.labels.fontSize = 7
+        graf.valueAxis.valueMin = 0
+        graf.bars[0].fillColor = rojo
+        graf.bars[0].strokeColor = None
+        dibujo.add(graf)
+        return dibujo
+
+    graf = HorizontalLineChart() if tipo == "linea" else VerticalBarChart()
+    graf.x, graf.y = 50, 35
+    graf.width, graf.height = ancho - 70, alto - 50
+    graf.data = [valores]
+    paso = max(1, len(etiquetas) // 10)
+    graf.categoryAxis.categoryNames = [
+        e if i % paso == 0 else "" for i, e in enumerate(etiquetas)
+    ]
+    graf.categoryAxis.labels.fontSize = 7
+    graf.categoryAxis.labels.angle = 30
+    graf.categoryAxis.labels.boxAnchor = "ne"
+    graf.valueAxis.labels.fontSize = 7
+    graf.valueAxis.valueMin = 0
+    graf.valueAxis.visibleGrid = True
+    graf.valueAxis.gridStrokeColor = colors.HexColor("#E5E7EB")
+    if tipo == "linea":
+        graf.lines[0].strokeColor = rojo
+        graf.lines[0].strokeWidth = 2
+        graf.lines[0].symbol = makeMarker("Circle")
+    else:
+        graf.bars[0].fillColor = rojo
+        graf.bars[0].strokeColor = None
+    dibujo.add(graf)
+    return dibujo
+
+
+def bi_marco_pdf(titulo, periodo):
+    """Cabecera y pie que se repiten en todas las páginas."""
+    def dibujar(canvas, documento):
+        ancho, alto = landscape(A4)
+        canvas.saveState()
+        canvas.setFillColor(colors.HexColor("#" + BI_OSCURO))
+        canvas.rect(0, alto - 22 * mm, ancho, 22 * mm, stroke=0, fill=1)
+        canvas.setFillColor(colors.HexColor("#" + BI_ROJO))
+        canvas.rect(0, alto - 22 * mm, 6 * mm, 22 * mm, stroke=0, fill=1)
+        canvas.setFillColor(colors.white)
+        canvas.setFont("Helvetica-Bold", 16)
+        canvas.drawString(15 * mm, alto - 10 * mm, "ZONA BURGER")
+        canvas.setFont("Helvetica", 10)
+        canvas.drawString(15 * mm, alto - 16.5 * mm, titulo)
+        canvas.drawRightString(ancho - 15 * mm, alto - 10 * mm, f"Período: {periodo}")
+        canvas.setFont("Helvetica", 8)
+        canvas.drawRightString(
+            ancho - 15 * mm, alto - 16.5 * mm,
+            f"Generado el {timezone.localdate():%d/%m/%Y}",
+        )
+        canvas.setFillColor(colors.HexColor("#" + BI_GRIS))
+        canvas.drawString(15 * mm, 8 * mm, "Zona Burger · Reporte de gestión")
+        canvas.drawRightString(ancho - 15 * mm, 8 * mm, f"Página {documento.page}")
+        canvas.restoreState()
+    return dibujar
+
+
+def bi_exportar_pdf(reporte, nombre_archivo):
+    respuesta = HttpResponse(content_type="application/pdf")
+    respuesta["Content-Disposition"] = f'attachment; filename="{nombre_archivo}"'
+
+    pagina = landscape(A4)
+    ancho_total = pagina[0] - 30 * mm
+    documento = SimpleDocTemplate(
+        respuesta, pagesize=pagina,
+        leftMargin=15 * mm, rightMargin=15 * mm,
+        topMargin=30 * mm, bottomMargin=16 * mm,
+    )
+
+    oscuro = colors.HexColor("#" + BI_OSCURO)
+    rojo = colors.HexColor("#" + BI_ROJO)
+    borde = colors.HexColor("#E5E7EB")
+    gris = colors.HexColor("#9CA3AF")
+    base = getSampleStyleSheet()["Normal"]
+
+    est_kpi_titulo = ParagraphStyle("kpiT", parent=base, fontSize=7,
+                                    leading=9, textColor=gris)
+    est_kpi_valor = ParagraphStyle("kpiV", parent=base, fontName="Helvetica-Bold",
+                                   fontSize=14, leading=18, textColor=colors.white)
+    est_kpi_detalle = ParagraphStyle("kpiD", parent=base, fontSize=7,
+                                     leading=9, textColor=gris)
+    est_seccion = ParagraphStyle("sec", parent=base, fontName="Helvetica-Bold",
+                                 fontSize=11, leading=14, textColor=oscuro,
+                                 spaceBefore=10, spaceAfter=4, keepWithNext=1)
+    est_grafico = ParagraphStyle("gra", parent=base, fontName="Helvetica-Bold",
+                                 fontSize=9, leading=12, textColor=oscuro)
+    est_celda = ParagraphStyle("cel", parent=base, fontSize=8, leading=10)
+    est_celda_der = ParagraphStyle("celd", parent=est_celda, alignment=TA_RIGHT)
+    est_enc = ParagraphStyle("enc", parent=est_celda, fontName="Helvetica-Bold",
+                             textColor=colors.white)
+    est_enc_der = ParagraphStyle("encd", parent=est_enc, alignment=TA_RIGHT)
+
+    elementos = []
+
+    # ---------- Tarjetas de KPI ----------
+    kpis = reporte["kpis"][:6]
+    celdas = [
+        [
+            Paragraph(escape(kpi["titulo"].upper()), est_kpi_titulo),
+            Paragraph(
+                escape(bi_formatear(kpi["valor"], kpi.get("formato"))),
+                est_kpi_valor,
+            ),
+            Paragraph(escape(kpi.get("detalle", "")), est_kpi_detalle),
+        ]
+        for kpi in kpis
+    ]
+    tarjetas = Table([celdas], colWidths=[ancho_total / len(celdas)] * len(celdas))
+    tarjetas.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), oscuro),
+        ("LINEABOVE", (0, 0), (-1, 0), 3, rojo),
+        ("LINEAFTER", (0, 0), (-2, -1), 3, colors.white),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 9),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    elementos += [tarjetas, Spacer(1, 6 * mm)]
+
+    # ---------- Gráficos (2 por fila) ----------
+    graficos = reporte.get("graficos", [])
+    ancho_col = (ancho_total - 8) / 2
+    for inicio_fila in range(0, len(graficos), 2):
+        grupo = graficos[inicio_fila:inicio_fila + 2]
+        fila = [
+            [
+                Paragraph(escape(grafico["titulo"]), est_grafico),
+                bi_dibujo_grafico(grafico, ancho_col - 14, 175),
+            ]
+            for grafico in grupo
+        ]
+        while len(fila) < 2:
+            fila.append("")
+
+        tabla_graficos = Table(
+            [[fila[0], "", fila[1]]],
+            colWidths=[ancho_col, 8, ancho_col],
+        )
+        estilo = [
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (1, 0), (1, 0), 0),
+            ("RIGHTPADDING", (1, 0), (1, 0), 0),
+            ("BOX", (0, 0), (0, 0), 0.6, borde),
+        ]
+        if len(grupo) == 2:
+            estilo.append(("BOX", (2, 0), (2, 0), 0.6, borde))
+        tabla_graficos.setStyle(TableStyle(estilo))
+        elementos += [tabla_graficos, Spacer(1, 4 * mm)]
+
+    # ---------- Tablas ----------
+    for tabla in reporte.get("tablas", []):
+        encabezados = tabla["encabezados"]
+        formatos = tabla.get("formatos") or [None] * len(encabezados)
+        derecha = [formato in BI_NUMERICOS for formato in formatos]
+
+        datos_tabla = [[
+            Paragraph(escape(enc), est_enc_der if derecha[i] else est_enc)
+            for i, enc in enumerate(encabezados)
+        ]]
+        for fila in tabla["filas"]:
+            datos_tabla.append([
+                Paragraph(
+                    escape(bi_formatear(valor, formatos[i])),
+                    est_celda_der if derecha[i] else est_celda,
+                )
+                for i, valor in enumerate(fila)
+            ])
+
+        ancho_tabla = min(ancho_total, 150 * len(encabezados))
+        pesos = [
+            1.8 if i == 0 and not derecha[0] else 1
+            for i in range(len(encabezados))
+        ]
+        anchos = [ancho_tabla * peso / sum(pesos) for peso in pesos]
+
+        objeto = Table(datos_tabla, colWidths=anchos, repeatRows=1, hAlign="LEFT")
+        objeto.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), rojo),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1),
+             [colors.white, colors.HexColor("#F3F4F6")]),
+            ("LINEBELOW", (0, 0), (-1, -1), 0.4, borde),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        elementos += [
+            Paragraph(escape(tabla["titulo"].upper()), est_seccion),
+            objeto,
+            Spacer(1, 3 * mm),
+        ]
+
+    marco = bi_marco_pdf(reporte["titulo"], reporte["periodo"])
+    documento.build(elementos, onFirstPage=marco, onLaterPages=marco)
+    return respuesta
+
+
+# ------------------------------------------------------------
+# 10.8 Despachador de exportaciones
+# ------------------------------------------------------------
+
+def bi_responder_exportacion(request, tipo, formato):
+    reportes = {
+        "ventas": (bi_reporte_ventas, "resumen_ventas"),
+        "productos": (bi_reporte_productos, "productos_mas_vendidos"),
+        "dinero": (bi_reporte_dinero, "dinero_recaudado"),
+    }
+    if tipo not in reportes:
+        return HttpResponse("Reporte desconocido", status=404)
+    if formato not in ("excel", "pdf"):
+        return HttpResponse("Formato desconocido", status=404)
+
+    if formato == "excel" and not OPENPYXL_DISPONIBLE:
+        return HttpResponse(
+            "Falta instalar openpyxl (pip install openpyxl).", status=503
+        )
+    if formato == "pdf" and not REPORTLAB_DISPONIBLE:
+        return HttpResponse(
+            "Falta instalar reportlab (pip install reportlab).", status=503
+        )
+
+    inicio, fin = bi_fechas(request)
+    constructor, nombre = reportes[tipo]
+    reporte = constructor(inicio, fin)
+    archivo = f"{nombre}_{inicio:%Y%m%d}_{fin:%Y%m%d}"
+
+    if formato == "excel":
+        return bi_exportar_excel(reporte, f"{archivo}.xlsx")
+    return bi_exportar_pdf(reporte, f"{archivo}.pdf")
+
+
+# ------------------------------------------------------------
+# 10.9 Vistas web de reportes
+# ------------------------------------------------------------
+
+@login_required
+def centro_reportes(request):
+    inicio, fin = bi_fechas(request)
+    indicadores, _ = bi_resumen(inicio, fin)
+
+    contexto = {
+        **bi_contexto(inicio, fin),
+        **indicadores,
+        "indicadores": indicadores,
+    }
+    return render(request, "panel/reportes/centroReportes.html", contexto)
+
+
+@login_required
+def resumen_ventas(request):
+    inicio, fin = bi_fechas(request)
+    indicadores, ventas_diarias = bi_resumen(inicio, fin)
+    metricas = bi_metricas_adicionales(inicio, fin, indicadores, ventas_diarias)
+
+    contexto = {
+        **bi_contexto(inicio, fin),
+        **indicadores,
+        "indicadores": indicadores,
+        "ventas_diarias": ventas_diarias,
+        **metricas,
+    }
+    return render(request, "panel/reportes/resumenVentas.html", contexto)
+
+
+@login_required
+def productos_mas_vendidos(request):
+    inicio, fin = bi_fechas(request)
+    productos = bi_top_productos(inicio, fin)
+    total_unidades, total_ingresos = bi_totales_productos(productos)
+
+    contexto = {
+        **bi_contexto(inicio, fin),
+        "productos": productos,
+        "total_unidades": total_unidades,
+        "total_ingresos": total_ingresos,
+    }
+    return render(request, "panel/reportes/productosMasVendidos.html", contexto)
+
+
+@login_required
+def dinero_recaudado(request):
+    inicio, fin = bi_fechas(request)
+    contexto = {**bi_contexto(inicio, fin), **bi_datos_dinero(inicio, fin)}
+    return render(request, "panel/reportes/dineroRecaudado.html", contexto)
+
+
+# ------------------------------------------------------------
+# 10.10 Vistas de exportación
+# ------------------------------------------------------------
+
+@login_required
+def exportar_resumen_excel(request):
+    return bi_responder_exportacion(request, "ventas", "excel")
+
+
+@login_required
+def exportar_resumen_pdf(request):
+    return bi_responder_exportacion(request, "ventas", "pdf")
+
+
+@login_required
+def exportar_productos_excel(request):
+    return bi_responder_exportacion(request, "productos", "excel")
+
+
+@login_required
+def exportar_productos_pdf(request):
+    return bi_responder_exportacion(request, "productos", "pdf")
+
+
+@login_required
+def exportar_dinero_excel(request):
+    return bi_responder_exportacion(request, "dinero", "excel")
+
+
+@login_required
+def exportar_dinero_pdf(request):
+    return bi_responder_exportacion(request, "dinero", "pdf")
+# ------------------------------------------------------------
+# VENTAS
+# ------------------------------------------------------------
+ 
+def reportes(request):
+    return render(request, 'panel/reportes/reportes.html')
+ 
+ 
+def reporte_resumen_ventas(request):
+    hoy = timezone.localdate()
+ 
+    rango = request.GET.get('rango', '').strip()
+    fecha_desde_txt = request.GET.get('fecha_desde', '').strip()
+    fecha_hasta_txt = request.GET.get('fecha_hasta', '').strip()
+ 
+    atajo = _rango_por_atajo(rango, hoy)
+ 
+    if atajo:
+        desde, hasta = atajo
+    else:
+        rango = ''
+        desde = (
+            _fecha_o_none(fecha_desde_txt)
+            if fecha_desde_txt else hoy - timedelta(days=6)
+        )
+        hasta = _fecha_o_none(fecha_hasta_txt) if fecha_hasta_txt else hoy
+ 
+    filtros_validos = True
+ 
+    if desde is None:
+        messages.error(request, 'La fecha inicial no es válida.')
+        filtros_validos = False
+ 
+    if hasta is None:
+        messages.error(request, 'La fecha final no es válida.')
+        filtros_validos = False
+ 
+    if desde and hasta:
+        if desde > hasta:
+            messages.error(
+                request,
+                'La fecha inicial no puede ser posterior a la fecha final.'
+            )
+            filtros_validos = False
+ 
+        elif (hasta - desde).days + 1 > MAX_DIAS_REPORTE:
+            messages.error(
+                request,
+                f'El período no puede superar los {MAX_DIAS_REPORTE} días.'
+            )
+            filtros_validos = False
+ 
+    contexto = {
+        'filtros_validos': filtros_validos,
+        'rango_activo': rango,
+        'fecha_desde': desde.isoformat() if desde else fecha_desde_txt,
+        'fecha_hasta': hasta.isoformat() if hasta else fecha_hasta_txt,
+    }
+ 
+    if not filtros_validos:
+        return render(request, 'panel/reportes/resumenVentas.html', contexto)
+ 
+    exportar = request.GET.get('exportar') == 'xlsx'
+ 
+    if exportar and Workbook is None:
+        messages.error(request, MENSAJE_SIN_OPENPYXL)
+        exportar = False
+ 
+    datos = _datos_resumen_ventas(
+        desde, hasta, limite_productos=50 if exportar else 5
+    )
+ 
+    if exportar:
+        return _exportar_resumen_xlsx(datos, desde, hasta)
+ 
+    contexto.update(datos)
+    contexto['url_exportar'] = _url_exportar(request)
+ 
+    return render(request, 'panel/reportes/resumenVentas.html', contexto)
+ 
+ 
+def reporte_historial_ventas(request):
+    """
+    Historial de pedidos pagados (sin cancelados).
+    Filtra por fecha inicial, fecha final y número de pedido.
+    Con ?exportar=xlsx descarga todos los resultados en Excel.
+    """
+    pedidos = _pedidos_vendidos().select_related(
+        'idcliente', 'idmediopago', 'idestadopedido'
+    )
+ 
+    fecha_desde = request.GET.get('fecha_desde', '').strip()
+    fecha_hasta = request.GET.get('fecha_hasta', '').strip()
+    numero_pedido = request.GET.get('pedido', '').strip()
+ 
+    desde = _fecha_o_none(fecha_desde)
+    hasta = _fecha_o_none(fecha_hasta)
+ 
+    hay_error = False
+ 
+    if fecha_desde and desde is None:
+        messages.error(request, 'La fecha inicial no es válida.')
+        hay_error = True
+ 
+    if fecha_hasta and hasta is None:
+        messages.error(request, 'La fecha final no es válida.')
+        hay_error = True
+ 
+    if desde and hasta and desde > hasta:
+        messages.error(
+            request,
+            'La fecha inicial no puede ser posterior a la fecha final.'
+        )
+        hay_error = True
+ 
+    if numero_pedido and not (
+        numero_pedido.isdigit() and int(numero_pedido) > 0
+    ):
+        messages.error(
+            request, 'El número de pedido debe ser un entero positivo.'
+        )
+        hay_error = True
+ 
+    if hay_error:
+        pedidos = pedidos.none()
+    else:
+        if desde:
+            pedidos = pedidos.filter(fecha_creacion__date__gte=desde)
+ 
+        if hasta:
+            pedidos = pedidos.filter(fecha_creacion__date__lte=hasta)
+ 
+        if numero_pedido:
+            pedidos = pedidos.filter(idpedido=int(numero_pedido))
+ 
+    pedidos = pedidos.order_by('-fecha_creacion', '-idpedido')
+ 
+    if request.GET.get('exportar') == 'xlsx' and not hay_error:
+        if Workbook is None:
+            messages.error(request, MENSAJE_SIN_OPENPYXL)
+        else:
+            partes = []
+ 
+            if desde:
+                partes.append(f'desde {desde:%d/%m/%Y}')
+ 
+            if hasta:
+                partes.append(f'hasta {hasta:%d/%m/%Y}')
+ 
+            if numero_pedido:
+                partes.append(f'pedido #{numero_pedido}')
+ 
+            return _exportar_historial_xlsx(
+                pedidos,
+                'Filtros: ' + (' · '.join(partes) or 'todos los pedidos'),
+            )
+ 
+    resumen = pedidos.aggregate(
+        total_ventas=Sum('total'),
+        cantidad_pedidos=Count('idpedido'),
+        ticket_promedio=Avg('total'),
+    )
+ 
+    pagina = Paginator(pedidos, 15).get_page(request.GET.get('pagina'))
+ 
+    return render(request, 'panel/reportes/historialVentas.html', {
+        'pagina_pedidos': pagina,
+        'total_ventas': resumen['total_ventas'] or CERO,
+        'cantidad_pedidos': resumen['cantidad_pedidos'] or 0,
+        'ticket_promedio': resumen['ticket_promedio'] or CERO,
+        'fecha_desde': fecha_desde,
+        'fecha_hasta': fecha_hasta,
+        'numero_pedido': numero_pedido,
+        'url_exportar': _url_exportar(request),
+    })
+# ------------------------------------------------------------
+# HORARIOS
+# ------------------------------------------------------------
+class HorarioForm(forms.ModelForm):
+    DIAS_SEMANA = [
+        ("Lunes", "Lunes"),
+        ("Martes", "Martes"),
+        ("Miércoles", "Miércoles"),
+        ("Jueves", "Jueves"),
+        ("Viernes", "Viernes"),
+        ("Sábado", "Sábado"),
+        ("Domingo", "Domingo"),
+    ]
+
+    ESTADOS = [
+        (1, "Abierto"),
+        (0, "Cerrado"),
+    ]
+
+    diasemana = forms.ChoiceField(
+        choices=DIAS_SEMANA,
+        label="Día de la semana",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+
+    idnegocio = forms.ModelChoiceField(
+        queryset=Negocio.objects.all(),
+        label="Negocio",
+        empty_label="Seleccioná un negocio",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+
+    horaapertura = forms.TimeField(
+        label="Hora de apertura",
+        required=False,
+        input_formats=["%H:%M"],
+        widget=forms.TimeInput(
+            format="%H:%M",
+            attrs={"type": "time", "class": "form-control"}
+        )
+    )
+
+    horacierre = forms.TimeField(
+        label="Hora de cierre",
+        required=False,
+        input_formats=["%H:%M"],
+        widget=forms.TimeInput(
+            format="%H:%M",
+            attrs={"type": "time", "class": "form-control"}
+        )
+    )
+
+    estaabierto = forms.TypedChoiceField(
+        choices=ESTADOS,
+        label="Estado del día",
+        coerce=int,
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+
+    class Meta:
+        model = Horario
+        fields = [
+            "idnegocio",
+            "diasemana",
+            "horaapertura",
+            "horacierre",
+            "estaabierto",
+        ]
+
+def horarios_lista(request):
+    horarios = Horario.objects.select_related("idnegocio").order_by(
+        "idnegocio__nombre", "idhorario"
+    )
+    return render(
+        request,
+        "panel/horarios/horarioLista.html",
+        {"horarios": horarios},
+    )
+
+
+def horarios_crear(request):
+    if request.method == "POST":
+        form = HorarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Horario creado correctamente.")
+            return redirect("horarios_lista")
+    else:
+        form = HorarioForm()
+
+    return render(request, "panel/horarios/horarioCrear.html", {
+        "form": form,
+        "titulo": "Crear horario",
+        "accion": "Crear horario",
+    })
+
+
+def horarios_editar(request, idhorario):
+    horario = get_object_or_404(Horario, pk=idhorario)
+
+    if request.method == "POST":
+        form = HorarioForm(request.POST, instance=horario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Horario actualizado correctamente.")
+            return redirect("horarios_lista")
+    else:
+        form = HorarioForm(instance=horario)
+
+    return render(request, "panel/horarios/horarioEditar.html", {
+        "form": form,
+        "titulo": "Editar horario",
+        "accion": "Guardar cambios",
+    })
+
+
+def horarios_eliminar(request, idhorario):
+    horario = get_object_or_404(Horario, pk=idhorario)
+
+    if request.method == "POST":
+        horario.delete()
+        messages.success(request, "Horario eliminado correctamente.")
+        return redirect("horarios_lista")
+
+    return render(
+        request,
+        "panel/horarios/horarioEliminar.html",
+        {"horario": horario},
+    )
+# ------------------------------------------------------------
+# ZONAS ENTREGA
+# ------------------------------------------------------------
+def zonas_entrega_lista(request):
+    zonas = ZonasEntrega.objects.all().order_by("nombre", "idzona")
+
+    return render(
+        request,
+        "panel/entrega/zonaLista.html",
+        {"zonas": zonas},
+    )
+
+
+def zonas_entrega_crear(request):
+    if request.method == "POST":
+        nombre = request.POST.get("nombre", "").strip()
+        costoenvio = request.POST.get("costoenvio") or "0"
+        idnegocio = request.POST.get("idnegocio") or None
+
+        try:
+            costoenvio = Decimal(costoenvio)
+
+            if costoenvio < 0:
+                raise InvalidOperation
+
+            if not nombre:
+                raise ValueError("El nombre es obligatorio.")
+
+            if len(nombre) > 50:
+                raise ValueError("El nombre no puede superar los 50 caracteres.")
+
+            if idnegocio is not None:
+                idnegocio = int(idnegocio)
+                if idnegocio < 1:
+                    raise ValueError("El ID del negocio debe ser positivo.")
+
+            ZonasEntrega.objects.create(
+                nombre=nombre,
+                costoenvio=costoenvio,
+                idnegocio=idnegocio,
+            )
+
+            messages.success(request, "Zona de entrega creada correctamente.")
+            return redirect("zonas_entrega_lista")
+
+        except (ValueError, InvalidOperation, TypeError):
+            messages.error(
+                request,
+                "Verificá los datos: nombre obligatorio, costo válido e ID de negocio numérico.",
+            )
+
+    return render(request, "panel/entrega/zonaCrear.html")
+
+
+def zonas_entrega_editar(request, idzona):
+    zona = get_object_or_404(ZonasEntrega, pk=idzona)
+
+    if request.method == "POST":
+        nombre = request.POST.get("nombre", "").strip()
+        costoenvio = request.POST.get("costoenvio") or "0"
+        idnegocio = request.POST.get("idnegocio") or None
+
+        try:
+            costoenvio = Decimal(costoenvio)
+
+            if costoenvio < 0:
+                raise InvalidOperation
+
+            if not nombre:
+                raise ValueError("El nombre es obligatorio.")
+
+            if len(nombre) > 50:
+                raise ValueError("El nombre no puede superar los 50 caracteres.")
+
+            if idnegocio is not None:
+                idnegocio = int(idnegocio)
+                if idnegocio < 1:
+                    raise ValueError("El ID del negocio debe ser positivo.")
+
+            zona.nombre = nombre
+            zona.costoenvio = costoenvio
+            zona.idnegocio = idnegocio
+            zona.save()
+
+            messages.success(request, "Zona de entrega actualizada correctamente.")
+            return redirect("zonas_entrega_lista")
+
+        except (ValueError, InvalidOperation, TypeError):
+            messages.error(
+                request,
+                "Verificá los datos: nombre obligatorio, costo válido e ID de negocio numérico.",
+            )
+
+    return render(
+        request,
+        "panel/entrega/zonaEditar.html",
+        {"zona": zona},
+    )
+
+
+def zonas_entrega_eliminar(request, idzona):
+    zona = get_object_or_404(ZonasEntrega, pk=idzona)
+
+    if request.method == "POST":
+        zona.delete()
+        messages.success(request, "Zona de entrega eliminada correctamente.")
+        return redirect("zonas_entrega_lista")
+
+    return render(
+        request,
+        "panel/entrega/zonaEliminar.html",
+        {"zona": zona},
+    )
+# ------------------------------------------------------------
+# historial de pedidos
+# ------------------------------------------------------------
+def historial_pedidos(request):
+    """Historial general de pedidos, independientemente de su estado."""
+    pedidos = Pedido.objects.select_related(
+        'idcliente',
+        'idmediopago',
+        'idestadopedido',
+    ).all()
+
+    fecha_desde = request.GET.get('fecha_desde', '').strip()
+    fecha_hasta = request.GET.get('fecha_hasta', '').strip()
+    numero_pedido = request.GET.get('pedido', '').strip()
+    cliente = request.GET.get('cliente', '').strip()
+    estado = request.GET.get('estado', '').strip()
+
+    desde = _fecha_o_none(fecha_desde) if fecha_desde else None
+    hasta = _fecha_o_none(fecha_hasta) if fecha_hasta else None
+    hay_error = False
+
+    if fecha_desde and desde is None:
+        messages.error(request, 'La fecha inicial no es válida.')
+        hay_error = True
+
+    if fecha_hasta and hasta is None:
+        messages.error(request, 'La fecha final no es válida.')
+        hay_error = True
+
+    if desde and hasta and desde > hasta:
+        messages.error(
+            request,
+            'La fecha inicial no puede ser posterior a la fecha final.'
+        )
+        hay_error = True
+
+    if numero_pedido and not (
+        numero_pedido.isdigit() and int(numero_pedido) > 0
+    ):
+        messages.error(
+            request,
+            'El número de pedido debe ser un entero positivo.'
+        )
+        hay_error = True
+
+    if estado and not estado.isdigit():
+        messages.error(request, 'El estado seleccionado no es válido.')
+        hay_error = True
+
+    if hay_error:
+        pedidos = pedidos.none()
+    else:
+        if desde:
+            pedidos = pedidos.filter(fecha_creacion__date__gte=desde)
+
+        if hasta:
+            pedidos = pedidos.filter(fecha_creacion__date__lte=hasta)
+
+        if numero_pedido:
+            pedidos = pedidos.filter(idpedido=int(numero_pedido))
+
+        if cliente:
+            pedidos = pedidos.filter(
+                Q(idcliente__nombre__icontains=cliente)
+                | Q(idcliente__apellido__icontains=cliente)
+            )
+
+        if estado:
+            pedidos = pedidos.filter(idestadopedido__idestado=int(estado))
+
+    pedidos = pedidos.order_by('-fecha_creacion', '-idpedido')
+    estados = EstadoPedido.objects.all().order_by('descripcion')
+
+    pagina = Paginator(pedidos, 15).get_page(
+        request.GET.get('pagina')
+    )
+
+    return render(request, 'panel/ventas/historialPedidos.html', {
+        'pagina_pedidos': pagina,
+        'estados': estados,
+        'fecha_desde': fecha_desde,
+        'fecha_hasta': fecha_hasta,
+        'numero_pedido': numero_pedido,
+        'cliente': cliente,
+        'estado_seleccionado': estado,
+    })
+
+
+def detalle_historial_pedido(request, idpedido):
+    """Detalle completo de un pedido del historial."""
+    pedido = get_object_or_404(
+        Pedido.objects.select_related(
+            'idcliente',
+            'idmediopago',
+            'idestadopedido',
+        ),
+        idpedido=idpedido,
+    )
+
+    detalles = DetallePedido.objects.filter(
+        idpedido=pedido
+    ).select_related('idproducto')
+
+    for detalle in detalles:
+        detalle.subtotal_item = detalle.preciounitario * detalle.cantidad
+
+    return render(request, 'panel/ventas/detalleHistorialPedido.html', {
+        'pedido': pedido,
+        'detalles': detalles,
     })

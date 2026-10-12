@@ -1,0 +1,116 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/entrega/zonaLista.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="zonas-container">
+
+    <div class="encabezado">
+        <div class="encabezado-texto">
+            <h1>Zonas de entrega</h1>
+            <p>Administrá las zonas y los costos de envío.</p>
+        </div>
+
+        <a href="{% url 'zonas_entrega_crear' %}" class="btn btn-principal">
+            <i class="fa-solid fa-plus"></i>
+            <span>Nueva zona</span>
+        </a>
+    </div>
+
+    {% if messages %}
+        <div class="mensajes-container">
+            {% for message in messages %}
+                <div class="mensaje {{ message.tags }}">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="tabla-contenedor">
+        <table class="tabla-zonas">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Costo de envío</th>
+                    <th>ID del negocio</th>
+                    <th class="columna-acciones">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for zona in zonas %}
+                <tr>
+                    <td data-label="ID">
+                        <span class="zona-id">#{{ zona.idzona }}</span>
+                    </td>
+
+                    <td data-label="Nombre">
+                        <span class="zona-nombre">
+                            {{ zona.nombre|default:"Sin nombre" }}
+                        </span>
+                    </td>
+
+                    <td data-label="Costo de envío">
+                        <span class="zona-costo">
+                            ${{ zona.costoenvio|default_if_none:"0.00" }}
+                        </span>
+                    </td>
+
+                    <td data-label="ID del negocio">
+                        {% if zona.idnegocio %}
+                            <span class="zona-negocio">{{ zona.idnegocio }}</span>
+                        {% else %}
+                            <span class="sin-dato">—</span>
+                        {% endif %}
+                    </td>
+
+                    <td data-label="Acciones" class="acciones">
+                        <a
+                            href="{% url 'zonas_entrega_editar' zona.idzona %}"
+                            class="btn btn-editar"
+                            title="Editar zona"
+                        >
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Editar</span>
+                        </a>
+
+                        <a
+                            href="{% url 'zonas_entrega_eliminar' zona.idzona %}"
+                            class="btn btn-eliminar"
+                            title="Eliminar zona"
+                        >
+                            <i class="fa-solid fa-trash"></i>
+                            <span>Eliminar</span>
+                        </a>
+                    </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="vacio">
+                        <div class="vacio-contenido">
+                            <div class="vacio-icono">
+                                <i class="fa-solid fa-truck-fast"></i>
+                            </div>
+                            <h3>No hay zonas de entrega</h3>
+                            <p>Todavía no registraste ninguna zona de entrega.</p>
+                            <a href="{% url 'zonas_entrega_crear' %}" class="btn btn-principal">
+                                <i class="fa-solid fa-plus"></i>
+                                Crear primera zona
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

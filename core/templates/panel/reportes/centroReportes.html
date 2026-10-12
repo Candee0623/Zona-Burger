@@ -1,0 +1,73 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Reportes | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/reportes/reportes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="rep-page">
+
+    <header class="rep-header">
+        <div class="rep-title">
+            <div class="rep-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+                <div class="rep-kicker">Administración</div>
+                <h1>Reportes</h1>
+                <p>Consultá la información de ventas y recaudación de Zona-Burger.</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="rep-kpis">
+        <article class="rep-kpi">
+            <span>Ventas acumuladas</span>
+            <strong>$ {{ total_vendido|floatformat:"2g" }}</strong>
+            <small>{{ periodo }}</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Pedidos</span>
+            <strong>{{ cantidad_pedidos }}</strong>
+            <small>Pedidos no cancelados</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Ticket promedio</span>
+            <strong>$ {{ ticket_promedio|floatformat:"2g" }}</strong>
+            <small>Importe por pedido</small>
+        </article>
+    </div>
+
+    <div class="rep-links">
+
+        <a href="{% url 'resumen_ventas' %}" class="rep-link">
+            <div class="rep-link-icon"><i class="fa-solid fa-chart-column"></i></div>
+            <div class="rep-link-info">
+                <h2>Resumen de ventas</h2>
+                <p>Facturación, pedidos por día y estado, y comparación con el período anterior.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right rep-link-flecha"></i>
+        </a>
+
+        <a href="{% url 'productos_mas_vendidos' %}" class="rep-link">
+            <div class="rep-link-icon"><i class="fa-solid fa-burger"></i></div>
+            <div class="rep-link-info">
+                <h2>Productos más vendidos</h2>
+                <p>Ranking por unidades e ingresos, con la participación de cada producto.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right rep-link-flecha"></i>
+        </a>
+
+        <a href="{% url 'dinero_recaudado' %}" class="rep-link">
+            <div class="rep-link-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <div class="rep-link-info">
+                <h2>Dinero recaudado</h2>
+                <p>Importes cobrados, medios de pago y rendimiento por día de la semana.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right rep-link-flecha"></i>
+        </a>
+
+    </div>
+</div>
+{% endblock %}

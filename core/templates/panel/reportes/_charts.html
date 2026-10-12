@@ -1,0 +1,82 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(() => {
+    const entero = new Intl.NumberFormat("es-AR");
+    const moneda = new Intl.NumberFormat("es-AR", {
+        style: "currency",
+        currency: "ARS",
+        minimumFractionDigits: 2
+    });
+
+    const C = {
+        rojo: "#dc2626",
+        rojoClaro: "#f87171",
+        grid: "#292929",
+        texto: "#888",
+        etiqueta: "#ccc",
+        paleta: ["#dc2626", "#f97316", "#fbbf24", "#a3a3a3", "#f87171", "#7f1d1d"]
+    };
+
+    window.rep = {
+        colores: C,
+        moneda: (v) => moneda.format(Number(v || 0)),
+        entero: (v) => entero.format(Number(v || 0)),
+        dia: (iso) => (iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) : ""),
+        leer: (id) => JSON.parse(document.getElementById(id).textContent),
+
+        tema() {
+            Chart.defaults.color = C.texto;
+            Chart.defaults.borderColor = C.grid;
+            Chart.defaults.font.family = "inherit";
+        },
+
+        ejes(opciones) {
+            const o = opciones || {};
+            const horizontal = !!o.horizontal;
+            const fmt = o.dinero ? window.rep.moneda : window.rep.entero;
+            const valor = {
+                beginAtZero: true,
+                grid: { color: C.grid },
+                ticks: { color: C.texto, callback: (v) => fmt(v) }
+            };
+            const categoria = {
+                grid: { display: false },
+                ticks: { color: horizontal ? C.etiqueta : C.texto, maxRotation: 0, autoSkip: true }
+            };
+            return {
+                indexAxis: horizontal ? "y" : "x",
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (c) => " " + fmt(horizontal ? c.parsed.x : c.parsed.y)
+                        }
+                    }
+                },
+                scales: horizontal ? { x: valor, y: categoria } : { x: categoria, y: valor }
+            };
+        },
+
+        dona(dinero) {
+            const fmt = dinero ? window.rep.moneda : window.rep.entero;
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "68%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { color: "#aaa", padding: 16, usePointStyle: true }
+                    },
+                    tooltip: {
+                        callbacks: { label: (c) => " " + c.label + ": " + fmt(c.parsed) }
+                    }
+                }
+            };
+        }
+    };
+})();
+</script>

@@ -78,10 +78,22 @@ class RolAdmin(AccionesAdminMixin, admin.ModelAdmin):
 
 @admin.register(Empleado)
 class EmpleadoAdmin(AccionesAdminMixin, admin.ModelAdmin):
-    list_display = ('idempleado', 'nombre', 'apellido', 'idrol', 'acciones')
-    list_display_links = ('idempleado',)
-    list_filter = ('idrol',)
-    search_fields = ('nombre', 'apellido', 'idrol__nombrerol')
+    list_display = (
+        'id_empleado',
+        'nombre',
+        'apellido',
+        'id_rol',
+        'correo',
+        'acciones',
+    )
+
+    list_display_links = ('id_empleado',)
+
+    search_fields = (
+        'nombre',
+        'apellido',
+        'correo',
+    )
 
 @admin.register(EstadoNegocio)
 class EstadoNegocioAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -146,12 +158,14 @@ class InsumoAdmin(AccionesAdminMixin, admin.ModelAdmin):
     list_filter = ('unidadmedidaingreso', 'stockactual')
     search_fields = ('nombreinsumo', 'unidadmedidaingreso')
 
+
 @admin.register(Compras)
 class ComprasAdmin(AccionesAdminMixin, admin.ModelAdmin):
-    list_display = ('idcompra', 'fecha', 'preciototal', 'idempleado', 'acciones')
+    list_display = ('idcompra', 'fecha', 'preciototal', 'acciones')
     list_display_links = ('idcompra',)
-    list_filter = ('fecha', 'idempleado')
-    search_fields = ('idempleado__nombre',)
+    list_filter = ('fecha',)
+    search_fields = ('idcompra',)
+
 
 @admin.register(Receta)
 class RecetaAdmin(AccionesAdminMixin, admin.ModelAdmin):

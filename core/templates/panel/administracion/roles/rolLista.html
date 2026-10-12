@@ -1,0 +1,94 @@
+
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Administración de roles | Zona Burger{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/panel/administracion/roles/rolLista.css' %}">
+
+<main class="roles-page">
+
+    <header class="roles-top">
+        <div class="roles-title">
+            <h1>Administración de roles</h1>
+            <p>Gestiona los roles y sus permisos de acceso.</p>
+        </div>
+
+        <a href="{% url 'rol_crear' %}" class="btn-rol-nuevo">
+            <i class="fa-solid fa-plus"></i>
+            Crear rol
+        </a>
+    </header>
+
+    {% if messages %}
+        <div class="roles-messages">
+            {% for mensaje in messages %}
+                <div class="rol-message">
+                    {{ mensaje }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="roles-card">
+        <div class="roles-table-scroll">
+            <table class="roles-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre del rol</th>
+                        <th class="roles-th-acciones">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for rol in roles %}
+                        <tr>
+                            <td class="roles-id" data-label="ID">
+                                #{{ rol.pk }}
+                            </td>
+
+                            <td class="roles-nombre" data-label="Nombre del rol">
+                                {{ rol.nombrerol|default:"Sin nombre" }}
+                            </td>
+
+                            <td class="roles-acciones-cell" data-label="Acciones">
+                                <div class="roles-acciones">
+
+                                    <a href="{% url 'rol_editar' rol.pk %}"
+                                       class="btn-rol btn-rol-editar">
+                                        <i class="fa-solid fa-pen"></i>
+                                        Editar
+                                    </a>
+
+                                    <form method="post"
+                                          action="{% url 'rol_eliminar' rol.pk %}"
+                                          onsubmit="return confirm('¿Seguro que deseas eliminar este rol?');">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="btn-rol btn-rol-eliminar">
+                                            <i class="fa-solid fa-trash"></i>
+                                            Eliminar
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="roles-empty">
+                                Todavía no hay roles registrados.
+                                <br>
+                                Puedes comenzar creando uno nuevo.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+{% endblock %}

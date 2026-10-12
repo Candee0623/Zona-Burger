@@ -1,0 +1,472 @@
+/* =========================================================
+   ELIMINAR ZONA DE ENTREGA - ZONA BURGER
+   Estilos basados en producto-delete
+   ========================================================= */
+
+.zona-delete-page {
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   VOLVER
+   ========================================================= */
+
+.zona-delete-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 7px 11px;
+    border: 1px solid #303030;
+    border-radius: 7px;
+    background: #191919;
+    color: #858585;
+    text-decoration: none;
+    font-size: .84rem;
+    transition:
+        color .2s ease,
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+.zona-delete-back svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.zona-delete-back:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, .06);
+    border-color: rgba(220, 38, 38, .35);
+    transform: translateX(-2px);
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.zona-delete-card {
+    background: #181818;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.zona-delete-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 23px 27px;
+    border-bottom: 1px solid #303030;
+}
+
+.zona-delete-icon {
+    width: 49px;
+    height: 49px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+}
+
+.zona-delete-icon svg {
+    width: 25px;
+    height: 25px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.zona-delete-icon.eliminar {
+    background: rgba(220, 38, 38, .10);
+    border: 1px solid rgba(220, 38, 38, .3);
+    color: #dc2626;
+}
+
+.zona-delete-header-text {
+    min-width: 0;
+}
+
+.zona-delete-header-text h1 {
+    margin: 0 0 5px;
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.zona-delete-header-text h1.eliminar {
+    color: #dc2626;
+}
+
+.zona-delete-header-text p {
+    margin: 0;
+    color: #858585;
+    font-size: .84rem;
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   BODY
+   ========================================================= */
+
+.zona-delete-body {
+    padding: 27px;
+}
+
+
+/* =========================================================
+   INFORMACIÓN DE LA ZONA
+   ========================================================= */
+
+.zona-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+.zona-placeholder {
+    width: 68px;
+    height: 68px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: #282828;
+    border: 1px solid #3a3a3a;
+    color: #dc2626;
+}
+
+.zona-placeholder svg {
+    width: 31px;
+    height: 31px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.zona-info-content {
+    min-width: 0;
+}
+
+.zona-info-label {
+    margin-bottom: 4px;
+    color: #626262;
+    font-size: .67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+}
+
+.zona-nombre {
+    display: block;
+    margin-bottom: 7px;
+    color: #f0f0f0;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.zona-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.zona-id {
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: #282828;
+    border: 1px solid #3a3a3a;
+    color: #858585;
+    font-size: .72rem;
+}
+
+.zona-precio {
+    color: #d8d8d8;
+    font-size: .86rem;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   DETALLES DE LA ZONA
+   ========================================================= */
+
+.zona-detalles {
+    margin-bottom: 20px;
+    padding: 5px 15px;
+    background: #1c1c1c;
+    border: 1px solid #303030;
+    border-radius: 8px;
+}
+
+.zona-detalle-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 11px 0;
+    border-bottom: 1px solid #292929;
+}
+
+.zona-detalle-fila:last-child {
+    border-bottom: none;
+}
+
+.zona-detalle-fila span {
+    color: #777;
+    font-size: .79rem;
+}
+
+.zona-detalle-fila strong {
+    color: #d8d8d8;
+    font-size: .82rem;
+    font-weight: 600;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   ADVERTENCIA
+   ========================================================= */
+
+.zona-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 14px;
+    margin-bottom: 22px;
+    border-radius: 7px;
+}
+
+.zona-warning.eliminar {
+    background: rgba(220, 38, 38, .07);
+    border: 1px solid rgba(220, 38, 38, .23);
+}
+
+.zona-warning-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #dc2626;
+}
+
+.zona-warning-icon svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.zona-warning-text {
+    color: #aaa;
+    font-size: .84rem;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   PREGUNTA
+   ========================================================= */
+
+.zona-question {
+    margin: 0 0 23px;
+    color: #b8b8b8;
+    font-size: .9rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.zona-delete-actions {
+    display: flex;
+    justify-content: center;
+    gap: 9px;
+    padding-top: 21px;
+    border-top: 1px solid #303030;
+    flex-wrap: wrap;
+}
+
+.zona-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.zona-action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.zona-action-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* CONFIRMAR */
+
+.zona-confirmar {
+    border: 1px solid #dc2626;
+    background: #dc2626;
+    color: #fff;
+    box-shadow: 0 5px 14px rgba(220, 38, 38, .10);
+}
+
+.zona-confirmar:hover {
+    background: #ef3030;
+    border-color: #ef3030;
+    color: #fff;
+    box-shadow: 0 7px 18px rgba(220, 38, 38, .16);
+}
+
+
+/* CANCELAR */
+
+.zona-cancelar {
+    background: #222;
+    border: 1px solid #3a3a3a;
+    color: #aaa;
+}
+
+.zona-cancelar:hover {
+    background: #292929;
+    border-color: #4a4a4a;
+    color: #eee;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .zona-delete-header,
+    .zona-delete-body {
+        padding: 20px;
+    }
+
+    .zona-delete-header {
+        gap: 12px;
+    }
+
+    .zona-delete-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .zona-delete-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .zona-delete-header-text h1 {
+        font-size: 1.18rem;
+    }
+
+    .zona-delete-header-text p {
+        font-size: .79rem;
+    }
+
+    .zona-info {
+        align-items: flex-start;
+        padding: 13px;
+    }
+
+    .zona-placeholder {
+        width: 60px;
+        height: 60px;
+    }
+
+    .zona-delete-actions {
+        flex-direction: column;
+    }
+
+    .zona-action-btn {
+        width: 100%;
+    }
+
+}
+
+
+@media (max-width: 420px) {
+
+    .zona-delete-page {
+        max-width: none;
+    }
+
+    .zona-info {
+        gap: 11px;
+    }
+
+    .zona-placeholder {
+        width: 54px;
+        height: 54px;
+    }
+
+    .zona-nombre {
+        font-size: .92rem;
+    }
+
+    .zona-warning-text {
+        font-size: .8rem;
+    }
+
+}

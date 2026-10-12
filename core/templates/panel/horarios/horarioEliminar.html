@@ -1,0 +1,116 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Eliminar horario | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/horarios/horarioEliminar.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="eliminar-container">
+
+    <a href="{% url 'horarios_lista' %}" class="eliminar-volver">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver a horarios
+    </a>
+
+    <div class="eliminar-card">
+
+        <div class="eliminar-icono">
+            <i class="fa-solid fa-trash-can"></i>
+        </div>
+
+        <h1>Eliminar horario</h1>
+
+        <p class="eliminar-descripcion">
+            ¿Estás seguro de que querés eliminar este horario?
+            Revisá los datos antes de continuar.
+        </p>
+
+        <div class="horario-detalle">
+
+            <div class="detalle-fila">
+                <span class="detalle-label">Negocio</span>
+                <span class="detalle-valor">
+                    {% if horario.idnegocio %}
+                        {{ horario.idnegocio.nombre }}
+                    {% else %}
+                        Sin negocio asignado
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="detalle-fila">
+                <span class="detalle-label">Día de la semana</span>
+                <span class="detalle-valor">
+                    {{ horario.diasemana|default:"—" }}
+                </span>
+            </div>
+
+            <div class="detalle-fila">
+                <span class="detalle-label">Hora de apertura</span>
+                <span class="detalle-valor">
+                    {% if horario.horaapertura %}
+                        {{ horario.horaapertura|time:"H:i" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="detalle-fila">
+                <span class="detalle-label">Hora de cierre</span>
+                <span class="detalle-valor">
+                    {% if horario.horacierre %}
+                        {{ horario.horacierre|time:"H:i" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="detalle-fila">
+                <span class="detalle-label">Estado</span>
+                <span class="detalle-valor">
+                    {% if horario.estaabierto == 1 %}
+                        Abierto
+                    {% elif horario.estaabierto == 0 %}
+                        Cerrado
+                    {% else %}
+                        Sin definir
+                    {% endif %}
+                </span>
+            </div>
+
+        </div>
+
+        <div class="advertencia">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Esta acción es permanente y no se puede deshacer.</span>
+        </div>
+
+        <div class="eliminar-acciones">
+
+            <a href="{% url 'horarios_lista' %}" class="btn-accion btn-cancelar">
+                <i class="fa-solid fa-arrow-left"></i>
+                Cancelar
+            </a>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <button type="submit" class="btn-accion btn-confirmar">
+                    <i class="fa-solid fa-trash"></i>
+                    Sí, eliminar
+                </button>
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

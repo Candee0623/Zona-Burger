@@ -1,0 +1,190 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Editar rol | Zona Burger{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/panel/administracion/roles/rolEditar.css' %}">
+
+<main class="rol-editar-page">
+
+    <!-- Encabezado -->
+    <header class="rol-editar-header">
+        <div class="rol-editar-header-info">
+            <a href="{% url 'rol_lista' %}" class="rol-editar-volver">
+                <i class="fa-solid fa-arrow-left"></i>
+                Volver a roles
+            </a>
+
+            <h1>Editar rol</h1>
+            <p>
+                Modifica el nombre y los permisos asignados al rol
+                <strong>{{ rol.nombrerol|default:"Sin nombre" }}</strong>.
+            </p>
+        </div>
+
+        <div class="rol-editar-icono-principal">
+            <i class="fa-solid fa-user-gear"></i>
+        </div>
+    </header>
+
+    <!-- Mensajes -->
+    {% if messages %}
+        <div class="rol-editar-mensajes">
+            {% for mensaje in messages %}
+                <div class="rol-editar-mensaje">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>{{ mensaje }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Formulario -->
+    <form method="post" class="rol-editar-form">
+        {% csrf_token %}
+
+        <!-- Nombre del rol -->
+        <section class="rol-editar-card">
+
+            <div class="rol-editar-seccion-titulo">
+                <div class="rol-editar-seccion-icono">
+                    <i class="fa-solid fa-id-badge"></i>
+                </div>
+
+                <div>
+                    <h2>Información del rol</h2>
+                    <p>Modifica el nombre con el que se identifica este rol.</p>
+                </div>
+            </div>
+
+            <div class="rol-editar-campo">
+                <label for="nombrerol">Nombre del rol</label>
+
+                <input
+                    type="text"
+                    id="nombrerol"
+                    name="nombrerol"
+                    maxlength="50"
+                    value="{{ rol.nombrerol|default:'' }}"
+                    placeholder="Ej. Administrador"
+                    required
+                    autofocus
+                >
+
+                <small>El nombre no puede superar los 50 caracteres.</small>
+            </div>
+
+        </section>
+
+        <!-- Permisos -->
+        <section class="rol-editar-card">
+
+            <div class="rol-editar-seccion-titulo">
+                <div class="rol-editar-seccion-icono">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+
+                <div>
+                    <h2>Permisos del rol</h2>
+                    <p>
+                        Selecciona los permisos que deseas asignar.
+                        Los permisos actuales aparecen marcados.
+                    </p>
+                </div>
+            </div>
+
+            {% if permisos %}
+                {% regroup permisos by modulo as permisos_por_modulo %}
+
+                <div class="rol-editar-permisos">
+
+                    {% for grupo in permisos_por_modulo %}
+                        <div class="rol-editar-grupo">
+
+                            <div class="rol-editar-grupo-header">
+                                <div class="rol-editar-grupo-titulo">
+                                    <i class="fa-solid fa-folder-open"></i>
+                                    <h3>{{ grupo.grouper }}</h3>
+                                </div>
+
+                                <span class="rol-editar-contador">
+                                    {{ grupo.list|length }}
+                                    {% if grupo.list|length == 1 %}
+                                        permiso
+                                    {% else %}
+                                        permisos
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <div class="rol-editar-grid">
+
+                                {% for permiso in grupo.list %}
+                                    <label
+                                        class="rol-editar-permiso"
+                                        for="permiso-{{ permiso.pk }}"
+                                    >
+
+                                        <input
+                                            type="checkbox"
+                                            id="permiso-{{ permiso.pk }}"
+                                            name="permisos"
+                                            value="{{ permiso.pk }}"
+                                            {% if permiso.pk in permisos_seleccionados %}
+                                                checked
+                                            {% endif %}
+                                        >
+
+                                        <span class="rol-editar-checkbox">
+                                            <i class="fa-solid fa-check"></i>
+                                        </span>
+
+                                        <span class="rol-editar-permiso-info">
+                                            <strong>{{ permiso.accion }}</strong>
+
+                                            {% if permiso.descripcion %}
+                                                <small>{{ permiso.descripcion }}</small>
+                                            {% endif %}
+                                        </span>
+
+                                    </label>
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+                <div class="rol-editar-vacio">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <h3>No hay permisos disponibles</h3>
+                    <p>
+                        Todavía no hay permisos registrados en el sistema.
+                    </p>
+                </div>
+            {% endif %}
+
+        </section>
+
+        <!-- Botones -->
+        <div class="rol-editar-acciones">
+
+            <a href="{% url 'rol_lista' %}" class="rol-editar-btn-cancelar">
+                <i class="fa-solid fa-xmark"></i>
+                Cancelar
+            </a>
+
+            <button type="submit" class="rol-editar-btn-guardar">
+                <i class="fa-solid fa-floppy-disk"></i>
+                Guardar cambios
+            </button>
+
+        </div>
+
+    </form>
+
+</main>
+{% endblock %}

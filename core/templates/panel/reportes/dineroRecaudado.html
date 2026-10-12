@@ -1,0 +1,247 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Dinero recaudado | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/reportes/reportes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="rep-page">
+
+    <a href="{% url 'centro_reportes' %}" class="rep-back">
+        <i class="fa-solid fa-arrow-left"></i> Volver a reportes
+    </a>
+
+    <header class="rep-header">
+        <div class="rep-title">
+            <div class="rep-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <div>
+                <div class="rep-kicker">Análisis financiero</div>
+                <h1>Dinero recaudado</h1>
+                <p>Importes efectivamente cobrados durante el período.</p>
+            </div>
+        </div>
+        <div class="rep-actions">
+            <a class="rep-btn" href="{% url 'exportar_dinero_excel' %}?fecha_inicio={{ fecha_inicio|date:'Y-m-d' }}&fecha_fin={{ fecha_fin|date:'Y-m-d' }}">
+                <i class="fa-solid fa-file-excel"></i> Excel
+            </a>
+            <a class="rep-btn rep-btn-primary" href="{% url 'exportar_dinero_pdf' %}?fecha_inicio={{ fecha_inicio|date:'Y-m-d' }}&fecha_fin={{ fecha_fin|date:'Y-m-d' }}">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+        </div>
+    </header>
+
+    {% include "panel/reportes/_filtros.html" %}
+
+    <div class="rep-kpis">
+        <article class="rep-kpi">
+            <span>Recaudación total</span>
+            <strong>$ {{ importe_total|floatformat:"2g" }}</strong>
+            <small>Pedidos pagados</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Pedidos cobrados</span>
+            <strong>{{ cantidad_pedidos }}</strong>
+            <small>Operaciones pagadas</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Ticket promedio</span>
+            <strong>$ {{ ticket_promedio|floatformat:"2g" }}</strong>
+            <small>Importe por pedido</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Promedio diario</span>
+            <strong>$ {{ promedio_diario|floatformat:"2g" }}</strong>
+            <small>Cobrado por día</small>
+        </article>
+        <article class="rep-kpi {% if variacion_porcentual is not None %}{% if variacion_porcentual > 0 %}rep-kpi-up{% elif variacion_porcentual < 0 %}rep-kpi-down{% endif %}{% endif %}">
+            <span>Variación</span>
+            <strong>{% if variacion_porcentual is not None %}{% if variacion_porcentual > 0 %}+{% endif %}{{ variacion_porcentual|floatformat:1 }}%{% else %}—{% endif %}</strong>
+            <small>vs. {{ inicio_anterior|date:"d/m" }} al {{ fin_anterior|date:"d/m" }}</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Mejor día de la semana</span>
+            <strong>{% if importe_total %}{{ mejor_dia_semana.dia }}{% else %}—{% endif %}</strong>
+            <small>{% if importe_total %}$ {{ mejor_dia_semana.importe|floatformat:"2g" }}{% else %}Sin cobros{% endif %}</small>
+        </article>
+    </div>
+
+    <div class="rep-grid">
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Evolución de la recaudación</h2><p>Importe cobrado por día</p></div>
+                <span class="rep-tag">Tendencia</span>
+            </div>
+            <div class="rep-chart">
+                {% if importe_total %}<canvas id="rep-linea"></canvas>{% else %}<div class="rep-empty-chart">No hay cobros en este período.</div>{% endif %}
+            </div>
+        </section>
+
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Medios de pago</h2><p>Distribución de lo cobrado</p></div>
+            </div>
+            <div class="rep-chart">
+                {% if medios_pago %}<canvas id="rep-medios"></canvas>{% else %}<div class="rep-empty-chart">Sin datos de medios de pago.</div>{% endif %}
+            </div>
+        </section>
+    </div>
+
+    <div class="rep-grid-even">
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Recaudación por día de la semana</h2><p>Suma de todo el período</p></div>
+            </div>
+            <div class="rep-chart">
+                {% if importe_total %}<canvas id="rep-semana"></canvas>{% else %}<div class="rep-empty-chart">No hay cobros en este período.</div>{% endif %}
+            </div>
+        </section>
+
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Días destacados</h2><p>Comparación y extremos del período</p></div>
+            </div>
+            <ul class="rep-compare">
+                <li>
+                    <div><span>Mejor día</span><small>{% if mejor_dia %}{{ mejor_dia.fecha|date:"d/m/Y" }} · {{ mejor_dia.cantidad }} pedidos{% else %}Sin datos{% endif %}</small></div>
+                    <strong class="rep-up">{% if mejor_dia %}$ {{ mejor_dia.importe|floatformat:"2g" }}{% else %}—{% endif %}</strong>
+                </li>
+                <li>
+                    <div><span>Día de menor recaudación</span><small>{% if peor_dia %}{{ peor_dia.fecha|date:"d/m/Y" }} · {{ peor_dia.cantidad }} pedidos{% else %}Sin datos{% endif %}</small></div>
+                    <strong class="rep-down">{% if peor_dia %}$ {{ peor_dia.importe|floatformat:"2g" }}{% else %}—{% endif %}</strong>
+                </li>
+                <li>
+                    <div><span>Período anterior</span><small>{{ inicio_anterior|date:"d/m/Y" }} al {{ fin_anterior|date:"d/m/Y" }}</small></div>
+                    <strong>$ {{ importe_anterior|floatformat:"2g" }}</strong>
+                </li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="rep-panel">
+        <div class="rep-panel-head">
+            <div><h2>Detalle por medio de pago</h2><p>Importes y cantidad de pedidos</p></div>
+        </div>
+        <div class="rep-table-container">
+            <table class="rep-table">
+                <thead>
+                    <tr>
+                        <th>Medio de pago</th>
+                        <th class="rep-num">Pedidos</th>
+                        <th class="rep-num">Total cobrado</th>
+                        <th>% del total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for medio in medios_pago %}
+                    <tr>
+                        <td class="rep-strong">{{ medio.nombre }}</td>
+                        <td class="rep-num">{{ medio.cantidad }}</td>
+                        <td class="rep-num rep-money">$ {{ medio.importe|floatformat:"2g" }}</td>
+                        <td>
+                            <div class="rep-meter">
+                                <div class="rep-meter-bar">
+                                    <span data-width="{% if mejor_dia and mejor_dia.importe %}{% widthratio dia.importe mejor_dia.importe 100 %}{% else %}0{% endif %}"></span>
+                                </div>
+                                <em>{% if mejor_dia and mejor_dia.importe %}{% widthratio dia.importe mejor_dia.importe 100 %}{% else %}0{% endif %}%</em>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="rep-empty">No hay datos de medios de pago.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="rep-panel">
+        <div class="rep-panel-head">
+            <div><h2>Detalle diario</h2><p>Recaudación por fecha</p></div>
+            <span class="rep-tag">{{ dias|length }} días</span>
+        </div>
+        <div class="rep-table-container">
+            <table class="rep-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th class="rep-num">Pedidos cobrados</th>
+                        <th class="rep-num">Recaudación</th>
+                        <th>Vs. mejor día</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dia in dias %}
+                    <tr {% if not dia.cantidad %}class="rep-row-muted"{% endif %}>
+                        <td>{{ dia.fecha|date:"d/m/Y" }}</td>
+                        <td class="rep-num">{{ dia.cantidad }}</td>
+                        <td class="rep-num {% if dia.cantidad %}rep-money{% endif %}">$ {{ dia.importe|floatformat:"2g" }}</td>
+                        <td>  
+                            <div class="rep-meter">
+                                <div class="rep-meter-bar">
+                                    <span data-width="{% widthratio producto.unidades total_unidades 100 %}"></span>
+                                </div>
+                                <em>{% widthratio producto.unidades total_unidades 100 %}%</em>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="rep-empty">No hay datos para este período.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+{{ dias|json_script:"rep-dias" }}
+{{ dias_semana|json_script:"rep-semana-datos" }}
+{{ medios_pago|json_script:"rep-medios-datos" }}
+
+{% include "panel/reportes/_charts.html" %}
+<script>
+(() => {
+    rep.tema();
+    const C = rep.colores;
+    const dias = rep.leer("rep-dias");
+    const semana = rep.leer("rep-semana-datos");
+    const medios = rep.leer("rep-medios-datos");
+
+    const linea = document.getElementById("rep-linea");
+    if (linea) new Chart(linea, {
+        type: "line",
+        data: { labels: dias.map(d => rep.dia(d.fecha)), datasets: [{
+            data: dias.map(d => Number(d.importe)),
+            borderColor: C.rojo, backgroundColor: "rgba(220,38,38,.12)",
+            pointBackgroundColor: C.rojo, fill: true, tension: .35, pointRadius: 3
+        }] },
+        options: rep.ejes({ dinero: true })
+    });
+
+    const dona = document.getElementById("rep-medios");
+    if (dona) new Chart(dona, {
+        type: "doughnut",
+        data: {
+            labels: medios.map(m => m.nombre),
+            datasets: [{
+                data: medios.map(m => Number(m.importe)),
+                backgroundColor: C.paleta, borderColor: "#181818", borderWidth: 3, hoverOffset: 6
+            }]
+        },
+        options: rep.dona(true)
+    });
+
+    const barras = document.getElementById("rep-semana");
+    if (barras) new Chart(barras, {
+        type: "bar",
+        data: { labels: semana.map(s => s.dia), datasets: [{
+            data: semana.map(s => Number(s.importe)),
+            backgroundColor: C.rojo, borderRadius: 4, maxBarThickness: 34
+        }] },
+        options: rep.ejes({ horizontal: false, dinero: true })
+    });
+})();
+</script>
+{% endblock %}

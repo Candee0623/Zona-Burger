@@ -1,0 +1,490 @@
+
+/* =========================================================
+   LISTA DE USUARIOS - ZONA BURGER
+========================================================= */
+
+.empleado-page {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+/* =========================================================
+   CABECERA
+========================================================= */
+
+.empleado-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+.empleado-header > div:first-child {
+    min-width: 0;
+}
+
+.empleado-header h1 {
+    margin: 0;
+
+    color: #f0f0f0;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.empleado-header p {
+    margin: 5px 0 0;
+
+    color: #858585;
+    font-size: .88rem;
+    line-height: 1.5;
+}
+
+.empleado-header-acciones {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   MENSAJES
+========================================================= */
+
+.empleado-mensajes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+.empleado-mensaje {
+    margin: 0;
+    padding: 13px 14px;
+
+    border-radius: 7px;
+    font-size: .84rem;
+    line-height: 1.5;
+}
+
+.empleado-mensaje-success {
+    color: #86efac;
+    background: rgba(34, 197, 94, .07);
+    border: 1px solid rgba(34, 197, 94, .25);
+}
+
+.empleado-mensaje-error {
+    color: #fca5a5;
+    background: rgba(220, 38, 38, .07);
+    border: 1px solid rgba(220, 38, 38, .25);
+}
+
+.empleado-mensaje-warning {
+    color: #fcd34d;
+    background: rgba(245, 158, 11, .07);
+    border: 1px solid rgba(245, 158, 11, .25);
+}
+
+.empleado-mensaje-info {
+    color: #93c5fd;
+    background: rgba(59, 130, 246, .07);
+    border: 1px solid rgba(59, 130, 246, .25);
+}
+
+/* =========================================================
+   BOTONES GENERALES
+========================================================= */
+
+.empleado-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 7px 11px;
+
+    background: #222;
+    border: 1px solid #3a3a3a;
+    border-radius: 5px;
+
+    color: #aaa;
+    font-family: inherit;
+    font-size: .82rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.empleado-btn:hover {
+    background: #292929;
+    border-color: #4a4a4a;
+    color: #eee;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   NUEVO USUARIO
+========================================================= */
+
+.empleado-btn-primary {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+
+    box-shadow: 0 5px 14px rgba(220, 38, 38, .10);
+}
+
+.empleado-btn-primary:hover {
+    background: #ef3030;
+    border-color: #ef3030;
+    color: #fff;
+
+    box-shadow: 0 7px 18px rgba(220, 38, 38, .16);
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   TARJETA DE LA TABLA
+========================================================= */
+
+.empleado-card {
+    background: #181818;
+    border: 1px solid #303030;
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+}
+
+/* =========================================================
+   TÍTULO DE LA TARJETA
+========================================================= */
+
+.empleado-card > h2 {
+    margin: 0;
+    padding: 20px 22px;
+
+    background: #181818;
+    border-bottom: 1px solid #303030;
+
+    color: #d8d8d8;
+    font-size: .92rem;
+    font-weight: 700;
+}
+
+/* =========================================================
+   CONTENEDOR RESPONSIVE DE TABLA
+========================================================= */
+
+.empleado-table-container {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #444 #181818;
+}
+
+.empleado-table-container::-webkit-scrollbar {
+    height: 7px;
+}
+
+.empleado-table-container::-webkit-scrollbar-track {
+    background: #181818;
+}
+
+.empleado-table-container::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 10px;
+}
+
+.empleado-table-container::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* =========================================================
+   TABLA
+========================================================= */
+
+.empleado-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+/* ENCABEZADOS */
+
+.empleado-table thead {
+    background: #222;
+}
+
+.empleado-table th {
+    padding: 14px 15px;
+
+    color: #aaa;
+    font-size: .75rem;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: .45px;
+    white-space: nowrap;
+
+    border-bottom: 1px solid #333;
+}
+
+/* CELDAS */
+
+.empleado-table td {
+    padding: 14px 15px;
+
+    color: #ccc;
+    font-size: .84rem;
+    line-height: 1.5;
+
+    border-bottom: 1px solid #292929;
+    vertical-align: middle;
+}
+
+.empleado-table tbody tr {
+    transition: background .2s ease;
+}
+
+.empleado-table tbody tr:hover {
+    background: #202020;
+}
+
+.empleado-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================================================
+   CORREO
+========================================================= */
+
+.empleado-table td:nth-child(3) {
+    color: #aaa;
+    overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   ROL
+========================================================= */
+
+.empleado-table td:nth-child(4) {
+    color: #ddd;
+}
+
+/* =========================================================
+   ESTADO
+========================================================= */
+
+.empleado-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 5px 9px;
+
+    background: #242424;
+    border: 1px solid #383838;
+    border-radius: 5px;
+
+    color: #858585;
+    font-size: .75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.empleado-estado::before {
+    content: "";
+
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+
+    background: #777;
+    border-radius: 50%;
+}
+
+/* =========================================================
+   ACCIONES
+========================================================= */
+
+.empleado-acciones {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.empleado-acciones .empleado-btn {
+    margin: 2px;
+}
+
+/* EDITAR */
+
+.empleado-acciones .empleado-btn:not(.empleado-btn-danger) {
+    color: #ccc;
+    background: #252525;
+    border-color: #3a3a3a;
+}
+
+.empleado-acciones .empleado-btn:not(.empleado-btn-danger):hover {
+    color: #fff;
+    background: #303030;
+    border-color: #555;
+}
+
+/* ELIMINAR */
+
+.empleado-btn-danger {
+    color: #f87171;
+    background: rgba(220, 38, 38, .06);
+    border-color: rgba(220, 38, 38, .30);
+}
+
+.empleado-btn-danger:hover {
+    color: #fff;
+    background: #dc2626;
+    border-color: #dc2626;
+
+    box-shadow: 0 4px 12px rgba(220, 38, 38, .12);
+}
+
+/* =========================================================
+   ESTADO VACÍO
+========================================================= */
+
+.empleado-vacio {
+    margin: 0;
+    padding: 38px 20px;
+
+    color: #777;
+    font-size: .88rem;
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* =========================================================
+   RESPONSIVE - TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+    .empleado-table {
+        min-width: 850px;
+    }
+
+    .empleado-table th,
+    .empleado-table td {
+        padding: 12px 11px;
+    }
+
+    .empleado-header h1 {
+        font-size: 1.45rem;
+    }
+}
+
+/* =========================================================
+   RESPONSIVE - MÓVIL
+========================================================= */
+
+@media (max-width: 600px) {
+    .empleado-page {
+        max-width: none;
+    }
+
+    .empleado-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 16px;
+
+        margin-bottom: 20px;
+    }
+
+    .empleado-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .empleado-header p {
+        font-size: .82rem;
+    }
+
+    .empleado-header-acciones {
+        width: 100%;
+    }
+
+    .empleado-header-acciones .empleado-btn {
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .empleado-card {
+        border-radius: 8px;
+    }
+
+    .empleado-card > h2 {
+        padding: 16px;
+        font-size: .86rem;
+    }
+
+    .empleado-table {
+        min-width: 850px;
+    }
+
+    .empleado-table th {
+        font-size: .72rem;
+    }
+
+    .empleado-table td {
+        font-size: .82rem;
+    }
+}
+
+/* =========================================================
+   RESPONSIVE - MÓVILES PEQUEÑOS
+========================================================= */
+
+@media (max-width: 420px) {
+    .empleado-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .empleado-header p {
+        font-size: .79rem;
+    }
+
+    .empleado-mensaje {
+        padding: 12px;
+        font-size: .8rem;
+    }
+
+    .empleado-vacio {
+        padding: 30px 15px;
+        font-size: .82rem;
+    }
+}
+
+/* =========================================================
+   ACCESIBILIDAD
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .empleado-back,
+    .empleado-btn,
+    .empleado-table tbody tr {
+        transition: none;
+    }
+}

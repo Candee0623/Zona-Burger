@@ -150,7 +150,7 @@ content="width=device-width, initial-scale=1.0"
     <!-- PEDIDOS -->
 
     <a
-        href="#"
+        href="{% url 'historial_pedidos' %}"
         class="menu-item {% if request.resolver_match.url_name == 'lista_pedidos' %}active{% endif %}"
     >
 
@@ -186,8 +186,8 @@ content="width=device-width, initial-scale=1.0"
     <!-- STOCK -->
 
     <a
-        href="#"
-        class="menu-item {% if request.resolver_match.url_name == 'lista_stock' %}active{% endif %}"
+        href="{% url 'stock_lista' %}"
+        class="menu-item {% if 'stock' in request.resolver_match.url_name %}active{% endif %}"
     >
 
         <span class="menu-icon">
@@ -203,19 +203,12 @@ content="width=device-width, initial-scale=1.0"
 
     <!-- REPORTES -->
 
-    <a
-        href="#"
-        class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}"
-    >
-
+    <a href="{% url 'centro_reportes' %}"
+    class="menu-item {% if request.resolver_match.url_name == 'centro_reportes' or request.resolver_match.url_name == 'resumen_ventas' or request.resolver_match.url_name == 'productos_mas_vendidos' or request.resolver_match.url_name == 'dinero_recaudado' %}active{% endif %}">
         <span class="menu-icon">
             <i class="fa-solid fa-chart-line"></i>
         </span>
-
-        <span class="menu-text">
-            Reportes
-        </span>
-
+        <span class="menu-text">Reportes</span>
     </a>
 
 
@@ -227,8 +220,8 @@ content="width=device-width, initial-scale=1.0"
     <!-- USUARIOS -->
 
     <a
-        href="#"
-        class="menu-item {% if request.resolver_match.url_name == 'lista_usuarios' %}active{% endif %}"
+        href="{% url 'empleado_lista' %}"
+        class="menu-item {% if 'empleado' in request.resolver_match.url_name %}active{% endif %}"
     >
 
         <span class="menu-icon">
@@ -243,20 +236,15 @@ content="width=device-width, initial-scale=1.0"
 
 
     <!-- ROLES -->
-
     <a
-        href="#"
-        class="menu-item {% if request.resolver_match.url_name == 'lista_roles' %}active{% endif %}"
+        href="{% url 'rol_lista' %}"
+        class="menu-item {% if request.resolver_match.url_name == 'rol_lista' %}active{% endif %}"
     >
-
         <span class="menu-icon">
             <i class="fa-solid fa-shield-halved"></i>
         </span>
 
-        <span class="menu-text">
-            Roles
-        </span>
-
+        <span class="menu-text">Roles</span>
     </a>
 
 
@@ -303,7 +291,7 @@ content="width=device-width, initial-scale=1.0"
     <!-- HORARIOS -->
 
     <a
-        href="#"
+        href="{% url 'horarios_lista' %}"
         class="menu-item {% if 'horarios' in request.resolver_match.url_name %}active{% endif %}"
     >
 
@@ -321,7 +309,7 @@ content="width=device-width, initial-scale=1.0"
     <!-- ENTREGA -->
 
     <a
-        href="#"
+        href="{% url 'zonas_entrega_lista' %}"
         class="menu-item {% if request.resolver_match.url_name == 'entrega' %}active{% endif %}"
     >
 

@@ -1,0 +1,97 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Crear horario | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/horarios/horarioCrear.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="horario-form-container">
+
+    <a href="{% url 'horarios_lista' %}" class="form-volver">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver a horarios
+    </a>
+
+    <div class="form-header">
+        <div class="form-header-icono">
+            <i class="fa-solid fa-clock"></i>
+        </div>
+
+        <div class="form-header-texto">
+            <h1>Crear horario</h1>
+            <p>Registrá un nuevo horario de atención para un negocio.</p>
+        </div>
+    </div>
+
+    <div class="form-card">
+
+        <div class="form-section-title">
+            <i class="fa-solid fa-calendar-plus"></i>
+            Información del horario
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="error-general">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <div>{{ form.non_field_errors }}</div>
+                </div>
+            {% endif %}
+
+            <div class="form-grid">
+
+                {% for campo in form %}
+                    <div class="campo {% if campo.name == 'idnegocio' or campo.name == 'diasemana' %}campo-completo{% endif %}">
+
+                        <label for="{{ campo.id_for_label }}">
+                            {{ campo.label }}
+                            {% if campo.field.required %}
+                                <span class="campo-obligatorio">*</span>
+                            {% endif %}
+                        </label>
+
+                        {{ campo }}
+
+                        {% if campo.help_text %}
+                            <small class="ayuda">{{ campo.help_text }}</small>
+                        {% endif %}
+
+                        {% if campo.errors %}
+                            <div class="error-campo">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                {{ campo.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+                {% endfor %}
+
+            </div>
+
+            <div class="form-acciones">
+
+                <a href="{% url 'horarios_lista' %}" class="btn-form btn-cancelar">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancelar
+                </a>
+
+                <button type="submit" class="btn-form btn-guardar">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Crear horario
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

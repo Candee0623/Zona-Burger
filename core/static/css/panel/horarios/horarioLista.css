@@ -1,0 +1,659 @@
+
+/* =========================================================
+   HORARIOS - ZONA BURGER
+   ========================================================= */
+
+.horarios-page {
+    width: 100%;
+    min-width: 0;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.horarios-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.horarios-header-texto {
+    min-width: 0;
+}
+
+.horarios-header-texto h1 {
+    margin: 0;
+    color: #f1f1f1;
+    font-size: 1.9rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -.4px;
+}
+
+.horarios-header-texto p {
+    margin: 7px 0 0;
+    max-width: 720px;
+    color: #858585;
+    font-size: .88rem;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   BOTÓN NUEVO HORARIO
+   ========================================================= */
+
+.horarios-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.horarios-btn-crear {
+    flex-shrink: 0;
+    padding: 10px 15px;
+    border: 1px solid #dc2626;
+    border-radius: 7px;
+    background: #dc2626;
+    color: #fff;
+    font-size: .86rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 5px 16px rgba(220, 38, 38, .12);
+}
+
+.horarios-btn-crear:hover {
+    background: #ef3030;
+    border-color: #ef3030;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 7px 20px rgba(220, 38, 38, .18);
+}
+
+.horarios-btn-crear i {
+    font-size: .9rem;
+}
+
+
+/* =========================================================
+   MENSAJES
+   ========================================================= */
+
+.horarios-mensajes {
+    margin-bottom: 20px;
+}
+
+.horarios-mensaje {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 14px;
+    margin-bottom: 9px;
+    border-radius: 7px;
+    font-size: .85rem;
+    line-height: 1.5;
+}
+
+.horarios-mensaje:last-child {
+    margin-bottom: 0;
+}
+
+.horarios-mensaje i {
+    flex-shrink: 0;
+    font-size: .95rem;
+}
+
+.horarios-mensaje.success {
+    color: #e5e5e5;
+    background: rgba(220, 38, 38, .07);
+    border: 1px solid rgba(220, 38, 38, .25);
+}
+
+.horarios-mensaje.success i {
+    color: #dc2626;
+}
+
+.horarios-mensaje.error {
+    color: #f0a0a0;
+    background: rgba(220, 38, 38, .06);
+    border: 1px solid rgba(220, 38, 38, .22);
+}
+
+.horarios-mensaje.error i {
+    color: #dc2626;
+}
+
+.horarios-mensaje.warning {
+    color: #d8bd83;
+    background: rgba(180, 130, 35, .07);
+    border: 1px solid rgba(180, 130, 35, .23);
+}
+
+.horarios-mensaje.warning i {
+    color: #d6a94c;
+}
+
+.horarios-mensaje.info {
+    color: #b0b0b0;
+    background: #202020;
+    border: 1px solid #363636;
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.horarios-card {
+    overflow: hidden;
+    background: #161616;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .16);
+}
+
+
+/* =========================================================
+   HEADER DE LA CARD
+   ========================================================= */
+
+.horarios-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+    background: #181818;
+    border-bottom: 1px solid #303030;
+}
+
+.horarios-card-header-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border: 1px solid rgba(220, 38, 38, .25);
+    border-radius: 7px;
+    background: rgba(220, 38, 38, .08);
+    color: #dc2626;
+}
+
+.horarios-card-header-icono i {
+    font-size: 17px;
+}
+
+.horarios-card-header h2 {
+    margin: 0;
+    color: #e8e8e8;
+    font-size: .96rem;
+    font-weight: 600;
+}
+
+.horarios-card-header p {
+    margin: 4px 0 0;
+    color: #707070;
+    font-size: .77rem;
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+.tabla-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.tabla-horarios {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.tabla-horarios thead {
+    background: #1e1e1e;
+}
+
+.tabla-horarios th {
+    padding: 13px 15px;
+    color: #777;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    border-bottom: 1px solid #303030;
+    white-space: nowrap;
+}
+
+.tabla-horarios td {
+    padding: 14px 15px;
+    border-bottom: 1px solid #242424;
+    color: #c8c8c8;
+    font-size: .84rem;
+    vertical-align: middle;
+}
+
+.tabla-horarios tbody tr {
+    transition: background .18s ease;
+}
+
+.tabla-horarios tbody tr:hover {
+    background: #1b1b1b;
+}
+
+.tabla-horarios tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* =========================================================
+   NEGOCIO Y DÍA
+   ========================================================= */
+
+.negocio-nombre {
+    display: inline-block;
+    color: #ededed;
+    font-size: .88rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.dia-nombre {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border: 1px solid #353535;
+    border-radius: 5px;
+    background: #202020;
+    color: #bdbdbd;
+    font-size: .76rem;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   HORAS
+   ========================================================= */
+
+.horario-hora {
+    display: inline-block;
+    color: #dedede;
+    font-size: .86rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.sin-dato {
+    color: #555;
+    font-size: .78rem;
+    font-style: italic;
+}
+
+
+/* =========================================================
+   ESTADOS
+   ========================================================= */
+
+.estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 9px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    font-size: .72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.estado i {
+    font-size: 6px;
+}
+
+.estado-abierto {
+    background: rgba(220, 38, 38, .08);
+    border-color: rgba(220, 38, 38, .24);
+    color: #e16a6a;
+}
+
+.estado-cerrado {
+    background: #202020;
+    border-color: #393939;
+    color: #969696;
+}
+
+.estado-desconocido {
+    display: inline-block;
+    padding: 5px 9px;
+    border: 1px solid #353535;
+    border-radius: 5px;
+    background: #202020;
+    color: #777;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+
+.columna-acciones {
+    text-align: right;
+}
+
+.celda-acciones {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.acciones {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.horarios-btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 33px;
+    padding: 6px 10px;
+    border: 1px solid #373737;
+    border-radius: 6px;
+    background: #202020;
+    text-decoration: none;
+    font-size: .72rem;
+    font-weight: 700;
+    transition:
+        transform .2s ease,
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease;
+}
+
+.horarios-btn-accion:hover {
+    transform: translateY(-1px);
+    background: #272727;
+}
+
+.horarios-btn-accion i {
+    font-size: .75rem;
+}
+
+.btn-editar {
+    color: #aaa;
+}
+
+.btn-editar:hover {
+    color: #eee;
+    border-color: #505050;
+}
+
+.btn-eliminar {
+    color: #d95a5a;
+}
+
+.btn-eliminar:hover {
+    color: #ef6b6b;
+    border-color: rgba(220, 38, 38, .35);
+    background: rgba(220, 38, 38, .06);
+}
+
+
+/* =========================================================
+   ESTADO VACÍO
+   ========================================================= */
+
+.sin-datos-fila {
+    padding: 0 !important;
+}
+
+.sin-datos-contenido {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 55px 20px;
+    text-align: center;
+}
+
+.sin-datos-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 15px;
+    border: 1px solid #393939;
+    border-radius: 50%;
+    background: #202020;
+    color: #dc2626;
+}
+
+.sin-datos-icono i {
+    font-size: 22px;
+}
+
+.sin-datos-contenido h3 {
+    margin: 0 0 7px;
+    color: #e8e8e8;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.sin-datos-contenido p {
+    margin: 0 0 18px;
+    color: #707070;
+    font-size: .83rem;
+    line-height: 1.5;
+}
+
+.sin-datos-contenido .horarios-btn-crear {
+    font-size: .82rem;
+}
+
+
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .horarios-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .horarios-btn-crear {
+        width: 100%;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - CELULAR
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .horarios-header-texto h1 {
+        font-size: 1.6rem;
+    }
+
+    .horarios-card {
+        overflow: visible;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .horarios-card-header {
+        margin-bottom: 12px;
+        padding: 15px;
+        border: 1px solid #303030;
+        border-radius: 9px;
+        background: #181818;
+    }
+
+    .tabla-responsive {
+        overflow: visible;
+    }
+
+    .tabla-horarios {
+        display: block;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .tabla-horarios thead {
+        display: none;
+    }
+
+    .tabla-horarios tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .tabla-horarios tbody tr:not(:has(.sin-datos-fila)) {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        margin-bottom: 12px;
+        padding: 8px;
+        border: 1px solid #303030;
+        border-radius: 10px;
+        background: #161616;
+    }
+
+    .tabla-horarios tbody tr:not(:has(.sin-datos-fila)):hover {
+        background: #1b1b1b;
+    }
+
+    .tabla-horarios tbody td {
+        display: block;
+        min-width: 0;
+        padding: 10px 9px;
+        border: none;
+        overflow-wrap: anywhere;
+    }
+
+    .tabla-horarios tbody td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 7px;
+        color: #5f5f5f;
+        font-size: .63rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+
+    .tabla-horarios tbody td:first-child,
+    .tabla-horarios tbody td:nth-child(5),
+    .tabla-horarios tbody td.celda-acciones {
+        grid-column: 1 / -1;
+    }
+
+    .tabla-horarios tbody td:first-child {
+        padding-top: 12px;
+    }
+
+    .tabla-horarios tbody td.celda-acciones {
+        padding-top: 12px;
+        border-top: 1px solid #292929;
+    }
+
+    .acciones {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .horarios-btn-accion {
+        flex: 1;
+        min-width: 100px;
+        min-height: 36px;
+    }
+
+    .tabla-horarios tbody tr:has(.sin-datos-fila) {
+        display: block;
+        padding: 0;
+        border: 1px solid #303030;
+        border-radius: 10px;
+        background: #161616;
+    }
+
+    .tabla-horarios .sin-datos-fila {
+        display: block;
+        width: 100%;
+    }
+
+    .sin-datos-contenido {
+        padding: 40px 16px;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - CELULARES PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 430px) {
+
+    .horarios-header-texto h1 {
+        font-size: 1.45rem;
+    }
+
+    .horarios-header-texto p {
+        font-size: .82rem;
+    }
+
+    .horarios-card-header {
+        padding: 13px;
+    }
+
+    .tabla-horarios tbody tr:not(:has(.sin-datos-fila)) {
+        grid-template-columns: 1fr;
+    }
+
+    .tabla-horarios tbody td:first-child,
+    .tabla-horarios tbody td:nth-child(5),
+    .tabla-horarios tbody td.celda-acciones {
+        grid-column: 1;
+    }
+
+    .tabla-horarios tbody td {
+        padding: 9px;
+    }
+
+    .horarios-btn-accion {
+        min-width: 0;
+    }
+
+    .sin-datos-contenido h3 {
+        font-size: .94rem;
+    }
+
+}

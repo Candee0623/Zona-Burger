@@ -1,0 +1,58 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Eliminar rol | Zona Burger{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/panel/administracion/roles/rolEliminar.css' %}">
+
+<main class="rol-eliminar-page">
+    <section class="rol-eliminar-card">
+
+        <div class="rol-eliminar-icono">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+
+        <h1>Eliminar rol</h1>
+
+        <p class="rol-eliminar-subtitulo">
+            Estás a punto de eliminar el siguiente rol:
+        </p>
+
+        <div class="rol-eliminar-dato">
+            <span class="rol-eliminar-label">Nombre del rol</span>
+            <strong>{{ rol.nombrerol }}</strong>
+        </div>
+
+        <p class="rol-eliminar-advertencia">
+            Esta acción no se puede deshacer. Los permisos asociados
+            a este rol también se eliminarán.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="rol-eliminar-mensaje">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post"
+              action="{% url 'rol_eliminar' rol.pk %}"
+              class="rol-eliminar-form">
+            {% csrf_token %}
+
+            <button type="submit" class="btn-eliminar-confirmar">
+                <i class="fa-solid fa-trash"></i>
+                Sí, eliminar rol
+            </button>
+
+            <a href="{% url 'rol_lista' %}" class="btn-eliminar-cancelar">
+                <i class="fa-solid fa-arrow-left"></i>
+                Cancelar
+            </a>
+        </form>
+
+    </section>
+</main>
+{% endblock %}

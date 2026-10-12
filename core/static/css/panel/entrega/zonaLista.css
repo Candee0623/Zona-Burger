@@ -1,0 +1,420 @@
+
+/* =========================================
+   ZONAS DE ENTREGA - LISTADO
+   Estilo oscuro, similar al panel de Productos
+   ========================================= */
+
+.zonas-container {
+    width: 100%;
+    min-width: 0;
+    color: #f5f5f5;
+}
+
+/* Encabezado */
+
+.zonas-container .encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.zonas-container .encabezado-texto {
+    min-width: 0;
+}
+
+.zonas-container .encabezado h1 {
+    margin: 0 0 8px;
+    color: #f5f5f5;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.zonas-container .encabezado p {
+    margin: 0;
+    color: #999;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Botones */
+
+.zonas-container .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.zonas-container .btn:hover {
+    transform: translateY(-1px);
+}
+
+.zonas-container .btn-principal {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.zonas-container .btn-principal:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+}
+
+/* Mensajes de Django */
+
+.zonas-container .mensajes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.zonas-container .mensaje {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 16px;
+    border: 1px solid #285a3a;
+    border-radius: 8px;
+    background: #172b20;
+    color: #a7e6b8;
+    font-size: 14px;
+}
+
+.zonas-container .mensaje.error {
+    background: #321b1b;
+    border-color: #713333;
+    color: #ffaaaa;
+}
+
+.zonas-container .mensaje.warning {
+    background: #302817;
+    border-color: #6b5428;
+    color: #f4d28c;
+}
+
+.zonas-container .mensaje.info {
+    background: #192938;
+    border-color: #2d506c;
+    color: #a8d8fa;
+}
+
+/* Contenedor de la tabla */
+
+.zonas-container .tabla-contenedor {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    background: #1c1c1c;
+    box-shadow: 0 4px 15px #0000001a;
+}
+
+.zonas-container .tabla-zonas {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.zonas-container .tabla-zonas thead {
+    background: #242424;
+}
+
+.zonas-container .tabla-zonas th {
+    padding: 16px 18px;
+    border-bottom: 1px solid #353535;
+    color: #aaa;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    white-space: nowrap;
+}
+
+.zonas-container .tabla-zonas td {
+    padding: 16px 18px;
+    border-bottom: 1px solid #303030;
+    color: #e5e5e5;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.zonas-container .tabla-zonas tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.zonas-container .tabla-zonas tbody tr:hover {
+    background: #252525;
+}
+
+.zonas-container .tabla-zonas tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Datos de cada zona */
+
+.zonas-container .zona-id {
+    display: inline-block;
+    padding: 5px 8px;
+    border: 1px solid #393939;
+    border-radius: 5px;
+    background: #262626;
+    color: #aaa;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.zonas-container .zona-nombre {
+    color: #f5f5f5;
+    font-weight: 600;
+}
+
+.zonas-container .zona-costo {
+    color: #f87171;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.zonas-container .zona-negocio {
+    display: inline-block;
+    padding: 4px 8px;
+    border: 1px solid #383838;
+    border-radius: 5px;
+    background: #252525;
+    color: #ccc;
+    font-size: 12px;
+}
+
+.zonas-container .sin-dato {
+    color: #666;
+}
+
+/* Acciones */
+
+.zonas-container .columna-acciones {
+    text-align: center;
+}
+
+.zonas-container .acciones {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 190px;
+}
+
+.zonas-container .btn-editar {
+    background: #292929;
+    border-color: #444;
+    color: #e5e5e5;
+}
+
+.zonas-container .btn-editar:hover {
+    background: #363636;
+    border-color: #666;
+    color: #fff;
+}
+
+.zonas-container .btn-eliminar {
+    background: #351b1b;
+    border-color: #642929;
+    color: #fca5a5;
+}
+
+.zonas-container .btn-eliminar:hover {
+    background: #4a2020;
+    border-color: #8b3030;
+    color: #fff;
+}
+
+/* Estado vacío */
+
+.zonas-container .tabla-zonas .vacio {
+    padding: 45px 20px;
+    text-align: center;
+}
+
+.zonas-container .vacio-contenido {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.zonas-container .vacio-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    border: 1px solid #393939;
+    border-radius: 50%;
+    background: #262626;
+    color: #dc2626;
+    font-size: 22px;
+}
+
+.zonas-container .vacio-contenido h3 {
+    margin: 0;
+    color: #eee;
+    font-size: 18px;
+}
+
+.zonas-container .vacio-contenido p {
+    margin: 0 0 8px;
+    color: #888;
+    font-size: 14px;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+    .zonas-container .tabla-zonas th,
+    .zonas-container .tabla-zonas td {
+        padding: 13px 12px;
+    }
+
+    .zonas-container .tabla-zonas th {
+        font-size: 10px;
+    }
+
+    .zonas-container .tabla-zonas td {
+        font-size: 13px;
+    }
+
+    .zonas-container .acciones {
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+
+    .zonas-container .btn {
+        padding: 9px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .zonas-container .encabezado {
+        align-items: flex-start;
+        flex-direction: column;
+        margin-bottom: 22px;
+    }
+
+    .zonas-container .encabezado h1 {
+        font-size: 24px;
+    }
+
+    .zonas-container .btn-principal {
+        width: 100%;
+    }
+
+    .zonas-container .tabla-contenedor {
+        overflow: visible;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .zonas-container .tabla-zonas,
+    .zonas-container .tabla-zonas tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .zonas-container .tabla-zonas thead {
+        display: none;
+    }
+
+    .zonas-container .tabla-zonas tbody tr {
+        display: block;
+        margin-bottom: 14px;
+        overflow: hidden;
+        border: 1px solid #303030;
+        border-radius: 9px;
+        background: #1c1c1c;
+    }
+
+    .zonas-container .tabla-zonas tbody tr:hover {
+        background: #222;
+    }
+
+    .zonas-container .tabla-zonas td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 13px 14px;
+        border-bottom: 1px solid #303030;
+        text-align: right;
+    }
+
+    .zonas-container .tabla-zonas td::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        color: #999;
+        font-size: 11px;
+        font-weight: 700;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .zonas-container .tabla-zonas td.acciones {
+        display: flex;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 13px 14px;
+        border-bottom: none;
+    }
+
+    .zonas-container .tabla-zonas td.acciones::before {
+        content: "Acciones";
+        margin-right: auto;
+    }
+
+    .zonas-container .tabla-zonas .vacio {
+        display: block;
+        padding: 30px 15px;
+        border: none;
+        text-align: center;
+    }
+
+    .zonas-container .tabla-zonas .vacio::before {
+        display: none;
+    }
+
+    .zonas-container .vacio-contenido .btn-principal {
+        width: auto;
+    }
+}
+
+@media (max-width: 380px) {
+    .zonas-container .btn {
+        padding: 9px;
+        font-size: 11px;
+    }
+
+    .zonas-container .tabla-zonas td {
+        gap: 8px;
+        padding: 12px 10px;
+    }
+}

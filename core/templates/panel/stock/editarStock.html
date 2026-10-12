@@ -1,0 +1,103 @@
+
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/stock/stockForm.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="stock-form-page">
+
+    <div class="stock-form-header">
+        <div>
+            <span class="stock-form-eyebrow">ZONA BURGER / INVENTARIO</span>
+            <h1>Editar insumo</h1>
+            <p>Modificá los datos y la configuración de stock del ingrediente.</p>
+        </div>
+
+        <a href="{% url 'stock_lista' %}" class="stock-back-link">
+            ← Volver al stock
+        </a>
+    </div>
+
+    <div class="stock-form-card">
+
+        <div class="stock-form-card-header">
+            <div class="stock-form-icon">
+                <i class="fa-solid fa-pen"></i>
+            </div>
+            <div>
+                <h2>{{ insumo.nombreinsumo }}</h2>
+                <p>Código: {{ insumo.codigo|default:"Sin código" }}</p>
+            </div>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="stock-form-grid">
+
+                <div class="stock-field stock-field-full">
+                    <label for="nombreinsumo">Nombre del insumo</label>
+                    <input type="text" name="nombreinsumo" id="nombreinsumo" class="stock-input" value="{{ insumo.nombreinsumo }}" required>
+                </div>
+
+                <div class="stock-field">
+                    <label for="unidadmedidaingreso">Unidad de medida de ingreso</label>
+                    <input type="text" name="unidadmedidaingreso" id="unidadmedidaingreso" class="stock-input" value="{{ insumo.unidadmedidaingreso }}" required>
+                    <small>Unidad en la que recibís o comprás el insumo.</small>
+                </div>
+
+                <div class="stock-field">
+                    <label for="unidadmedidaegreso">Unidad de medida de egreso</label>
+                    <input type="text" name="unidadmedidaegreso" id="unidadmedidaegreso" class="stock-input" value="{{ insumo.unidadmedidaegreso }}" required>
+                    <small>Unidad utilizada al consumir el insumo.</small>
+                </div>
+
+                <div class="stock-field">
+                    <label for="stockactual">Stock actual</label>
+                    <input type="number" name="stockactual" id="stockactual" class="stock-input" min="0" step="0.01" value="{{ insumo.stockactual|stringformat:'.2f' }}" required>
+                    <small>La cantidad disponible actualmente.</small>
+                </div>
+
+                <div class="stock-field">
+                    <label for="stockminimo">Stock mínimo</label>
+                    <input type="number" name="stockminimo" id="stockminimo" class="stock-input" min="0" step="0.01" value="{{ insumo.stockminimo|stringformat:'.2f' }}" required>
+                    <small>Umbral para identificar cuándo queda poco stock.</small>
+                </div>
+
+                <div class="stock-field stock-field-full">
+                    <label class="stock-checkbox-label" for="descontar_stock_automaticamente">
+                        <input type="checkbox" name="descontar_stock_automaticamente" id="descontar_stock_automaticamente" {% if insumo.descontar_stock_automaticamente %}checked{% endif %}>
+                        <span>Descontar stock automáticamente al vender</span>
+                    </label>
+                    <small>Activá esta opción si querés que las ventas descuenten este ingrediente cuando la receta tenga una cantidad válida.</small>
+                </div>
+
+            </div>
+
+            <div class="stock-form-notice">
+                <span class="notice-symbol">i</span>
+                <p>
+                    Revisá el stock actual antes de guardar. Modificar esta cantidad
+                    cambia las existencias registradas. La opción de descuento
+                    automático no realiza por sí sola ningún movimiento de stock.
+                </p>
+            </div>
+
+            <div class="stock-form-actions">
+                <a href="{% url 'stock_lista' %}" class="stock-btn stock-btn-cancel">
+                    Cancelar
+                </a>
+
+                <button type="submit" class="stock-btn stock-btn-save">
+                    Guardar cambios
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+{% endblock %}

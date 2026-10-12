@@ -1,0 +1,426 @@
+
+/* =========================================================
+   MODIFICAR USUARIO - ZONA BURGER
+========================================================= */
+
+.empleado-page {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    color: #fff;
+}
+
+/* =========================================================
+   VOLVER
+========================================================= */
+
+.empleado-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 20px;
+    padding: 7px 11px;
+
+    background: #191919;
+    border: 1px solid #303030;
+    border-radius: 7px;
+
+    color: #858585;
+    text-decoration: none;
+    font-size: .84rem;
+
+    transition:
+        color .2s ease,
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+.empleado-back:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, .06);
+    border-color: rgba(220, 38, 38, .35);
+    transform: translateX(-2px);
+}
+
+/* =========================================================
+   CABECERA
+========================================================= */
+
+.empleado-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    margin-bottom: 22px;
+}
+
+.empleado-header > div {
+    min-width: 0;
+}
+
+.empleado-header h1 {
+    margin: 0 0 5px;
+
+    color: #f0f0f0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.empleado-header p {
+    margin: 0;
+
+    color: #858585;
+    font-size: .84rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   MENSAJES
+========================================================= */
+
+.empleado-mensajes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+.empleado-mensaje {
+    margin: 0;
+    padding: 13px 14px;
+
+    border-radius: 7px;
+    font-size: .84rem;
+    line-height: 1.5;
+}
+
+.empleado-mensaje-success {
+    color: #86efac;
+    background: rgba(34, 197, 94, .07);
+    border: 1px solid rgba(34, 197, 94, .25);
+}
+
+.empleado-mensaje-error {
+    color: #fca5a5;
+    background: rgba(220, 38, 38, .07);
+    border: 1px solid rgba(220, 38, 38, .25);
+}
+
+.empleado-mensaje-warning {
+    color: #fcd34d;
+    background: rgba(245, 158, 11, .07);
+    border: 1px solid rgba(245, 158, 11, .25);
+}
+
+.empleado-mensaje-info {
+    color: #93c5fd;
+    background: rgba(59, 130, 246, .07);
+    border: 1px solid rgba(59, 130, 246, .25);
+}
+
+/* =========================================================
+   TARJETA
+========================================================= */
+
+.empleado-card {
+    background: #181818;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    overflow: hidden;
+
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+}
+
+/* =========================================================
+   FORMULARIO
+========================================================= */
+
+.empleado-card form {
+    padding: 27px;
+}
+
+/* =========================================================
+   GRID DE CAMPOS
+========================================================= */
+
+.empleado-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
+    row-gap: 0;
+}
+
+/* =========================================================
+   GRUPOS
+========================================================= */
+
+.empleado-form-group {
+    min-width: 0;
+    margin-bottom: 21px;
+}
+
+/* =========================================================
+   LABELS
+========================================================= */
+
+.empleado-form-group label {
+    display: block;
+    margin-bottom: 7px;
+
+    color: #ddd;
+    font-size: .84rem;
+    font-weight: 600;
+}
+
+/* =========================================================
+   INPUTS Y SELECT
+========================================================= */
+
+.empleado-form-group input,
+.empleado-form-group select {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+
+    box-sizing: border-box;
+    padding: 9px 12px;
+
+    background: #202020;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+
+    color: #f0f0f0;
+    font-family: inherit;
+    font-size: .86rem;
+
+    outline: none;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+/* HOVER */
+
+.empleado-form-group input:hover,
+.empleado-form-group select:hover {
+    border-color: #4a4a4a;
+}
+
+/* FOCUS */
+
+.empleado-form-group input:focus,
+.empleado-form-group select:focus {
+    background: #222;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, .08);
+}
+
+/* PLACEHOLDER */
+
+.empleado-form-group input::placeholder {
+    color: #626262;
+}
+
+/* SELECT */
+
+.empleado-form-group select {
+    cursor: pointer;
+}
+
+.empleado-form-group select option {
+    background: #202020;
+    color: #f0f0f0;
+}
+
+/* AUTOFILL */
+
+.empleado-form-group input:-webkit-autofill,
+.empleado-form-group input:-webkit-autofill:hover,
+.empleado-form-group input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f0f0f0;
+    -webkit-box-shadow: 0 0 0 1000px #202020 inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+/* =========================================================
+   AYUDA DE CONTRASEÑA
+========================================================= */
+
+.empleado-ayuda {
+    margin: 6px 0 0;
+
+    color: #626262;
+    font-size: .74rem;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   ACCIONES
+========================================================= */
+
+.empleado-form-acciones {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+
+    padding-top: 21px;
+    border-top: 1px solid #303030;
+}
+
+/* =========================================================
+   BOTONES
+========================================================= */
+
+.empleado-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 38px;
+    box-sizing: border-box;
+    padding: 9px 16px;
+
+    background: #222;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+
+    color: #aaa;
+    font-family: inherit;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.empleado-btn:hover {
+    background: #292929;
+    border-color: #4a4a4a;
+    color: #eee;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   GUARDAR CAMBIOS
+========================================================= */
+
+.empleado-btn-primary {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+
+    box-shadow: 0 5px 14px rgba(220, 38, 38, .10);
+}
+
+.empleado-btn-primary:hover {
+    background: #ef3030;
+    border-color: #ef3030;
+    color: #fff;
+
+    box-shadow: 0 7px 18px rgba(220, 38, 38, .16);
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   CANCELAR
+========================================================= */
+
+.empleado-form-acciones > a.empleado-btn {
+    background: #222;
+    border-color: #3a3a3a;
+    color: #aaa;
+}
+
+.empleado-form-acciones > a.empleado-btn:hover {
+    background: #292929;
+    border-color: #4a4a4a;
+    color: #eee;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+    .empleado-page {
+        max-width: none;
+    }
+
+    .empleado-card form {
+        padding: 20px;
+    }
+
+    .empleado-header {
+        gap: 12px;
+    }
+
+    .empleado-header h1 {
+        font-size: 1.18rem;
+    }
+
+    .empleado-header p {
+        font-size: .79rem;
+    }
+
+    .empleado-form-grid {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+    }
+
+    .empleado-form-group {
+        margin-bottom: 19px;
+    }
+
+    .empleado-form-acciones {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .empleado-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .empleado-card form {
+        padding: 18px;
+    }
+
+    .empleado-header h1 {
+        font-size: 1.1rem;
+    }
+
+    .empleado-header p {
+        font-size: .77rem;
+    }
+
+    .empleado-mensaje {
+        padding: 12px;
+    }
+
+    .empleado-form-group input,
+    .empleado-form-group select {
+        font-size: .84rem;
+    }
+
+    .empleado-ayuda {
+        font-size: .72rem;
+    }
+}

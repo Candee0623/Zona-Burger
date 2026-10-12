@@ -1,0 +1,473 @@
+```html
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Zona-Burger | Gestión de stock{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/stock/stockLista.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<main class="stock-page">
+
+    <!-- ENCABEZADO DE STOCK -->
+    <header class="stock-header">
+        <div>
+            <p class="eyebrow">ZONA BURGER / INVENTARIO</p>
+            <h1>Gestión de stock</h1>
+            <p class="subtitle">Controlá tus insumos, lotes y compras.</p>
+        </div>
+
+        <div class="stock-header-actions">
+            <a href="{% url 'stock_crear' %}" class="btn btn-outline">
+                + Crear insumo
+            </a>
+
+            <a href="{% url 'registrar_compra_insumo' %}" class="btn btn-primary">
+                + Registrar compra
+            </a>
+        </div>
+    </header>
+
+    <!-- MENSAJES -->
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- RESUMEN -->
+    <section class="summary-grid">
+
+        <article class="summary-card">
+            <span class="summary-label">Insumos registrados</span>
+            <strong>{{ insumos|length }}</strong>
+            <span class="summary-description">Ingredientes en el sistema</span>
+        </article>
+
+        <article class="summary-card">
+            <span class="summary-label">Stock bajo</span>
+            <strong>{{ insumos_criticos|length }}</strong>
+            <span class="summary-description">En el mínimo o por debajo</span>
+        </article>
+
+        <article class="summary-card">
+            <span class="summary-label">Lotes registrados</span>
+            <strong>{{ lotes|length }}</strong>
+            <span class="summary-description">Ingresos de mercadería</span>
+        </article>
+
+        <article class="summary-card">
+            <span class="summary-label">Compras registradas</span>
+            <strong>{{ compras|length }}</strong>
+            <span class="summary-description">Operaciones de compra</span>
+        </article>
+
+    </section>
+
+    <!-- PESTAÑAS -->
+    <nav class="stock-tabs" role="tablist" aria-label="Secciones de stock">
+
+        <button
+            type="button"
+            class="stock-tab active"
+            id="tab-insumos"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panel-insumos"
+            data-panel="panel-insumos"
+        >
+            Insumos
+            <span class="tab-count">{{ insumos|length }}</span>
+        </button>
+
+        <button
+            type="button"
+            class="stock-tab"
+            id="tab-lotes"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-lotes"
+            data-panel="panel-lotes"
+        >
+            Lotes
+            <span class="tab-count">{{ lotes|length }}</span>
+        </button>
+
+        <button
+            type="button"
+            class="stock-tab"
+            id="tab-compras"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-compras"
+            data-panel="panel-compras"
+        >
+            Historial de compras
+            <span class="tab-count">{{ compras|length }}</span>
+        </button>
+
+    </nav>
+
+    <!-- ====================================== -->
+    <!-- PESTAÑA: INSUMOS                       -->
+    <!-- ====================================== -->
+    <section
+        class="stock-panel"
+        id="panel-insumos"
+        role="tabpanel"
+        aria-labelledby="tab-insumos"
+    >
+
+        <div class="panel-heading">
+            <div>
+                <h2>Stock por insumo</h2>
+                <p>El stock total disponible de cada ingrediente.</p>
+            </div>
+
+            <a href="{% url 'stock_crear' %}" class="small-link">
+                + Nuevo insumo
+            </a>
+        </div>
+
+        {% if insumos %}
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Insumo</th>
+                            <th>Stock actual</th>
+                            <th>Stock mínimo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for insumo in insumos %}
+                            <tr>
+                                <td>
+                                    {% if insumo.codigo %}
+                                        <span class="code">
+                                            {{ insumo.codigo }}
+                                        </span>
+                                    {% else %}
+                                        <span class="muted">Sin código</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="primary-cell">
+                                    {{ insumo.nombreinsumo }}
+                                </td>
+
+                                <td class="number-cell">
+                                    {{ insumo.stockactual|floatformat:2 }}
+                                    {{ insumo.unidadmedidaingreso }}
+                                </td>
+
+                                <td>
+                                    {{ insumo.stockminimo|floatformat:2 }}
+                                    {{ insumo.unidadmedidaingreso }}
+                                </td>
+
+                                <td>
+                                    {% if insumo.stockactual <= insumo.stockminimo %}
+                                        <span class="status status-low">
+                                            Stock bajo
+                                        </span>
+                                    {% else %}
+                                        <span class="status status-ok">
+                                            Disponible
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <a
+                                        class="action-link"
+                                        href="{% url 'ajustar_stock' insumo.idinsumo %}"
+                                    >
+                                        Ajustar stock
+                                    </a>
+
+                                    <a
+                                        class="action-link"
+                                        href="{% url 'stock_editar' insumo.idinsumo %}"
+                                    >
+                                        Editar insumo
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+
+            <div class="empty-state">
+                <h3>Todavía no hay insumos</h3>
+                <p>
+                    Creá tu primer ingrediente para comenzar a controlar el stock.
+                </p>
+
+                <a href="{% url 'stock_crear' %}" class="btn btn-primary">
+                    + Crear insumo
+                </a>
+            </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- ====================================== -->
+    <!-- PESTAÑA: LOTES                         -->
+    <!-- ====================================== -->
+    <section
+        class="stock-panel"
+        id="panel-lotes"
+        role="tabpanel"
+        aria-labelledby="tab-lotes"
+        hidden
+    >
+
+        <div class="panel-heading">
+            <div>
+                <h2>Lotes de mercadería</h2>
+                <p>Cada lote representa una entrada de un insumo.</p>
+            </div>
+
+            <span class="section-label">Trazabilidad</span>
+        </div>
+
+        {% if lotes %}
+
+            <div class="table-wrapper">
+                <table class="wide-table">
+                    <thead>
+                        <tr>
+                            <th>Lote</th>
+                            <th>Insumo</th>
+                            <th>Ingreso</th>
+                            <th>Vencimiento</th>
+                            <th>Cantidad inicial</th>
+                            <th>Cantidad actual</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for lote in lotes %}
+                            <tr>
+                                <td>
+                                    <span class="code">
+                                        {{ lote.codigo|default:"Sin código" }}
+                                    </span>
+                                </td>
+
+                                <td class="primary-cell">
+                                    {{ lote.idinsumo.nombreinsumo }}
+                                </td>
+
+                                <td>
+                                    {{ lote.fechaingreso|date:"d/m/Y H:i" }}
+                                </td>
+
+                                <td>
+                                    {% if lote.fechavencimiento %}
+                                        {{ lote.fechavencimiento|date:"d/m/Y" }}
+                                    {% else %}
+                                        <span class="muted">No registrado</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ lote.cantidadinicial|floatformat:2 }}
+                                    {{ lote.idinsumo.unidadmedidaingreso }}
+                                </td>
+
+                                <td class="number-cell">
+                                    {{ lote.cantidadactual|floatformat:2 }}
+                                    {{ lote.idinsumo.unidadmedidaingreso }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+
+            <div class="empty-state">
+                <h3>No hay lotes registrados</h3>
+                <p>
+                    Cuando registres una compra, el lote aparecerá en esta pestaña.
+                </p>
+
+                <a
+                    href="{% url 'registrar_compra_insumo' %}"
+                    class="btn btn-primary"
+                >
+                    + Registrar compra
+                </a>
+            </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- ====================================== -->
+    <!-- PESTAÑA: HISTORIAL DE COMPRAS          -->
+    <!-- ====================================== -->
+    <section
+        class="stock-panel"
+        id="panel-compras"
+        role="tabpanel"
+        aria-labelledby="tab-compras"
+        hidden
+    >
+
+        <div class="panel-heading">
+            <div>
+                <h2>Historial de compras</h2>
+                <p>Consultá qué compraste, cuándo y cuánto gastaste.</p>
+            </div>
+
+            <a
+                href="{% url 'registrar_compra_insumo' %}"
+                class="small-link"
+            >
+                + Registrar compra
+            </a>
+        </div>
+
+        {% if compras %}
+
+            <div class="table-wrapper">
+                <table class="wide-table">
+                    <thead>
+                        <tr>
+                            <th>N.º compra</th>
+                            <th>Fecha</th>
+                            <th>Insumos comprados</th>
+                            <th>Cantidad</th>
+                            <th>Costo unitario</th>
+                            <th>Total de compra</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for compra in compras %}
+                            <tr>
+                                <td>
+                                    <span class="code">
+                                        COMP-{{ compra.idcompra }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {{ compra.fecha|date:"d/m/Y H:i" }}
+                                </td>
+
+                                <td>
+                                    {% for detalle in compra.detallecompra_set.all %}
+                                        <div class="purchase-item">
+                                            {{ detalle.idinsumo.nombreinsumo|default:"Insumo eliminado" }}
+                                        </div>
+                                    {% empty %}
+                                        <span class="muted">Sin detalle</span>
+                                    {% endfor %}
+                                </td>
+
+                                <td>
+                                    {% for detalle in compra.detallecompra_set.all %}
+                                        <div class="purchase-item">
+                                            {{ detalle.cantidad|floatformat:2 }}
+
+                                            {% if detalle.idinsumo %}
+                                                {{ detalle.idinsumo.unidadmedidaingreso }}
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+                                <td>
+                                    {% for detalle in compra.detallecompra_set.all %}
+                                        <div class="purchase-item">
+                                            $ {{ detalle.costounitario|floatformat:2 }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+                                <td class="total-cell">
+                                    $ {{ compra.preciototal|floatformat:2 }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+
+            <div class="empty-state">
+                <h3>Todavía no hay compras</h3>
+                <p>
+                    Las compras que registres aparecerán acá para que puedas
+                    consultarlas después.
+                </p>
+
+                <a
+                    href="{% url 'registrar_compra_insumo' %}"
+                    class="btn btn-primary"
+                >
+                    + Registrar primera compra
+                </a>
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</main>
+
+<!-- FUNCIONAMIENTO DE LAS PESTAÑAS -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = document.querySelectorAll('.stock-tab');
+    const panels = document.querySelectorAll('.stock-panel');
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+
+            tabs.forEach(function (item) {
+                item.classList.remove('active');
+                item.setAttribute('aria-selected', 'false');
+            });
+
+            panels.forEach(function (panel) {
+                panel.hidden = true;
+            });
+
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+
+            const selectedPanel = document.getElementById(tab.dataset.panel);
+
+            if (selectedPanel) {
+                selectedPanel.hidden = false;
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}
+```

@@ -19,17 +19,38 @@ class Rol(models.Model):
  
  
 class Empleado(models.Model):
-    idempleado = models.AutoField(db_column='IdEmpleado', primary_key=True)
-    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
-    apellido = models.CharField(db_column='Apellido', max_length=100, db_collation='Modern_Spanish_CI_AS')
-    idrol = models.ForeignKey(Rol, models.DO_NOTHING, db_column='IdRol', blank=True, null=True)
-    contrasena = models.CharField(db_column='Contrasena', max_length=255, db_collation='Modern_Spanish_CI_AS')
- 
-    def __str__(self):
-        return f"{self.nombre} {self.apellido}"
- 
+    id_empleado = models.AutoField(
+        primary_key=True,
+        db_column='IdEmpleado'
+    )
+
+    nombre = models.CharField(
+        max_length=100,
+        db_column='Nombre'
+    )
+
+    apellido = models.CharField(
+        max_length=100,
+        db_column='Apellido'
+    )
+
+    id_rol = models.IntegerField(
+        db_column='IdRol'
+    )
+
+    contrasena = models.CharField(
+        max_length=255,
+        db_column='Contrasena'
+    )
+
+    correo = models.EmailField(
+        max_length=255,
+        db_column='CorreoElectronico'
+    )
+
     class Meta:
         db_table = 'Empleado'
+        managed = False
  
  
 class UltimaModificacion(models.Model):
@@ -241,39 +262,32 @@ class ProductoGrupoOpcion(models.Model):
         db_table = 'ProductoGrupoOpcion'
  
  
+
+
 class Insumo(models.Model):
-  idinsumo = models.AutoField(db_column='IdInsumo', primary_key=True)
-  codigo = models.CharField(max_length=50, unique=True, blank=True, null=True)
-  nombreinsumo = models.CharField(
-      db_column='NombreInsumo',
-      max_length=100,
-      db_collation='Modern_Spanish_CI_AS',
-  )
-  unidadmedidaingreso = models.CharField(
-      db_column='UnidadMedidaIngreso',
-      max_length=30,
-      db_collation='Modern_Spanish_CI_AS',
-  )
-  unidadmedidaegreso = models.CharField(
-      db_column='UnidadMedidaEgreso',
-      max_length=30,
-      db_collation='Modern_Spanish_CI_AS',
-  )
-  stockactual = models.DecimalField(
-      db_column='StockActual',
-      max_digits=10,
-      decimal_places=2,
-      default=0.00,
-  )
-  stockminimo = models.DecimalField(  # ¡Nuevo! Para las alertas de stock bajo
-      max_digits=10, decimal_places=2, default=5.00
-  )
+    idinsumo = models.AutoField(db_column='IdInsumo', primary_key=True)
+    codigo = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    nombreinsumo = models.CharField(db_column='NombreInsumo', max_length=100, db_collation='Modern_Spanish_CI_AS')
+    unidadmedidaingreso = models.CharField(db_column='UnidadMedidaIngreso', max_length=30, db_collation='Modern_Spanish_CI_AS')
+    unidadmedidaegreso = models.CharField(db_column='UnidadMedidaEgreso', max_length=30, db_collation='Modern_Spanish_CI_AS')
+    stockactual = models.DecimalField(db_column='StockActual', max_digits=10, decimal_places=2, default=0.00)
+    stockminimo = models.DecimalField(max_digits=10, decimal_places=2, default=5.00)
+    descontar_stock_automaticamente = models.BooleanField(db_column='DescontarStockAutomaticamente', default=False)
 
-  def __str__(self):
-    return self.nombreinsumo
+    def save(self, *args, **kwargs):
+        es_nuevo = self.pk is None
+        if es_nuevo and not self.codigo:
+            super().save(*args, **kwargs)
+            self.codigo = f"INS-{self.pk:03d}"
+            super().save(update_fields=['codigo'])
+            return
+        super().save(*args, **kwargs)
 
-  class Meta:
-    db_table = 'Insumo'
+    def __str__(self):
+        return self.nombreinsumo
+
+    class Meta:
+        db_table = 'Insumo'
 
 class AjusteStock(models.Model):
   idajuste = models.AutoField(db_column='IdAjuste', primary_key=True)
@@ -301,16 +315,73 @@ class AjusteStock(models.Model):
   class Meta:
     db_table = 'AjusteStock'
  
- 
+
 class Compras(models.Model):
     idcompra = models.AutoField(db_column='IdCompra', primary_key=True)
     fecha = models.DateTimeField(db_column='Fecha')
-    preciototal = models.DecimalField(db_column='PrecioTotal', max_digits=10, decimal_places=2)
-    idempleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='IdEmpleado', blank=True, null=True)
- 
+    preciototal = models.DecimalField(
+        db_column='PrecioTotal',
+        max_digits=10,
+        decimal_places=2,
+    )
+
     class Meta:
         db_table = 'Compras'
- 
+
+class Lote(models.Model):
+    idlote = models.AutoField(
+        db_column='IdLote',
+        primary_key=True,
+    )
+    codigo = models.CharField(
+        db_column='Codigo',
+        max_length=50,
+        unique=True,
+        blank=True,
+        null=True,
+    )
+    idinsumo = models.ForeignKey(
+        Insumo,
+        models.DO_NOTHING,
+        db_column='IdInsumo',
+    )
+    fechaingreso = models.DateTimeField(
+        db_column='FechaIngreso',
+    )
+    fechavencimiento = models.DateField(
+        db_column='FechaVencimiento',
+        blank=True,
+        null=True,
+    )
+    cantidadinicial = models.DecimalField(
+        db_column='CantidadInicial',
+        max_digits=10,
+        decimal_places=2,
+    )
+    cantidadactual = models.DecimalField(
+        db_column='CantidadActual',
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+    )
+
+    def save(self, *args, **kwargs):
+        es_nuevo = self.pk is None
+
+        if es_nuevo and not self.codigo:
+            super().save(*args, **kwargs)
+            self.codigo = f'LOT-{self.pk:03d}'
+            super().save(update_fields=['codigo'])
+            return
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.codigo} - {self.idinsumo.nombreinsumo}'
+
+    class Meta:
+        db_table = 'Lote'
+
  
 class DetalleCompra(models.Model):
     iddetallecompra = models.AutoField(db_column='IdDetalleCompra', primary_key=True)
@@ -332,16 +403,18 @@ class Receta(models.Model):
         db_table = 'Receta'
  
  
+
 class RecetaInsumo(models.Model):
-    idrecetainsumo = models.IntegerField(db_column='IdRecetaInsumo', primary_key=True)
-    idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo', blank=True, null=True)
-    idreceta = models.ForeignKey(Receta, models.DO_NOTHING, db_column='IdReceta', blank=True, null=True)
-    cantidadinsumo = models.IntegerField(db_column='CantidadInsumo',blank=True,null=True,default=0)
+    idrecetainsumo = models.AutoField(db_column='IdRecetaInsumo',primary_key=True)
+    idinsumo = models.ForeignKey(Insumo,models.DO_NOTHING,db_column='IdInsumo',blank=True,null=True)
+    idreceta = models.ForeignKey(Receta,models.DO_NOTHING,db_column='IdReceta',blank=True,null=True)
+    cantidadinsumo = models.DecimalField(db_column='CantidadInsumo',max_digits=10,decimal_places=2,default=0)
     es_removible = models.BooleanField(default=False)
+    unidadmedida = models.CharField(db_column='UnidadMedida',max_length=20,default='unidad')
 
     class Meta:
         db_table = 'RecetaInsumo'
- 
+
  
 class MedioPago(models.Model):
     idmediopago = models.AutoField(db_column='IdMedioPago', primary_key=True)
@@ -567,4 +640,67 @@ class ProductoPromocion(models.Model):
 
     class Meta:
         db_table = 'ProductoPromocion'
- 
+
+
+class Permiso(models.Model):
+    idpermiso = models.AutoField(
+        db_column='IdPermiso',
+        primary_key=True
+    )
+    codigo = models.CharField(
+        db_column='Codigo',
+        max_length=100,
+        unique=True
+    )
+    modulo = models.CharField(
+        db_column='Modulo',
+        max_length=100
+    )
+    accion = models.CharField(
+        db_column='Accion',
+        max_length=50
+    )
+    descripcion = models.CharField(
+        db_column='Descripcion',
+        max_length=250,
+        blank=True,
+        null=True
+    )
+
+    def __str__(self):
+        return f"{self.modulo} - {self.accion}"
+
+    class Meta:
+        db_table = 'Permiso'
+        ordering = ['modulo', 'accion']
+
+
+class RolPermiso(models.Model):
+    idrolpermiso = models.AutoField(
+        db_column='IdRolPermiso',
+        primary_key=True
+    )
+    idrol = models.ForeignKey(
+        Rol,
+        models.CASCADE,
+        db_column='IdRol',
+        related_name='permisos_asignados'
+    )
+    idpermiso = models.ForeignKey(
+        Permiso,
+        models.CASCADE,
+        db_column='IdPermiso',
+        related_name='roles_asignados'
+    )
+
+    def __str__(self):
+        return f"{self.idrol} - {self.idpermiso}"
+
+    class Meta:
+        db_table = 'RolPermiso'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['idrol', 'idpermiso'],
+                name='UQ_RolPermiso_Rol_Permiso'
+            )
+        ]

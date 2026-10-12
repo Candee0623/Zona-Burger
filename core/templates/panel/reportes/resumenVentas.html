@@ -1,0 +1,216 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Resumen de ventas | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/reportes/reportes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="rep-page">
+
+    <a href="{% url 'centro_reportes' %}" class="rep-back">
+        <i class="fa-solid fa-arrow-left"></i> Volver a reportes
+    </a>
+
+    <header class="rep-header">
+        <div class="rep-title">
+            <div class="rep-icon"><i class="fa-solid fa-chart-column"></i></div>
+            <div>
+                <div class="rep-kicker">Análisis comercial</div>
+                <h1>Resumen de ventas</h1>
+                <p>Rendimiento comercial del período seleccionado.</p>
+            </div>
+        </div>
+        <div class="rep-actions">
+            <a class="rep-btn" href="{% url 'exportar_resumen_excel' %}?fecha_inicio={{ fecha_inicio|date:'Y-m-d' }}&fecha_fin={{ fecha_fin|date:'Y-m-d' }}">
+                <i class="fa-solid fa-file-excel"></i> Excel
+            </a>
+            <a class="rep-btn rep-btn-primary" href="{% url 'exportar_resumen_pdf' %}?fecha_inicio={{ fecha_inicio|date:'Y-m-d' }}&fecha_fin={{ fecha_fin|date:'Y-m-d' }}">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+        </div>
+    </header>
+
+    {% include "panel/reportes/_filtros.html" %}
+
+    <div class="rep-kpis">
+        <article class="rep-kpi">
+            <span>Total vendido</span>
+            <strong>$ {{ total_vendido|floatformat:"2g" }}</strong>
+            <small>Pedidos no cancelados</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Pedidos</span>
+            <strong>{{ cantidad_pedidos }}</strong>
+            <small>Operaciones del período</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Ticket promedio</span>
+            <strong>$ {{ ticket_promedio|floatformat:"2g" }}</strong>
+            <small>Importe por pedido</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Promedio diario</span>
+            <strong>$ {{ promedio_diario|floatformat:"2g" }}</strong>
+            <small>Ventas por día</small>
+        </article>
+        <article class="rep-kpi {% if variacion_porcentual is not None %}{% if variacion_porcentual > 0 %}rep-kpi-up{% elif variacion_porcentual < 0 %}rep-kpi-down{% endif %}{% endif %}">
+            <span>Variación</span>
+            <strong>{% if variacion_porcentual is not None %}{% if variacion_porcentual > 0 %}+{% endif %}{{ variacion_porcentual|floatformat:1 }}%{% else %}—{% endif %}</strong>
+            <small>vs. {{ inicio_anterior|date:"d/m" }} al {{ fin_anterior|date:"d/m" }}</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Mejor día</span>
+            <strong>{% if mejor_dia %}{{ mejor_dia.dia|date:"d/m/Y" }}{% else %}—{% endif %}</strong>
+            <small>{% if mejor_dia %}$ {{ mejor_dia.total|floatformat:"2g" }}{% else %}Sin ventas{% endif %}</small>
+        </article>
+    </div>
+
+    <div class="rep-grid">
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Evolución de ventas</h2><p>Importe vendido por día</p></div>
+                <span class="rep-tag">Tendencia</span>
+            </div>
+            <div class="rep-chart">
+                {% if ventas_diarias %}<canvas id="rep-linea"></canvas>{% else %}<div class="rep-empty-chart">No hay ventas en este período.</div>{% endif %}
+            </div>
+        </section>
+
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Pedidos por estado</h2><p>Incluye pedidos cancelados</p></div>
+            </div>
+            <div class="rep-chart">
+                {% if pedidos_por_estado %}<canvas id="rep-estados-chart"></canvas>{% else %}<div class="rep-empty-chart">Sin pedidos.</div>{% endif %}
+            </div>
+        </section>
+    </div>
+
+    <div class="rep-grid-even">
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Pedidos por día</h2><p>Cantidad de pedidos no cancelados</p></div>
+            </div>
+            <div class="rep-chart">
+                {% if ventas_diarias %}<canvas id="rep-barras"></canvas>{% else %}<div class="rep-empty-chart">No hay ventas en este período.</div>{% endif %}
+            </div>
+        </section>
+
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Comparación de períodos</h2><p>Mismo largo, inmediatamente anterior</p></div>
+            </div>
+            <ul class="rep-compare">
+                <li>
+                    <div><span>Período actual</span><small>{{ fecha_inicio|date:"d/m/Y" }} al {{ fecha_fin|date:"d/m/Y" }}</small></div>
+                    <strong>$ {{ total_vendido|floatformat:"2g" }}</strong>
+                </li>
+                <li>
+                    <div><span>Período anterior</span><small>{{ inicio_anterior|date:"d/m/Y" }} al {{ fin_anterior|date:"d/m/Y" }}</small></div>
+                    <strong>$ {{ total_anterior|floatformat:"2g" }}</strong>
+                </li>
+                <li>
+                    <div><span>Diferencia</span><small>{% if variacion_porcentual is None %}Sin ventas en el período anterior{% else %}Respecto del anterior{% endif %}</small></div>
+                    {% if variacion_porcentual is not None %}
+                    <strong class="{% if variacion_porcentual > 0 %}rep-up{% elif variacion_porcentual < 0 %}rep-down{% endif %}">{% if variacion_porcentual > 0 %}+{% endif %}{{ variacion_porcentual|floatformat:1 }}%</strong>
+                    {% else %}
+                    <strong>—</strong>
+                    {% endif %}
+                </li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="rep-panel">
+        <div class="rep-panel-head">
+            <div><h2>Detalle diario</h2><p>Ventas por fecha</p></div>
+            <span class="rep-tag">{{ ventas_diarias|length }} días</span>
+        </div>
+        <div class="rep-table-container">
+            <table class="rep-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th class="rep-num">Pedidos</th>
+                        <th class="rep-num">Ticket promedio</th>
+                        <th class="rep-num">Total</th>
+                        <th>Vs. mejor día</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venta in ventas_diarias %}
+                    <tr>
+                        <td>{{ venta.dia|date:"d/m/Y" }}</td>
+                        <td class="rep-num">{{ venta.pedidos }}</td>
+                        <td class="rep-num">$ {{ venta.ticket_promedio|floatformat:"2g" }}</td>
+                        <td class="rep-num rep-money">$ {{ venta.total|floatformat:"2g" }}</td>
+                        <td>                         
+                            <div class="rep-meter">
+                                <div class="rep-meter-bar">
+                                    <span data-width="{{ venta.porcentaje|floatformat:0 }}"></span>
+                                </div>
+                                <em>{{ venta.porcentaje|floatformat:0 }}%</em>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="rep-empty">No hay ventas para este período.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+{{ ventas_diarias|json_script:"rep-dias" }}
+{{ pedidos_por_estado|json_script:"rep-estados" }}
+
+{% include "panel/reportes/_charts.html" %}
+
+<script>
+(() => {
+    rep.tema();
+    const C = rep.colores;
+    const dias = rep.leer("rep-dias");
+    const estados = rep.leer("rep-estados");
+    const labels = dias.map(d => rep.dia(d.dia));
+
+    const linea = document.getElementById("rep-linea");
+    if (linea) new Chart(linea, {
+        type: "line",
+        data: { labels, datasets: [{
+            data: dias.map(d => Number(d.total)),
+            borderColor: C.rojo, backgroundColor: "rgba(220,38,38,.12)",
+            pointBackgroundColor: C.rojo, fill: true, tension: .35, pointRadius: 3
+        }] },
+        options: rep.ejes({ dinero: true })
+    });
+
+    const barras = document.getElementById("rep-barras");
+    if (barras) new Chart(barras, {
+        type: "bar",
+        data: { labels, datasets: [{
+            data: dias.map(d => Number(d.pedidos)),
+            backgroundColor: C.rojo, borderRadius: 4, maxBarThickness: 28
+        }] },
+        options: rep.ejes()
+    });
+
+    const dona = document.getElementById("rep-estados-chart");
+    if (dona) new Chart(dona, {
+        type: "doughnut",
+        data: {
+            labels: estados.map(e => e.idestadopedido__descripcion || "Sin estado"),
+            datasets: [{
+                data: estados.map(e => Number(e.cantidad)),
+                backgroundColor: C.paleta, borderColor: "#181818", borderWidth: 3, hoverOffset: 6
+            }]
+        },
+        options: rep.dona()
+    });
+})();
+</script>
+{% endblock %}

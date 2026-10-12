@@ -1,0 +1,349 @@
+
+/* ===========================
+   EDITAR HORARIO
+=========================== */
+
+.horario-form-container {
+    width: 100%;
+    max-width: 900px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 10px 0 40px;
+    box-sizing: border-box;
+}
+
+/* Volver */
+
+.form-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 22px;
+    padding: 10px 14px;
+    background: #191919;
+    border: 1px solid #303030;
+    border-radius: 8px;
+    color: #858585;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all .2s ease;
+}
+
+.form-volver:hover {
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, .35);
+    background: rgba(220, 38, 38, .06);
+    transform: translateX(-3px);
+}
+
+/* Encabezado */
+
+.form-header {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    margin-bottom: 25px;
+}
+
+.form-header-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 55px;
+    height: 55px;
+    flex-shrink: 0;
+    background: rgba(220, 38, 38, .09);
+    border: 1px solid rgba(220, 38, 38, .2);
+    border-radius: 11px;
+    color: #dc2626;
+    font-size: 22px;
+}
+
+.form-header-texto h1 {
+    margin: 0 0 7px;
+    color: #f1f1f1;
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.form-header-texto p {
+    margin: 0;
+    color: #858585;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Tarjeta */
+
+.form-card {
+    padding: 28px;
+    background: #161616;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .18);
+}
+
+/* Título de sección */
+
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding-bottom: 17px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #303030;
+    color: #f1f1f1;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.form-section-title i {
+    color: #dc2626;
+    font-size: 17px;
+}
+
+/* Campos */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 23px 22px;
+}
+
+.campo {
+    min-width: 0;
+    margin-bottom: 3px;
+}
+
+.campo-completo {
+    grid-column: 1 / -1;
+}
+
+.campo label {
+    display: block;
+    margin-bottom: 9px;
+    color: #d5d5d5;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.campo-obligatorio {
+    margin-left: 3px;
+    color: #dc2626;
+}
+
+/* Controles generados por Django */
+
+.campo input:not([type="checkbox"]):not([type="radio"]),
+.campo select,
+.campo textarea {
+    display: block;
+    width: 100%;
+    min-height: 43px;
+    box-sizing: border-box;
+    padding: 11px 13px;
+    background: #222;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    color: #f0f0f0;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.campo input:hover,
+.campo select:hover,
+.campo textarea:hover {
+    border-color: #484848;
+}
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
+}
+
+.campo select {
+    cursor: pointer;
+}
+
+.campo select option {
+    background: #222;
+    color: #f0f0f0;
+}
+
+.campo input[type="checkbox"],
+.campo input[type="radio"] {
+    accent-color: #dc2626;
+}
+
+.campo textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.campo input[type="time"] {
+    color-scheme: dark;
+}
+
+.campo input[type="date"],
+.campo input[type="datetime-local"] {
+    color-scheme: dark;
+}
+
+/* Ayuda y errores */
+
+.ayuda {
+    display: block;
+    margin-top: 8px;
+    color: #858585;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.error-general {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 22px;
+    padding: 14px 16px;
+    background: rgba(220, 38, 38, .08);
+    border: 1px solid rgba(220, 38, 38, .22);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.error-general > i {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.error-campo {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 8px;
+    color: #f87171;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.error-campo i {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.error-campo ul,
+.error-general ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+/* Acciones */
+
+.form-acciones {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+    padding-top: 22px;
+    border-top: 1px solid #303030;
+}
+
+.btn-form {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 43px;
+    box-sizing: border-box;
+    padding: 12px 20px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.btn-guardar {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.btn-guardar:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, .2);
+}
+
+.btn-cancelar {
+    background: #222;
+    border-color: #3a3a3a;
+    color: #c5c5c5;
+}
+
+.btn-cancelar:hover {
+    background: #2a2a2a;
+    border-color: #484848;
+    color: #f1f1f1;
+}
+
+/* Responsive */
+
+@media (max-width: 700px) {
+    .horario-form-container {
+        padding-top: 5px;
+    }
+
+    .form-card {
+        padding: 24px 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .form-header {
+        align-items: flex-start;
+        gap: 13px;
+    }
+
+    .form-header-icono {
+        width: 46px;
+        height: 46px;
+        font-size: 19px;
+    }
+
+    .form-header-texto h1 {
+        font-size: 23px;
+    }
+
+    .form-card {
+        padding: 21px 16px;
+    }
+
+    .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    .campo-completo {
+        grid-column: auto;
+    }
+
+    .form-acciones {
+        flex-direction: column-reverse;
+    }
+
+    .btn-form {
+        width: 100%;
+    }
+}

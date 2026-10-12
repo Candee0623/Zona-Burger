@@ -1,0 +1,180 @@
+```html
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Detalle del pedido #{{ pedido.idpedido }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/ventas/detalleHistorialPedido.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="detalle-historial-contenedor">
+    <a href="{% url 'historial_pedidos' %}" class="detalle-historial-volver">
+        <span aria-hidden="true">←</span> Volver al historial
+    </a>
+
+    <header class="detalle-historial-encabezado">
+        <div class="detalle-historial-icono">▤</div>
+        <div>
+            <h1>Pedido #{{ pedido.idpedido }}</h1>
+            <p>
+                {% if pedido.fecha_creacion %}
+                    Creado el {{ pedido.fecha_creacion|date:"d/m/Y" }}
+                    a las {{ pedido.fecha_creacion|date:"H:i" }}
+                {% else %}
+                    Fecha de creación no disponible
+                {% endif %}
+            </p>
+        </div>
+    </header>
+
+    <section class="detalle-historial-tarjeta">
+        <h2>Información del pedido</h2>
+
+        <div class="detalle-historial-datos">
+            <div class="detalle-historial-dato">
+                <span>Cliente</span>
+                <strong>
+                    {% if pedido.idcliente %}
+                        {{ pedido.idcliente.nombre }} {{ pedido.idcliente.apellido }}
+                    {% else %}
+                        Cliente no registrado
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detalle-historial-dato">
+                <span>Medio de pago</span>
+                <strong>
+                    {% if pedido.idmediopago %}
+                        {{ pedido.idmediopago.nombremetodo }}
+                    {% else %}
+                        No especificado
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detalle-historial-dato">
+                <span>Estado</span>
+                <strong>
+                    {% if pedido.idestadopedido %}
+                        {{ pedido.idestadopedido.descripcion }}
+                    {% else %}
+                        Sin estado
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detalle-historial-dato">
+                <span>Estado del pago</span>
+                <strong class="{% if pedido.pagado %}detalle-pago-ok{% else %}detalle-pago-pendiente{% endif %}">
+                    {% if pedido.pagado %}Pagado{% else %}Pendiente{% endif %}
+                </strong>
+            </div>
+
+            <div class="detalle-historial-dato">
+                <span>Horario de entrega deseado</span>
+                <strong>
+                    {% if pedido.horarioentregadeseado %}
+                        {{ pedido.horarioentregadeseado|time:"H:i" }}
+                    {% else %}
+                        No especificado
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detalle-historial-dato">
+                <span>Total del pedido</span>
+                <strong class="detalle-historial-total">
+                    {% if pedido.total != None %}
+                        ${{ pedido.total|floatformat:2 }}
+                    {% else %}
+                        No disponible
+                    {% endif %}
+                </strong>
+            </div>
+        </div>
+
+        {% if pedido.justificacioncancelacion %}
+            <div class="detalle-cancelacion">
+                <span>Justificación de cancelación</span>
+                <p>{{ pedido.justificacioncancelacion }}</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="detalle-historial-tarjeta">
+        <div class="detalle-historial-titulo-productos">
+            <h2>Productos del pedido</h2>
+            <span>{{ detalles|length }} ítem(s)</span>
+        </div>
+
+        <div class="detalle-historial-tabla-scroll">
+            <table class="detalle-historial-tabla">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio unitario</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in detalles %}
+                        <tr>
+                            <td>
+                                <strong>
+                                    {% if detalle.idproducto %}
+                                        {{ detalle.idproducto }}
+                                    {% else %}
+                                        Producto no disponible
+                                    {% endif %}
+                                </strong>
+
+                                {% if detalle.observaciones %}
+                                    <p class="detalle-observaciones">
+                                        {{ detalle.observaciones }}
+                                    </p>
+                                {% endif %}
+                            </td>
+                            <td>{{ detalle.cantidad }}</td>
+                            <td>${{ detalle.preciounitario|floatformat:2 }}</td>
+                            <td class="detalle-subtotal">
+                                ${{ detalle.subtotal_item|floatformat:2 }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="detalle-tabla-vacia">
+                                Este pedido no tiene productos registrados.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                {% if detalles %}
+                    <tfoot>
+                        <tr>
+                            <td colspan="3">Total del pedido</td>
+                            <td>
+                                {% if pedido.total != None %}
+                                    ${{ pedido.total|floatformat:2 }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </section>
+
+    <div class="detalle-historial-pie">
+        <a href="{% url 'historial_pedidos' %}" class="detalle-historial-boton">
+            Volver al historial
+        </a>
+    </div>
+</div>
+{% endblock %}
+```

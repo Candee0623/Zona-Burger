@@ -1,0 +1,162 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}
+    Zona Burger | Crear usuario
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/administracion/usuarios/empleadoCrear.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="crear-empleado-page">
+
+    <header class="crear-empleado-header">
+        <div class="crear-empleado-header-text">
+            <h1>Nuevo usuario</h1>
+            <p>Completá los datos para habilitar el acceso al panel.</p>
+
+            <a href="{% url 'empleado_lista' %}" class="crear-empleado-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Volver a usuarios</span>
+            </a>
+        </div>
+    </header>
+
+    {% if messages %}
+        <div class="crear-empleado-mensajes">
+            {% for mensaje in messages %}
+                <p class="crear-empleado-mensaje crear-empleado-mensaje-{{ mensaje.tags }}">
+                    {{ mensaje }}
+                </p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="crear-empleado-card">
+
+        <div class="crear-empleado-card-header">
+            <h2>Datos del usuario</h2>
+            <p>Los campos marcados son obligatorios.</p>
+        </div>
+
+        <form method="POST"
+              action="{% url 'empleado_crear' %}"
+              class="crear-empleado-form">
+            {% csrf_token %}
+
+            <div class="crear-empleado-grid">
+
+                <div class="crear-empleado-grupo">
+                    <label for="nombre">Nombre <span>*</span></label>
+                    <input
+                        type="text"
+                        id="nombre"
+                        name="nombre"
+                        maxlength="100"
+                        autocomplete="given-name"
+                        placeholder="Ingresá el nombre"
+                        required
+                    >
+                </div>
+
+                <div class="crear-empleado-grupo">
+                    <label for="apellido">Apellido <span>*</span></label>
+                    <input
+                        type="text"
+                        id="apellido"
+                        name="apellido"
+                        maxlength="100"
+                        autocomplete="family-name"
+                        placeholder="Ingresá el apellido"
+                        required
+                    >
+                </div>
+
+                <div class="crear-empleado-grupo">
+                    <label for="correo">Correo electrónico <span>*</span></label>
+                    <input
+                        type="email"
+                        id="correo"
+                        name="correo"
+                        maxlength="254"
+                        autocomplete="email"
+                        placeholder="ejemplo@correo.com"
+                        required
+                    >
+                </div>
+
+                <div class="crear-empleado-grupo">
+                    <label for="idrol">Rol <span>*</span></label>
+                    <select id="idrol" name="idrol" required>
+                        <option value="">Seleccioná un rol</option>
+                        {% for rol in roles %}
+                            <option value="{{ rol.pk }}">{{ rol }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="crear-empleado-grupo">
+                    <label for="contrasena">Contraseña <span>*</span></label>
+                    <input
+                        type="password"
+                        id="contrasena"
+                        name="contrasena"
+                        minlength="8"
+                        autocomplete="new-password"
+                        placeholder="Mínimo 8 caracteres"
+                        required
+                    >
+                </div>
+
+                <div class="crear-empleado-grupo">
+                    <label for="confirmar_contrasena">
+                        Confirmar contraseña <span>*</span>
+                    </label>
+                    <input
+                        type="password"
+                        id="confirmar_contrasena"
+                        name="confirmar_contrasena"
+                        minlength="8"
+                        autocomplete="new-password"
+                        placeholder="Repetí la contraseña"
+                        required
+                    >
+                </div>
+
+            </div>
+
+            <div class="crear-empleado-estado">
+                <label class="crear-empleado-switch" for="activo">
+                    <input
+                        type="checkbox"
+                        id="activo"
+                        name="activo"
+                        checked
+                    >
+                    <span class="crear-empleado-switch-visual"></span>
+                    <span class="crear-empleado-switch-texto">
+                        <strong>Cuenta habilitada</strong>
+                        <small>El usuario podrá acceder al panel.</small>
+                    </span>
+                </label>
+            </div>
+
+            <div class="crear-empleado-acciones">
+                <a href="{% url 'empleado_lista' %}"
+                   class="crear-empleado-btn crear-empleado-cancelar">
+                    Cancelar
+                </a>
+
+                <button type="submit"
+                        class="crear-empleado-btn crear-empleado-guardar">
+                    Crear usuario
+                </button>
+            </div>
+
+        </form>
+    </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/stock/stockForm.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="stock-form-page">
+
+    <div class="stock-form-header">
+        <div>
+            <span class="stock-form-eyebrow">ZONA BURGER / INVENTARIO</span>
+            <h1>Registrar insumo</h1>
+            <p>Completá los datos del nuevo ingrediente o producto.</p>
+        </div>
+
+        <a href="{% url 'stock_lista' %}" class="stock-back-link">
+            ← Volver al stock
+        </a>
+    </div>
+
+    <div class="stock-form-card">
+
+        <div class="stock-form-card-header">
+            <div class="stock-form-icon">+</div>
+            <div>
+                <h2>Datos del insumo</h2>
+                <p>Ingresá la información necesaria para controlar el inventario.</p>
+            </div>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="stock-form-grid">
+
+                <div class="stock-field stock-field-full">
+                    <label for="nombreinsumo">Nombre del insumo</label>
+                    <input type="text" name="nombreinsumo" id="nombreinsumo" class="stock-input" placeholder="Ej. Carne vacuna" required>
+                    <small>Nombre con el que identificarás el ingrediente.</small>
+                </div>
+
+                <div class="stock-field">
+                    <label for="unidadmedidaingreso">Unidad de medida de ingreso</label>
+                    <input type="text" name="unidadmedidaingreso" id="unidadmedidaingreso" class="stock-input" placeholder="Ej. kg, litro, unidad" required>
+                    <small>Unidad en la que recibís o comprás el insumo.</small>
+                </div>
+
+                <div class="stock-field">
+                    <label for="unidadmedidaegreso">Unidad de medida de egreso</label>
+                    <input type="text" name="unidadmedidaegreso" id="unidadmedidaegreso" class="stock-input" placeholder="Ej. gramo, ml, unidad" required>
+                    <small>Unidad usada al consumir el insumo.</small>
+                </div>
+
+                <div class="stock-field">
+                    <label for="stockactual">Stock inicial</label>
+                    <input type="number" name="stockactual" id="stockactual" class="stock-input" min="0" step="0.01" value="0" required>
+                    <small>Cantidad que tenés actualmente.</small>
+                </div>
+
+                <div class="stock-field">
+                    <label for="stockminimo">Stock mínimo</label>
+                    <input type="number" name="stockminimo" id="stockminimo" class="stock-input" min="0" step="0.01" value="5" required>
+                    <small>Umbral para identificar cuándo queda poco stock.</small>
+                </div>
+
+                <div class="stock-field stock-field-full">
+                    <label class="stock-checkbox-label" for="descontar_stock_automaticamente">
+                        <input type="checkbox" name="descontar_stock_automaticamente" id="descontar_stock_automaticamente">
+                        <span>Descontar stock automáticamente al vender</span>
+                    </label>
+                    <small>Si activás esta opción, el sistema podrá descontar este ingrediente al registrar una venta, siempre que la receta tenga una cantidad válida y las unidades sean compatibles.</small>
+                </div>
+
+            </div>
+
+            <div class="stock-form-notice">
+                <span class="notice-symbol">i</span>
+                <p>
+                    Si el insumo ya tiene existencias, ingresá la cantidad inicial.
+                    Si vas a cargar la mercadería mediante una compra, podés dejar
+                    el stock inicial en cero y registrarla después.
+                </p>
+            </div>
+
+            <div class="stock-form-actions">
+                <a href="{% url 'stock_lista' %}" class="stock-btn stock-btn-cancel">
+                    Cancelar
+                </a>
+
+                <button type="submit" class="stock-btn stock-btn-save">
+                    Guardar insumo
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+{% endblock %}

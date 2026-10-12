@@ -1,0 +1,157 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Horarios | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/horarios/horarioLista.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="horarios-page">
+
+    <div class="horarios-header">
+        <div class="horarios-header-texto">
+            <h1>Gestión de horarios</h1>
+            <p>Administrá los días y horarios de atención de tus negocios.</p>
+        </div>
+
+        <a href="{% url 'horarios_crear' %}" class="horarios-btn horarios-btn-crear">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            <span>Nuevo horario</span>
+        </a>
+    </div>
+
+    {% if messages %}
+        <div class="horarios-mensajes">
+            {% for message in messages %}
+                <div class="horarios-mensaje {{ message.tags }}">
+                    {% if 'error' in message.tags %}
+                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                    {% elif 'warning' in message.tags %}
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    {% else %}
+                        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    {% endif %}
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="horarios-card">
+        <div class="horarios-card-header">
+            <div class="horarios-card-header-icono">
+                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+            </div>
+            <div>
+                <h2>Horarios registrados</h2>
+                <p>Consultá y administrá los horarios de atención.</p>
+            </div>
+        </div>
+
+        <div class="tabla-responsive">
+            <table class="tabla-horarios">
+                <thead>
+                    <tr>
+                        <th>Negocio</th>
+                        <th>Día</th>
+                        <th>Apertura</th>
+                        <th>Cierre</th>
+                        <th>Estado</th>
+                        <th class="columna-acciones">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for horario in horarios %}
+                        <tr>
+                            <td data-label="Negocio">
+                                {% if horario.idnegocio %}
+                                    <span class="negocio-nombre">{{ horario.idnegocio.nombre }}</span>
+                                {% else %}
+                                    <span class="sin-dato">Sin negocio asignado</span>
+                                {% endif %}
+                            </td>
+
+                            <td data-label="Día">
+                                <span class="dia-nombre">{{ horario.diasemana|default:"—" }}</span>
+                            </td>
+
+                            <td data-label="Apertura">
+                                {% if horario.horaapertura %}
+                                    <span class="horario-hora">{{ horario.horaapertura|time:"H:i" }}</span>
+                                {% else %}
+                                    <span class="sin-dato">—</span>
+                                {% endif %}
+                            </td>
+
+                            <td data-label="Cierre">
+                                {% if horario.horacierre %}
+                                    <span class="horario-hora">{{ horario.horacierre|time:"H:i" }}</span>
+                                {% else %}
+                                    <span class="sin-dato">—</span>
+                                {% endif %}
+                            </td>
+
+                            <td data-label="Estado">
+                                {% if horario.estaabierto == 1 %}
+                                    <span class="estado estado-abierto">
+                                        <i class="fa-solid fa-circle" aria-hidden="true"></i>
+                                        Abierto
+                                    </span>
+                                {% elif horario.estaabierto == 0 %}
+                                    <span class="estado estado-cerrado">
+                                        <i class="fa-solid fa-circle" aria-hidden="true"></i>
+                                        Cerrado
+                                    </span>
+                                {% else %}
+                                    <span class="estado estado-desconocido">Sin definir</span>
+                                {% endif %}
+                            </td>
+
+                            <td data-label="Acciones" class="celda-acciones">
+                                <div class="acciones">
+                                    <a href="{% url 'horarios_editar' horario.idhorario %}"
+                                       class="horarios-btn-accion btn-editar"
+                                       title="Editar horario"
+                                       aria-label="Editar horario">
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                        <span>Editar</span>
+                                    </a>
+
+                                    <a href="{% url 'horarios_eliminar' horario.idhorario %}"
+                                       class="horarios-btn-accion btn-eliminar"
+                                       title="Eliminar horario"
+                                       aria-label="Eliminar horario">
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                        <span>Eliminar</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="sin-datos-fila">
+                                <div class="sin-datos-contenido">
+                                    <div class="sin-datos-icono">
+                                        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                    </div>
+                                    <h3>No hay horarios registrados</h3>
+                                    <p>Todavía no se registraron horarios de atención.</p>
+                                    <a href="{% url 'horarios_crear' %}" class="horarios-btn horarios-btn-crear">
+                                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                                        <span>Crear primer horario</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,612 @@
+
+/* =========================================================
+ELIMINAR USUARIO - ZONA BURGER
+========================================================= */
+
+.eliminar-page {
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+    padding-bottom: 35px;
+}
+
+/* =========================================================
+VOLVER
+========================================================= */
+
+.eliminar-page .empleado-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 20px;
+    padding: 7px 11px;
+
+    border: 1px solid #303030;
+    border-radius: 7px;
+
+    background: #191919;
+    color: #858585;
+
+    text-decoration: none;
+    font-size: .84rem;
+
+    transition:
+        color .2s ease,
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+.eliminar-page .empleado-back:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, .06);
+    border-color: rgba(220, 38, 38, .35);
+    transform: translateX(-2px);
+}
+
+/* =========================================================
+CARD
+========================================================= */
+
+.eliminar-contenedor {
+    box-sizing: border-box;
+    width: 100%;
+
+    background: #181818;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    overflow: hidden;
+
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+}
+
+/* =========================================================
+ICONO PRINCIPAL
+========================================================= */
+
+.eliminar-icono {
+    width: 54px;
+    height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 28px auto 16px;
+
+    border: 1px solid rgba(220, 38, 38, .30);
+    border-radius: 9px;
+
+    background: rgba(220, 38, 38, .10);
+    color: #dc2626;
+
+    font-size: 23px;
+}
+
+/* =========================================================
+ENCABEZADO
+========================================================= */
+
+.eliminar-etiqueta {
+    display: block;
+    margin: 0 20px 10px;
+
+    color: #777;
+    font-size: .67rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-align: center;
+}
+
+.eliminar-contenedor > h1 {
+    margin: 0 20px 10px;
+
+    color: #dc2626;
+    font-size: 1.55rem;
+    font-weight: 650;
+    line-height: 1.3;
+    text-align: center;
+}
+
+.eliminar-descripcion {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 0 25px 25px;
+
+    color: #858585;
+    font-size: .86rem;
+    line-height: 1.7;
+    text-align: center;
+}
+
+/* =========================================================
+MENSAJES DE DJANGO
+========================================================= */
+
+.eliminar-contenedor .empleado-mensajes {
+    margin: 0 27px 20px;
+}
+
+.eliminar-contenedor .empleado-mensaje {
+    margin: 0 0 8px;
+    padding: 12px 14px;
+
+    border: 1px solid #333;
+    border-radius: 7px;
+
+    background: #202020;
+    color: #ddd;
+
+    font-size: .84rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.eliminar-contenedor .empleado-mensaje:last-child {
+    margin-bottom: 0;
+}
+
+.eliminar-contenedor .empleado-mensaje-success {
+    border-color: rgba(34, 197, 94, .30);
+    background: rgba(34, 197, 94, .07);
+    color: #86efac;
+}
+
+.eliminar-contenedor .empleado-mensaje-error {
+    border-color: rgba(220, 38, 38, .30);
+    background: rgba(220, 38, 38, .07);
+    color: #f87171;
+}
+
+.eliminar-contenedor .empleado-mensaje-warning {
+    border-color: rgba(234, 179, 8, .30);
+    background: rgba(234, 179, 8, .07);
+    color: #facc15;
+}
+
+.eliminar-contenedor .empleado-mensaje-info {
+    border-color: rgba(59, 130, 246, .30);
+    background: rgba(59, 130, 246, .07);
+    color: #93c5fd;
+}
+
+/* =========================================================
+INFORMACIÓN DEL USUARIO
+========================================================= */
+
+.eliminar-datos {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    margin: 0 27px 18px;
+    padding: 17px;
+
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 8px;
+
+    transition:
+        border-color .2s ease,
+        background .2s ease;
+}
+
+.eliminar-datos:hover {
+    background: #222;
+    border-color: #414141;
+}
+
+/* Avatar */
+
+.eliminar-avatar {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background: rgba(220, 38, 38, .10);
+    border: 1px solid rgba(220, 38, 38, .25);
+    border-radius: 8px;
+
+    color: #dc2626;
+    font-size: 20px;
+}
+
+/* Datos personales */
+
+.eliminar-identidad {
+    min-width: 0;
+    flex: 1;
+}
+
+.eliminar-campo {
+    display: block;
+    margin-bottom: 5px;
+
+    color: #777;
+    font-size: .66rem;
+    font-weight: 700;
+    letter-spacing: .8px;
+}
+
+.eliminar-identidad h2 {
+    margin: 0 0 5px;
+
+    color: #f0f0f0;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+
+    overflow-wrap: anywhere;
+}
+
+.eliminar-identidad p {
+    margin: 0;
+
+    color: #858585;
+    font-size: .82rem;
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+}
+
+/* =========================================================
+DETALLES DE LA ACCIÓN
+========================================================= */
+
+.eliminar-detalles {
+    margin: 0 27px 20px;
+    padding: 14px 16px;
+
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+.eliminar-detalle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+
+    padding: 10px 0;
+
+    border-bottom: 1px solid #303030;
+}
+
+.eliminar-detalle:first-child {
+    padding-top: 0;
+}
+
+.eliminar-detalle:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.eliminar-detalle span {
+    color: #777;
+    font-size: .7rem;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.eliminar-detalle strong {
+    color: #ddd;
+    font-size: .84rem;
+    font-weight: 600;
+
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.eliminar-detalle strong.eliminar-texto-rojo {
+    color: #dc2626;
+}
+
+/* =========================================================
+ADVERTENCIA
+========================================================= */
+
+.eliminar-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+
+    margin: 0 27px 22px;
+    padding: 14px;
+
+    background: rgba(220, 38, 38, .07);
+    border: 1px solid rgba(220, 38, 38, .23);
+    border-radius: 7px;
+}
+
+.eliminar-aviso > i {
+    flex-shrink: 0;
+    margin-top: 2px;
+
+    color: #dc2626;
+    font-size: 17px;
+}
+
+.eliminar-aviso p {
+    margin: 0;
+
+    color: #aaa;
+    font-size: .82rem;
+    line-height: 1.6;
+}
+
+.eliminar-aviso p strong {
+    display: block;
+    margin-bottom: 3px;
+
+    color: #dc2626;
+    font-size: .84rem;
+    font-weight: 600;
+}
+
+/* =========================================================
+FORMULARIO Y ACCIONES
+========================================================= */
+
+.eliminar-form {
+    margin: 0;
+    padding: 21px 27px;
+
+    border-top: 1px solid #303030;
+    background: #161616;
+}
+
+.eliminar-form .eliminar-btn-confirmar,
+.eliminar-form .eliminar-btn-cancelar {
+    box-sizing: border-box;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 39px;
+    padding: 10px 16px;
+
+    border-radius: 6px;
+
+    font-family: inherit;
+    font-size: .82rem;
+    font-weight: 700;
+    line-height: 1.3;
+
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.eliminar-form .eliminar-btn-confirmar:hover,
+.eliminar-form .eliminar-btn-cancelar:hover {
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+BOTÓN CONFIRMAR
+========================================================= */
+
+.eliminar-form .eliminar-btn-confirmar {
+    border: 1px solid #dc2626;
+    background: #dc2626;
+    color: #fff;
+
+    box-shadow: 0 5px 14px rgba(220, 38, 38, .10);
+}
+
+.eliminar-form .eliminar-btn-confirmar:hover {
+    border-color: #ef3030;
+    background: #ef3030;
+    color: #fff;
+
+    box-shadow: 0 7px 18px rgba(220, 38, 38, .16);
+}
+
+.eliminar-form .eliminar-btn-confirmar:active {
+    transform: translateY(0);
+}
+
+/* =========================================================
+BOTÓN CANCELAR
+========================================================= */
+
+.eliminar-form .eliminar-btn-cancelar {
+    border: 1px solid #3a3a3a;
+    background: #222;
+    color: #aaa;
+}
+
+.eliminar-form .eliminar-btn-cancelar:hover {
+    border-color: #4a4a4a;
+    background: #292929;
+    color: #eee;
+}
+
+/* =========================================================
+PIE DE TARJETA
+========================================================= */
+
+.eliminar-pie {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 15px 20px;
+    border-top: 1px solid #292929;
+
+    color: #626262;
+    font-size: .7rem;
+}
+
+.eliminar-pie i {
+    color: #777;
+    font-size: .8rem;
+}
+
+/* =========================================================
+FOCO DE TECLADO
+========================================================= */
+
+.eliminar-form .eliminar-btn-confirmar:focus-visible,
+.eliminar-form .eliminar-btn-cancelar:focus-visible,
+.eliminar-page .empleado-back:focus-visible {
+    outline: 2px solid #dc2626;
+    outline-offset: 3px;
+}
+
+/* =========================================================
+RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .eliminar-page {
+        max-width: none;
+    }
+
+    .eliminar-contenedor {
+        border-radius: 8px;
+    }
+
+    .eliminar-icono {
+        width: 46px;
+        height: 46px;
+        margin-top: 22px;
+
+        font-size: 20px;
+    }
+
+    .eliminar-contenedor > h1 {
+        font-size: 1.3rem;
+    }
+
+    .eliminar-descripcion {
+        padding-right: 20px;
+        padding-left: 20px;
+
+        font-size: .81rem;
+    }
+
+    .eliminar-contenedor .empleado-mensajes,
+    .eliminar-datos,
+    .eliminar-detalles,
+    .eliminar-aviso {
+        margin-right: 20px;
+        margin-left: 20px;
+    }
+
+    .eliminar-form {
+        padding: 20px;
+    }
+
+    .eliminar-detalles {
+        padding: 13px;
+    }
+
+    .eliminar-detalle {
+        gap: 10px;
+    }
+
+    .eliminar-identidad h2 {
+        font-size: .92rem;
+    }
+
+    .eliminar-identidad p {
+        font-size: .77rem;
+    }
+
+    .eliminar-form .eliminar-btn-confirmar,
+    .eliminar-form .eliminar-btn-cancelar {
+        width: 100%;
+        min-height: 42px;
+    }
+
+    .eliminar-form {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .eliminar-pie {
+        padding-right: 12px;
+        padding-left: 12px;
+
+        font-size: .65rem;
+        text-align: center;
+    }
+}
+
+/* =========================================================
+PANTALLAS MUY PEQUEÑAS
+========================================================= */
+
+@media (max-width: 420px) {
+
+    .eliminar-datos {
+        align-items: flex-start;
+        gap: 11px;
+        padding: 13px;
+    }
+
+    .eliminar-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 17px;
+    }
+
+    .eliminar-detalle {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .eliminar-detalle strong {
+        text-align: left;
+    }
+
+    .eliminar-aviso {
+        padding: 12px;
+    }
+
+    .eliminar-aviso p {
+        font-size: .78rem;
+    }
+
+    .eliminar-etiqueta {
+        font-size: .6rem;
+        letter-spacing: 1px;
+    }
+}
+
+/* =========================================================
+REDUCIR ANIMACIONES
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .eliminar-page *,
+    .eliminar-page *::before,
+    .eliminar-page *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+}

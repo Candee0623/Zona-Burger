@@ -1,0 +1,158 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Productos más vendidos | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/reportes/reportes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="rep-page">
+
+    <a href="{% url 'centro_reportes' %}" class="rep-back">
+        <i class="fa-solid fa-arrow-left"></i> Volver a reportes
+    </a>
+
+    <header class="rep-header">
+        <div class="rep-title">
+            <div class="rep-icon"><i class="fa-solid fa-burger"></i></div>
+            <div>
+                <div class="rep-kicker">Análisis de productos</div>
+                <h1>Productos más vendidos</h1>
+                <p>Top 10 por unidades vendidas e ingresos generados.</p>
+            </div>
+        </div>
+        <div class="rep-actions">
+            <a class="rep-btn" href="{% url 'exportar_productos_excel' %}?fecha_inicio={{ fecha_inicio|date:'Y-m-d' }}&fecha_fin={{ fecha_fin|date:'Y-m-d' }}">
+                <i class="fa-solid fa-file-excel"></i> Excel
+            </a>
+            <a class="rep-btn rep-btn-primary" href="{% url 'exportar_productos_pdf' %}?fecha_inicio={{ fecha_inicio|date:'Y-m-d' }}&fecha_fin={{ fecha_fin|date:'Y-m-d' }}">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+        </div>
+    </header>
+
+    {% include "panel/reportes/_filtros.html" %}
+
+    <div class="rep-kpis">
+        <article class="rep-kpi">
+            <span>Unidades (Top 10)</span>
+            <strong>{{ total_unidades }}</strong>
+            <small>Suma del ranking</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Ingresos (Top 10)</span>
+            <strong>$ {{ total_ingresos|floatformat:"2g" }}</strong>
+            <small>Suma del ranking</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Productos en ranking</span>
+            <strong>{{ productos|length }}</strong>
+            <small>Productos distintos</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Más vendido</span>
+            <strong class="rep-kpi-text">{% if productos %}{{ productos.0.idproducto__nombre }}{% else %}—{% endif %}</strong>
+            <small>{% if productos %}{{ productos.0.unidades }} unidades{% else %}Sin datos{% endif %}</small>
+        </article>
+        <article class="rep-kpi">
+            <span>Peso del líder</span>
+            <strong>{% if productos %}{% widthratio productos.0.unidades total_unidades 100 %}%{% else %}—{% endif %}</strong>
+            <small>De las unidades del Top 10</small>
+        </article>
+    </div>
+
+    <div class="rep-grid-even">
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Ranking por unidades</h2><p>Cantidad vendida por producto</p></div>
+                <span class="rep-tag">Top productos</span>
+            </div>
+            <div class="rep-chart rep-chart-alto">
+                {% if productos %}<canvas id="rep-unidades"></canvas>{% else %}<div class="rep-empty-chart">No hay productos vendidos en este período.</div>{% endif %}
+            </div>
+        </section>
+
+        <section class="rep-panel">
+            <div class="rep-panel-head">
+                <div><h2>Ingresos por producto</h2><p>Importe generado por cada uno</p></div>
+            </div>
+            <div class="rep-chart rep-chart-alto">
+                {% if productos %}<canvas id="rep-ingresos"></canvas>{% else %}<div class="rep-empty-chart">No hay productos vendidos en este período.</div>{% endif %}
+            </div>
+        </section>
+    </div>
+
+    <section class="rep-panel">
+        <div class="rep-panel-head">
+            <div><h2>Detalle del ranking</h2><p>Participación sobre el total del Top 10</p></div>
+        </div>
+        <div class="rep-table-container">
+            <table class="rep-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Producto</th>
+                        <th class="rep-num">Unidades</th>
+                        <th>% unidades</th>
+                        <th class="rep-num">Ingresos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td><span class="rep-rank">{{ forloop.counter }}</span></td>
+                        <td class="rep-strong">{{ producto.idproducto__nombre|default:"Producto sin nombre" }}</td>
+                        <td class="rep-num">{{ producto.unidades }}</td>
+                        <td>
+                            <div class="rep-meter">
+                                <div class="rep-meter-bar">
+                                    <span data-width="{% widthratio producto.unidades total_unidades 100 %}"></span>
+                                </div>
+                                <em>{% widthratio producto.unidades total_unidades 100 %}%</em>
+                            </div>
+                        </td>
+                        <td class="rep-num rep-money">$ {{ producto.ingresos|floatformat:"2g" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="rep-empty">No hay productos vendidos en este período.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+{{ productos|json_script:"rep-productos" }}
+
+{% include "panel/reportes/_charts.html" %}
+<script>
+(() => {
+    rep.tema();
+    const C = rep.colores;
+    const filas = rep.leer("rep-productos");
+    const labels = filas.map(p => p.idproducto__nombre || "Sin nombre");
+
+    const unidades = document.getElementById("rep-unidades");
+    if (unidades) new Chart(unidades, {
+        type: "bar",
+        data: { labels, datasets: [{
+            data: filas.map(p => Number(p.unidades)),
+            backgroundColor: C.rojo, borderRadius: 4, maxBarThickness: 26
+        }] },
+        options: rep.ejes({ horizontal: true })
+    });
+
+    const ingresos = document.getElementById("rep-ingresos");
+    if (ingresos) new Chart(ingresos, {
+        type: "bar",
+        data: { labels, datasets: [{
+            data: filas.map(p => Number(p.ingresos)),
+            backgroundColor: C.rojoClaro, borderRadius: 4, maxBarThickness: 26
+        }] },
+        options: rep.ejes({ horizontal: true, dinero: true })
+    });
+})();
+</script>
+{% endblock %}

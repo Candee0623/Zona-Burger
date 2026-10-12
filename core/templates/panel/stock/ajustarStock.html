@@ -1,0 +1,164 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Ajustar stock | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/stock/ajustarStock.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="ajuste-form-page">
+
+    <a href="{% url 'stock_lista' %}" class="ajuste-form-back">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver al inventario
+    </a>
+
+    <div class="ajuste-form-header">
+
+        <div class="ajuste-form-icon">
+            <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+
+        <div class="ajuste-form-header-text">
+            <h1>Ajustar stock</h1>
+            <p>Actualiza las existencias reales del inventario.</p>
+        </div>
+
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="ajuste-message {{ message.tags }}">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="ajuste-form-card">
+
+        <div class="ajuste-card-heading">
+            <h2>
+                <i class="fa-solid fa-clipboard-list"></i>
+                Información del ajuste
+            </h2>
+            <p>Verifica el stock y registra el motivo del cambio.</p>
+        </div>
+
+        <form method="post" class="ajuste-form">
+            {% csrf_token %}
+
+            <div class="ajuste-insumo-card">
+
+                <div class="ajuste-insumo-icon">
+                    <i class="fa-solid fa-box"></i>
+                </div>
+
+                <div class="ajuste-insumo-info">
+                    <span class="ajuste-info-label">Insumo seleccionado</span>
+                    <h3>{{ insumo.nombreinsumo }}</h3>
+                    <p>
+                        Unidad de medida:
+                        {{ insumo.unidadmedidaingreso }}
+                    </p>
+                </div>
+
+                <div class="ajuste-stock-actual">
+                    <span>Stock actual</span>
+                    <strong>
+                        {{ insumo.stockactual }}
+                    </strong>
+                    <small>{{ insumo.unidadmedidaingreso }}</small>
+                </div>
+
+            </div>
+
+            <div class="ajuste-form-section-title">
+                <i class="fa-solid fa-pen-to-square"></i>
+                Datos del ajuste
+            </div>
+
+            <div class="ajuste-form-group">
+                <label for="cantidadnueva" class="ajuste-form-label">
+                    Cantidad real en inventario
+                    <span class="ajuste-required">*</span>
+                </label>
+
+                <input
+                    type="number"
+                    id="cantidadnueva"
+                    name="cantidadnueva"
+                    class="ajuste-form-input"
+                    min="0"
+                    step="0.01"
+                    value="{{ insumo.stockactual }}"
+                    required
+                >
+
+                <p class="ajuste-form-help">
+                    Ingresa la cantidad que contaste físicamente.
+                    Puede ser cero si ya no queda stock.
+                </p>
+            </div>
+
+            <div class="ajuste-form-group">
+                <label for="motivo" class="ajuste-form-label">
+                    Motivo del ajuste
+                    <span class="ajuste-required">*</span>
+                </label>
+
+                <select
+                    id="motivo"
+                    name="motivo"
+                    class="ajuste-form-select"
+                    required
+                >
+                    <option value="">Selecciona un motivo</option>
+                    <option value="Pérdida">Pérdida</option>
+                    <option value="Error de conteo">Error de conteo</option>
+                    <option value="Diferencia de inventario">Diferencia de inventario</option>
+                    <option value="Otro">Otro</option>
+                </select>
+
+                <p class="ajuste-form-help">
+                    Selecciona la razón por la que necesitás corregir el stock.
+                </p>
+            </div>
+
+            <div class="ajuste-aviso">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <p>
+                    El ajuste reemplazará el stock actual por la cantidad que ingreses.
+                    Verifica el valor antes de guardar.
+                </p>
+            </div>
+
+            <div class="ajuste-form-actions">
+
+                <a
+                    href="{% url 'stock_lista' %}"
+                    class="ajuste-action-btn ajuste-cancelar"
+                >
+                    Cancelar
+                </a>
+
+                <button
+                    type="submit"
+                    class="ajuste-action-btn ajuste-guardar"
+                >
+                    <i class="fa-solid fa-check"></i>
+                    Guardar ajuste
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

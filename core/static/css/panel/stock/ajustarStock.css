@@ -1,0 +1,515 @@
+/* =========================================================
+   FORMULARIO DE AJUSTE DE STOCK
+   ZONA-BURGER
+========================================================= */
+
+.ajuste-form-page {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    color: #fff;
+}
+
+/* VOLVER */
+
+.ajuste-form-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 20px;
+    padding: 7px 11px;
+
+    border: 1px solid #303030;
+    border-radius: 7px;
+
+    background: #191919;
+    color: #858585;
+
+    text-decoration: none;
+    font-size: .84rem;
+
+    transition: color .2s ease, background .2s ease,
+                border-color .2s ease, transform .2s ease;
+}
+
+.ajuste-form-back:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, .06);
+    border-color: rgba(220, 38, 38, .35);
+    transform: translateX(-2px);
+}
+
+/* ENCABEZADO */
+
+.ajuste-form-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.ajuste-form-icon {
+    width: 49px;
+    height: 49px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(220, 38, 38, .10);
+    border: 1px solid rgba(220, 38, 38, .30);
+    border-radius: 8px;
+
+    color: #dc2626;
+    font-size: 21px;
+}
+
+.ajuste-form-header-text {
+    min-width: 0;
+}
+
+.ajuste-form-header h1 {
+    margin: 0 0 5px;
+    color: #f0f0f0;
+
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.ajuste-form-header p {
+    margin: 0;
+    color: #858585;
+    font-size: .84rem;
+    line-height: 1.4;
+}
+
+/* MENSAJES */
+
+.ajuste-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    margin-bottom: 18px;
+    padding: 13px 14px;
+
+    border: 1px solid #303030;
+    border-radius: 7px;
+
+    font-size: .84rem;
+    line-height: 1.5;
+}
+
+.ajuste-message.success {
+    color: #86efac;
+    background: rgba(34, 197, 94, .07);
+    border-color: rgba(34, 197, 94, .25);
+}
+
+.ajuste-message.error {
+    color: #fca5a5;
+    background: rgba(220, 38, 38, .07);
+    border-color: rgba(220, 38, 38, .25);
+}
+
+/* TARJETA PRINCIPAL */
+
+.ajuste-form-card {
+    background: #181818;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    overflow: hidden;
+
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+}
+
+.ajuste-card-heading {
+    padding: 22px 27px;
+    border-bottom: 1px solid #303030;
+}
+
+.ajuste-card-heading h2 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    margin: 0 0 7px;
+    color: #e5e5e5;
+
+    font-size: .95rem;
+    font-weight: 700;
+}
+
+.ajuste-card-heading h2 i {
+    color: #dc2626;
+}
+
+.ajuste-card-heading p {
+    margin: 0;
+    color: #858585;
+    font-size: .82rem;
+    line-height: 1.5;
+}
+
+/* FORMULARIO */
+
+.ajuste-form {
+    padding: 27px;
+}
+
+/* RESUMEN DEL INSUMO */
+
+.ajuste-insumo-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    margin-bottom: 28px;
+    padding: 16px;
+
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+.ajuste-insumo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+
+    background: rgba(220, 38, 38, .10);
+    border: 1px solid rgba(220, 38, 38, .20);
+    border-radius: 7px;
+
+    color: #dc2626;
+    font-size: 17px;
+}
+
+.ajuste-insumo-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ajuste-info-label {
+    display: block;
+    margin-bottom: 4px;
+    color: #777;
+    font-size: .73rem;
+}
+
+.ajuste-insumo-info h3 {
+    margin: 0 0 5px;
+    color: #f0f0f0;
+    font-size: .94rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.ajuste-insumo-info p {
+    margin: 0;
+    color: #858585;
+    font-size: .76rem;
+}
+
+.ajuste-stock-actual {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    text-align: right;
+}
+
+.ajuste-stock-actual span {
+    color: #858585;
+    font-size: .73rem;
+}
+
+.ajuste-stock-actual strong {
+    color: #f0f0f0;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.ajuste-stock-actual small {
+    color: #777;
+    font-size: .72rem;
+}
+
+/* TÍTULO DE SECCIÓN */
+
+.ajuste-form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    margin: 0 0 20px;
+    padding-bottom: 13px;
+
+    border-bottom: 1px solid #303030;
+
+    color: #d8d8d8;
+    font-size: .84rem;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: .45px;
+}
+
+.ajuste-form-section-title i {
+    color: #dc2626;
+}
+
+/* CAMPOS */
+
+.ajuste-form-group {
+    margin-bottom: 22px;
+}
+
+.ajuste-form-label {
+    display: block;
+    margin-bottom: 7px;
+
+    color: #ddd;
+    font-size: .84rem;
+    font-weight: 600;
+}
+
+.ajuste-required {
+    color: #dc2626;
+}
+
+.ajuste-form-input,
+.ajuste-form-select {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+    box-sizing: border-box;
+
+    padding: 9px 12px;
+
+    background: #202020;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+
+    color: #f0f0f0;
+    font-family: inherit;
+    font-size: .86rem;
+
+    outline: none;
+
+    transition: background .2s ease, border-color .2s ease,
+                box-shadow .2s ease;
+}
+
+.ajuste-form-input:hover,
+.ajuste-form-select:hover {
+    border-color: #4a4a4a;
+}
+
+.ajuste-form-input:focus,
+.ajuste-form-select:focus {
+    background: #222;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, .08);
+}
+
+.ajuste-form-select {
+    cursor: pointer;
+}
+
+.ajuste-form-select option {
+    background: #202020;
+    color: #f0f0f0;
+}
+
+.ajuste-form-help {
+    margin: 6px 0 0;
+    color: #626262;
+    font-size: .74rem;
+    line-height: 1.5;
+}
+
+/* AVISO */
+
+.ajuste-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    margin: 3px 0 25px;
+    padding: 13px 14px;
+
+    background: rgba(220, 38, 38, .06);
+    border: 1px solid rgba(220, 38, 38, .20);
+    border-radius: 7px;
+}
+
+.ajuste-aviso > i {
+    margin-top: 2px;
+    color: #dc2626;
+}
+
+.ajuste-aviso p {
+    margin: 0;
+    color: #aaa;
+    font-size: .8rem;
+    line-height: 1.5;
+}
+
+/* BOTONES */
+
+.ajuste-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 9px;
+
+    padding-top: 21px;
+    border-top: 1px solid #303030;
+}
+
+.ajuste-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 38px;
+    box-sizing: border-box;
+    padding: 9px 16px;
+
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: .82rem;
+    font-weight: 700;
+
+    text-decoration: none;
+    cursor: pointer;
+
+    transition: background .2s ease, border-color .2s ease,
+                color .2s ease, transform .2s ease,
+                box-shadow .2s ease;
+}
+
+.ajuste-cancelar {
+    background: #222;
+    border: 1px solid #3a3a3a;
+    color: #aaa;
+}
+
+.ajuste-cancelar:hover {
+    background: #292929;
+    border-color: #4a4a4a;
+    color: #eee;
+    transform: translateY(-1px);
+}
+
+.ajuste-guardar {
+    background: #dc2626;
+    border: 1px solid #dc2626;
+    color: #fff;
+
+    box-shadow: 0 5px 14px rgba(220, 38, 38, .10);
+}
+
+.ajuste-guardar:hover {
+    background: #ef3030;
+    border-color: #ef3030;
+    color: #fff;
+    transform: translateY(-1px);
+
+    box-shadow: 0 7px 18px rgba(220, 38, 38, .16);
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+    .ajuste-form-page {
+        max-width: none;
+    }
+
+    .ajuste-form {
+        padding: 20px;
+    }
+
+    .ajuste-card-heading {
+        padding: 20px;
+    }
+
+    .ajuste-form-header {
+        gap: 12px;
+    }
+
+    .ajuste-form-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .ajuste-form-header h1 {
+        font-size: 1.18rem;
+    }
+
+    .ajuste-form-header p {
+        font-size: .79rem;
+    }
+
+    .ajuste-insumo-card {
+        flex-wrap: wrap;
+    }
+
+    .ajuste-stock-actual {
+        margin-left: auto;
+    }
+
+    .ajuste-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .ajuste-action-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .ajuste-form {
+        padding: 18px;
+    }
+
+    .ajuste-form-header {
+        align-items: flex-start;
+    }
+
+    .ajuste-form-header h1 {
+        font-size: 1.1rem;
+    }
+
+    .ajuste-form-header p {
+        font-size: .77rem;
+    }
+
+    .ajuste-insumo-card {
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .ajuste-insumo-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .ajuste-stock-actual strong {
+        font-size: 1rem;
+    }
+
+    .ajuste-form-input,
+    .ajuste-form-select {
+        font-size: .84rem;
+    }
+}

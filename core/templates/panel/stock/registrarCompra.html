@@ -1,0 +1,209 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Registrar compra | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/stock/registrarCompra.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="compra-form-page">
+
+    <a href="{% url 'stock_lista' %}" class="compra-form-back">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver al inventario
+    </a>
+
+    <div class="compra-form-header">
+        <div class="compra-form-icon">
+            <i class="fa-solid fa-cart-flatbed"></i>
+        </div>
+
+        <div class="compra-form-header-text">
+            <h1>Registrar compra</h1>
+            <p>Registra una compra y actualiza el inventario.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="compra-message {{ message.tags }}">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="compra-form-card">
+
+        <div class="compra-form-card-heading">
+            <h2>
+                <i class="fa-solid fa-clipboard-list"></i>
+                Datos de la compra
+            </h2>
+            <p>Ingresa la cantidad y el importe total que pagaste.</p>
+        </div>
+
+        <form method="POST" class="compra-form">
+            {% csrf_token %}
+
+            <div class="compra-form-section-title">
+                <i class="fa-solid fa-box"></i>
+                Información del insumo
+            </div>
+
+            <div class="compra-form-group">
+                <label for="idinsumo" class="compra-form-label">
+                    Insumo <span class="compra-required">*</span>
+                </label>
+
+                <select
+                    name="idinsumo"
+                    id="idinsumo"
+                    class="compra-form-select"
+                    required
+                >
+                    <option value="">Selecciona un insumo</option>
+
+                    {% for insumo in insumos %}
+                        <option
+                            value="{{ insumo.pk }}"
+                            {% if request.POST.idinsumo == insumo.pk|stringformat:"s" %}selected{% endif %}
+                        >
+                            {{ insumo.nombreinsumo }} — Stock actual: {{ insumo.stockactual }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <p class="compra-form-help">
+                    Selecciona el ingrediente o producto que compraste.
+                </p>
+            </div>
+
+            <div class="compra-form-section-title compra-section-secondary">
+                <i class="fa-solid fa-coins"></i>
+                Importes de la compra
+            </div>
+
+            <div class="compra-form-row">
+
+                <div class="compra-form-group">
+                    <label for="cantidad" class="compra-form-label">
+                        Cantidad comprada <span class="compra-required">*</span>
+                    </label>
+
+                    <input
+                        type="number"
+                        name="cantidad"
+                        id="cantidad"
+                        class="compra-form-input"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="Ej. 10"
+                        value="{{ request.POST.cantidad }}"
+                        required
+                    >
+
+                    <p class="compra-form-help">
+                        Cantidad según la unidad de ingreso del insumo.
+                    </p>
+                </div>
+
+                <div class="compra-form-group">
+                    <label for="preciototal" class="compra-form-label">
+                        Precio total ($) <span class="compra-required">*</span>
+                    </label>
+
+                    <input
+                        type="number"
+                        name="preciototal"
+                        id="preciototal"
+                        class="compra-form-input"
+                        min="0"
+                        step="0.01"
+                        placeholder="Ej. 25000"
+                        value="{{ request.POST.preciototal }}"
+                        required
+                    >
+
+                    <p class="compra-form-help">
+                        Importe total pagado por toda la compra.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="compra-form-total">
+                <div class="compra-total-icon">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+
+                <div class="compra-total-text">
+                    <span>Costo calculado por unidad</span>
+                    <strong id="costo-unitario-calculado">$ 0,00</strong>
+                    <small>Precio total dividido por la cantidad.</small>
+                </div>
+            </div>
+
+            <div class="compra-form-notice">
+                <i class="fa-solid fa-circle-info"></i>
+                <p>
+                    Al registrar la compra, el stock se actualizará y se creará
+                    un lote para el insumo. El costo unitario se calculará
+                    nuevamente en el servidor antes de guardar.
+                </p>
+            </div>
+
+            <div class="compra-form-actions">
+
+                <a
+                    href="{% url 'stock_lista' %}"
+                    class="compra-action-btn compra-cancelar"
+                >
+                    Cancelar
+                </a>
+
+                <button
+                    type="submit"
+                    class="compra-action-btn compra-guardar"
+                >
+                    <i class="fa-solid fa-check"></i>
+                    Registrar compra
+                </button>
+
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cantidad = document.getElementById('cantidad');
+    const precioTotal = document.getElementById('preciototal');
+    const costoUnitario = document.getElementById('costo-unitario-calculado');
+
+    function calcularCostoUnitario() {
+        const cant = Number(cantidad.value) || 0;
+        const total = Number(precioTotal.value) || 0;
+
+        const costo = cant > 0 ? total / cant : 0;
+
+        costoUnitario.textContent = costo.toLocaleString('es-AR', {
+            style: 'currency',
+            currency: 'ARS',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    cantidad.addEventListener('input', calcularCostoUnitario);
+    precioTotal.addEventListener('input', calcularCostoUnitario);
+
+    calcularCostoUnitario();
+});
+</script>
+
+{% endblock %}

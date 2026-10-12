@@ -1,547 +1,384 @@
-django
 {% extends 'panel/base.html' %}
 {% load static %}
+{% load l10n %}
 
 {% block title %}
-    Zona-Burger | Receta de {{ producto.nombre }}
+    Zona Burger | Receta de {{ producto.nombre }}
 {% endblock %}
 
 {% block extra_css %}
-
-<link
-    rel="stylesheet"
-    href="{% static 'css/panel/recetas/gestionarReceta.css' %}"
->
-
+<link rel="stylesheet" href="{% static 'css/panel/recetas/gestionarReceta.css' %}">
 {% endblock %}
 
 {% block content %}
-
 <div class="receta-page">
 
-    <!-- VOLVER A PRODUCTOS -->
+    <a href="{% url 'producto_lista' %}"
+       class="receta-back"
+       id="volver-productos">
+        ← Volver a productos
+    </a>
 
-    <div class="receta-back">
-
-        <a href="{% url 'producto_lista' %}">
-
-            <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-                <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-
-            Volver a productos
-
-        </a>
-
-    </div>
-
-
-    <!-- CABECERA -->
-
-    <div class="receta-header">
-
-        <div class="receta-header-icon">
-
-            <svg
-                width="23"
-                height="23"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-                <path d="M6 3h9l3 3v15H6z"></path>
-                <path d="M15 3v4h4"></path>
-                <path d="M9 12h6"></path>
-                <path d="M9 16h4"></path>
-            </svg>
-
-        </div>
-
+    <header class="receta-header">
         <div>
-
-            <div class="receta-kicker">
-                Menú / Productos
-            </div>
-
-            <h1>
-                Receta de:
-                <span>{{ producto.nombre }}</span>
-            </h1>
-
-            <p>
-                Configurá los ingredientes y cuáles pueden ser removidos
-                por el cliente.
-            </p>
-
+            <h1>Receta de {{ producto.nombre }}</h1>
+            <p>Administrá los ingredientes y las cantidades de este producto.</p>
         </div>
+    </header>
 
-    </div>
+    <section class="receta-card">
+        <h2>Agregar ingrediente</h2>
 
+        <form
+            id="form-agregar-insumo"
+            method="POST"
+            action="{% url 'gestionar_receta' producto.idproducto %}{% if origen %}?origen={{ origen|urlencode }}{% endif %}"
+        >
+            {% csrf_token %}
 
-    <!-- AGREGAR INSUMO -->
-
-    <div class="receta-card">
-
-        <div class="receta-card-header">
-
-            <div class="receta-card-title">
-
-                <span class="receta-card-title-icon">
-
-                    <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-                        ></circle>
-
-                        <line
-                            x1="12"
-                            y1="8"
-                            x2="12"
-                            y2="16"
-                        ></line>
-
-                        <line
-                            x1="8"
-                            y1="12"
-                            x2="16"
-                            y2="12"
-                        ></line>
-
-                    </svg>
-
-                </span>
-
-                <span>
-                    Agregar insumo del stock
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <div class="receta-card-body">
-
-            <form
-                method="POST"
-                action="{% url 'gestionar_receta' producto.idproducto %}{% if origen %}?origen={{ origen|urlencode }}{% endif %}"
-            >
-
-                {% csrf_token %}
-
-                {% if origen %}
-
-                    <input
-                        type="hidden"
-                        name="origen"
-                        value="{{ origen }}"
-                    >
-
-                {% endif %}
-
-
-                <!-- INSUMO -->
-
+            <div class="receta-form-grid">
                 <div class="receta-form-group">
-
-                    <label for="id_insumo">
-                        Seleccionar insumo
-                    </label>
-
-                    <select
-                        id="id_insumo"
-                        name="id_insumo"
-                        class="receta-select"
-                        required
-                    >
-
-                        <option value="">
-                            -- Elegí un ingrediente del stock --
-                        </option>
-
+                    <label for="id_insumo">Insumo</label>
+                    <select id="id_insumo" name="id_insumo" required>
+                        <option value="">Seleccioná un insumo</option>
                         {% for insumo in todos_los_insumos %}
-
                             <option value="{{ insumo.idinsumo }}">
                                 {{ insumo.nombreinsumo }}
                             </option>
-
-                        {% empty %}
-
-                            <option value="">
-                                No hay insumos disponibles
-                            </option>
-
                         {% endfor %}
-
                     </select>
-
                 </div>
-
-
-                <!-- CANTIDAD -->
 
                 <div class="receta-form-group">
-
-                    <label for="cantidadinsumo">
-
-                        Cantidad que lleva el producto
-
-                        <span class="receta-opcional">
-                            (Opcional)
-                        </span>
-
-                    </label>
-
+                    <label for="cantidadinsumo">Cantidad necesaria</label>
                     <input
                         type="number"
-                        step="0.01"
-                        min="0"
                         id="cantidadinsumo"
                         name="cantidadinsumo"
-                        class="receta-input"
-                        placeholder="Ej: 1 o 50 (Opcional)"
+                        min="0.01"
+                        step="0.01"
+                        required
                     >
-
                 </div>
-
-
-                <!-- REMOVIBLE -->
-
-                <div class="receta-check">
-
-                    <input
-                        type="checkbox"
-                        name="es_removible"
-                        id="es_removible"
-                    >
-
-                    <label for="es_removible">
-
-                        ¿Es removible por el cliente
-                        en la tienda web?
-
-                        <small>
-                            Ej: permitir quitar cebolla.
-                        </small>
-
-                    </label>
-
-                </div>
-
-
-                <!-- BOTÓN -->
-
-                <button
-                    type="submit"
-                    class="receta-btn-add"
-                >
-
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-                        ></circle>
-
-                        <line
-                            x1="12"
-                            y1="8"
-                            x2="12"
-                            y2="16"
-                        ></line>
-
-                        <line
-                            x1="8"
-                            y1="12"
-                            x2="16"
-                            y2="12"
-                        ></line>
-
-                    </svg>
-
-                    Añadir a la receta
-
-                </button>
-
-            </form>
-
-        </div>
-
-    </div>
-
-
-    <!-- INGREDIENTES ACTUALES -->
-
-    <div class="receta-list-section">
-
-        <div class="receta-list-title">
-
-            <svg
-                width="19"
-                height="19"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-                <path d="M6 3h12v18H6z"></path>
-                <path d="M9 7h6"></path>
-                <path d="M9 11h6"></path>
-                <path d="M9 15h4"></path>
-            </svg>
-
-            <h2>
-                Ingredientes actuales de la receta
-            </h2>
-
-        </div>
-
-
-        <div class="receta-table-card">
-
-            <div class="receta-table-wrapper">
-
-                <table class="receta-table">
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Insumo
-                            </th>
-
-                            <th>
-                                Cantidad
-                            </th>
-
-                            <th>
-                                ¿Removible en Web?
-                            </th>
-
-                            <th>
-                                Acciones
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        {% for detalle in detalles_receta %}
-
-                        <tr>
-
-                            <!-- INSUMO -->
-
-                            <td>
-
-                                <div class="receta-insumo">
-
-                                    <div class="receta-insumo-icon">
-
-                                        <svg
-                                            width="17"
-                                            height="17"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.8"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            aria-hidden="true"
-                                        >
-                                            <path d="M4 7h16"></path>
-                                            <path d="M6 7l1 13h10l1-13"></path>
-                                            <path d="M9 7V5a3 3 0 0 1 6 0v2"></path>
-                                        </svg>
-
-                                    </div>
-
-                                    <strong class="receta-insumo-name">
-                                        {{ detalle.idinsumo.nombreinsumo }}
-                                    </strong>
-
-                                </div>
-
-                            </td>
-
-
-                            <!-- CANTIDAD -->
-
-                            <td>
-
-                                {% if detalle.cantidadinsumo is not None and detalle.cantidadinsumo != '' and detalle.cantidadinsumo != 0 %}
-
-                                    <span class="receta-cantidad">
-                                        {{ detalle.cantidadinsumo }}
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="receta-sin-cantidad">
-                                        Opcional / A gusto
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <!-- REMOVIBLE -->
-
-                            <td>
-
-                                {% if detalle.es_removible %}
-
-                                    <span class="receta-estado si">
-
-                                        <span class="receta-punto"></span>
-
-                                        Sí · Permitido
-
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="receta-estado no">
-
-                                        <span class="receta-punto"></span>
-
-                                        No · Fijo
-
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <!-- ACCIONES -->
-
-                            <td>
-
-                                <a
-                                    href="{% url 'eliminar_insumo_receta' detalle.idrecetainsumo %}{% if origen %}?origen={{ origen|urlencode }}{% endif %}"
-                                    class="receta-btn-delete"
-                                    onclick="return confirm('¿Seguro querés quitar este insumo de la receta?');"
-                                >
-
-                                    <svg
-                                        width="15"
-                                        height="15"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M3 6h18"></path>
-                                        <path d="M8 6V4h8v2"></path>
-                                        <path d="M19 6l-1 14H6L5 6"></path>
-                                        <path d="M10 11v5"></path>
-                                        <path d="M14 11v5"></path>
-                                    </svg>
-
-                                    Quitar
-
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                        {% empty %}
-
-                        <tr>
-
-                            <td
-                                colspan="4"
-                                class="receta-empty"
-                            >
-
-                                <svg
-                                    width="22"
-                                    height="22"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    aria-hidden="true"
-                                >
-                                    <path d="M6 3h12v18H6z"></path>
-                                    <path d="M9 7h6"></path>
-                                    <path d="M9 11h6"></path>
-                                    <path d="M9 15h4"></path>
-                                </svg>
-
-                                <span>
-                                    No hay insumos configurados
-                                    para esta receta.
-                                </span>
-
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
             </div>
 
+            <label class="receta-check">
+                <input type="checkbox" name="es_removible" value="on">
+                <span>El cliente puede quitar este ingrediente</span>
+            </label>
+
+            <button type="submit" class="receta-btn-add">
+                + Agregar ingrediente
+            </button>
+        </form>
+    </section>
+
+    <section class="receta-card">
+        <div class="receta-section-heading">
+            <div>
+                <h2>Ingredientes de la receta</h2>
+                <p>Modificá las cantidades que necesites y guardalas juntas.</p>
+            </div>
+
+            <button
+                type="button"
+                id="guardar-todas-las-cantidades"
+                class="receta-btn-save-all"
+                hidden
+            >
+                Guardar cambios
+            </button>
         </div>
 
-    </div>
+        <div id="estado-guardado" class="receta-status" role="status" hidden></div>
 
+        {% if detalles_receta %}
+            <div class="receta-table-container">
+                <table class="receta-table">
+                    <thead>
+                        <tr>
+                            <th>Ingrediente</th>
+                            <th>Cantidad</th>
+                            <th>Personalización</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for detalle in detalles_receta %}
+                            <tr>
+                                <td class="receta-insumo">
+                                    {{ detalle.idinsumo.nombreinsumo }}
+                                </td>
+
+                                <td>
+                                    <form
+                                        class="form-editar-cantidad"
+                                        method="POST"
+                                        action="{% url 'editar_cantidad_insumo_receta' detalle.idrecetainsumo %}{% if origen %}?origen={{ origen|urlencode }}{% endif %}"
+                                        data-cantidad-original="{{ detalle.cantidadinsumo|unlocalize }}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <label class="sr-only"
+                                               for="cantidad-{{ detalle.idrecetainsumo }}">
+                                            Cantidad de {{ detalle.idinsumo.nombreinsumo }}
+                                        </label>
+
+                                        <input
+                                            id="cantidad-{{ detalle.idrecetainsumo }}"
+                                            class="campo-cantidad"
+                                            type="number"
+                                            name="cantidadinsumo"
+                                            value="{{ detalle.cantidadinsumo|unlocalize }}"
+                                            min="0.01"
+                                            step="0.01"
+                                            required
+                                        >
+                                    </form>
+                                </td>
+
+                                <td>
+                                    {% if detalle.es_removible %}
+                                        <span class="receta-estado receta-estado-si">
+                                            Se puede quitar
+                                        </span>
+                                    {% else %}
+                                        <span class="receta-estado receta-estado-no">
+                                            Obligatorio
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <form
+                                        class="form-quitar-insumo"
+                                        method="POST"
+                                        action="{% url 'eliminar_insumo_receta' detalle.idrecetainsumo %}{% if origen %}?origen={{ origen|urlencode }}{% endif %}"
+                                    >
+                                        {% csrf_token %}
+                                        <button type="submit" class="receta-btn-delete">
+                                            Quitar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="receta-empty">
+                <p>Esta receta todavía no tiene ingredientes.</p>
+            </div>
+        {% endif %}
+    </section>
 </div>
 
-{% endblock %}
+<script>
+(function () {
+    'use strict';
 
+    const botonGuardar = document.getElementById(
+        'guardar-todas-las-cantidades'
+    );
+    const estado = document.getElementById('estado-guardado');
+
+    let guardando = false;
+    window.recetaGuardandoCambios = false;
+
+    const formularios = Array.from(
+        document.querySelectorAll('.form-editar-cantidad')
+    );
+
+    function normalizar(valor) {
+        const numero = Number(valor);
+        return Number.isFinite(numero)
+            ? String(Math.round(numero * 100) / 100)
+            : '';
+    }
+
+    function tieneCambios(formulario) {
+        const input = formulario.querySelector('[name="cantidadinsumo"]');
+
+        return input &&
+            normalizar(input.value) !==
+            normalizar(formulario.dataset.cantidadOriginal);
+    }
+
+    function cambiosPendientes() {
+        return formularios.some(tieneCambios);
+    }
+
+    function actualizarInterfaz() {
+        const hayCambios = cambiosPendientes();
+
+        botonGuardar.hidden = !hayCambios;
+        botonGuardar.disabled = guardando;
+
+        if (!guardando && estado.dataset.tipo !== 'error') {
+            estado.hidden = true;
+            estado.textContent = '';
+        }
+    }
+
+    formularios.forEach(function (formulario) {
+        const input = formulario.querySelector('[name="cantidadinsumo"]');
+
+        input.addEventListener('input', function () {
+            estado.hidden = true;
+            estado.dataset.tipo = '';
+            actualizarInterfaz();
+        });
+    });
+
+    // Guarda todas las cantidades modificadas.
+    // Devuelve true si se guardó todo (o no había nada para guardar).
+    async function guardarCambios() {
+        const modificados = formularios.filter(tieneCambios);
+
+        if (!modificados.length) return true;
+
+        for (const formulario of modificados) {
+            const input = formulario.querySelector('[name="cantidadinsumo"]');
+
+            if (!formulario.checkValidity()) {
+                input.reportValidity();
+                input.focus();
+                return false;
+            }
+        }
+
+        guardando = true;
+        botonGuardar.disabled = true;
+        botonGuardar.textContent = 'Guardando...';
+        estado.hidden = true;
+        estado.dataset.tipo = '';
+
+        try {
+            for (const formulario of modificados) {
+                const respuesta = await fetch(formulario.action, {
+                    method: 'POST',
+                    body: new FormData(formulario),
+                    credentials: 'same-origin',
+                    redirect: 'follow',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!respuesta.ok || respuesta.redirected &&
+                    new URL(respuesta.url).pathname.includes('/login')) {
+                    throw new Error('No se pudo guardar una de las cantidades.');
+                }
+            }
+
+            return true;
+
+        } catch (error) {
+            estado.textContent =
+                'No se pudieron guardar todos los cambios. Revisá tu conexión e intentá nuevamente.';
+            estado.dataset.tipo = 'error';
+            estado.hidden = false;
+
+            return false;
+
+        } finally {
+            guardando = false;
+            botonGuardar.disabled = false;
+            botonGuardar.textContent = 'Guardar cambios';
+            actualizarInterfaz();
+        }
+    }
+
+    // Botón "Guardar cambios": pide confirmación, guarda y recarga.
+    botonGuardar.addEventListener('click', async function () {
+        if (guardando) return;
+
+        if (!cambiosPendientes()) {
+            actualizarInterfaz();
+            return;
+        }
+
+        const confirmado = window.confirm(
+            '¿Querés guardar los cambios en las cantidades?'
+        );
+
+        if (!confirmado) return;
+
+        if (await guardarCambios()) {
+            // Recargar desde el servidor para mostrar los valores guardados.
+            window.recetaGuardandoCambios = true;
+            window.location.reload();
+        }
+    });
+
+    // Al ir a otra página con cantidades sin guardar:
+    //  - Aceptar: guarda y después te lleva a donde querías ir.
+    //  - Cancelar: no guarda y te lleva igual.
+    document.addEventListener('click', async function (evento) {
+        const enlace = evento.target.closest('a[href]');
+
+        if (!enlace) return;
+        if (evento.defaultPrevented || evento.button !== 0) return;
+        if (evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey) return;
+        if (enlace.target && enlace.target !== '_self') return;
+        if (enlace.hasAttribute('download')) return;
+
+        const destino = new URL(enlace.href, window.location.href);
+
+        if (!/^https?:$/.test(destino.protocol)) return;
+
+        const mismaPagina =
+            destino.href.split('#')[0] === window.location.href.split('#')[0];
+
+        if (mismaPagina && destino.hash) return;
+        if (!cambiosPendientes()) return;
+
+        evento.preventDefault();
+
+        if (guardando) return;
+
+        const guardar = window.confirm(
+            '¿Querés guardar los cambios antes de salir?\n\n' +
+            'Aceptar: guardar y salir.\n' +
+            'Cancelar: salir sin guardar.'
+        );
+
+        if (guardar) {
+            const guardado = await guardarCambios();
+
+            // Si falló, se queda en la receta para no perder los cambios.
+            if (!guardado) return;
+        }
+
+        window.recetaGuardandoCambios = true;
+        window.location.assign(destino.href);
+    });
+
+    // Confirmar únicamente la eliminación de un ingrediente.
+    document.querySelectorAll('.form-quitar-insumo').forEach(function (formulario) {
+        formulario.addEventListener('submit', function (evento) {
+            if (!window.confirm('¿Querés quitar este ingrediente de la receta?')) {
+                evento.preventDefault();
+                return;
+            }
+
+            window.recetaGuardandoCambios = true;
+        });
+    });
+
+    // Cerrar la pestaña, recargar o salir por otro medio (formularios, botón
+    // atrás): el navegador no permite mostrar un diálogo propio ni guardar
+    // en ese momento, solo su aviso estándar.
+    window.addEventListener('beforeunload', function (evento) {
+        if (window.recetaGuardandoCambios || !cambiosPendientes()) return;
+
+        evento.preventDefault();
+        evento.returnValue = '';
+    });
+
+    actualizarInterfaz();
+})();
+</script>
+{% endblock %}

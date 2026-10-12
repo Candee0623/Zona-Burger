@@ -1,0 +1,124 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/entrega/zonaEditar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="zona-edit-page">
+
+    <!-- Volver -->
+    <a href="{% url 'zonas_entrega_lista' %}" class="zona-edit-back">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m15 18-6-6 6-6"/>
+        </svg>
+        <span>Volver a zonas de entrega</span>
+    </a>
+
+    <!-- Tarjeta principal -->
+    <div class="zona-edit-card">
+
+        <!-- Encabezado -->
+        <div class="zona-edit-header">
+            <div class="zona-edit-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20h9"/>
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/>
+                </svg>
+            </div>
+
+            <div class="zona-edit-header-text">
+                <h1>Editar zona de entrega</h1>
+                <p>Modificá los datos de la zona seleccionada.</p>
+            </div>
+        </div>
+
+        <!-- Formulario -->
+        <div class="zona-edit-body">
+
+            {% if messages %}
+                <div class="zona-mensajes">
+                    {% for message in messages %}
+                        <div class="zona-mensaje">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Nombre y costo -->
+                <div class="zona-form-grid">
+
+                    <div class="zona-form-group">
+                        <label for="nombre">Nombre de la zona</label>
+                        <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            class="zona-form-control"
+                            maxlength="50"
+                            placeholder="Ej. Centro"
+                            value="{{ request.POST.nombre|default:zona.nombre|default:'' }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="zona-form-group">
+                        <label for="costoenvio">Costo de envío ($)</label>
+                        <input
+                            type="number"
+                            id="costoenvio"
+                            name="costoenvio"
+                            class="zona-form-control"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            value="{{ request.POST.costoenvio|default:zona.costoenvio|default:'0.00' }}"
+                            required
+                        >
+                    </div>
+
+                </div>
+
+                <!-- Negocio asociado -->
+                <div class="zona-form-group zona-negocio-group">
+                    <label for="idnegocio">ID del negocio</label>
+                    <input
+                        type="number"
+                        id="idnegocio"
+                        name="idnegocio"
+                        class="zona-form-control"
+                        min="1"
+                        placeholder="Ingresá el ID del negocio"
+                        value="{{ request.POST.idnegocio|default:zona.idnegocio|default:'' }}"
+                    >
+                </div>
+
+                <!-- Botones -->
+                <div class="zona-edit-actions">
+
+                    <button type="submit" class="zona-action-btn zona-save-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+                            <path d="M17 21v-8H7v8"/>
+                            <path d="M7 3v5h8"/>
+                        </svg>
+                        <span>Guardar cambios</span>
+                    </button>
+
+                    <a href="{% url 'zonas_entrega_lista' %}"
+                       class="zona-action-btn zona-cancel-btn">
+                        Cancelar
+                    </a>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

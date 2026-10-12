@@ -1,0 +1,198 @@
+```html
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Historial de pedidos{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/ventas/historialPedidos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="historial-contenedor">
+    <a href="{% url 'panel_inicio' %}" class="historial-volver">
+        <span aria-hidden="true">←</span> Volver al panel
+    </a>
+
+    <header class="historial-encabezado">
+        <div class="historial-icono">▤</div>
+        <div>
+            <h1>Historial de pedidos</h1>
+            <p>Consultá los pedidos registrados y revisá sus detalles.</p>
+        </div>
+    </header>
+
+    {% if messages %}
+        <div class="historial-mensajes">
+            {% for message in messages %}
+                <div class="historial-mensaje">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="historial-filtros">
+        <h2>Filtrar pedidos</h2>
+
+        <form method="get" class="historial-form-filtros">
+            <div class="historial-campo">
+                <label for="fecha_desde">Desde</label>
+                <input type="date" id="fecha_desde" name="fecha_desde"
+                       value="{{ fecha_desde }}">
+            </div>
+
+            <div class="historial-campo">
+                <label for="fecha_hasta">Hasta</label>
+                <input type="date" id="fecha_hasta" name="fecha_hasta"
+                       value="{{ fecha_hasta }}">
+            </div>
+
+            <div class="historial-campo">
+                <label for="pedido">N.º de pedido</label>
+                <input type="number" id="pedido" name="pedido"
+                       min="1" placeholder="Ej. 125"
+                       value="{{ numero_pedido }}">
+            </div>
+
+            <div class="historial-campo">
+                <label for="cliente">Cliente</label>
+                <input type="text" id="cliente" name="cliente"
+                       placeholder="Nombre o apellido"
+                       value="{{ cliente }}">
+            </div>
+
+            <div class="historial-campo">
+                <label for="estado">Estado</label>
+                <select id="estado" name="estado">
+                    <option value="">Todos los estados</option>
+                    {% for item_estado in estados %}
+                        <option value="{{ item_estado.idestado }}"
+                            {% if estado_seleccionado == item_estado.idestado|stringformat:"s" %}selected{% endif %}>
+                            {{ item_estado.descripcion }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="historial-acciones-filtro">
+                <button type="submit" class="historial-btn historial-btn-principal">
+                    Buscar
+                </button>
+                <a href="{% url 'historial_pedidos' %}"
+                   class="historial-btn historial-btn-secundario">
+                    Limpiar
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <section class="historial-tabla-contenedor">
+        <div class="historial-tabla-titulo">
+            <h2>Pedidos registrados</h2>
+            <span>{{ pagina_pedidos.paginator.count }} resultado(s)</span>
+        </div>
+
+        <div class="historial-tabla-scroll">
+            <table class="historial-tabla">
+                <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Medio de pago</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Pago</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido_item in pagina_pedidos %}
+                        <tr>
+                            <td class="historial-numero">#{{ pedido_item.idpedido }}</td>
+                            <td>
+                                {% if pedido_item.fecha_creacion %}
+                                    {{ pedido_item.fecha_creacion|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if pedido_item.idcliente %}
+                                    {{ pedido_item.idcliente.nombre }}
+                                    {{ pedido_item.idcliente.apellido }}
+                                {% else %}
+                                    Cliente no registrado
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if pedido_item.idmediopago %}
+                                    {{ pedido_item.idmediopago.nombremetodo }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td class="historial-total">
+                                {% if pedido_item.total != None %}
+                                    ${{ pedido_item.total|floatformat:2 }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="historial-estado">
+                                    {% if pedido_item.idestadopedido %}
+                                        {{ pedido_item.idestadopedido.descripcion }}
+                                    {% else %}
+                                        Sin estado
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if pedido_item.pagado %}
+                                    <span class="historial-pago pagado">Pagado</span>
+                                {% else %}
+                                    <span class="historial-pago pendiente">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a class="historial-btn-detalle"
+                                   href="{% url 'detalle_historial_pedido' pedido_item.idpedido %}">
+                                    Ver pedido
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="historial-vacio">
+                                No se encontraron pedidos con esos filtros.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pagina_pedidos.has_other_pages %}
+            <nav class="historial-paginacion" aria-label="Paginación">
+                {% if pagina_pedidos.has_previous %}
+                    <a href="?{{ request.GET.urlencode }}&pagina={{ pagina_pedidos.previous_page_number }}">
+                        ← Anterior
+                    </a>
+                {% endif %}
+
+                <span>
+                    Página {{ pagina_pedidos.number }} de
+                    {{ pagina_pedidos.paginator.num_pages }}
+                </span>
+
+                {% if pagina_pedidos.has_next %}
+                    <a href="?{{ request.GET.urlencode }}&pagina={{ pagina_pedidos.next_page_number }}">
+                        Siguiente →
+                    </a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+```

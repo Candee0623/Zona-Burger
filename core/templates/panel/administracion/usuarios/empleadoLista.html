@@ -1,0 +1,105 @@
+
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}
+    Zona Burger | Usuarios
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/administracion/usuarios/empleadoLista.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="empleado-page">
+
+    <header class="empleado-header">
+        <div>
+            <h1>Usuarios</h1>
+            <p>Administrá las personas que acceden al panel.</p>
+        </div>
+
+        <div class="empleado-header-acciones">
+            <a href="{% url 'empleado_crear' %}"
+               class="empleado-btn empleado-btn-primary">
+                + Nuevo usuario
+            </a>
+        </div>
+    </header>
+
+    {% if messages %}
+        <div class="empleado-mensajes">
+            {% for mensaje in messages %}
+                <p class="empleado-mensaje empleado-mensaje-{{ mensaje.tags }}">
+                    {{ mensaje }}
+                </p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="empleado-card">
+        <h2>Lista de usuarios</h2>
+
+        {% if empleados %}
+            <div class="empleado-table-container">
+                <table class="empleado-table">
+                    <thead>
+                        <tr>
+                            <th>Apellido</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for e in empleados %}
+                            <tr>
+                                <td>{{ e.apellido|default:"—" }}</td>
+                                <td>{{ e.nombre|default:"—" }}</td>
+                                <td>{{ e.correo|default:"—" }}</td>
+
+                                <td>
+                                    {% if e.id_rol %}
+                                        {{ e.id_rol }}
+                                    {% else %}
+                                        Sin rol
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <span class="empleado-estado">
+                                        No disponible
+                                    </span>
+                                </td>
+
+                                <td class="empleado-acciones">
+
+                                    <a href="{% url 'empleado_editar' idempleado=e.id_empleado %}"
+                                       class="empleado-btn">
+                                        Editar
+                                    </a>
+
+                                    <a href="{% url 'empleado_eliminar' idempleado=e.id_empleado %}"
+                                       class="empleado-btn empleado-btn-danger">
+                                        Eliminar
+                                    </a>
+
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <p class="empleado-vacio">
+                Todavía no hay usuarios cargados.
+            </p>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Zona Burger | Eliminar usuario{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/administracion/usuarios/empleadoEliminar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="empleado-page eliminar-page">
+
+    <a href="{% url 'empleado_lista' %}" class="empleado-back">
+        <i class="fas fa-arrow-left"></i>
+        <span>Volver a usuarios</span>
+    </a>
+
+    <section class="eliminar-contenedor">
+
+        <!-- Ícono de advertencia -->
+        <div class="eliminar-icono">
+            <i class="fas fa-user-times"></i>
+        </div>
+
+        <span class="eliminar-etiqueta">
+            CONFIRMACIÓN DE SEGURIDAD
+        </span>
+
+        <h1>¿Eliminar usuario?</h1>
+
+        <p class="eliminar-descripcion">
+            Estás a punto de eliminar esta cuenta del sistema.
+            Revisá los datos antes de continuar.
+        </p>
+
+        <!-- Mensajes de Django -->
+        {% if messages %}
+            <div class="empleado-mensajes">
+                {% for mensaje in messages %}
+                    <p class="empleado-mensaje empleado-mensaje-{{ mensaje.tags }}">
+                        {{ mensaje }}
+                    </p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Datos del usuario -->
+        <div class="eliminar-datos">
+
+            <div class="eliminar-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+
+            <div class="eliminar-identidad">
+                <span class="eliminar-campo">USUARIO</span>
+
+                <h2>
+                    {{ empleado.nombre }} {{ empleado.apellido }}
+                </h2>
+
+                <p>{{ empleado.correo }}</p>
+            </div>
+
+        </div>
+
+        <!-- Detalles de la acción -->
+        <div class="eliminar-detalles">
+
+            <div class="eliminar-detalle">
+                <span>ID de usuario</span>
+                <strong>#{{ empleado.id_empleado }}</strong>
+            </div>
+
+            <div class="eliminar-detalle">
+                <span>Acción solicitada</span>
+                <strong class="eliminar-texto-rojo">
+                    Eliminar cuenta
+                </strong>
+            </div>
+
+        </div>
+
+        <!-- Aviso -->
+        <div class="eliminar-aviso">
+            <i class="fas fa-exclamation-triangle"></i>
+
+            <p>
+                <strong>Esta acción no se puede deshacer.</strong>
+                El usuario será eliminado del sistema si confirmás.
+            </p>
+        </div>
+
+        <!-- Acciones -->
+        <form
+            method="POST"
+            action="{% url 'empleado_eliminar' idempleado=empleado.id_empleado %}"
+            class="eliminar-form"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="eliminar-btn-confirmar"
+            >
+                <i class="fas fa-trash-alt"></i>
+                Sí, eliminar usuario
+            </button>
+
+            <a
+                href="{% url 'empleado_lista' %}"
+                class="eliminar-btn-cancelar"
+            >
+                <i class="fas fa-times"></i>
+                Cancelar y volver
+            </a>
+        </form>
+
+        <!-- Pie de tarjeta -->
+        <div class="eliminar-pie">
+            <i class="fas fa-shield-alt"></i>
+            <span>Zona Burger · Administración de usuarios</span>
+        </div>
+
+    </section>
+
+</div>
+{% endblock %}

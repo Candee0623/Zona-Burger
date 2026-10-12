@@ -1,0 +1,239 @@
+/* ===========================
+   ELIMINAR HORARIO
+=========================== */
+
+.eliminar-container {
+    width: 100%;
+    max-width: 900px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 25px 0 40px;
+    box-sizing: border-box;
+}
+
+/* Volver */
+
+.eliminar-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 22px;
+    padding: 10px 14px;
+    background: #191919;
+    border: 1px solid #303030;
+    border-radius: 8px;
+    color: #858585;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all .2s ease;
+}
+
+.eliminar-volver:hover {
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, .35);
+    background: rgba(220, 38, 38, .06);
+    transform: translateX(-3px);
+}
+
+/* Tarjeta */
+
+.eliminar-card {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 35px;
+    background: #161616;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .2);
+    text-align: center;
+}
+
+/* Icono */
+
+.eliminar-icono {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 22px;
+    background: rgba(220, 38, 38, .09);
+    border: 1px solid rgba(220, 38, 38, .2);
+    border-radius: 12px;
+    color: #dc2626;
+    font-size: 27px;
+}
+
+/* Textos */
+
+.eliminar-card h1 {
+    margin: 0 0 12px;
+    color: #f1f1f1;
+    font-size: 25px;
+    font-weight: 800;
+}
+
+.eliminar-descripcion {
+    max-width: 480px;
+    margin: 0 auto 25px;
+    color: #858585;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* Detalle del horario */
+
+.horario-detalle {
+    margin: 25px 0;
+    padding: 12px 20px;
+    background: #181818;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.detalle-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid #303030;
+    font-size: 14px;
+}
+
+.detalle-fila:last-child {
+    border-bottom: none;
+}
+
+.detalle-label {
+    color: #858585;
+    flex-shrink: 0;
+}
+
+.detalle-valor {
+    color: #f0f0f0;
+    font-weight: 700;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+/* Advertencia */
+
+.advertencia {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: rgba(220, 38, 38, .07);
+    border: 1px solid rgba(220, 38, 38, .2);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: left;
+}
+
+.advertencia i {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* Botones */
+
+.eliminar-acciones {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 27px;
+}
+
+.eliminar-acciones form {
+    margin: 0;
+}
+
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 43px;
+    box-sizing: border-box;
+    padding: 12px 20px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.btn-confirmar {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.btn-confirmar:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, .2);
+}
+
+.btn-cancelar {
+    background: #222;
+    border-color: #3a3a3a;
+    color: #c5c5c5;
+}
+
+.btn-cancelar:hover {
+    background: #2a2a2a;
+    border-color: #484848;
+    color: #f1f1f1;
+}
+
+/* Responsive */
+
+@media (max-width: 700px) {
+    .eliminar-container {
+        padding: 18px 0 30px;
+    }
+
+    .eliminar-card {
+        padding: 28px 22px;
+    }
+}
+
+@media (max-width: 500px) {
+    .eliminar-card {
+        padding: 25px 16px;
+    }
+
+    .eliminar-card h1 {
+        font-size: 22px;
+    }
+
+    .detalle-fila {
+        flex-direction: column;
+        gap: 6px;
+        padding: 13px 0;
+    }
+
+    .detalle-valor {
+        text-align: left;
+    }
+
+    .eliminar-acciones {
+        flex-direction: column-reverse;
+    }
+
+    .eliminar-acciones form,
+    .btn-accion {
+        width: 100%;
+    }
+}
