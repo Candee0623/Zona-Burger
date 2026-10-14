@@ -59,6 +59,7 @@ class UltimaModificacion(models.Model):
     idempleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='IdEmpleado', blank=True, null=True)
     descripcioncambio = models.CharField(db_column='DescripcionCambio', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     idnegocio = models.IntegerField(db_column='IdNegocio', blank=True, null=True)
+    idestado = models.ForeignKey('EstadoNegocio', models.DO_NOTHING, db_column='IdEstado', blank=True, null=True)
  
     class Meta:
         db_table = 'UltimaModificacion'
@@ -66,8 +67,6 @@ class UltimaModificacion(models.Model):
  
 class EstadoNegocio(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
-    # La base real exige este campo (NOT NULL, según el inspectdb): se quita blank/null.
-    idmodificacion = models.ForeignKey(UltimaModificacion, models.DO_NOTHING, db_column='IdModificacion')
     descripcion = models.CharField(db_column='Descripcion', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
  
     def __str__(self):

@@ -125,6 +125,10 @@ urlpatterns = [
     path('panel/pedidos/<int:idpedido>/imprimir/', views.imprimir_ticket, name='imprimir_ticket'),
     path('panel/pedidos/<int:idpedido>/estado/', views.cambiar_estado_pedido, name='cambiar_estado_pedido'),
 
+    # Negocio
+    path("panel/negocio/apertura/", views.estado_negocio_panel, name="estado_negocio"),
+path("panel/negocio/estado/", views.cambiar_estado_local, name="cambiar_estado_local"),
+
     # Horarios - CRUD
     path('panel/horarios/', views.horarios_lista, name='horarios_lista'),
     path('panel/horarios/crear/', views.horarios_crear, name='horarios_crear'),

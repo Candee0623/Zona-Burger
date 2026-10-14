@@ -1,0 +1,141 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Abrir / Cerrar | Zona-Burger{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/negocio/interruptorNegocio.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="negocio-page">
+
+    <header class="negocio-header">
+        <div class="negocio-kicker">Configuración</div>
+        <h1>Abrir y cerrar el negocio</h1>
+        <p>Controlá si el local recibe pedidos hoy y revisá quién hizo cada cambio.</p>
+    </header>
+
+    {% if messages %}
+    <div class="negocio-mensajes">
+        {% for mensaje in messages %}
+        <div class="negocio-mensaje negocio-mensaje-{{ mensaje.tags }}">{{ mensaje }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ESTADO ACTUAL -->
+
+    <section class="local-estado {% if estado_local.abierto %}local-abierto{% else %}local-cerrado{% endif %}">
+        <div class="local-estado-info">
+            <span class="local-punto"></span>
+            <div>
+                <strong>{% if estado_local.abierto %}Local abierto{% else %}Local cerrado{% endif %}</strong>
+                <small>
+                    {% if estado_local.manual %}
+                        Modo manual: vale solo por hoy, mañana vuelve a los horarios.
+                    {% else %}
+                        Modo automático: según los horarios cargados.
+                    {% endif %}
+                </small>
+                <small>{{ estado_local.mensaje }}</small>
+                {% if estado_local.ultimo_cambio %}
+                <small class="local-ultimo">
+                    Último cambio: {{ estado_local.ultimo_cambio|date:"d/m/Y H:i" }}{% if estado_local.ultimo_por %} por {{ estado_local.ultimo_por }}{% endif %}
+                </small>
+                {% endif %}
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'cambiar_estado_local' %}" class="local-acciones">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+            {% if estado_local.abierto %}
+            <button type="submit" name="accion" value="cerrar" class="local-btn local-btn-rojo"
+                    onclick="return confirm('¿Cerrar el local por hoy? No se podrán hacer pedidos hasta mañana.');">
+                Cerrar por hoy
+            </button>
+            {% else %}
+            <button type="submit" name="accion" value="abrir" class="local-btn local-btn-rojo">
+                Abrir ahora
+            </button>
+            {% endif %}
+
+            {% if estado_local.manual %}
+            <button type="submit" name="accion" value="automatico" class="local-btn">
+                Volver a automático
+            </button>
+            {% endif %}
+        </form>
+    </section>
+
+    <!-- RESUMEN -->
+
+    <div class="local-kpis">
+        <article class="local-kpi">
+            <span>Aperturas manuales</span>
+            <strong>{{ total_aperturas }}</strong>
+            <small>Total registrado</small>
+        </article>
+        <article class="local-kpi">
+            <span>Cierres manuales</span>
+            <strong>{{ total_cierres }}</strong>
+            <small>Total registrado</small>
+        </article>
+        <article class="local-kpi">
+            <span>Vueltas a automático</span>
+            <strong>{{ total_automatico }}</strong>
+            <small>Total registrado</small>
+        </article>
+    </div>
+
+    <!-- HISTORIAL -->
+
+    <section class="local-panel">
+        <div class="local-panel-head">
+            <div>
+                <h2>Historial de cambios manuales</h2>
+                <p>Últimos 100 cambios, del más reciente al más antiguo</p>
+            </div>
+            <span class="local-tag">{{ cambios|length }} registros</span>
+        </div>
+
+        <div class="local-table-container">
+            <table class="local-table">
+                <thead>
+                    <tr>
+                        <th>Fecha y hora</th>
+                        <th>Acción</th>
+                        <th>Realizado por</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cambio in cambios %}
+                    <tr>
+                        <td class="local-fecha">{{ cambio.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <span class="local-accion local-accion-{{ cambio.clase }}">
+                                <span class="local-accion-punto"></span>{{ cambio.accion }}
+                            </span>
+                        </td>
+                        <td class="local-quien">{{ cambio.quien }}</td>
+                        <td>
+                            {% if cambio.vigente %}
+                            <span class="local-tag">Vigente hoy</span>
+                            {% else %}
+                            <span class="local-sin-dato">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="local-empty">Todavía no hay cambios manuales registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

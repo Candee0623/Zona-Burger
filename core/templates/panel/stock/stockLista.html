@@ -1,4 +1,3 @@
-```html
 {% extends 'panel/base.html' %}
 {% load static %}
 
@@ -68,6 +67,125 @@
             <strong>{{ compras|length }}</strong>
             <span class="summary-description">Operaciones de compra</span>
         </article>
+
+    </section>
+
+    <!-- ALERTAS DE STOCK Y VENCIMIENTOS -->
+    <section class="stock-alerts" aria-label="Alertas de inventario">
+
+        {% if lotes_vencidos %}
+            <article class="stock-alert stock-alert--expired">
+                <div class="stock-alert__icon" aria-hidden="true">!</div>
+                <div class="stock-alert__content">
+                    <h2>Lotes vencidos</h2>
+                    <p>
+                        Hay mercadería vencida que todavía registra cantidad disponible.
+                        Revisá estos lotes antes de utilizarlos.
+                    </p>
+
+                    <ul class="stock-alert__list">
+                        {% for lote in lotes_vencidos %}
+                            <li>
+                                <strong>{{ lote.idinsumo.nombreinsumo }}</strong>
+                                <span>
+                                    Lote: {{ lote.codigo|default:"Sin código" }}
+                                </span>
+                                <span>
+                                    Venció: {{ lote.fechavencimiento|date:"d/m/Y" }}
+                                </span>
+                                <span>
+                                    Disponible: {{ lote.cantidadactual|floatformat:2 }}
+                                    {{ lote.idinsumo.unidadmedidaingreso }}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </article>
+        {% endif %}
+
+        {% if lotes_por_vencer %}
+            <article class="stock-alert stock-alert--expiry">
+                <div class="stock-alert__icon" aria-hidden="true">!</div>
+                <div class="stock-alert__content">
+                    <h2>Próximos vencimientos</h2>
+                    <p>
+                        Estos lotes vencen hoy o dentro de los próximos 7 días.
+                        Planificá su uso y revisá las cantidades disponibles.
+                    </p>
+
+                    <ul class="stock-alert__list">
+                        {% for lote in lotes_por_vencer %}
+                            <li>
+                                <strong>{{ lote.idinsumo.nombreinsumo }}</strong>
+                                <span>
+                                    Lote: {{ lote.codigo|default:"Sin código" }}
+                                </span>
+                                <span>
+                                    Vence: {{ lote.fechavencimiento|date:"d/m/Y" }}
+                                </span>
+                                <span>
+                                    Disponible: {{ lote.cantidadactual|floatformat:2 }}
+                                    {{ lote.idinsumo.unidadmedidaingreso }}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </article>
+        {% endif %}
+
+        {% if insumos_criticos %}
+            <article class="stock-alert stock-alert--low">
+                <div class="stock-alert__icon" aria-hidden="true">!</div>
+                <div class="stock-alert__content">
+                    <h2>Stock bajo</h2>
+                    <p>
+                        Los siguientes insumos están en su stock mínimo o por debajo.
+                        Considerá registrar una compra para reponerlos.
+                    </p>
+
+                    <ul class="stock-alert__list">
+                        {% for insumo in insumos_criticos %}
+                            <li>
+                                <strong>{{ insumo.nombreinsumo }}</strong>
+                                <span>
+                                    Actual: {{ insumo.stockactual|floatformat:2 }}
+                                    {{ insumo.unidadmedidaingreso }}
+                                </span>
+                                <span>
+                                    Mínimo: {{ insumo.stockminimo|floatformat:2 }}
+                                    {{ insumo.unidadmedidaingreso }}
+                                </span>
+                                <a
+                                    class="stock-alert__link"
+                                    href="{% url 'ajustar_stock' insumo.idinsumo %}"
+                                >
+                                    Revisar stock
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+                    <a href="{% url 'registrar_compra_insumo' %}" class="btn btn-primary stock-alert__button">
+                        + Registrar compra
+                    </a>
+                </div>
+            </article>
+        {% endif %}
+
+        {% if not lotes_vencidos and not lotes_por_vencer and not insumos_criticos %}
+            <article class="stock-alert stock-alert--ok">
+                <div class="stock-alert__icon" aria-hidden="true">&#10003;</div>
+                <div class="stock-alert__content">
+                    <h2>Todo en orden</h2>
+                    <p>
+                        No hay lotes vencidos, vencimientos próximos ni insumos por debajo
+                        de su stock mínimo.
+                    </p>
+                </div>
+            </article>
+        {% endif %}
 
     </section>
 
@@ -470,4 +588,3 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 {% endblock %}
-```

@@ -2,6 +2,7 @@ import hashlib
 import logging
 import re
 import urllib.parse
+import unicodedata
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -31,6 +32,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST
 try:
@@ -74,11 +76,11 @@ except ImportError:
 from .forms import ExtraForm
 from .models import (
     AjusteStock, CategoriaProducto, Cliente, Compras, DetalleCompra,
-    DetallePedido, Direccion, Empleado, EstadoPedido, Extras, GrupoOpcion,
+    DetallePedido, Direccion, Empleado, EstadoNegocio, EstadoPedido, Extras, GrupoOpcion,
     Horario, Insumo, Lote, MedioPago, Negocio, Opcion, Pedido, Permiso,
     Producto, ProductoExtras, ProductoGrupoOpcion, ProductoPromocion,
     Promocion, Receta, RecetaInsumo, RedesSociales, Rol, RolPermiso,
-    TipoBeneficio, ZonasEntrega,
+    TipoBeneficio, UltimaModificacion, ZonasEntrega,
 )
 
 logger = logging.getLogger(__name__)
@@ -2319,28 +2321,66 @@ def eliminar_tipo_beneficio(request, pk):
 # 8. PANEL - STOCK
 # ============================================================
 
+
 def stock_lista(request):
+    hoy = timezone.localdate()
+    fecha_limite = hoy + timedelta(days=7)
+
     insumos = Insumo.objects.all().order_by('nombreinsumo')
 
+    # Stock en el mínimo o por debajo.
     insumos_criticos = [
         insumo for insumo in insumos
         if insumo.stockactual <= insumo.stockminimo
     ]
 
-    lotes = Lote.objects.select_related('idinsumo').order_by(
-        '-fechaingreso', '-idlote'
+    # Lotes que vencen entre hoy y los próximos 7 días.
+    lotes_por_vencer = (
+        Lote.objects
+        .filter(
+            fechavencimiento__gte=hoy,
+            fechavencimiento__lte=fecha_limite,
+            cantidadactual__gt=0,
+        )
+        .select_related('idinsumo')
+        .order_by('fechavencimiento', 'idinsumo__nombreinsumo')
     )
 
-    compras = Compras.objects.prefetch_related(
-        'detallecompra_set__idinsumo'
-    ).order_by('-fecha', '-idcompra')
+    # Lotes que ya vencieron y todavía tienen cantidad registrada.
+    lotes_vencidos = (
+        Lote.objects
+        .filter(
+            fechavencimiento__lt=hoy,
+            cantidadactual__gt=0,
+        )
+        .select_related('idinsumo')
+        .order_by('fechavencimiento', 'idinsumo__nombreinsumo')
+    )
+
+    # Se conserva el listado completo de lotes.
+    lotes = (
+        Lote.objects
+        .select_related('idinsumo')
+        .order_by('-fechaingreso', '-idlote')
+    )
+
+    compras = (
+        Compras.objects
+        .prefetch_related('detallecompra_set__idinsumo')
+        .order_by('-fecha', '-idcompra')
+    )
 
     return render(request, 'panel/stock/stockLista.html', {
         'insumos': insumos,
         'insumos_criticos': insumos_criticos,
         'lotes': lotes,
         'compras': compras,
+        'lotes_por_vencer': lotes_por_vencer,
+        'lotes_vencidos': lotes_vencidos,
+        'hoy': hoy,
+        'fecha_limite': fecha_limite,
     })
+
 
 
 def stock_crear(request):
@@ -4746,3 +4786,366 @@ def detalle_historial_pedido(request, idpedido):
         'pedido': pedido,
         'detalles': detalles,
     })
+# ============================================================
+# 11. PANEL - ABRIR / CERRAR EL NEGOCIO
+# ============================================================
+
+# ------------------------------------------------------------
+# 11.1 Constantes
+# ------------------------------------------------------------
+
+# Estados fijos de EstadoNegocio (se crean solos la primera vez que se usan)
+LOCAL_AUTOMATICO = "Automático"
+LOCAL_ABIERTO_MANUAL = "Abierto manual"
+LOCAL_CERRADO_MANUAL = "Cerrado manual"
+
+# Prefijo con el que se registran los cambios en UltimaModificacion
+LOCAL_PREFIJO_LOG = "Estado del local:"
+
+# Si no hay horarios cargados, ¿se considera abierto?
+# True evita bloquear pedidos mientras no se carguen los horarios.
+LOCAL_SIN_HORARIOS_ABIERTO = True
+
+LOCAL_DIAS = [
+    "lunes", "martes", "miercoles", "jueves",
+    "viernes", "sabado", "domingo",
+]
+LOCAL_DIAS_TXT = [
+    "lunes", "martes", "miércoles", "jueves",
+    "viernes", "sábado", "domingo",
+]
+
+LOCAL_TEXTO_LOG = {
+    LOCAL_AUTOMATICO: "volvió al modo automático (según horarios)",
+    LOCAL_ABIERTO_MANUAL: "abierto manualmente por hoy",
+    LOCAL_CERRADO_MANUAL: "cerrado manualmente por hoy",
+}
+
+
+# ------------------------------------------------------------
+# 11.2 Utilidades
+# ------------------------------------------------------------
+
+def local_normalizar(texto):
+    texto = unicodedata.normalize("NFD", texto or "")
+    sin_tildes = "".join(c for c in texto if unicodedata.category(c) != "Mn")
+    return sin_tildes.strip().lower()
+
+
+LOCAL_INDICE_DIA = {nombre: i for i, nombre in enumerate(LOCAL_DIAS)}
+LOCAL_MODOS = {
+    local_normalizar(modo): modo
+    for modo in (LOCAL_AUTOMATICO, LOCAL_ABIERTO_MANUAL, LOCAL_CERRADO_MANUAL)
+}
+
+
+def local_ahora():
+    ahora = timezone.now()
+    return timezone.localtime(ahora) if timezone.is_aware(ahora) else ahora
+
+
+def local_a_local(momento):
+    return timezone.localtime(momento) if timezone.is_aware(momento) else momento
+
+
+def local_nombre_empleado(empleado):
+    if empleado is None:
+        return ""
+    return f"{empleado.nombre} {getattr(empleado, 'apellido', '')}".strip()
+
+
+# ------------------------------------------------------------
+# 11.3 Horarios automáticos
+# ------------------------------------------------------------
+
+def local_franjas(horarios):
+    """[(día 0-6, apertura, cierre)] solo de los días marcados como abiertos."""
+    franjas = []
+    for h in horarios:
+        if not (h.estaabierto and h.horaapertura and h.horacierre):
+            continue
+        dia = LOCAL_INDICE_DIA.get(local_normalizar(h.diasemana))
+        if dia is not None:
+            franjas.append((dia, h.horaapertura, h.horacierre))
+    return franjas
+
+
+def local_abierto_por_horario(franjas, ahora):
+    dia, hora = ahora.weekday(), ahora.time()
+    for d, apertura, cierre in franjas:
+        if apertura == cierre:                       # 24 horas
+            if d == dia:
+                return True
+        elif apertura < cierre:                      # mismo día
+            if d == dia and apertura <= hora < cierre:
+                return True
+        else:                                        # cruza la medianoche
+            if d == dia and hora >= apertura:
+                return True
+            if d == (dia - 1) % 7 and hora < cierre:
+                return True
+    return False
+
+
+def local_proxima_apertura(franjas, desde):
+    candidatas = []
+    for desplazamiento in range(8):
+        fecha = desde.date() + timedelta(days=desplazamiento)
+        for d, apertura, _ in franjas:
+            if d == fecha.weekday():
+                momento = datetime.combine(fecha, apertura, tzinfo=desde.tzinfo)
+                if momento > desde:
+                    candidatas.append(momento)
+    return min(candidatas) if candidatas else None
+
+
+def local_texto_apertura(momento, ahora):
+    dias = (momento.date() - ahora.date()).days
+    if dias == 0:
+        cuando = "hoy"
+    elif dias == 1:
+        cuando = "mañana"
+    else:
+        cuando = f"el {LOCAL_DIAS_TXT[momento.weekday()]}"
+    return f"{cuando} a las {momento:%H:%M}"
+
+
+# ------------------------------------------------------------
+# 11.4 Estado actual del local
+# ------------------------------------------------------------
+
+def local_estado_por_defecto():
+    return {
+        "abierto": True,
+        "manual": False,
+        "mensaje": "",
+        "ultimo_cambio": None,
+        "ultimo_por": "",
+    }
+
+
+def local_estado():
+    """
+    Estado actual del local (se usa en el panel y, más adelante,
+    para bloquear carrito y checkout). Devuelve un diccionario:
+    abierto, manual (hay un cierre/apertura manual vigente HOY),
+    mensaje, ultimo_cambio y ultimo_por.
+    """
+    try:
+        return local_calcular_estado()
+    except Exception:
+        logger.exception("No se pudo calcular el estado del local")
+        return local_estado_por_defecto()
+
+
+def local_calcular_estado():
+    ahora = local_ahora()
+    negocio = Negocio.objects.select_related("idestado").first()
+    if negocio is None:
+        return local_estado_por_defecto()
+
+    descripcion = negocio.idestado.descripcion if negocio.idestado_id else ""
+    modo = LOCAL_MODOS.get(local_normalizar(descripcion), LOCAL_AUTOMATICO)
+
+    registro = (
+        UltimaModificacion.objects.select_related("idempleado")
+        .filter(
+            idnegocio=negocio.idnegocio,
+            descripcioncambio__startswith=LOCAL_PREFIJO_LOG,
+        )
+        .order_by("-fecha")
+        .first()
+    )
+
+    # El modo manual solo vale el día en que se activó
+    manual_vigente = (
+        modo != LOCAL_AUTOMATICO
+        and registro is not None
+        and local_a_local(registro.fecha).date() == ahora.date()
+    )
+
+    franjas = local_franjas(Horario.objects.filter(idnegocio=negocio))
+
+    if manual_vigente:
+        abierto = modo == LOCAL_ABIERTO_MANUAL
+    elif franjas:
+        abierto = local_abierto_por_horario(franjas, ahora)
+    else:
+        abierto = LOCAL_SIN_HORARIOS_ABIERTO
+
+    if abierto:
+        mensaje = "Estamos abiertos."
+    else:
+        if manual_vigente:
+            medianoche = datetime.combine(
+                ahora.date() + timedelta(days=1),
+                datetime.min.time(),
+                tzinfo=ahora.tzinfo,
+            )
+            proxima = local_proxima_apertura(
+                franjas, medianoche - timedelta(seconds=1)
+            )
+            mensaje = "Hoy el local permanece cerrado."
+        else:
+            proxima = local_proxima_apertura(franjas, ahora)
+            mensaje = "En este momento estamos cerrados."
+        if proxima:
+            mensaje += f" Volvemos a abrir {local_texto_apertura(proxima, ahora)}."
+
+    return {
+        "abierto": abierto,
+        "manual": manual_vigente,
+        "mensaje": mensaje,
+        "ultimo_cambio": local_a_local(registro.fecha) if registro else None,
+        "ultimo_por": local_nombre_empleado(registro.idempleado) if registro else "",
+    }
+
+
+# ------------------------------------------------------------
+# 11.5 Cambio de modo (abrir / cerrar / automático)
+# ------------------------------------------------------------
+
+def local_estado_fijo(descripcion, id_negocio, ahora):
+    estado = EstadoNegocio.objects.filter(descripcion=descripcion).first()
+    if estado:
+        return estado
+    modificacion = UltimaModificacion.objects.create(
+        fecha=ahora,
+        idempleado=None,
+        descripcioncambio=f"Estado inicial: {descripcion}",
+        idnegocio=id_negocio,
+    )
+    return EstadoNegocio.objects.create(
+        idmodificacion=modificacion, descripcion=descripcion
+    )
+
+
+def local_aplicar_modo(modo, empleado=None):
+    """Guarda el nuevo modo y deja registro de quién y cuándo. Devuelve el Negocio."""
+    with transaction.atomic():
+        negocio = Negocio.objects.select_for_update().first()
+        if negocio is None:
+            return None
+
+        ahora = local_ahora()
+        estado = local_estado_fijo(modo, negocio.idnegocio, ahora)
+
+        UltimaModificacion.objects.create(
+            fecha=ahora,
+            idempleado=empleado,
+            descripcioncambio=f"{LOCAL_PREFIJO_LOG} {LOCAL_TEXTO_LOG[modo]}",
+            idnegocio=negocio.idnegocio,
+        )
+
+        negocio.idestado = estado
+        negocio.idempleado = empleado
+        negocio.save(update_fields=["idestado", "idempleado"])
+    return negocio
+
+
+# ------------------------------------------------------------
+# 11.6 Vistas del panel
+# ------------------------------------------------------------
+
+@login_required
+def estado_negocio_panel(request):
+    estado = local_estado()
+    negocio = Negocio.objects.first()
+
+    cambios = []
+    total_aperturas = total_cierres = total_automatico = 0
+
+    if negocio:
+        base = UltimaModificacion.objects.filter(
+            idnegocio=negocio.idnegocio,
+            descripcioncambio__startswith=LOCAL_PREFIJO_LOG,
+        )
+
+        def contar(modo):
+            return base.filter(
+                descripcioncambio=f"{LOCAL_PREFIJO_LOG} {LOCAL_TEXTO_LOG[modo]}"
+            ).count()
+
+        total_aperturas = contar(LOCAL_ABIERTO_MANUAL)
+        total_cierres = contar(LOCAL_CERRADO_MANUAL)
+        total_automatico = contar(LOCAL_AUTOMATICO)
+
+        modos_por_texto = {texto: modo for modo, texto in LOCAL_TEXTO_LOG.items()}
+        acciones = {
+            LOCAL_ABIERTO_MANUAL: ("Abrió el local", "abrio"),
+            LOCAL_CERRADO_MANUAL: ("Cerró el local", "cerro"),
+            LOCAL_AUTOMATICO: ("Volvió a modo automático", "auto"),
+        }
+
+        registros = (
+            base.select_related("idempleado")
+            .order_by("-fecha")[:100]
+        )
+
+        for posicion, registro in enumerate(registros):
+            texto = (registro.descripcioncambio or "")[len(LOCAL_PREFIJO_LOG):].strip()
+            modo = modos_por_texto.get(texto)
+            accion, clase = acciones.get(modo, (texto or "Cambio", "auto"))
+
+            cambios.append({
+                "fecha": local_a_local(registro.fecha),
+                "accion": accion,
+                "clase": clase,
+                "quien": (
+                    local_nombre_empleado(registro.idempleado)
+                    or "Sin usuario registrado"
+                ),
+                "vigente": posicion == 0 and estado["manual"],
+            })
+
+    contexto = {
+        "estado_local": estado,
+        "cambios": cambios,
+        "total_aperturas": total_aperturas,
+        "total_cierres": total_cierres,
+        "total_automatico": total_automatico,
+    }
+    return render(request, "panel/negocio/interruptorNegocio.html", contexto)
+
+
+@login_required
+@require_POST
+def cambiar_estado_local(request):
+    destino = request.POST.get("next", "")
+    if not url_has_allowed_host_and_scheme(
+        destino,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        destino = "/"
+
+    modos = {
+        "abrir": (
+            LOCAL_ABIERTO_MANUAL,
+            "El local quedó abierto por hoy. Mañana vuelve a regirse por los horarios.",
+        ),
+        "cerrar": (
+            LOCAL_CERRADO_MANUAL,
+            "El local quedó cerrado por hoy. Mañana abre normalmente según los horarios.",
+        ),
+        "automatico": (
+            LOCAL_AUTOMATICO,
+            "El local volvió al modo automático según los horarios.",
+        ),
+    }
+
+    accion = request.POST.get("accion")
+    if accion not in modos:
+        messages.error(request, "Acción no válida.")
+        return redirect(destino)
+
+    modo, texto = modos[accion]
+    empleado = request.user if isinstance(request.user, Empleado) else None
+    negocio = local_aplicar_modo(modo, empleado)
+
+    if negocio is None:
+        messages.error(request, "No hay un negocio configurado.")
+    else:
+        messages.success(request, texto)
+
+    return redirect(destino)
