@@ -141,6 +141,8 @@
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Precio adicional</th>
+                                    <th>Insumo de stock (opcional)</th>
+                                    <th>Cantidad</th>
                                     <th>Eliminar</th>
                                 </tr>
                             </thead>
@@ -173,6 +175,31 @@
                                                 name="opcion_precio[]"
                                                 class="grupo-edit-input"
                                                 value="{{ opcion.precioadicional|default:0 }}"
+                                            >
+                                        </td>
+
+                                        <td>
+                                            <select
+                                                name="opcion_insumo[]"
+                                                class="grupo-edit-input"
+                                            >
+                                                <option value="">(Sin insumo vinculado)</option>
+                                                {% for insumo in insumos %}
+                                                    <option value="{{ insumo.idinsumo }}" {% if opcion.idinsumo_id == insumo.idinsumo %}selected{% endif %}>
+                                                        {{ insumo.nombreinsumo }} (Stock: {{ insumo.stockactual }})
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0.01"
+                                                name="opcion_cantidad_insumo[]"
+                                                class="grupo-edit-input"
+                                                value="{{ opcion.cantidad_insumo|default:'1.00' }}"
                                             >
                                         </td>
 
@@ -326,6 +353,33 @@ document.getElementById('btn-agregar-opcion').addEventListener('click', function
                 name="opcion_precio[]"
                 class="grupo-edit-input"
                 value="0"
+            >
+
+        </td>
+
+        <td class="grupo-new-option-cell">
+
+            <select
+                name="opcion_insumo[]"
+                class="grupo-edit-input"
+            >
+                <option value="">(Sin insumo vinculado)</option>
+                {% for insumo in insumos %}
+                    <option value="{{ insumo.idinsumo }}">{{ insumo.nombreinsumo }} (Stock: {{ insumo.stockactual }})</option>
+                {% endfor %}
+            </select>
+
+        </td>
+
+        <td class="grupo-new-option-cell">
+
+            <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                name="opcion_cantidad_insumo[]"
+                class="grupo-edit-input"
+                value="1.00"
             >
 
         </td>

@@ -1,0 +1,30 @@
+# Entornos virtuales
+venv/
+env/
+ENV/
+
+# Variables de entorno
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+
+# Bases de datos locales
+db.sqlite3
+*.sqlite3
+
+# Archivos de medios generados localmente
+media/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

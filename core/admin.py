@@ -5,7 +5,7 @@ from .models import (
     ZonasEntrega, RedesSociales, CategoriaProducto, EstadoStock, EstadoProducto, 
     Producto, Extras, ProductoExtras, GrupoOpcion, Opcion, ProductoGrupoOpcion, 
     Insumo, Compras, Receta, MedioPago, Cliente, Direccion, EstadoPedido, 
-    Pedido, Promocion, TipoBeneficio
+    Pedido, Promocion, TipoBeneficio, MovimientoStock
 )
 
 # --- CLASE BASE DE ACCIONES PARA LOS MODELADMIN ---
@@ -32,6 +32,8 @@ class CategoriaAdmin(AccionesAdminMixin, admin.ModelAdmin):
 class OpcionInline(admin.TabularInline):
     model = Opcion
     extra = 1
+    fields = ('nombre', 'precioadicional', 'idinsumo', 'cantidad_insumo')
+    autocomplete_fields = ['idinsumo']
 
 @admin.register(GrupoOpcion)
 class GrupoOpcionAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -224,3 +226,12 @@ class PromocionAdmin(admin.ModelAdmin):
         # Intenta obtener el valor de la relación de forma segura
         return getattr(obj, 'tipobeneficio', None) or "Sin asignar"
     get_tipo_beneficio.short_description = 'Tipo de Beneficio'
+
+
+@admin.register(MovimientoStock)
+class MovimientoStockAdmin(AccionesAdminMixin, admin.ModelAdmin):
+    list_display = ('idmovimiento', 'tipomovimiento', 'idinsumo', 'cantidad', 'idpedido', 'fecha', 'acciones')
+    list_display_links = ('idmovimiento',)
+    list_filter = ('tipomovimiento', 'fecha')
+    search_fields = ('idinsumo__nombreinsumo', 'descripcion')
+

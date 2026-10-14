@@ -77,10 +77,17 @@ from .forms import ExtraForm
 from .models import (
     AjusteStock, CategoriaProducto, Cliente, Compras, DetalleCompra,
     DetallePedido, Direccion, Empleado, EstadoNegocio, EstadoPedido, Extras, GrupoOpcion,
-    Horario, Insumo, Lote, MedioPago, Negocio, Opcion, Pedido, Permiso,
+    Horario, Insumo, Lote, MedioPago, MovimientoStock, Negocio, Opcion, Pedido, Permiso,
     Producto, ProductoExtras, ProductoGrupoOpcion, ProductoPromocion,
     Promocion, Receta, RecetaInsumo, RedesSociales, Rol, RolPermiso,
     TipoBeneficio, UltimaModificacion, ZonasEntrega,
+)
+from .stock_service import (
+    calcular_consumo_carrito,
+    descontar_stock_pedido,
+    reintegrar_stock_pedido,
+    verificar_stock_disponible,
+    StockInsuficienteError,
 )
 
 logger = logging.getLogger(__name__)
@@ -354,16 +361,18 @@ def agregar_al_carrito(request, idproducto):
     extras_seleccionados = {}
     insumos_quitados_ids = []
 
-    for key, value in request.POST.items():
+    for key in request.POST:
         if key.startswith('grupo_'):
-            opcion = Opcion.objects.filter(pk=value).first()
+            for value in request.POST.getlist(key):
+                opcion = Opcion.objects.filter(pk=value).first()
 
-            if opcion:
-                precio_unitario += float(opcion.precioadicional or 0)
-                detalle_opciones.append(opcion.nombre)
-                opciones_seleccionadas.append(str(value))
+                if opcion:
+                    precio_unitario += float(opcion.precioadicional or 0)
+                    detalle_opciones.append(opcion.nombre)
+                    opciones_seleccionadas.append(str(value))
 
-        elif key.startswith('extra_'):
+    for key, value in request.POST.items():
+        if key.startswith('extra_'):
             extra = Extras.objects.filter(pk=value).first()
 
             if extra:
@@ -719,50 +728,8 @@ def _items_checkout(carrito):
 
 
 def calcular_consumo_insumos(carrito):
-    """Devuelve el consumo total de insumos del carrito según las recetas."""
-    consumo = {}
-
-    for item in carrito.values():
-        producto_id = item.get('producto_id')
-        cantidad_producto = int(item.get('cantidad', 1) or 1)
-
-        if not producto_id or cantidad_producto <= 0:
-            continue
-
-        insumos_quitados = {
-            str(insumo_id)
-            for insumo_id in item.get('insumos_quitados_ids', [])
-        }
-
-        recetas = RecetaInsumo.objects.filter(
-            idreceta__idproducto_id=producto_id,
-            idinsumo__isnull=False,
-            idreceta__isnull=False,
-            idinsumo__descontar_stock_automaticamente=True,
-        ).select_related('idinsumo', 'idreceta')
-
-        for detalle_receta in recetas:
-            insumo = detalle_receta.idinsumo
-
-            if str(insumo.pk) in insumos_quitados:
-                continue
-
-            cantidad_receta = detalle_receta.cantidadinsumo or Decimal('0')
-
-            if cantidad_receta <= 0:
-                continue
-
-            if insumo.pk not in consumo:
-                consumo[insumo.pk] = {
-                    'insumo': insumo,
-                    'cantidad': Decimal('0'),
-                }
-
-            consumo[insumo.pk]['cantidad'] += (
-                cantidad_receta * cantidad_producto
-            )
-
-    return consumo
+    """Devuelve el consumo total de insumos del carrito (recetas base y opciones)."""
+    return calcular_consumo_carrito(carrito)
 
 
 def procesar_checkout(request):
@@ -954,82 +921,73 @@ def procesar_checkout(request):
         total_carrito - descuento_promocion + costo_envio,
     )
 
-    consumo_insumos = calcular_consumo_insumos(carrito)
+    consumo_insumos = calcular_consumo_carrito(carrito)
 
-    with transaction.atomic():
-        # Se bloquean los insumos para comprobar y descontar el stock
-        # dentro de la misma transacción.
-        insumos_bloqueados = {}
+    # 1. Verificación previa de stock disponible
+    stock_ok, errores_stock = verificar_stock_disponible(consumo_insumos)
+    if not stock_ok:
+        for err in errores_stock:
+            messages.error(request, err)
+        return redirect('ver_carrito')
 
-        for insumo_id in sorted(consumo_insumos.keys()):
-            insumo = Insumo.objects.select_for_update().get(pk=insumo_id)
-            cantidad_necesaria = consumo_insumos[insumo_id]['cantidad']
-
-            if insumo.stockactual < cantidad_necesaria:
-                messages.error(
-                    request,
-                    f'Stock insuficiente de {insumo.nombreinsumo}. '
-                    f'Disponible: {insumo.stockactual}. '
-                    f'Necesario: {cantidad_necesaria}.'
-                )
-                return redirect('ver_carrito')
-
-            insumos_bloqueados[insumo_id] = insumo
-
-        cliente = Cliente.objects.create(
-            nombre=nombre,
-            apellido=apellido,
-            telefono=telefono,
-        )
-
-        Direccion.objects.create(
-            idcliente=cliente,
-            calle=calle,
-            numero=numero,
-            piso=piso,
-            localidad=localidad,
-        )
-
-        estado_inicial = get_object_or_404(EstadoPedido, pk=1)
-
-        pedido = Pedido.objects.create(
-            idcliente=cliente,
-            idmediopago=medio_pago,
-            idestadopedido=estado_inicial,
-            idpromocion=(
-                objeto_promocion.idpromocion if objeto_promocion else None
-            ),
-            horarioentregadeseado=horario_deseado,
-            total=total_general,
-            justificacioncancelacion=comentario,
-        )
-
-        for item in carrito.values():
-            producto = Producto.objects.filter(
-                pk=item.get('producto_id')
-            ).first()
-
-            if not producto:
-                continue
-
-            cantidad = item.get('cantidad', 1) or 1
-            subtotal_item = Decimal(str(item.get('subtotal', 0)))
-            detalles = item.get('detalles')
-
-            DetallePedido.objects.create(
-                idpedido=pedido,
-                idproducto=producto,
-                cantidad=cantidad,
-                preciounitario=subtotal_item / cantidad,
-                observaciones=(
-                    ', '.join(detalles) if isinstance(detalles, list) else ''
-                ),
+    try:
+        with transaction.atomic():
+            cliente = Cliente.objects.create(
+                nombre=nombre,
+                apellido=apellido,
+                telefono=telefono,
             )
 
-        for insumo_id, dato in consumo_insumos.items():
-            insumo = insumos_bloqueados[insumo_id]
-            insumo.stockactual -= dato['cantidad']
-            insumo.save(update_fields=['stockactual'])
+            Direccion.objects.create(
+                idcliente=cliente,
+                calle=calle,
+                numero=numero,
+                piso=piso,
+                localidad=localidad,
+            )
+
+            estado_inicial = get_object_or_404(EstadoPedido, pk=1)
+
+            pedido = Pedido.objects.create(
+                idcliente=cliente,
+                idmediopago=medio_pago,
+                idestadopedido=estado_inicial,
+                idpromocion=(
+                    objeto_promocion.idpromocion if objeto_promocion else None
+                ),
+                horarioentregadeseado=horario_deseado,
+                total=total_general,
+                justificacioncancelacion=comentario,
+            )
+
+            for item in carrito.values():
+                producto = Producto.objects.filter(
+                    pk=item.get('producto_id')
+                ).first()
+
+                if not producto:
+                    continue
+
+                cantidad = item.get('cantidad', 1) or 1
+                subtotal_item = Decimal(str(item.get('subtotal', 0)))
+                detalles = item.get('detalles')
+
+                DetallePedido.objects.create(
+                    idpedido=pedido,
+                    idproducto=producto,
+                    cantidad=cantidad,
+                    preciounitario=subtotal_item / cantidad,
+                    observaciones=(
+                        ', '.join(detalles) if isinstance(detalles, list) else ''
+                    ),
+                )
+
+            # Descontar stock atómicamente y registrar movimientos
+            descontar_stock_pedido(pedido, consumo_insumos)
+
+    except StockInsuficienteError as e:
+        messages.error(request, str(e))
+        return redirect('ver_carrito')
 
     mensaje = '*¡Nuevo Pedido! 🍔*\n\n'
 
@@ -1216,6 +1174,7 @@ def actualizar_estado_pedido(request, idpedido):
         pedido.justificacioncancelacion = request.POST.get(
             'justificacioncancelacion', ''
         )
+        reintegrar_stock_pedido(pedido, motivo=pedido.justificacioncancelacion)
 
     pedido.save()
 
@@ -1379,6 +1338,7 @@ def grupo_lista(request):
 
 def grupo_crear(request):
     errores = []
+    insumos = Insumo.objects.all().order_by('nombreinsumo')
 
     if request.method == 'POST':
         nombre = request.POST.get('nombre', '').strip()
@@ -1386,6 +1346,8 @@ def grupo_crear(request):
         maxselecciones = request.POST.get('maxselecciones') or 1
         opcion_nombres = request.POST.getlist('opcion_nombre[]')
         opcion_precios = request.POST.getlist('opcion_precio[]')
+        opcion_insumos = request.POST.getlist('opcion_insumo[]')
+        opcion_cantidades = request.POST.getlist('opcion_cantidad_insumo[]')
 
         if not nombre:
             errores.append('El nombre del grupo es obligatorio.')
@@ -1396,14 +1358,30 @@ def grupo_crear(request):
                 maxselecciones=maxselecciones,
             )
 
-            # Las opciones llegan como listas paralelas de nombre y precio.
-            for nom, precio in zip(opcion_nombres, opcion_precios):
-                if nom.strip():
-                    Opcion.objects.create(
-                        idgrupo=grupo,
-                        nombre=nom.strip(),
-                        precioadicional=precio or 0,
-                    )
+            total_opc = len(opcion_nombres)
+            for i in range(total_opc):
+                nom = opcion_nombres[i].strip() if i < len(opcion_nombres) else ''
+                if not nom:
+                    continue
+                precio = opcion_precios[i] if i < len(opcion_precios) else 0
+                insumo_id = opcion_insumos[i] if i < len(opcion_insumos) else None
+                cant_ins = opcion_cantidades[i] if i < len(opcion_cantidades) else 1
+
+                insumo_obj = Insumo.objects.filter(pk=insumo_id).first() if insumo_id and str(insumo_id).isdigit() else None
+                try:
+                    cant_dec = Decimal(str(cant_ins)) if cant_ins else Decimal('1.00')
+                    if cant_dec <= 0:
+                        cant_dec = Decimal('1.00')
+                except Exception:
+                    cant_dec = Decimal('1.00')
+
+                Opcion.objects.create(
+                    idgrupo=grupo,
+                    nombre=nom,
+                    precioadicional=precio or 0,
+                    idinsumo=insumo_obj,
+                    cantidad_insumo=cant_dec,
+                )
 
             messages.success(
                 request, 'Grupo de opciones creado correctamente.'
@@ -1412,12 +1390,14 @@ def grupo_crear(request):
 
     return render(request, 'panel/menu/opciones/crearGrupo.html', {
         'errores': errores,
+        'insumos': insumos,
     })
 
 
 def grupo_editar(request, idgrupo):
     grupo = get_object_or_404(GrupoOpcion, pk=idgrupo)
     errores = []
+    insumos = Insumo.objects.all().order_by('nombreinsumo')
 
     if request.method == 'POST':
         nombre = request.POST.get('nombre', '').strip()
@@ -1430,11 +1410,63 @@ def grupo_editar(request, idgrupo):
         else:
             grupo.nombre = nombre
             grupo.save()
+
+            opcion_ids = request.POST.getlist('opcion_id[]')
+            opcion_nombres = request.POST.getlist('opcion_nombre[]')
+            opcion_precios = request.POST.getlist('opcion_precio[]')
+            opcion_insumos = request.POST.getlist('opcion_insumo[]')
+            opcion_cantidades = request.POST.getlist('opcion_cantidad_insumo[]')
+            opcion_eliminar = set(request.POST.getlist('opcion_eliminar[]'))
+
+            if opcion_eliminar:
+                Opcion.objects.filter(idgrupo=grupo, pk__in=opcion_eliminar).delete()
+
+            total_opc = len(opcion_nombres)
+            for i in range(total_opc):
+                opc_id_raw = opcion_ids[i].strip() if i < len(opcion_ids) else ''
+                if opc_id_raw in opcion_eliminar:
+                    continue
+
+                nom = opcion_nombres[i].strip() if i < len(opcion_nombres) else ''
+                if not nom:
+                    continue
+
+                precio = opcion_precios[i] if i < len(opcion_precios) else 0
+                insumo_id = opcion_insumos[i] if i < len(opcion_insumos) else None
+                cant_ins = opcion_cantidades[i] if i < len(opcion_cantidades) else 1
+
+                insumo_obj = Insumo.objects.filter(pk=insumo_id).first() if insumo_id and str(insumo_id).isdigit() else None
+                try:
+                    cant_dec = Decimal(str(cant_ins)) if cant_ins else Decimal('1.00')
+                    if cant_dec <= 0:
+                        cant_dec = Decimal('1.00')
+                except Exception:
+                    cant_dec = Decimal('1.00')
+
+                if opc_id_raw and opc_id_raw.isdigit():
+                    opcion_obj = Opcion.objects.filter(pk=int(opc_id_raw), idgrupo=grupo).first()
+                    if opcion_obj:
+                        opcion_obj.nombre = nom
+                        opcion_obj.precioadicional = precio or 0
+                        opcion_obj.idinsumo = insumo_obj
+                        opcion_obj.cantidad_insumo = cant_dec
+                        opcion_obj.save()
+                else:
+                    Opcion.objects.create(
+                        idgrupo=grupo,
+                        nombre=nom,
+                        precioadicional=precio or 0,
+                        idinsumo=insumo_obj,
+                        cantidad_insumo=cant_dec,
+                    )
+
             messages.success(request, 'Grupo actualizado correctamente.')
             return redirect('grupo_lista')
 
     return render(request, 'panel/menu/opciones/editarGrupo.html', {
         'grupo': grupo,
+        'opciones': grupo.opcion_set.select_related('idinsumo').all(),
+        'insumos': insumos,
         'errores': errores,
     })
 
