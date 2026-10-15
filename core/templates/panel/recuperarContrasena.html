@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Contraseña | Zona Burger</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --zb-rojo: #dc2626;
+            --zb-rojo-hover: #b91c1c;
+            --zb-negro: #0a0a0c;
+            --zb-card: #151518;
+            --zb-card-borde: rgba(255, 255, 255, 0.08);
+            --zb-input-bg: #1c1c21;
+            --zb-input-borde: #2d2d35;
+            --zb-texto: #ffffff;
+            --zb-texto-mutado: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: radial-gradient(circle at top center, rgba(220, 38, 38, 0.12), transparent 500px), var(--zb-negro);
+            color: var(--zb-texto);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .login-card {
+            background: var(--zb-card);
+            border: 1px solid var(--zb-card-borde);
+            border-radius: 14px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--zb-rojo), #ff5635);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .login-logo {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 4px 12px rgba(220, 38, 38, 0.25));
+        }
+
+        .login-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 0.85rem;
+            color: var(--zb-texto-mutado);
+            line-height: 1.5;
+        }
+
+        .login-messages {
+            margin-bottom: 24px;
+        }
+
+        .login-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .login-alert-success {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #6ee7b7;
+        }
+
+        .login-alert-error {
+            background: rgba(220, 38, 38, 0.12);
+            border: 1px solid rgba(220, 38, 38, 0.35);
+            color: #fca5a5;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #d1d5db;
+            margin-bottom: 8px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 0.95rem;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 48px;
+            background: var(--zb-input-bg);
+            border: 1px solid var(--zb-input-borde);
+            border-radius: 8px;
+            padding: 0 16px 0 42px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--zb-rojo);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+            background: #212127;
+        }
+
+        .btn-submit {
+            width: 100%;
+            height: 48px;
+            background: linear-gradient(135deg, var(--zb-rojo), #b91c1c);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(220, 38, 38, 0.28);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #ef4444, var(--zb-rojo));
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(220, 38, 38, 0.4);
+        }
+
+        .login-footer {
+            margin-top: 28px;
+            text-align: center;
+            border-top: 1px solid var(--zb-card-borde);
+            padding-top: 20px;
+        }
+
+        .back-to-login {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--zb-texto-mutado);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .back-to-login:hover {
+            color: #fff;
+            transform: translateX(-3px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <img src="{% static 'img/logo.png' %}" alt="Zona Burger" class="login-logo">
+            <h1 class="login-title">Recuperar Contraseña</h1>
+            <p class="login-subtitle">
+                Ingresá tu correo electrónico registrado y te enviaremos un enlace seguro para restablecerla.
+            </p>
+        </div>
+
+        {% if messages %}
+            <div class="login-messages">
+                {% for message in messages %}
+                    <div class="login-alert login-alert-{{ message.tags|default:'success' }}">
+                        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if not correo_enviado %}
+            <form method="POST" action="{% url 'panel_recuperar_contrasena' %}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="correo" class="form-label">Correo Electrónico</label>
+                    <div class="input-group">
+                        <input
+                            type="email"
+                            id="correo"
+                            name="correo"
+                            class="form-input"
+                            placeholder="tu-correo@zonaburger.com"
+                            required
+                            autofocus
+                        >
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <span>Enviar instrucciones</span>
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        {% endif %}
+
+        <div class="login-footer">
+            <a href="{% url 'panel_login' %}" class="back-to-login">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Volver a iniciar sesión</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import re
+import secrets
 import urllib.parse
 import unicodedata
 from datetime import datetime, timedelta
@@ -9,10 +10,13 @@ from io import BytesIO
 from urllib.parse import quote
 from xml.sax.saxutils import escape
 from django import forms
+from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
@@ -79,9 +83,15 @@ from .models import (
     DetallePedido, Direccion, Empleado, EstadoNegocio, EstadoPedido, Extras, GrupoOpcion,
     Horario, Insumo, Lote, MedioPago, MovimientoStock, Negocio, Opcion, Pedido, Permiso,
     Producto, ProductoExtras, ProductoGrupoOpcion, ProductoPromocion,
-    Promocion, Receta, RecetaInsumo, RedesSociales, Rol, RolPermiso,
+    Promocion, Receta, RecetaInsumo, RedesSociales, RegistroAuditoria, Rol, RolPermiso,
     TipoBeneficio, UltimaModificacion, ZonasEntrega,
 )
+from .decorators import (
+    panel_login_requerido,
+    requiere_permiso,
+    requiere_algun_permiso,
+)
+from .utils import registrar_auditoria, obtener_ip_cliente
 from .stock_service import (
     calcular_consumo_carrito,
     descontar_stock_pedido,
@@ -169,6 +179,7 @@ def index(request):
         'zonas': zonas,
         'instagram': obtener_instagram(),
         'promociones_activas': Promocion.objects.filter(activo=1),
+        'estado_local': local_estado(),
     })
 
 
@@ -185,6 +196,7 @@ def menu(request):
         'categorias': categorias,
         'negocio': Negocio.objects.first(),
         'instagram': obtener_instagram(),
+        'estado_local': local_estado(),
     })
 
 
@@ -307,6 +319,7 @@ def detalleProducto(request, idproducto):
         'instagram': obtener_instagram(),
         'item_editando': item_editando,
         'edit_item_id': edit_item_id,
+        'estado_local': local_estado(),
     })
 
 
@@ -316,6 +329,17 @@ def detalleProducto(request, idproducto):
 
 def agregar_al_carrito(request, idproducto):
     if request.method != 'POST':
+        return redirect('menu')
+
+    estado = local_estado()
+    if not estado.get('abierto', True):
+        msg = "En este momento el negocio está cerrado. No es posible agregar productos al carrito."
+        if es_peticion_ajax(request):
+            return JsonResponse({'status': 'error', 'message': msg}, status=400)
+        messages.error(request, msg)
+        referer = request.META.get('HTTP_REFERER')
+        if referer and url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
+            return redirect(referer)
         return redirect('menu')
 
     producto = get_object_or_404(Producto, pk=idproducto)
@@ -458,6 +482,7 @@ def ver_carrito(request):
         'total_carrito': total_carrito,
         'negocio': Negocio.objects.first(),
         'instagram': obtener_instagram(),
+        'estado_local': local_estado(),
     })
 
 
@@ -466,6 +491,13 @@ def actualizar_cantidad_carrito(request, item_id, accion):
 
     if item_id in carrito:
         if accion == 'aumentar':
+            estado = local_estado()
+            if not estado.get('abierto', True):
+                messages.error(
+                    request,
+                    "En este momento el negocio está cerrado. No es posible agregar productos al carrito."
+                )
+                return redirect('ver_carrito')
             carrito[item_id]['cantidad'] += 1
         elif accion == 'disminuir':
             carrito[item_id]['cantidad'] -= 1
@@ -733,6 +765,19 @@ def calcular_consumo_insumos(carrito):
 
 
 def procesar_checkout(request):
+    info_estado = local_estado()
+    if not info_estado.get('abierto', True):
+        mensaje_cerrado = 'El negocio está cerrado en este momento. Podrás realizar tu pedido cuando vuelva a abrir.'
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or (
+            request.method == 'GET' and 'application/json' in request.META.get('HTTP_ACCEPT', '')
+        ):
+            return JsonResponse({'status': 'error', 'mensaje': mensaje_cerrado, 'cerrado': True}, status=403)
+        if request.method == 'POST':
+            messages.error(request, 'No se pudo confirmar tu pedido porque el negocio está cerrado. Intentá nuevamente cuando vuelva a abrir.')
+        else:
+            messages.warning(request, mensaje_cerrado)
+        return redirect('ver_carrito')
+
     carrito = request.session.get('carrito', {})
 
     total_carrito = sum(
@@ -769,6 +814,8 @@ def procesar_checkout(request):
         'zonas_entrega': zonas_entrega,
         'total_carrito': total_carrito,
         'carrito_items': _items_checkout(carrito),
+        'negocio_abierto': info_estado.get('abierto', True),
+        'mensaje_negocio': info_estado.get('mensaje', ''),
     }
 
     if request.method != 'POST':
@@ -932,6 +979,12 @@ def procesar_checkout(request):
 
     try:
         with transaction.atomic():
+            info_confirmacion = local_estado()
+            if not info_confirmacion.get('abierto', True):
+                raise ValueError(
+                    'No se pudo confirmar tu pedido porque el negocio está cerrado. Intentá nuevamente cuando vuelva a abrir.'
+                )
+
             cliente = Cliente.objects.create(
                 nombre=nombre,
                 apellido=apellido,
@@ -985,6 +1038,9 @@ def procesar_checkout(request):
             # Descontar stock atómicamente y registrar movimientos
             descontar_stock_pedido(pedido, consumo_insumos)
 
+    except ValueError as e:
+        messages.error(request, str(e))
+        return redirect('ver_carrito')
     except StockInsuficienteError as e:
         messages.error(request, str(e))
         return redirect('ver_carrito')
@@ -1074,6 +1130,7 @@ def pedido_exitoso(request):
 # 5. PANEL - INICIO Y PEDIDOS
 # ============================================================
 
+@panel_login_requerido
 def panel_inicio(request):
     hoy = timezone.localdate()
     pedidos_hoy_base = Pedido.objects.filter(fecha_creacion__date=hoy)
@@ -1134,6 +1191,8 @@ def panel_inicio(request):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('pedidos.ver')
 def obtener_ticket_modal(request, idpedido):
     pedido = get_object_or_404(Pedido, idpedido=idpedido)
 
@@ -1155,6 +1214,8 @@ def obtener_ticket_modal(request, idpedido):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('pedidos.cambiar_estado')
 def actualizar_estado_pedido(request, idpedido):
     if request.method != 'POST':
         return redirect('panel_inicio')
@@ -1217,6 +1278,8 @@ def actualizar_estado_pedido(request, idpedido):
     return redirect('panel_inicio')
 
 
+@panel_login_requerido
+@requiere_permiso('pedidos.marcar_pagado')
 def toggle_pagado(request, idpedido):
     pedido = get_object_or_404(Pedido, pk=idpedido)
     pedido.pagado = not pedido.pagado
@@ -1239,16 +1302,22 @@ def toggle_pagado(request, idpedido):
 
 # Pendientes de implementar.
 
+@panel_login_requerido
+@requiere_permiso('pedidos.ver')
 def ver_ticket(request, idpedido):
     get_object_or_404(Pedido, idpedido=idpedido)
     return HttpResponse(f'Visualizando el ticket del pedido #{idpedido}')
 
 
+@panel_login_requerido
+@requiere_permiso('pedidos.imprimir')
 def imprimir_ticket(request, idpedido):
     get_object_or_404(Pedido, idpedido=idpedido)
     return HttpResponse(f'Imprimiendo ticket del pedido #{idpedido}')
 
 
+@panel_login_requerido
+@requiere_permiso('pedidos.cambiar_estado')
 def cambiar_estado_pedido(request, idpedido):
     get_object_or_404(Pedido, idpedido=idpedido)
     return redirect('panel_inicio')
@@ -1258,6 +1327,7 @@ def cambiar_estado_pedido(request, idpedido):
 # 6. PANEL - MENÚ
 # ============================================================
 
+@panel_login_requerido
 def menu_panel(request):
     return render(request, 'panel/menu/inicioMenu.html')
 
@@ -1266,12 +1336,16 @@ def menu_panel(request):
 # Categorías
 # ------------------------------------------------------------
 
+@panel_login_requerido
+@requiere_permiso('categorias.ver')
 def categoria_lista(request):
     return render(request, 'panel/menu/categorias/listaCategorias.html', {
         'categorias': CategoriaProducto.objects.all(),
     })
 
 
+@panel_login_requerido
+@requiere_permiso('categorias.crear')
 def categoria_crear(request):
     errores = []
 
@@ -1290,6 +1364,8 @@ def categoria_crear(request):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('categorias.editar')
 def categoria_editar(request, idcategoria):
     categoria = get_object_or_404(CategoriaProducto, pk=idcategoria)
     errores = []
@@ -1311,6 +1387,8 @@ def categoria_editar(request, idcategoria):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('categorias.eliminar')
 def categoria_eliminar(request, idcategoria):
     categoria = get_object_or_404(CategoriaProducto, pk=idcategoria)
 
@@ -1330,12 +1408,16 @@ def categoria_eliminar(request, idcategoria):
 # Grupos de opciones
 # ------------------------------------------------------------
 
+@panel_login_requerido
+@requiere_permiso('opciones.ver')
 def grupo_lista(request):
     return render(request, 'panel/menu/opciones/listaOpciones.html', {
         'grupos': GrupoOpcion.objects.prefetch_related('opcion_set').all(),
     })
 
 
+@panel_login_requerido
+@requiere_permiso('opciones.crear')
 def grupo_crear(request):
     errores = []
     insumos = Insumo.objects.all().order_by('nombreinsumo')
@@ -1394,6 +1476,8 @@ def grupo_crear(request):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('opciones.editar')
 def grupo_editar(request, idgrupo):
     grupo = get_object_or_404(GrupoOpcion, pk=idgrupo)
     errores = []
@@ -1471,6 +1555,8 @@ def grupo_editar(request, idgrupo):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('opciones.eliminar')
 def grupo_eliminar(request, idgrupo):
     grupo = get_object_or_404(GrupoOpcion, pk=idgrupo)
 
@@ -1528,6 +1614,8 @@ def _guardar_relaciones_producto(producto, grupos_ids, extras_ids):
         ProductoExtras.objects.create(idproducto=producto, idextra=extra)
 
 
+@panel_login_requerido
+@requiere_permiso('productos.ver')
 def producto_lista(request):
     productos = (
         Producto.objects
@@ -1546,6 +1634,8 @@ def producto_lista(request):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('productos.crear')
 def producto_crear(request):
     contexto = {
         'categorias': CategoriaProducto.objects.all(),
@@ -1602,6 +1692,8 @@ def producto_crear(request):
     return redirect('producto_lista')
 
 
+@panel_login_requerido
+@requiere_permiso('productos.editar')
 def producto_editar(request, idproducto):
     producto = get_object_or_404(Producto, pk=idproducto)
 
@@ -1667,6 +1759,8 @@ def producto_editar(request, idproducto):
     return redirect('producto_lista')
 
 
+@panel_login_requerido
+@requiere_permiso('productos.eliminar')
 def producto_eliminar(request, idproducto):
     """
     Borrado lógico: el producto cambia a estado Eliminado (o vuelve a Activo
@@ -1702,6 +1796,8 @@ def producto_eliminar(request, idproducto):
 # Extras
 # ------------------------------------------------------------
 
+@panel_login_requerido
+@requiere_permiso('extras.ver')
 def extra_lista(request):
     extras_con_conteo = [
         {
@@ -1718,6 +1814,8 @@ def extra_lista(request):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('extras.crear')
 def extra_crear(request):
     if request.method == 'POST':
         form = ExtraForm(request.POST)
@@ -1737,6 +1835,8 @@ def extra_crear(request):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('extras.editar')
 def extra_editar(request, idextra):
     extra = get_object_or_404(Extras, pk=idextra)
 
@@ -1759,6 +1859,8 @@ def extra_editar(request, idextra):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('extras.eliminar')
 def extra_eliminar(request, idextra):
     extra = get_object_or_404(Extras, pk=idextra)
     cant_productos = ProductoExtras.objects.filter(idextra=extra).count()
@@ -1784,6 +1886,8 @@ def extra_eliminar(request, idextra):
 # Recetas
 # ------------------------------------------------------------
 
+@panel_login_requerido
+@requiere_permiso('recetas.administrar')
 def gestionar_receta(request, idproducto):
     producto = get_object_or_404(Producto, pk=idproducto)
     receta, _ = Receta.objects.get_or_create(idproducto=producto)
@@ -1881,6 +1985,8 @@ def gestionar_receta(request, idproducto):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('recetas.administrar')
 def eliminar_insumo_receta(request, idrecetainsumo):
     detalle = get_object_or_404(RecetaInsumo, pk=idrecetainsumo)
 
@@ -1911,6 +2017,8 @@ def eliminar_insumo_receta(request, idrecetainsumo):
     return redirect(url)
 
 
+@panel_login_requerido
+@requiere_permiso('recetas.administrar')
 def editar_cantidad_insumo_receta(request, idrecetainsumo):
     detalle = get_object_or_404(
         RecetaInsumo.objects.select_related(
@@ -1993,16 +2101,22 @@ def _form_promocion_con_error(request, contexto, mensaje):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('promociones.ver')
 def promociones_panel(request):
     return render(request, 'panel/promociones/inicioPromociones.html')
 
 
+@panel_login_requerido
+@requiere_permiso('promociones.ver')
 def lista_promociones(request):
     return render(request, 'panel/promociones/listaPromociones.html', {
         'promociones': Promocion.objects.all(),
     })
 
 
+@panel_login_requerido
+@requiere_permiso('promociones.crear')
 def crear_promocion(request):
     contexto = {
         'titulo': 'Crear promoción',
@@ -2093,6 +2207,8 @@ def crear_promocion(request):
     return redirect('panel_lista_promociones')
 
 
+@panel_login_requerido
+@requiere_permiso('promociones.editar')
 def editar_promocion(request, idpromocion):
     promocion = get_object_or_404(Promocion, idpromocion=idpromocion)
 
@@ -2200,6 +2316,8 @@ def editar_promocion(request, idpromocion):
     return redirect('panel_lista_promociones')
 
 
+@panel_login_requerido
+@requiere_permiso('promociones.eliminar')
 def eliminar_promocion(request, idpromocion):
     promocion = get_object_or_404(Promocion, pk=idpromocion)
 
@@ -2219,6 +2337,8 @@ def eliminar_promocion(request, idpromocion):
 # Tipos de beneficio
 # ------------------------------------------------------------
 
+@panel_login_requerido
+@requiere_permiso('tipos_beneficio.administrar')
 def lista_tipos_beneficio(request):
     return render(
         request,
@@ -2227,6 +2347,8 @@ def lista_tipos_beneficio(request):
     )
 
 
+@panel_login_requerido
+@requiere_permiso('tipos_beneficio.administrar')
 def crear_tipo_beneficio(request):
     if request.method == 'GET':
         return render(
@@ -2274,6 +2396,8 @@ def crear_tipo_beneficio(request):
     return redirect('lista_tipos_beneficio')
 
 
+@panel_login_requerido
+@requiere_permiso('tipos_beneficio.administrar')
 def editar_tipo_beneficio(request, pk):
     tipo = get_object_or_404(TipoBeneficio, pk=pk)
 
@@ -2325,6 +2449,8 @@ def editar_tipo_beneficio(request, pk):
     )
 
 
+@panel_login_requerido
+@requiere_permiso('tipos_beneficio.administrar')
 def eliminar_tipo_beneficio(request, pk):
     tipo = get_object_or_404(TipoBeneficio, pk=pk)
 
@@ -2354,6 +2480,8 @@ def eliminar_tipo_beneficio(request, pk):
 # ============================================================
 
 
+@panel_login_requerido
+@requiere_permiso('stock.ver')
 def stock_lista(request):
     hoy = timezone.localdate()
     fecha_limite = hoy + timedelta(days=7)
@@ -2415,6 +2543,8 @@ def stock_lista(request):
 
 
 
+@panel_login_requerido
+@requiere_permiso('stock.crear')
 def stock_crear(request):
     if request.method == 'POST':
         Insumo.objects.create(
@@ -2433,6 +2563,8 @@ def stock_crear(request):
     return render(request, 'panel/stock/stockForm.html')
 
 
+@panel_login_requerido
+@requiere_permiso('stock.editar')
 def stock_editar(request, idinsumo):
     insumo = get_object_or_404(Insumo, pk=idinsumo)
 
@@ -2471,6 +2603,8 @@ def stock_editar(request, idinsumo):
     return render(request, 'panel/stock/editarStock.html', {'insumo': insumo})
 
 
+@panel_login_requerido
+@requiere_permiso('stock.compras')
 def registrar_compra_insumo(request):
     if request.method == 'POST':
         insumo = get_object_or_404(Insumo, pk=request.POST.get('idinsumo'))
@@ -2535,6 +2669,8 @@ def registrar_compra_insumo(request):
     })
 
 
+@panel_login_requerido
+@requiere_permiso('stock.ajustar')
 def ajustar_stock(request, idinsumo):
     insumo = get_object_or_404(Insumo, pk=idinsumo)
 
@@ -2616,8 +2752,12 @@ def _error_correo(correo, idempleado=None):
     return None
 
 
+@panel_login_requerido
 def empleado_lista(request):
     if request.method == 'POST':
+        if hasattr(request.user, 'tiene_permiso') and not request.user.tiene_permiso('usuarios.crear'):
+            messages.error(request, 'No tenés permiso para crear usuarios.')
+            return redirect('empleado_lista')
         nombre = request.POST.get('nombre', '').strip()
         apellido = request.POST.get('apellido', '').strip()
         idrol = request.POST.get('idrol', '').strip()
@@ -2820,6 +2960,21 @@ def empleado_editar(request, idempleado):
                     idempleado=empleado.pk
                 )
 
+        activo_check = request.POST.get('activo') is not None
+        if getattr(request.user, 'pk', None) == empleado.pk and not activo_check:
+            messages.error(request, 'Por motivos de seguridad no podés desactivar tu propia cuenta.')
+            return redirect('empleado_editar', idempleado=empleado.pk)
+
+        if (
+            getattr(request.user, 'pk', None) == empleado.pk
+            and hasattr(request.user, 'idrol')
+            and request.user.idrol
+            and (request.user.idrol.nombrerol or '').strip().lower() == 'administrador'
+            and (rol.nombrerol or '').strip().lower() != 'administrador'
+        ):
+            messages.error(request, 'No podés remover tu propio rol de Administrador.')
+            return redirect('empleado_editar', idempleado=empleado.pk)
+
         with transaction.atomic():
             empleado = Empleado.objects.select_for_update().get(
                 pk=idempleado
@@ -2829,12 +2984,14 @@ def empleado_editar(request, idempleado):
             empleado.apellido = apellido
             empleado.correo = correo
             empleado.id_rol = rol.pk
+            empleado.activo = activo_check
 
             campos = [
                 'nombre',
                 'apellido',
                 'correo',
                 'id_rol',
+                'activo',
             ]
 
             if contrasena:
@@ -2842,6 +2999,7 @@ def empleado_editar(request, idempleado):
                 campos.append('contrasena')
 
             empleado.save(update_fields=campos)
+            registrar_auditoria(request, 'USUARIO_EDITAR', f'Empleado {empleado.correo} modificado')
 
         messages.success(
             request,
@@ -5037,19 +5195,8 @@ def local_calcular_estado():
 # 11.5 Cambio de modo (abrir / cerrar / automático)
 # ------------------------------------------------------------
 
-def local_estado_fijo(descripcion, id_negocio, ahora):
-    estado = EstadoNegocio.objects.filter(descripcion=descripcion).first()
-    if estado:
-        return estado
-    modificacion = UltimaModificacion.objects.create(
-        fecha=ahora,
-        idempleado=None,
-        descripcioncambio=f"Estado inicial: {descripcion}",
-        idnegocio=id_negocio,
-    )
-    return EstadoNegocio.objects.create(
-        idmodificacion=modificacion, descripcion=descripcion
-    )
+def local_estado_fijo(descripcion):
+    return EstadoNegocio.objects.filter(descripcion=descripcion).first()
 
 
 def local_aplicar_modo(modo, empleado=None):
@@ -5060,13 +5207,16 @@ def local_aplicar_modo(modo, empleado=None):
             return None
 
         ahora = local_ahora()
-        estado = local_estado_fijo(modo, negocio.idnegocio, ahora)
+        estado = local_estado_fijo(modo)
+        if estado is None:
+            raise ValueError(f"Falta cargar en EstadoNegocio el estado '{modo}'.")
 
         UltimaModificacion.objects.create(
             fecha=ahora,
             idempleado=empleado,
             descripcioncambio=f"{LOCAL_PREFIJO_LOG} {LOCAL_TEXTO_LOG[modo]}",
             idnegocio=negocio.idnegocio,
+            idestado=estado,
         )
 
         negocio.idestado = estado
@@ -5171,6 +5321,16 @@ def cambiar_estado_local(request):
         messages.error(request, "Acción no válida.")
         return redirect(destino)
 
+    permiso_por_accion = {
+        'abrir': 'negocio.abrir',
+        'cerrar': 'negocio.cerrar',
+        'automatico': 'negocio.automatico',
+    }
+    permiso_req = permiso_por_accion.get(accion)
+    if permiso_req and hasattr(request.user, 'tiene_permiso') and not request.user.tiene_permiso(permiso_req):
+        messages.error(request, 'No tenés permiso para modificar el estado del local.')
+        return redirect(destino)
+
     modo, texto = modos[accion]
     empleado = request.user if isinstance(request.user, Empleado) else None
     negocio = local_aplicar_modo(modo, empleado)
@@ -5178,6 +5338,275 @@ def cambiar_estado_local(request):
     if negocio is None:
         messages.error(request, "No hay un negocio configurado.")
     else:
+        registrar_auditoria(request, f'NEGOCIO_{accion.upper()}', f'Estado del negocio cambiado a {modo}')
         messages.success(request, texto)
 
     return redirect(destino)
+
+
+# ============================================================
+# 12. API DE ESTADO EN TIEMPO REAL
+# ============================================================
+
+def api_estado_negocio(request):
+    """
+    API pública en tiempo real para consultar el estado del negocio (abierto/cerrado).
+    Utilizado por la tienda pública (index, carrito, etc.) para sincronizar el estado sin recargar la página.
+    """
+    estado = local_estado()
+    return JsonResponse({
+        'status': 'success',
+        'abierto': bool(estado.get('abierto', True)),
+        'mensaje': estado.get('mensaje', ''),
+        'manual': bool(estado.get('manual', False)),
+    })
+
+
+# ============================================================
+# 13. PANEL - AUTENTICACIÓN, PERFIL Y SEGURIDAD
+# ============================================================
+
+def panel_login(request):
+    """
+    Login personalizado del panel de administración de Zona Burger.
+    Reutiliza el sistema de autenticación de Django mediante EmpleadoAuthBackend.
+    """
+    if getattr(request.user, 'is_authenticated', False) and getattr(request.user, 'is_active', False):
+        return redirect('panel_inicio')
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        next_url = request.POST.get('next') or request.GET.get('next') or reverse('panel_inicio')
+
+        if not username or not password:
+            messages.error(request, 'Por favor ingresá tu usuario/correo y contraseña.')
+            return render(request, 'panel/login.html')
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            if getattr(user, 'activo', True):
+                login(request, user, backend='core.auth_backend.EmpleadoAuthBackend')
+                user.ultimo_login = timezone.now()
+                user.save(update_fields=['last_login'])
+                registrar_auditoria(request, 'LOGIN', f'Inicio de sesión exitoso: {user.get_username()}')
+
+                if not url_has_allowed_host_and_scheme(
+                    next_url,
+                    allowed_hosts={request.get_host()},
+                    require_https=request.is_secure()
+                ):
+                    next_url = reverse('panel_inicio')
+
+                messages.success(request, f'¡Bienvenido/a, {user.nombre}!')
+                return redirect(next_url)
+            else:
+                messages.error(request, 'Tu cuenta está desactivada. Por favor contactá al administrador.')
+                return render(request, 'panel/login.html')
+        else:
+            # Comprobar si existe la cuenta pero está inactiva para emitir un aviso preciso
+            empleado_inactivo = (
+                Empleado.objects.filter(correo__iexact=username.lower()).first()
+                or Empleado.objects.filter(nombre__iexact=username).first()
+            )
+            if empleado_inactivo and not empleado_inactivo.activo:
+                messages.error(request, 'Tu cuenta ha sido desactivada. Por favor contactá al administrador.')
+            else:
+                messages.error(request, 'Usuario/correo o contraseña incorrectos.')
+            return render(request, 'panel/login.html')
+
+    return render(request, 'panel/login.html')
+
+
+def panel_logout(request):
+    """
+    Cierre de sesión seguro para usuarios del panel administrativo.
+    """
+    if getattr(request.user, 'is_authenticated', False):
+        registrar_auditoria(request, 'LOGOUT', f'Cierre de sesión: {request.user.get_username()}')
+    logout(request)
+    messages.success(request, 'Sesión cerrada correctamente.')
+    return redirect('panel_login')
+
+
+def panel_recuperar_contrasena(request):
+    """
+    Solicitud de restablecimiento de contraseña vía correo electrónico con token seguro,
+    vencimiento temporal y uso único.
+    Seguridad defensiva: no revela si un correo electrónico está o no registrado.
+    """
+    correo_enviado = False
+
+    if request.method == 'POST':
+        correo = request.POST.get('correo', '').strip().lower()
+
+        if correo:
+            empleado = Empleado.objects.filter(correo__iexact=correo, activo=True).first()
+
+            if empleado:
+                token = secrets.token_urlsafe(32)
+                expiracion = timezone.now() + timedelta(hours=2)
+
+                empleado.token_recuperacion = token
+                empleado.token_expiracion = expiracion
+                empleado.save(update_fields=['token_recuperacion', 'token_expiracion'])
+
+                enlace = request.build_absolute_uri(
+                    reverse('panel_restablecer_contrasena', kwargs={'token': token})
+                )
+
+                asunto = "Zona Burger - Recuperación de Contraseña"
+                cuerpo = (
+                    f"Hola {empleado.nombre},\n\n"
+                    f"Recibimos una solicitud para restablecer la contraseña de tu cuenta en el panel administrativo de Zona Burger.\n\n"
+                    f"Podés generar una nueva contraseña ingresando al siguiente enlace seguro (válido por 2 horas):\n"
+                    f"{enlace}\n\n"
+                    f"Si no solicitaste este cambio, podés ignorar este mensaje; tu contraseña actual continuará siendo segura.\n\n"
+                    f"Equipo de Zona Burger"
+                )
+
+                try:
+                    send_mail(
+                        subject=asunto,
+                        message=cuerpo,
+                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'Zona Burger <no-reply@zonaburger.com>'),
+                        recipient_list=[empleado.correo],
+                        fail_silently=False,
+                    )
+                    registrar_auditoria(request, 'RECUPERACION_SOLICITADA', f'Correo de recuperación enviado a {correo}')
+                except Exception as e:
+                    logger.exception("Error al enviar correo de recuperación a %s: %s", correo, e)
+
+            correo_enviado = True
+            messages.success(
+                request,
+                'Si el correo electrónico ingresado corresponde a una cuenta activa registrada, '
+                'recibirás un enlace con instrucciones para restablecer tu contraseña.'
+            )
+
+    return render(request, 'panel/recuperarContrasena.html', {'correo_enviado': correo_enviado})
+
+
+def panel_restablecer_contrasena(request, token):
+    """
+    Permite establecer una nueva contraseña a partir de un token de recuperación válido y vigente.
+    Invalida el token inmediatamente después del cambio para garantizar uso único.
+    """
+    empleado = Empleado.objects.filter(token_recuperacion=token).first()
+
+    if not empleado or not empleado.token_expiracion or empleado.token_expiracion < timezone.now() or not empleado.activo:
+        messages.error(
+            request,
+            'El enlace de recuperación es inválido o ha expirado. Por favor solicitá un nuevo enlace.'
+        )
+        return redirect('panel_recuperar_contrasena')
+
+    if request.method == 'POST':
+        nueva = request.POST.get('nueva_contrasena', '')
+        confirmar = request.POST.get('confirmar_contrasena', '')
+
+        if not nueva or not confirmar:
+            messages.error(request, 'Por favor completá ambos campos.')
+            return render(request, 'panel/restablecerContrasena.html', {'empleado': empleado, 'token': token})
+
+        if nueva != confirmar:
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return render(request, 'panel/restablecerContrasena.html', {'empleado': empleado, 'token': token})
+
+        if len(nueva) < 8:
+            messages.error(request, 'La nueva contraseña debe tener al menos 8 caracteres.')
+            return render(request, 'panel/restablecerContrasena.html', {'empleado': empleado, 'token': token})
+
+        with transaction.atomic():
+            empleado.contrasena = make_password(nueva)
+            empleado.token_recuperacion = None
+            empleado.token_expiracion = None
+            empleado.save(update_fields=['contrasena', 'token_recuperacion', 'token_expiracion'])
+            registrar_auditoria(request, 'RESTABLECER_CONTRASENA', f'Contraseña restablecida con token para {empleado.correo}')
+
+        messages.success(request, 'Tu contraseña ha sido actualizada exitosamente. Ya podés iniciar sesión con tu nueva clave.')
+        return redirect('panel_login')
+
+    return render(request, 'panel/restablecerContrasena.html', {'empleado': empleado, 'token': token})
+
+
+@panel_login_requerido
+def panel_cambiar_contrasena(request):
+    """
+    Permite que cada usuario autenticado cambie su propia contraseña desde el panel,
+    validando obligatoriamente su contraseña actual.
+    """
+    if request.method == 'POST':
+        actual = request.POST.get('contrasena_actual', '')
+        nueva = request.POST.get('nueva_contrasena', '')
+        confirmar = request.POST.get('confirmar_contrasena', '')
+
+        if not actual or not nueva or not confirmar:
+            messages.error(request, 'Por favor completá todos los campos.')
+            return render(request, 'panel/cambiarContrasena.html')
+
+        if not check_password(actual, request.user.contrasena):
+            messages.error(request, 'La contraseña actual ingresada es incorrecta.')
+            return render(request, 'panel/cambiarContrasena.html')
+
+        if nueva != confirmar:
+            messages.error(request, 'La nueva contraseña y su confirmación no coinciden.')
+            return render(request, 'panel/cambiarContrasena.html')
+
+        if len(nueva) < 8:
+            messages.error(request, 'La nueva contraseña debe tener al menos 8 caracteres.')
+            return render(request, 'panel/cambiarContrasena.html')
+
+        if actual == nueva:
+            messages.error(request, 'La nueva contraseña debe ser distinta a la contraseña actual.')
+            return render(request, 'panel/cambiarContrasena.html')
+
+        with transaction.atomic():
+            request.user.contrasena = make_password(nueva)
+            request.user.save(update_fields=['contrasena'])
+            update_session_auth_hash(request, request.user)
+            registrar_auditoria(request, 'CAMBIAR_CONTRASENA', f'Cambio de contraseña propio de {request.user.get_username()}')
+
+        messages.success(request, 'Tu contraseña ha sido actualizada correctamente.')
+        return redirect('panel_inicio')
+
+    return render(request, 'panel/cambiarContrasena.html')
+
+
+@panel_login_requerido
+def panel_perfil(request):
+    """
+    Vista de perfil del usuario autenticado en el panel.
+    Muestra datos del empleado, rol, permisos asignados y fecha de último login.
+    """
+    permisos_codigos = request.user.obtener_permisos() if hasattr(request.user, 'obtener_permisos') else set()
+    permisos_detallados = Permiso.objects.filter(codigo__in=permisos_codigos).order_by('modulo', 'accion')
+
+    return render(request, 'panel/perfil.html', {
+        'empleado': request.user,
+        'permisos_detallados': permisos_detallados,
+    })
+
+
+@requiere_permiso('usuarios.activar_desactivar')
+@require_POST
+def empleado_toggle_activo(request, idempleado):
+    """
+    Habilita o suspende una cuenta de usuario.
+    Previene auto-desactivación para evitar bloqueos del sistema.
+    """
+    if getattr(request.user, 'pk', None) == idempleado:
+        messages.error(request, 'Por motivos de seguridad no podés desactivar tu propia cuenta.')
+        return redirect('empleado_lista')
+
+    empleado = get_object_or_404(Empleado, pk=idempleado)
+    nuevo_estado = not empleado.activo
+    empleado.activo = nuevo_estado
+    empleado.save(update_fields=['activo'])
+
+    accion_texto = 'activada' if nuevo_estado else 'desactivada'
+    registrar_auditoria(request, 'USUARIO_TOGGLE_ACTIVO', f'Cuenta de {empleado.correo} {accion_texto}')
+    messages.success(request, f'La cuenta de {empleado.nombre} {empleado.apellido} fue {accion_texto} correctamente.')
+
+    return redirect('empleado_lista')

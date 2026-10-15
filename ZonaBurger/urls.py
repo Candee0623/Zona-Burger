@@ -9,6 +9,17 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
 
+    # Autenticación Personalizada del Panel
+    path('panel/login/', views.panel_login, name='panel_login'),
+    path('panel/logout/', views.panel_logout, name='panel_logout'),
+    path('panel/recuperar-contrasena/', views.panel_recuperar_contrasena, name='panel_recuperar_contrasena'),
+    path('panel/restablecer-contrasena/<str:token>/', views.panel_restablecer_contrasena, name='panel_restablecer_contrasena'),
+    path('panel/cambiar-contrasena/', views.panel_cambiar_contrasena, name='panel_cambiar_contrasena'),
+    path('panel/perfil/', views.panel_perfil, name='panel_perfil'),
+
+    # API en tiempo real
+    path('api/negocio/estado/', views.api_estado_negocio, name='api_estado_negocio'),
+
     # Vistas Públicas / Tienda
     path('', views.index, name='index'),
     path('menu/', views.menu, name='menu'),
@@ -108,6 +119,7 @@ urlpatterns = [
     path('panel/empleados/crear/', views.empleado_crear, name='empleado_crear'),
     path('panel/empleados/<int:idempleado>/editar/', views.empleado_editar, name='empleado_editar'),
     path('panel/empleados/<int:idempleado>/eliminar/', views.empleado_eliminar, name='empleado_eliminar'),
+    path('panel/empleados/<int:idempleado>/toggle-activo/', views.empleado_toggle_activo, name='empleado_toggle_activo'),
 
     # Roles y permisos
     path('panel/roles/', views.rol_lista, name='rol_lista'),

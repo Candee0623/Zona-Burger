@@ -10,7 +10,17 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.SeparateDatabaseAndState(
-            database_operations=[],
+            database_operations=[
+                migrations.RunSQL(
+                    sql="""
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('RecetaInsumo') AND name = 'UnidadMedida')
+                    BEGIN
+                        ALTER TABLE [RecetaInsumo] ADD [UnidadMedida] VARCHAR(20) NOT NULL CONSTRAINT [DF_RecetaInsumo_UnidadMedida] DEFAULT ('unidad');
+                    END
+                    """,
+                    reverse_sql=""
+                ),
+            ],
             state_operations=[
                 migrations.AddField(
                     model_name='empleado',

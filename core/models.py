@@ -35,8 +35,13 @@ class Empleado(models.Model):
         db_column='Apellido'
     )
 
-    id_rol = models.IntegerField(
-        db_column='IdRol'
+    idrol = models.ForeignKey(
+        Rol,
+        models.DO_NOTHING,
+        db_column='IdRol',
+        null=True,
+        blank=True,
+        related_name='empleados'
     )
 
     contrasena = models.CharField(
@@ -49,9 +54,106 @@ class Empleado(models.Model):
         db_column='CorreoElectronico'
     )
 
+    activo = models.BooleanField(
+        db_column='Activo',
+        default=True
+    )
+
+    fecha_creacion = models.DateTimeField(
+        db_column='FechaCreacion',
+        auto_now_add=True,
+        null=True,
+        blank=True
+    )
+
+    token_recuperacion = models.CharField(
+        db_column='TokenRecuperacion',
+        max_length=128,
+        null=True,
+        blank=True
+    )
+
+    token_expiracion = models.DateTimeField(
+        db_column='TokenExpiracion',
+        null=True,
+        blank=True
+    )
+
+    last_login = models.DateTimeField(
+        db_column='UltimoLogin',
+        null=True,
+        blank=True
+    )
+
+    @property
+    def ultimo_login(self):
+        return self.last_login
+
+    @ultimo_login.setter
+    def ultimo_login(self, value):
+        self.last_login = value
+
+    @property
+    def id_rol(self):
+        return self.idrol_id
+
+    @id_rol.setter
+    def id_rol(self, value):
+        self.idrol_id = value
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    @property
+    def is_active(self):
+        return bool(self.activo)
+
+    def get_session_auth_hash(self):
+        import hashlib
+        return hashlib.sha256((self.contrasena or '').encode()).hexdigest()
+
+    def get_username(self):
+        return self.correo or self.nombre
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellido}".strip() or self.correo
+
+    def tiene_permiso(self, codigo):
+        if not self.activo:
+            return False
+        if not self.idrol:
+            return False
+        if (self.idrol.nombrerol or '').strip().lower() == 'administrador':
+            return True
+        return RolPermiso.objects.filter(idrol=self.idrol, idpermiso__codigo=codigo).exists()
+
+    def tiene_algun_permiso(self, codigos):
+        if not self.activo:
+            return False
+        if not self.idrol:
+            return False
+        if (self.idrol.nombrerol or '').strip().lower() == 'administrador':
+            return True
+        return RolPermiso.objects.filter(idrol=self.idrol, idpermiso__codigo__in=codigos).exists()
+
+    def obtener_permisos(self):
+        if not self.activo or not self.idrol:
+            return set()
+        if (self.idrol.nombrerol or '').strip().lower() == 'administrador':
+            return set(Permiso.objects.values_list('codigo', flat=True))
+        return set(
+            RolPermiso.objects.filter(idrol=self.idrol).values_list('idpermiso__codigo', flat=True)
+        )
+
     class Meta:
         db_table = 'Empleado'
         managed = False
+
  
  
 class UltimaModificacion(models.Model):
@@ -69,10 +171,10 @@ class UltimaModificacion(models.Model):
 class EstadoNegocio(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
     descripcion = models.CharField(db_column='Descripcion', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
- 
+
     def __str__(self):
         return self.descripcion or f"Estado {self.idestado}"
- 
+
     class Meta:
         db_table = 'EstadoNegocio'
  
@@ -727,3 +829,20 @@ class RolPermiso(models.Model):
                 name='UQ_RolPermiso_Rol_Permiso'
             )
         ]
+
+
+class RegistroAuditoria(models.Model):
+    idauditoria = models.AutoField(primary_key=True, db_column='IdAuditoria')
+    fecha = models.DateTimeField(auto_now_add=True, db_column='Fecha')
+    idempleado = models.ForeignKey(Empleado, models.SET_NULL, null=True, blank=True, db_column='IdEmpleado')
+    accion = models.CharField(max_length=100, db_column='Accion')
+    descripcion = models.CharField(max_length=500, db_column='Descripcion')
+    ip = models.CharField(max_length=50, null=True, blank=True, db_column='IP')
+
+    def __str__(self):
+        return f"[{self.fecha:%Y-%m-%d %H:%M}] {self.accion} - {self.descripcion}"
+
+    class Meta:
+        db_table = 'RegistroAuditoria'
+        ordering = ['-fecha']
+

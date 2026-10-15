@@ -62,25 +62,34 @@
                                 <td>{{ e.correo|default:"—" }}</td>
 
                                 <td>
-                                    {% if e.id_rol %}
-                                        {{ e.id_rol }}
-                                    {% else %}
-                                        Sin rol
-                                    {% endif %}
+                                    {{ e.idrol.nombrerol|default:"Sin rol" }}
                                 </td>
 
                                 <td>
-                                    <span class="empleado-estado">
-                                        No disponible
-                                    </span>
+                                    {% if e.activo %}
+                                        <span class="empleado-estado" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.76rem;">
+                                            Activo
+                                        </span>
+                                    {% else %}
+                                        <span class="empleado-estado" style="background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.35); color: #fca5a5; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.76rem;">
+                                            Desactivado
+                                        </span>
+                                    {% endif %}
                                 </td>
 
-                                <td class="empleado-acciones">
+                                <td class="empleado-acciones" style="display: flex; gap: 6px; align-items: center;">
 
                                     <a href="{% url 'empleado_editar' idempleado=e.id_empleado %}"
                                        class="empleado-btn">
                                         Editar
                                     </a>
+
+                                    <form method="POST" action="{% url 'empleado_toggle_activo' idempleado=e.id_empleado %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="empleado-btn" style="background: {% if e.activo %}#2b2b30{% else %}#1e3a2f{% endif %}; color: {% if e.activo %}#d1d5db{% else %}#6ee7b7{% endif %}; cursor: pointer;">
+                                            {% if e.activo %}Desactivar{% else %}Activar{% endif %}
+                                        </button>
+                                    </form>
 
                                     <a href="{% url 'empleado_eliminar' idempleado=e.id_empleado %}"
                                        class="empleado-btn empleado-btn-danger">

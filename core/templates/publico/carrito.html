@@ -793,6 +793,26 @@
             Tu Carrito de Compras
         </h1>
 
+        {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 0.86rem; font-weight: 600; margin-bottom: 10px; background: rgba(220, 38, 38, 0.14); border: 1px solid rgba(220, 38, 38, 0.35); color: #fca5a5;">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if estado_local and not estado_local.abierto %}
+            <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: 10px; margin-bottom: 20px; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.45); color: #fca5a5;">
+                <i class="fa-solid fa-clock" style="font-size: 1.2rem; color: #ef4444; margin-top: 2px;"></i>
+                <div>
+                    <strong style="display: block; font-size: 0.92rem; color: #fff; margin-bottom: 4px;">El negocio está cerrado en este momento.</strong>
+                    <span style="font-size: 0.84rem; color: #d1d5db;">Podrás realizar tu pedido cuando vuelva a abrir. Podés mantener tus productos seleccionados en el carrito mientras tanto.</span>
+                </div>
+            </div>
+        {% endif %}
 
         {% if carrito %}
 
@@ -933,13 +953,25 @@
                         Seguir Comprando
                     </a>
 
-
-                    <a
-                        href="{% url 'procesar_checkout' %}"
-                        class="btn-checkout"
-                    >
-                        Ir al Checkout
-                    </a>
+                    {% if estado_local and not estado_local.abierto %}
+                        <button
+                            type="button"
+                            class="btn-checkout"
+                            style="background: #2a2a2a; color: #888; border: 1px solid #444; cursor: not-allowed; box-shadow: none;"
+                            disabled
+                            title="El negocio está cerrado en este momento"
+                        >
+                            <i class="fa-solid fa-lock" style="margin-right: 8px;"></i>
+                            Negocio Cerrado
+                        </button>
+                    {% else %}
+                        <a
+                            href="{% url 'procesar_checkout' %}"
+                            class="btn-checkout"
+                        >
+                            Ir al Checkout
+                        </a>
+                    {% endif %}
 
                 </div>
 

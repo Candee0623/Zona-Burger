@@ -37,6 +37,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.PanelSecurityMiddleware',
 ]
 
 ROOT_URLCONF = 'ZonaBurger.urls'
@@ -51,6 +52,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.panel_auth_context',
             ],
         },
     },
@@ -92,11 +94,33 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+AUTHENTICATION_BACKENDS = [
+    'core.auth_backend.EmpleadoAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# --- CONFIGURACIÓN DE CORREO ELECTRÓNICO (Django 6 MAILERS) ---
+EMAIL_BACKEND_ELEGIDO = os.getenv(
+    'EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'
+)
+
+_opciones_correo = {}
+if EMAIL_BACKEND_ELEGIDO.endswith('smtp.EmailBackend'):
+    _opciones_correo = {
+        'host': os.getenv('EMAIL_HOST', 'smtp.gmail.com'),
+        'port': int(os.getenv('EMAIL_PORT', 587)),
+        'use_tls': os.getenv('EMAIL_USE_TLS', 'True') == 'True',
+        'username': os.getenv('EMAIL_HOST_USER', ''),
+        'password': os.getenv('EMAIL_HOST_PASSWORD', ''),
+    }
+
 MAILERS = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        'BACKEND': EMAIL_BACKEND_ELEGIDO,
+        'OPTIONS': _opciones_correo,
     },
 }
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Zona Burger <no-reply@zonaburger.com>')
 
 JAZZMIN_SETTINGS = {
     "site_title": "Zona-Burger Admin",
@@ -135,9 +159,9 @@ JAZZMIN_UI_TWEAKS = {
     "show_ui_builder": False,
 }
 
-LOGIN_URL = '/admin/login/'
-LOGIN_REDIRECT_URL = '/admin/'
-LOGOUT_REDIRECT_URL = '/admin/login/'
+LOGIN_URL = '/panel/login/'
+LOGIN_REDIRECT_URL = '/panel/'
+LOGOUT_REDIRECT_URL = '/panel/login/'
 
 # --- CONFIGURACIÓN DE CKEDITOR 5 ---
 CKEDITOR_5_CUSTOM_CSS = 'css/admin_custom.css'

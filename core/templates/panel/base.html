@@ -110,11 +110,11 @@ content="width=device-width, initial-scale=1.0"
     <div class="user-info">
 
         <strong>
-            Candela
+            {{ request.user.nombre }} {{ request.user.apellido }}
         </strong>
 
         <span>
-            Administrador
+            {{ request.user.idrol.nombrerol|default:"Sin rol asignado" }}
         </span>
 
     </div>
@@ -426,11 +426,11 @@ content="width=device-width, initial-scale=1.0"
                 <div class="dropdown-user-info">
 
                     <strong>
-                        Candela
+                        {{ request.user.nombre }} {{ request.user.apellido }}
                     </strong>
 
                     <span>
-                        Administrador
+                        {{ request.user.idrol.nombrerol|default:"Sin rol asignado" }}
                     </span>
 
                 </div>
@@ -438,7 +438,7 @@ content="width=device-width, initial-scale=1.0"
             </div>
 
 
-            <a href="#">
+            <a href="{% url 'panel_perfil' %}">
 
                 <i class="fa-solid fa-user"></i>
 
@@ -449,7 +449,7 @@ content="width=device-width, initial-scale=1.0"
             </a>
 
 
-            <a href="#">
+            <a href="{% url 'panel_cambiar_contrasena' %}">
 
                 <i class="fa-solid fa-key"></i>
 
@@ -464,7 +464,7 @@ content="width=device-width, initial-scale=1.0"
 
 
             <a
-                href="#"
+                href="{% url 'panel_logout' %}"
                 class="logout"
             >
 

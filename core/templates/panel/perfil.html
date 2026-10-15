@@ -1,0 +1,241 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}
+    Zona Burger | Mi Perfil
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .perfil-container {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .perfil-header {
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .perfil-header h1 {
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+
+    .perfil-header p {
+        color: #9ca3af;
+        font-size: 0.88rem;
+    }
+
+    .perfil-card {
+        background: #151518;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 28px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        margin-bottom: 24px;
+    }
+
+    .perfil-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    .perfil-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .perfil-label {
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #9ca3af;
+    }
+
+    .perfil-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .badge-rol {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: rgba(220, 38, 38, 0.15);
+        border: 1px solid rgba(220, 38, 38, 0.35);
+        color: #fca5a5;
+        width: fit-content;
+    }
+
+    .badge-activo {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        color: #6ee7b7;
+        width: fit-content;
+    }
+
+    .perfil-seccion-titulo {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .perfil-permisos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 10px;
+        max-height: 340px;
+        overflow-y: auto;
+        padding-right: 6px;
+    }
+
+    .permiso-tag {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #1c1c21;
+        border: 1px solid #2d2d35;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        color: #d1d5db;
+        font-weight: 600;
+    }
+
+    .permiso-tag i {
+        color: #10b981;
+        font-size: 0.75rem;
+    }
+
+    .btn-cambiar-pass {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: #222;
+        border: 1px solid #333;
+        border-radius: 7px;
+        color: #fff;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-cambiar-pass:hover {
+        background: #2d2d33;
+        border-color: #555;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="perfil-container">
+
+    <div class="perfil-header">
+        <div>
+            <h1>Mi Perfil</h1>
+            <p>Información de tu cuenta y permisos asignados.</p>
+        </div>
+
+        <a href="{% url 'panel_cambiar_contrasena' %}" class="btn-cambiar-pass">
+            <i class="fa-solid fa-key"></i>
+            <span>Cambiar contraseña</span>
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 0.84rem; margin-bottom: 20px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: #6ee7b7;">
+                <i class="fa-solid fa-circle-check"></i> {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="perfil-card">
+        <div class="perfil-grid">
+            <div class="perfil-item">
+                <span class="perfil-label">Nombre Completo</span>
+                <span class="perfil-value">{{ usuario.nombre }} {{ usuario.apellido }}</span>
+            </div>
+
+            <div class="perfil-item">
+                <span class="perfil-label">Correo Electrónico</span>
+                <span class="perfil-value">{{ usuario.correo }}</span>
+            </div>
+
+            <div class="perfil-item">
+                <span class="perfil-label">Rol Asignado</span>
+                <span class="badge-rol">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    {{ usuario.idrol.nombrerol|default:"Sin rol" }}
+                </span>
+            </div>
+
+            <div class="perfil-item">
+                <span class="perfil-label">Estado de la Cuenta</span>
+                <span class="badge-activo">
+                    <i class="fa-solid fa-check-circle"></i>
+                    {% if usuario.activo %}Activa{% else %}Inactiva{% endif %}
+                </span>
+            </div>
+
+            <div class="perfil-item">
+                <span class="perfil-label">Último Inicio de Sesión</span>
+                <span class="perfil-value">
+                    {{ usuario.ultimo_login|date:"d/m/Y H:i"|default:"Hoy" }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="perfil-card">
+        <h2 class="perfil-seccion-titulo">
+            <i class="fa-solid fa-lock-open" style="color: #dc2626;"></i>
+            <span>Tus Permisos de Operación</span>
+        </h2>
+
+        {% if permisos %}
+            <div class="perfil-permisos-grid">
+                {% for permiso in permisos %}
+                    <div class="permiso-tag">
+                        <i class="fa-solid fa-check"></i>
+                        <span>{{ permiso.modulo }}: {{ permiso.accion }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #9ca3af; font-size: 0.88rem;">No tenés permisos de modificación asignados actualmente.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

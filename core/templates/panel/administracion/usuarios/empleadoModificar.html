@@ -108,6 +108,18 @@
                            autocomplete="new-password">
                 </div>
 
+                <div class="empleado-form-group" style="grid-column: 1 / -1; margin-top: 8px;">
+                    <label for="activo" style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff; font-size: 0.88rem;">
+                        <input type="checkbox"
+                               id="activo"
+                               name="activo"
+                               value="1"
+                               {% if empleado.activo %}checked{% endif %}
+                               style="width: 18px; height: 18px; accent-color: #dc2626; cursor: pointer;">
+                        <span><strong>Cuenta activa:</strong> el usuario puede iniciar sesión en el panel y ejecutar acciones autorizadas.</span>
+                    </label>
+                </div>
+
             </div>
 
             <div class="empleado-form-acciones">

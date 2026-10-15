@@ -357,7 +357,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='RecetaInsumo',
             fields=[
-                ('idrecetainsumo', models.IntegerField(db_column='IdRecetaInsumo', primary_key=True, serialize=False)),
+                ('idrecetainsumo', models.AutoField(db_column='IdRecetaInsumo', primary_key=True, serialize=False)),
                 ('cantidadinsumo', models.IntegerField(db_column='CantidadInsumo')),
                 ('idinsumo', models.ForeignKey(blank=True, db_column='IdInsumo', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='core.insumo')),
                 ('idreceta', models.ForeignKey(blank=True, db_column='IdReceta', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='core.receta')),

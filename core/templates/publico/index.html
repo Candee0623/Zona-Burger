@@ -66,19 +66,13 @@
     <div class="hero-content">
 
 
-        <div class="hero-kicker">
+        <div class="hero-kicker {% if estado_local.abierto %}abierto{% else %}cerrado{% endif %}" id="hero-kicker-estado">
 
-            <i class="fa-solid fa-circle"></i>
+            <i class="fa-solid fa-circle" id="hero-kicker-icon"></i>
 
-            {% if negocio.idestado %}
-
-                {{ negocio.idestado.descripcion }}
-
-            {% else %}
-
-                Abierto
-
-            {% endif %}
+            <span id="hero-kicker-texto">
+                {% if estado_local.abierto %}Abierto{% else %}Cerrado{% endif %}
+            </span>
 
         </div>
 
@@ -131,19 +125,19 @@
         </div>
 
 
-        <div class="hero-status">
+        <div class="hero-status" id="hero-status-box">
 
-            <span class="hero-status-dot"></span>
+            <span class="hero-status-dot {% if estado_local.abierto %}dot-abierto{% else %}dot-cerrado{% endif %}" id="hero-status-dot"></span>
 
-            {% if negocio.idestado %}
-
-                {{ negocio.idestado.descripcion }}
-
-            {% else %}
-
-                Estamos abiertos
-
-            {% endif %}
+            <span id="hero-status-texto">
+                {% if estado_local %}
+                    {{ estado_local.mensaje }}
+                {% elif negocio.idestado %}
+                    {{ negocio.idestado.descripcion }}
+                {% else %}
+                    Estamos abiertos
+                {% endif %}
+            </span>
 
         </div>
 
@@ -704,6 +698,119 @@
 
 </div>
 
+
+<style>
+    /* Estilos dinámicos para estado Abierto / Cerrado en index */
+    .hero-kicker.abierto {
+        background: rgba(40, 216, 5, 0.16) !important;
+        border-color: rgba(91, 240, 22, 0.45) !important;
+        color: #fff !important;
+    }
+    .hero-kicker.abierto i {
+        color: var(--green, #2ecc71) !important;
+    }
+    .hero-kicker.cerrado {
+        background: rgba(220, 38, 38, 0.18) !important;
+        border-color: rgba(220, 38, 38, 0.45) !important;
+        color: #fca5a5 !important;
+    }
+    .hero-kicker.cerrado i {
+        color: #ef4444 !important;
+    }
+    .hero-kicker.loading {
+        background: rgba(156, 163, 175, 0.16) !important;
+        border-color: rgba(156, 163, 175, 0.35) !important;
+        color: #d1d5db !important;
+    }
+    .hero-kicker.loading i {
+        color: #9ca3af !important;
+    }
+    .hero-status-dot.dot-abierto {
+        background: var(--green, #2ecc71) !important;
+        box-shadow: 0 0 12px rgba(46, 204, 113, .8) !important;
+    }
+    .hero-status-dot.dot-cerrado {
+        background: #ef4444 !important;
+        box-shadow: 0 0 12px rgba(239, 68, 68, .8) !important;
+    }
+    .hero-status-dot.dot-loading {
+        background: #9ca3af !important;
+        box-shadow: 0 0 12px rgba(156, 163, 175, .6) !important;
+    }
+</style>
+
+<script>
+(function() {
+    const kickerBox = document.getElementById('hero-kicker-estado');
+    const kickerTexto = document.getElementById('hero-kicker-texto');
+    const kickerIcon = document.getElementById('hero-kicker-icon');
+    const statusDot = document.getElementById('hero-status-dot');
+    const statusTexto = document.getElementById('hero-status-texto');
+
+    let errorCount = 0;
+
+    function aplicarEstado(data) {
+        if (!data || typeof data.abierto === 'undefined') return;
+        const abierto = Boolean(data.abierto);
+
+        if (abierto) {
+            if (kickerBox) {
+                kickerBox.classList.remove('cerrado', 'loading');
+                kickerBox.classList.add('abierto');
+            }
+            if (kickerTexto) kickerTexto.textContent = 'Abierto';
+            if (statusDot) {
+                statusDot.classList.remove('dot-cerrado', 'dot-loading');
+                statusDot.classList.add('dot-abierto');
+            }
+            if (statusTexto) {
+                statusTexto.textContent = data.mensaje || 'Estamos abiertos';
+            }
+        } else {
+            if (kickerBox) {
+                kickerBox.classList.remove('abierto', 'loading');
+                kickerBox.classList.add('cerrado');
+            }
+            if (kickerTexto) kickerTexto.textContent = 'Cerrado';
+            if (statusDot) {
+                statusDot.classList.remove('dot-abierto', 'dot-loading');
+                statusDot.classList.add('dot-cerrado');
+            }
+            if (statusTexto) {
+                statusTexto.textContent = data.mensaje || 'En este momento estamos cerrados';
+            }
+        }
+    }
+
+    function sincronizarEstado() {
+        fetch('/api/negocio/estado/', {
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store'
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(data => {
+            errorCount = 0;
+            aplicarEstado(data);
+        })
+        .catch(err => {
+            errorCount++;
+            console.warn('Verificando conexión con el servidor...', err);
+            // Si falla repetidamente y aún no había estado cargado, avisar de conexión sin asumir que está abierto
+            if (errorCount > 3 && !kickerBox.classList.contains('abierto') && !kickerBox.classList.contains('cerrado')) {
+                if (kickerTexto) kickerTexto.textContent = 'Verificando...';
+                if (statusTexto) statusTexto.textContent = 'Comprobando estado del local...';
+            }
+        });
+    }
+
+    // Sincronización inicial y polling periódico cada 5 segundos
+    sincronizarEstado();
+    setInterval(sincronizarEstado, 5000);
+})();
+</script>
 
 </body>
 
