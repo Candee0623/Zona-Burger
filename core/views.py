@@ -4979,27 +4979,53 @@ def zonas_entrega_lista(request):
 
 
 def zonas_entrega_crear(request):
+    negocios = Negocio.objects.all().order_by("idnegocio")
+
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
-        costoenvio = request.POST.get("costoenvio") or "0"
-        idnegocio = request.POST.get("idnegocio") or None
+        costo_raw = request.POST.get("costoenvio", "").strip()
+        idnegocio_raw = request.POST.get("idnegocio", "").strip()
+
+        contexto = {
+            "negocios": negocios,
+            "nombre_ingresado": nombre,
+            "costo_ingresado": costo_raw,
+            "negocio_seleccionado": idnegocio_raw,
+        }
 
         try:
-            costoenvio = Decimal(costoenvio)
-
-            if costoenvio < 0:
-                raise InvalidOperation
-
             if not nombre:
-                raise ValueError("El nombre es obligatorio.")
+                raise ValueError("El nombre de la zona es obligatorio.")
 
             if len(nombre) > 50:
-                raise ValueError("El nombre no puede superar los 50 caracteres.")
+                raise ValueError(
+                    "El nombre no puede superar los 50 caracteres."
+                )
 
-            if idnegocio is not None:
-                idnegocio = int(idnegocio)
-                if idnegocio < 1:
-                    raise ValueError("El ID del negocio debe ser positivo.")
+            costoenvio = Decimal(
+                costo_raw.replace(",", ".") if costo_raw else "0"
+            )
+
+            if not costoenvio.is_finite() or costoenvio < 0:
+                raise ValueError(
+                    "El costo de envío debe ser válido y no negativo."
+                )
+
+            if costoenvio.as_tuple().exponent < -2:
+                raise ValueError(
+                    "El costo admite como máximo dos decimales."
+                )
+
+            if costoenvio >= Decimal("100000000"):
+                raise ValueError("El costo de envío es demasiado alto.")
+
+            if not idnegocio_raw:
+                raise ValueError("Seleccioná una sucursal.")
+
+            idnegocio = int(idnegocio_raw)
+
+            if not negocios.filter(pk=idnegocio).exists():
+                raise ValueError("La sucursal seleccionada no es válida.")
 
             ZonasEntrega.objects.create(
                 nombre=nombre,
@@ -5007,16 +5033,32 @@ def zonas_entrega_crear(request):
                 idnegocio=idnegocio,
             )
 
-            messages.success(request, "Zona de entrega creada correctamente.")
+            messages.success(
+                request,
+                "Zona de entrega creada correctamente."
+            )
             return redirect("zonas_entrega_lista")
 
-        except (ValueError, InvalidOperation, TypeError):
+        except (ValueError, InvalidOperation, TypeError) as e:
+            messages.error(request, str(e))
+        except DatabaseError as e:
+            print(f"Error al crear zona de entrega: {e}")
             messages.error(
                 request,
-                "Verificá los datos: nombre obligatorio, costo válido e ID de negocio numérico.",
+                "No se pudo guardar la zona. Revisá el error en la consola."
             )
 
-    return render(request, "panel/entrega/zonaCrear.html")
+        return render(
+            request,
+            "panel/entrega/zonaCrear.html",
+            contexto,
+        )
+
+    return render(
+        request,
+        "panel/entrega/zonaCrear.html",
+        {"negocios": negocios},
+    )
 
 
 def zonas_entrega_editar(request, idzona):
@@ -5024,38 +5066,34 @@ def zonas_entrega_editar(request, idzona):
 
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
-        costoenvio = request.POST.get("costoenvio") or "0"
-        idnegocio = request.POST.get("idnegocio") or None
+        costo_raw = request.POST.get("costoenvio", "0").strip()
 
         try:
-            costoenvio = Decimal(costoenvio)
-
-            if costoenvio < 0:
-                raise InvalidOperation
-
             if not nombre:
                 raise ValueError("El nombre es obligatorio.")
 
             if len(nombre) > 50:
                 raise ValueError("El nombre no puede superar los 50 caracteres.")
 
-            if idnegocio is not None:
-                idnegocio = int(idnegocio)
-                if idnegocio < 1:
-                    raise ValueError("El ID del negocio debe ser positivo.")
+            costoenvio = Decimal(costo_raw or "0")
+
+            if not costoenvio.is_finite() or costoenvio < 0:
+                raise ValueError("El costo debe ser un número válido mayor o igual a cero.")
 
             zona.nombre = nombre
             zona.costoenvio = costoenvio
-            zona.idnegocio = idnegocio
-            zona.save()
+            zona.save(update_fields=["nombre", "costoenvio"])
 
-            messages.success(request, "Zona de entrega actualizada correctamente.")
+            messages.success(
+                request,
+                "Zona de entrega actualizada correctamente.",
+            )
             return redirect("zonas_entrega_lista")
 
         except (ValueError, InvalidOperation, TypeError):
             messages.error(
                 request,
-                "Verificá los datos: nombre obligatorio, costo válido e ID de negocio numérico.",
+                "Verificá el nombre y el costo de envío. El costo debe ser válido y no negativo.",
             )
 
     return render(

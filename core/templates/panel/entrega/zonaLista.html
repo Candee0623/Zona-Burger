@@ -38,7 +38,6 @@
                     <th>ID</th>
                     <th>Nombre</th>
                     <th>Costo de envío</th>
-                    <th>ID del negocio</th>
                     <th class="columna-acciones">Acciones</th>
                 </tr>
             </thead>
@@ -60,14 +59,6 @@
                         <span class="zona-costo">
                             ${{ zona.costoenvio|default_if_none:"0.00" }}
                         </span>
-                    </td>
-
-                    <td data-label="ID del negocio">
-                        {% if zona.idnegocio %}
-                            <span class="zona-negocio">{{ zona.idnegocio }}</span>
-                        {% else %}
-                            <span class="sin-dato">—</span>
-                        {% endif %}
                     </td>
 
                     <td data-label="Acciones" class="acciones">
