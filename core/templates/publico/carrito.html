@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
@@ -786,7 +787,6 @@
 
     {% include 'components/header.html' %}
 
-
     <main class="carrito-container">
 
         <h1>
@@ -804,15 +804,24 @@
             </div>
         {% endif %}
 
-        {% if estado_local and not estado_local.abierto %}
-            <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: 10px; margin-bottom: 20px; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.45); color: #fca5a5;">
-                <i class="fa-solid fa-clock" style="font-size: 1.2rem; color: #ef4444; margin-top: 2px;"></i>
-                <div>
-                    <strong style="display: block; font-size: 0.92rem; color: #fff; margin-bottom: 4px;">El negocio está cerrado en este momento.</strong>
-                    <span style="font-size: 0.84rem; color: #d1d5db;">Podrás realizar tu pedido cuando vuelva a abrir. Podés mantener tus productos seleccionados en el carrito mientras tanto.</span>
-                </div>
+        <!-- Aviso dinámico: se muestra u oculta según el estado actual. -->
+        <div
+            id="aviso-negocio-cerrado"
+            style="display: none; align-items: flex-start; gap: 12px; padding: 16px; border-radius: 10px; margin-bottom: 20px; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.45); color: #fca5a5;"
+            role="status"
+            aria-live="polite"
+            hidden
+        >
+            <i class="fa-solid fa-clock" style="font-size: 1.2rem; color: #ef4444; margin-top: 2px;"></i>
+            <div>
+                <strong style="display: block; font-size: 0.92rem; color: #fff; margin-bottom: 4px;">
+                    El negocio está cerrado en este momento.
+                </strong>
+                <span style="font-size: 0.84rem; color: #d1d5db;">
+                    Podrás realizar tu pedido cuando vuelva a abrir. Podés mantener tus productos seleccionados en el carrito mientras tanto.
+                </span>
             </div>
-        {% endif %}
+        </div>
 
         {% if carrito %}
 
@@ -827,7 +836,6 @@
                             <h3>
                                 {{ item.nombre }}
                             </h3>
-
 
                             {% if item.detalles %}
 
@@ -845,7 +853,6 @@
 
                             {% endif %}
 
-
                             <div class="carrito-acciones">
 
                                 <div class="cantidad-control">
@@ -858,11 +865,9 @@
                                         -
                                     </a>
 
-
                                     <span class="cantidad-val">
                                         {{ item.cantidad }}
                                     </span>
-
 
                                     <a
                                         href="{% url 'actualizar_cantidad_carrito' item_id 'aumentar' %}"
@@ -874,7 +879,6 @@
 
                                 </div>
 
-
                                 <a
                                     href="{% url 'editar_item_carrito' item_id %}"
                                     class="btn-editar-item"
@@ -882,7 +886,6 @@
                                     <i class="fa-solid fa-pen"></i>
                                     Editar
                                 </a>
-
 
                                 <a
                                     href="{% url 'eliminar_del_carrito' item_id %}"
@@ -895,7 +898,6 @@
                             </div>
 
                         </div>
-
 
                         <div class="carrito-precio-col">
 
@@ -913,7 +915,6 @@
 
                 {% endfor %}
 
-
                 <div class="carrito-resumen-totales">
 
                     <div class="resumen-linea">
@@ -927,7 +928,6 @@
                         </span>
 
                     </div>
-
 
                     <div class="resumen-linea total-final">
 
@@ -943,7 +943,6 @@
 
                 </div>
 
-
                 <div class="carrito-botones-accion">
 
                     <a
@@ -953,25 +952,35 @@
                         Seguir Comprando
                     </a>
 
-                    {% if estado_local and not estado_local.abierto %}
-                        <button
-                            type="button"
-                            class="btn-checkout"
-                            style="background: #2a2a2a; color: #888; border: 1px solid #444; cursor: not-allowed; box-shadow: none;"
+                    <!-- Un único botón permite actualizar su estado sin recargar. -->
+                    <button
+                        type="button"
+                        id="btn-checkout"
+                        class="btn-checkout"
+                        data-checkout-url="{% url 'procesar_checkout' %}"
+                        {% if not estado_local or not estado_local.abierto %}
                             disabled
+                            aria-disabled="true"
                             title="El negocio está cerrado en este momento"
-                        >
-                            <i class="fa-solid fa-lock" style="margin-right: 8px;"></i>
-                            Negocio Cerrado
-                        </button>
-                    {% else %}
-                        <a
-                            href="{% url 'procesar_checkout' %}"
-                            class="btn-checkout"
-                        >
-                            Ir al Checkout
-                        </a>
-                    {% endif %}
+                            style="background: #2a2a2a; color: #888; border: 1px solid #444; cursor: not-allowed; box-shadow: none;"
+                        {% else %}
+                            aria-disabled="false"
+                        {% endif %}
+                    >
+                        <i
+                            class="fa-solid {% if estado_local and estado_local.abierto %}fa-arrow-right{% else %}fa-lock{% endif %}"
+                            style="margin-right: 8px;"
+                            aria-hidden="true"
+                        ></i>
+
+                        <span data-texto-boton>
+                            {% if estado_local and estado_local.abierto %}
+                                Ir al Checkout
+                            {% else %}
+                                Negocio Cerrado
+                            {% endif %}
+                        </span>
+                    </button>
 
                 </div>
 
@@ -985,11 +994,9 @@
                     <i class="fa-solid fa-cart-shopping"></i>
                 </div>
 
-
                 <p>
                     Tu carrito está vacío.
                 </p>
-
 
                 <a
                     href="{% url 'menu' %}"
@@ -1004,8 +1011,10 @@
 
     </main>
 
-
     {% include 'components/footer.html' %}
+
+    <script src="{% static 'java/header.js' %}" defer></script>
+    <script src="{% static 'java/carrito.js' %}" defer></script>
 
 </body>
 </html>
