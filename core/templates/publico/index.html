@@ -1,134 +1,56 @@
 {% load static %}
-
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>{{ negocio.nombre|default:"Zona Burger" }}</title>
 
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>{{ negocio.nombre|default:"Zona Burger" }}</title>
-
-
-<!-- =====================================================
-     FUENTES
-====================================================== -->
-
-<link
-    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
-    rel="stylesheet"
->
-
-
-<!-- =====================================================
-     FONT AWESOME
-====================================================== -->
-
-<link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
->
-
-
-<!-- =====================================================
-     CSS PRINCIPAL
-====================================================== -->
-
-<link
-    rel="stylesheet"
-    href="{% static 'css/publico/index.css' %}"
->
-
-
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/publico/index.css' %}">
 </head>
 
 <body>
 
-
-<!-- =====================================================
-     HEADER COMPARTIDO
-====================================================== -->
-
 {% include 'components/header.html' %}
 
-
-
-<!-- =====================================================
-     HERO
-====================================================== -->
-
+<!-- HERO -->
 <section class="home-hero">
-
     <div class="hero-content">
 
-
         <div class="hero-kicker {% if estado_local.abierto %}abierto{% else %}cerrado{% endif %}" id="hero-kicker-estado">
-
             <i class="fa-solid fa-circle" id="hero-kicker-icon"></i>
-
             <span id="hero-kicker-texto">
                 {% if estado_local.abierto %}Abierto{% else %}Cerrado{% endif %}
             </span>
-
         </div>
-
 
         <h1 class="hero-title">
-
             Hamburguesas<br>
-
-            <span>
-                de verdad.
-            </span>
-
+            <span>de verdad.</span>
         </h1>
 
-
         <p class="hero-description">
-
             Burgers artesanales, ingredientes frescos y todo el sabor
             que buscás en cada bocado.
-
         </p>
 
-
         <div class="hero-actions">
-
-
-            <a
-                href="#nosotros"
-                class="hero-button hero-button-primary"
-            >
-
+            <a href="#nosotros" class="hero-button hero-button-primary">
                 <i class="fa-solid fa-arrow-down"></i>
-
                 Conocé Zona Burger
-
             </a>
 
-
-            <a
-                href="#promociones"
-                class="hero-button hero-button-secondary"
-            >
-
+            <a href="#promociones" class="hero-button hero-button-secondary">
                 <i class="fa-solid fa-fire"></i>
-
                 Ver promociones
-
             </a>
-
         </div>
 
-
         <div class="hero-status" id="hero-status-box">
-
             <span class="hero-status-dot {% if estado_local.abierto %}dot-abierto{% else %}dot-cerrado{% endif %}" id="hero-status-dot"></span>
-
             <span id="hero-status-texto">
                 {% if estado_local %}
                     {{ estado_local.mensaje }}
@@ -138,680 +60,293 @@
                     Estamos abiertos
                 {% endif %}
             </span>
-
         </div>
-
     </div>
-
 </section>
 
-
-
-<!-- =====================================================
-     SOBRE NOSOTROS
-====================================================== -->
-
-<section
-    class="section about-section"
-    id="nosotros"
->
-
+<!-- SOBRE NOSOTROS -->
+<section class="section about-section" id="nosotros">
     <div class="container">
-
         <div class="about-layout">
 
-
             <div class="about-copy">
-
-
-                <div class="section-label">
-                    Nuestra historia
-                </div>
-
+                <div class="section-label">Nuestra historia</div>
 
                 <h2 class="section-heading">
-
                     No hacemos burgers.<br>
-
-                    Hacemos
-                    <span>
-                        experiencias.
-                    </span>
-
+                    Hacemos <span>experiencias.</span>
                 </h2>
 
-
                 <p class="section-intro">
-
-                    En
-
-                    <strong>
-                        {{ negocio.nombre|default:"Zona Burger" }}
-                    </strong>
-
+                    En <strong>{{ negocio.nombre|default:"Zona Burger" }}</strong>
                     nos apasiona hacer las cosas bien.
-
                 </p>
 
-
                 <p>
-
                     Nacimos con el propósito de revolucionar el concepto
                     de la comida rápida artesanal, ofreciendo burgers de
                     autor preparadas con ingredientes frescos, locales y
                     de primera calidad.
-
                 </p>
 
-
                 <p>
-
                     Cada blend de carne es seleccionado con dedicación y
                     nuestros medallones se cocinan al punto justo en la
                     plancha para lograr esa costra crujiente y jugosa
                     que tanto te gusta.
-
                 </p>
-
 
                 <div class="about-list">
-
-
                     <div class="about-item">
-
                         <div class="about-item-icon">
-
                             <i class="fa-solid fa-fire-flame-curved"></i>
-
                         </div>
-
-                        <span>
-                            Carne 100% fresca
-                        </span>
-
+                        <span>Carne 100% fresca</span>
                     </div>
 
-
                     <div class="about-item">
-
                         <div class="about-item-icon">
-
                             <i class="fa-solid fa-bread-slice"></i>
-
                         </div>
-
-                        <span>
-                            Panes caseros del día
-                        </span>
-
+                        <span>Panes caseros del día</span>
                     </div>
 
-
                     <div class="about-item">
-
                         <div class="about-item-icon">
-
                             <i class="fa-solid fa-utensils"></i>
-
                         </div>
-
-                        <span>
-                            Salsas propias
-                        </span>
-
+                        <span>Salsas propias</span>
                     </div>
-
 
                     <div class="about-item">
-
                         <div class="about-item-icon">
-
                             <i class="fa-solid fa-heart"></i>
-
                         </div>
-
-                        <span>
-                            Hecho con pasión
-                        </span>
-
+                        <span>Hecho con pasión</span>
                     </div>
-
-
                 </div>
-
             </div>
-
-
 
             <div class="about-photo">
-
-
                 <img
                     src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1000&q=90"
-                    alt="Nuestras Hamburguesas"
+                    alt="Nuestras hamburguesas"
+                    loading="lazy"
                 >
 
-
                 <div class="photo-badge">
-
-                    <strong>
-                        100%
-                    </strong>
-
-                    <span>
-                        Artesanal
-                    </span>
-
+                    <strong>100%</strong>
+                    <span>Artesanal</span>
                 </div>
-
             </div>
 
-
         </div>
-
     </div>
-
 </section>
 
-
-
-<!-- =====================================================
-     PROMOCIONES
-====================================================== -->
-
+<!-- PROMOCIONES -->
 {% if promociones_activas %}
-
-<section
-    class="promotions-section"
-    id="promociones"
->
-
+<section class="promotions-section" id="promociones">
     <div class="container">
-
 
         <div class="promotions-header">
-
-
             <div>
-
-                <div class="section-label">
-                    Aprovechá hoy
-                </div>
-
-
+                <div class="section-label">Aprovechá hoy</div>
                 <h2 class="promotion-heading">
-
                     <i class="fa-solid fa-fire"></i>
-
                     Promociones
-
                 </h2>
-
             </div>
-
 
             <p class="promotion-description">
-
                 Beneficios exclusivos para que disfrutes tu pedido
                 por menos.
-
             </p>
-
         </div>
-
-
 
         <div class="promotion-grid">
-
-
             {% for promo in promociones_activas %}
-
-
-            <article class="promotion-card">
-
+            <article class="promotion-card" data-promo-id="{{ promo.pk }}">
 
                 <div>
-
-
                     <div class="promotion-code">
-
                         <i class="fa-solid fa-ticket"></i>
-
                         {{ promo.palabraclave }}
-
                     </div>
 
-
-                    <h3>
-
-                        {{ promo.descripcion_amigable }}
-
-                    </h3>
-
+                    <h3>{{ promo.descripcion_amigable }}</h3>
 
                     <div class="promotion-date">
-
                         <i class="fa-solid fa-calendar-days"></i>
 
-
                         {% if promo.fechafin %}
-
-                            <span>
-
-                                Válido hasta el
-                                {{ promo.fechafin|date:"d/m/Y" }}
-
-                            </span>
-
+                        <span>
+                            Válido hasta el {{ promo.fechafin|date:"d/m/Y" }}
+                        </span>
                         {% else %}
-
-                            <span>
-                                ¡Tiempo limitado!
-                            </span>
-
+                        <span>¡Tiempo limitado!</span>
                         {% endif %}
-
                     </div>
-
                 </div>
-
-
 
                 <div class="promotion-products">
-
-
                     <span class="promotion-products-title">
-
                         Productos participantes
-
                     </span>
 
-
                     <div class="promotion-tags">
-
-
                         {% for rel in promo.productopromocion_set.all %}
-
-
-                            <span class="promotion-tag">
-
-                                <i class="fa-solid fa-burger"></i>
-
-                                {{ rel.idproducto.nombre }}
-
-                            </span>
-
-
+                        <span class="promotion-tag">
+                            <i class="fa-solid fa-burger"></i>
+                            {{ rel.idproducto.nombre }}
+                        </span>
                         {% empty %}
-
-
-                            <span class="promotion-empty">
-
-                                Aplica de forma general en el carrito
-
-                            </span>
-
-
+                        <span class="promotion-empty">
+                            Aplica de forma general en el carrito
+                        </span>
                         {% endfor %}
-
-
                     </div>
-
                 </div>
 
-
             </article>
-
-
-            {% empty %}
-
-
-            <div class="promotion-empty-state">
-
-                <p>
-
-                    No hay promociones disponibles en este momento.
-                    ¡Volvé pronto por más novedades!
-
-                </p>
-
-            </div>
-
-
             {% endfor %}
-
-
         </div>
-
     </div>
-
 </section>
-
 {% endif %}
 
-
-
-<!-- =====================================================
-     INFORMACIÓN DEL LOCAL
-====================================================== -->
-
-<section
-    class="info-section"
-    id="info"
->
-
+<!-- INFORMACIÓN DEL LOCAL -->
+<section class="info-section" id="info">
     <div class="container">
 
-
         <div class="info-header">
-
-
-            <div class="section-label">
-                Estamos para vos
-            </div>
-
+            <div class="section-label">Estamos para vos</div>
 
             <h2 class="section-heading">
-
-                Información del
-                <span>
-                    local
-                </span>
-
+                Información del <span>local</span>
             </h2>
 
-
             <p class="section-intro">
-
                 Consultá nuestros horarios y las zonas donde realizamos
                 entregas.
-
             </p>
-
         </div>
-
-
 
         <div class="info-grid">
 
-
             <!-- HORARIOS -->
-
             <div class="info-card">
-
-
                 <div class="info-card-header">
-
-
                     <div class="info-card-icon">
-
                         <i class="fa-solid fa-clock"></i>
-
                     </div>
-
-
-                    <h3>
-                        Horarios de Atención
-                    </h3>
-
-
+                    <h3>Horarios de Atención</h3>
                 </div>
 
-
-                <ul class="info-list">
-
-
+                <ul class="info-list" id="index-horarios">
                     {% for h in horarios %}
-
-
                     <li>
-
-                        <span>
-                            {{ h.diasemana }}
-                        </span>
-
-
+                        <span>{{ h.diasemana }}</span>
                         <span class="info-value">
-
                             {{ h.horaapertura|time:"H:i" }}
-
                             -
-
                             {{ h.horacierre|time:"H:i" }}
-
                         </span>
-
                     </li>
-
-
                     {% empty %}
-
-
                     <li>
-
-                        <span>
-                            No hay horarios configurados.
-                        </span>
-
+                        <span>No hay horarios configurados.</span>
                     </li>
-
-
                     {% endfor %}
-
-
                 </ul>
-
             </div>
-
-
 
             <!-- ZONAS -->
-
             <div class="info-card">
-
-
                 <div class="info-card-header">
-
-
                     <div class="info-card-icon">
-
                         <i class="fa-solid fa-motorcycle"></i>
-
                     </div>
-
-
-                    <h3>
-                        Zonas de Entrega
-                    </h3>
-
-
+                    <h3>Zonas de Entrega</h3>
                 </div>
 
-
-                <ul class="info-list">
-
-
+                <ul class="info-list" id="index-zonas">
                     {% for zona in zonas %}
-
-
                     <li>
-
-                        <span>
-                            {{ zona.nombre }}
-                        </span>
-
-
+                        <span>{{ zona.nombre }}</span>
                         <span class="info-value">
-
-
-                            {% if zona.costoenvio == 0 or zona.costoenvio == 0.00 %}
-
+                            {% if zona.costoenvio == 0 %}
                                 GRATIS
-
                             {% else %}
-
                                 ${{ zona.costoenvio }}
-
                             {% endif %}
-
-
                         </span>
-
                     </li>
-
-
                     {% empty %}
-
-
                     <li>
-
-                        <span>
-                            No hay zonas de entrega configuradas.
-                        </span>
-
+                        <span>No hay zonas de entrega configuradas.</span>
                     </li>
-
-
                     {% endfor %}
-
-
                 </ul>
-
             </div>
 
-
         </div>
-
     </div>
-
 </section>
 
-
-
-<!-- =====================================================
-     FOOTER
-====================================================== -->
-
+<!-- FOOTER -->
 <div id="contacto">
-
     {% include 'components/footer.html' %}
-
 </div>
 
-
 <style>
-    /* Estilos dinámicos para estado Abierto / Cerrado en index */
     .hero-kicker.abierto {
-        background: rgba(40, 216, 5, 0.16) !important;
-        border-color: rgba(91, 240, 22, 0.45) !important;
+        background: rgba(40, 216, 5, .16) !important;
+        border-color: rgba(91, 240, 22, .45) !important;
         color: #fff !important;
     }
+
     .hero-kicker.abierto i {
         color: var(--green, #2ecc71) !important;
     }
+
     .hero-kicker.cerrado {
-        background: rgba(220, 38, 38, 0.18) !important;
-        border-color: rgba(220, 38, 38, 0.45) !important;
+        background: rgba(220, 38, 38, .18) !important;
+        border-color: rgba(220, 38, 38, .45) !important;
         color: #fca5a5 !important;
     }
+
     .hero-kicker.cerrado i {
         color: #ef4444 !important;
     }
+
     .hero-kicker.loading {
-        background: rgba(156, 163, 175, 0.16) !important;
-        border-color: rgba(156, 163, 175, 0.35) !important;
+        background: rgba(156, 163, 175, .16) !important;
+        border-color: rgba(156, 163, 175, .35) !important;
         color: #d1d5db !important;
     }
+
     .hero-kicker.loading i {
         color: #9ca3af !important;
     }
+
     .hero-status-dot.dot-abierto {
         background: var(--green, #2ecc71) !important;
         box-shadow: 0 0 12px rgba(46, 204, 113, .8) !important;
     }
+
     .hero-status-dot.dot-cerrado {
         background: #ef4444 !important;
         box-shadow: 0 0 12px rgba(239, 68, 68, .8) !important;
     }
+
     .hero-status-dot.dot-loading {
         background: #9ca3af !important;
         box-shadow: 0 0 12px rgba(156, 163, 175, .6) !important;
     }
 </style>
 
-<script>
-(function() {
-    const kickerBox = document.getElementById('hero-kicker-estado');
-    const kickerTexto = document.getElementById('hero-kicker-texto');
-    const kickerIcon = document.getElementById('hero-kicker-icon');
-    const statusDot = document.getElementById('hero-status-dot');
-    const statusTexto = document.getElementById('hero-status-texto');
-
-    let errorCount = 0;
-
-    function aplicarEstado(data) {
-        if (!data || typeof data.abierto === 'undefined') return;
-        const abierto = Boolean(data.abierto);
-
-        if (abierto) {
-            if (kickerBox) {
-                kickerBox.classList.remove('cerrado', 'loading');
-                kickerBox.classList.add('abierto');
-            }
-            if (kickerTexto) kickerTexto.textContent = 'Abierto';
-            if (statusDot) {
-                statusDot.classList.remove('dot-cerrado', 'dot-loading');
-                statusDot.classList.add('dot-abierto');
-            }
-            if (statusTexto) {
-                statusTexto.textContent = data.mensaje || 'Estamos abiertos';
-            }
-        } else {
-            if (kickerBox) {
-                kickerBox.classList.remove('abierto', 'loading');
-                kickerBox.classList.add('cerrado');
-            }
-            if (kickerTexto) kickerTexto.textContent = 'Cerrado';
-            if (statusDot) {
-                statusDot.classList.remove('dot-abierto', 'dot-loading');
-                statusDot.classList.add('dot-cerrado');
-            }
-            if (statusTexto) {
-                statusTexto.textContent = data.mensaje || 'En este momento estamos cerrados';
-            }
-        }
-    }
-
-    function sincronizarEstado() {
-        fetch('/api/negocio/estado/', {
-            headers: { 'Accept': 'application/json' },
-            cache: 'no-store'
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            return response.json();
-        })
-        .then(data => {
-            errorCount = 0;
-            aplicarEstado(data);
-        })
-        .catch(err => {
-            errorCount++;
-            console.warn('Verificando conexión con el servidor...', err);
-            // Si falla repetidamente y aún no había estado cargado, avisar de conexión sin asumir que está abierto
-            if (errorCount > 3 && !kickerBox.classList.contains('abierto') && !kickerBox.classList.contains('cerrado')) {
-                if (kickerTexto) kickerTexto.textContent = 'Verificando...';
-                if (statusTexto) statusTexto.textContent = 'Comprobando estado del local...';
-            }
-        });
-    }
-
-    // Sincronización inicial y polling periódico cada 5 segundos
-    sincronizarEstado();
-    setInterval(sincronizarEstado, 5000);
-})();
-</script>
+<script src="{% static 'java/index.js' %}" defer></script>
 
 </body>
-
 </html>

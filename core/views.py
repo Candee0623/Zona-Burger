@@ -167,10 +167,16 @@ def calcular_ingresos_del_dia(pedidos):
 def index(request):
     negocio = Negocio.objects.first()
 
-    horarios = Horario.objects.filter(idnegocio=negocio) if negocio else []
+    horarios = (
+        Horario.objects.filter(idnegocio=negocio)
+        if negocio else Horario.objects.none()
+    )
+
     zonas = (
-        ZonasEntrega.objects.filter(idnegocio=negocio.idnegocio)
-        if negocio else []
+        ZonasEntrega.objects.filter(
+            idnegocio=negocio.idnegocio
+        )
+        if negocio else ZonasEntrega.objects.none()
     )
 
     return render(request, 'publico/index.html', {
