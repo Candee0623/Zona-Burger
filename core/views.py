@@ -2606,62 +2606,84 @@ def stock_editar(request, idinsumo):
 @panel_login_requerido
 @requiere_permiso('stock.compras')
 def registrar_compra_insumo(request):
+
     if request.method == 'POST':
-        insumo = get_object_or_404(Insumo, pk=request.POST.get('idinsumo'))
+        insumo_id = request.POST.get('idinsumo')
 
         try:
             cantidad = Decimal(request.POST.get('cantidad', '0'))
-            costo_unitario = Decimal(request.POST.get('costounitario', '0'))
-        except (ValueError, TypeError, ArithmeticError):
-            messages.error(request, 'Ingresa cantidades y costos válidos.')
+            precio_total = Decimal(request.POST.get('preciototal', '0'))
+
+        except (InvalidOperation, ValueError, TypeError):
+            messages.error(
+                request,
+                'Ingresa una cantidad y un precio total válidos.'
+            )
             return redirect('registrar_compra_insumo')
 
         if (
             not cantidad.is_finite()
-            or not costo_unitario.is_finite()
+            or not precio_total.is_finite()
             or cantidad <= 0
-            or costo_unitario < 0
+            or precio_total < 0
         ):
             messages.error(
                 request,
-                'La cantidad debe ser mayor que cero y el costo no puede '
-                'ser negativo.',
+                'La cantidad debe ser mayor que cero y el precio total '
+                'no puede ser negativo.'
             )
             return redirect('registrar_compra_insumo')
 
-        fecha_compra = datetime.now()
-        precio_total = cantidad * costo_unitario
+        # Calcular el costo unitario en el servidor.
+        costo_unitario = precio_total / cantidad
 
-        with transaction.atomic():
-            insumo = Insumo.objects.select_for_update().get(pk=insumo.pk)
+        # Obtener la fecha actual.
+        fecha_compra = timezone.now()
 
-            compra = Compras.objects.create(
-                fecha=fecha_compra,
-                preciototal=precio_total,
-            )
+        try:
+            with transaction.atomic():
 
-            DetalleCompra.objects.create(
-                idcompra=compra,
-                idinsumo=insumo,
-                cantidad=cantidad,
-                costounitario=costo_unitario,
-            )
+                insumo = get_object_or_404(
+                    Insumo.objects.select_for_update(),
+                    pk=insumo_id
+                )
 
-            Lote.objects.create(
-                idinsumo=insumo,
-                fechaingreso=fecha_compra,
-                cantidadinicial=cantidad,
-                cantidadactual=cantidad,
-            )
+                # Registrar la compra con el importe total.
+                compra = Compras.objects.create(
+                    fecha=fecha_compra,
+                    preciototal=precio_total,
+                )
 
-            insumo.stockactual += cantidad
-            insumo.save(update_fields=['stockactual'])
+                # Guardar el detalle con el costo unitario calculado.
+                DetalleCompra.objects.create(
+                    idcompra=compra,
+                    idinsumo=insumo,
+                    cantidad=cantidad,
+                    costounitario=costo_unitario,
+                )
+
+                # Crear el lote de ingreso.
+                Lote.objects.create(
+                    idinsumo=insumo,
+                    fechaingreso=fecha_compra,
+                    cantidadinicial=cantidad,
+                    cantidadactual=cantidad,
+                )
+
+                # Actualizar el stock.
+                insumo.stockactual = (insumo.stockactual or Decimal('0')) + cantidad
+                insumo.save(update_fields=['stockactual'])
+
+        except Insumo.DoesNotExist:
+            messages.error(request, 'El insumo seleccionado no existe.')
+            return redirect('registrar_compra_insumo')
 
         messages.success(
             request,
-            'Compra registrada, lote creado y stock actualizado '
-            'correctamente.',
+            'Compra registrada correctamente. Se guardaron el precio total, '
+            'el costo unitario, el lote y el stock actualizado.'
         )
+
         return redirect('stock_lista')
 
     return render(request, 'panel/stock/registrarCompra.html', {

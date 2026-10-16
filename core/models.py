@@ -424,9 +424,8 @@ class Compras(models.Model):
     idcompra = models.AutoField(db_column='IdCompra', primary_key=True)
     fecha = models.DateTimeField(db_column='Fecha')
     preciototal = models.DecimalField(
-        db_column='PrecioTotal',
-        max_digits=10,
-        decimal_places=2,
+        max_digits=12,
+        decimal_places=2
     )
 
     class Meta:
@@ -492,7 +491,10 @@ class DetalleCompra(models.Model):
     idcompra = models.ForeignKey(Compras, models.DO_NOTHING, db_column='IdCompra', blank=True, null=True)
     idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo', blank=True, null=True)
     cantidad = models.DecimalField(db_column='Cantidad', max_digits=10, decimal_places=2)
-    costounitario = models.DecimalField(db_column='CostoUnitario', max_digits=10, decimal_places=2)
+    costounitario = models.DecimalField(
+        max_digits=12,
+        decimal_places=4
+    )
  
     class Meta:
         db_table = 'DetalleCompra'
