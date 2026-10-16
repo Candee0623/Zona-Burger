@@ -12,81 +12,45 @@
     <link rel="stylesheet" href="{% static 'css/productos/detalleProducto.css' %}">
     <link rel="stylesheet" href="{% static 'css/publico/detalleProducto.css' %}">
 </head>
-
 <body>
 
 {% include 'components/header.html' %}
 
 <main class="menu-container">
-
     <div class="detalle-header-links">
-
         <h1 class="detalle-titulo">
-            {% if edit_item_id %}
-                Editar Producto
-            {% else %}
-                Personalizar
-            {% endif %}
+            {% if edit_item_id %}Editar Producto{% else %}Personalizar{% endif %}
         </h1>
 
         <a href="{% url 'menu' %}" class="btn-volver">
             <i class="fa-solid fa-arrow-left"></i>
             Volver al Menú
         </a>
-
     </div>
 
-
     <div class="producto-card">
-
         {% if producto.imagen %}
-
-            <img
-                src="{{ producto.imagen.url }}"
-                alt="{{ producto.nombre }}"
-                class="detalle-imagen"
-            >
-
+            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="detalle-imagen">
         {% else %}
-
-            <div class="producto-imagen-placeholder">
-                🍔
-            </div>
-
+            <div class="producto-imagen-placeholder">🍔</div>
         {% endif %}
 
-
-        <h2 class="detalle-titulo">
-            {{ producto.nombre }}
-        </h2>
-
+        <h2 class="detalle-titulo">{{ producto.nombre }}</h2>
 
         {% if producto.descripcion %}
-
-            <p class="detalle-descripcion">
-                {{ producto.descripcion }}
-            </p>
-
+            <p class="detalle-descripcion">{{ producto.descripcion }}</p>
         {% endif %}
 
-
-        {# data-precio-base va sin localizar: el JS necesita punto decimal, no coma #}
-
-        <div
-            class="detalle-precio-base"
-            data-precio-base="{{ producto.precio|unlocalize }}"
-        >
+        <div class="detalle-precio-base" data-precio-base="{{ producto.precio|unlocalize }}">
             $<span id="base-val">{{ producto.precio }}</span>
         </div>
 
-
         <hr class="detalle-divider">
 
-
         {% if messages %}
-            <div style="margin-bottom: 16px;">
+            <div style="margin-bottom:16px;">
                 {% for message in messages %}
-                    <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 0.86rem; font-weight: 600; margin-bottom: 10px; background: rgba(220, 38, 38, 0.14); border: 1px solid rgba(220, 38, 38, 0.35); color: #fca5a5;">
+                    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:8px;font-size:.86rem;font-weight:600;margin-bottom:10px;background:rgba(220,38,38,.14);border:1px solid rgba(220,38,38,.35);color:#fca5a5;">
                         <i class="fa-solid fa-circle-exclamation"></i>
                         <span>{{ message }}</span>
                     </div>
@@ -95,11 +59,20 @@
         {% endif %}
 
         {% if estado_local and not estado_local.abierto %}
-            <div style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 10px; margin-bottom: 20px; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.45); color: #fca5a5;">
-                <i class="fa-solid fa-clock" style="font-size: 1.15rem; color: #ef4444; margin-top: 2px;"></i>
+            <div
+                id="aviso-negocio-cerrado"
+                role="status"
+                aria-live="polite"
+                style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:10px;margin-bottom:20px;background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.45);color:#fca5a5;"
+            >
+                <i class="fa-solid fa-clock" style="font-size:1.15rem;color:#ef4444;margin-top:2px;"></i>
                 <div>
-                    <strong style="display: block; font-size: 0.9rem; color: #fff; margin-bottom: 3px;">En este momento el negocio está cerrado.</strong>
-                    <span style="font-size: 0.82rem; color: #d1d5db;">No es posible agregar productos al carrito. Podrás realizar tu pedido cuando vuelva a abrir.</span>
+                    <strong style="display:block;font-size:.9rem;color:#fff;margin-bottom:3px;">
+                        En este momento el negocio está cerrado.
+                    </strong>
+                    <span style="font-size:.82rem;color:#d1d5db;">
+                        No es posible agregar productos al carrito. Podrás realizar tu pedido cuando vuelva a abrir.
+                    </span>
                 </div>
             </div>
         {% endif %}
@@ -108,262 +81,122 @@
             id="form-personalizar"
             method="POST"
             action="{% url 'agregar_al_carrito' producto.idproducto %}"
+            data-producto-id="{{ producto.idproducto }}"
+            data-edit-id="{{ edit_item_id|default:'' }}"
         >
-
             {% csrf_token %}
 
-
-            {# Si se está editando un ítem del carrito, se envía su ID para reemplazarlo #}
-
             {% if edit_item_id %}
-
-                <input
-                    type="hidden"
-                    name="edit_id"
-                    value="{{ edit_item_id }}"
-                >
-
+                <input type="hidden" name="edit_id" value="{{ edit_item_id }}">
             {% endif %}
 
-
-            {# Grupos de opciones #}
-
             {% for item in grupos_opciones %}
-
                 {% with grupo=item.grupo %}
+                    <div
+                        class="grupo-opcion-seccion"
+                        data-min="{{ grupo.minselecciones|default:0 }}"
+                        data-max="{{ grupo.maxselecciones|default:0 }}"
+                        data-nombre="{{ grupo.nombre }}"
+                    >
+                        <h3 class="grupo-titulo">{{ grupo.nombre }}</h3>
 
-                <div
-                    class="grupo-opcion-seccion"
-                    data-min="{{ grupo.minselecciones|default:0 }}"
-                    data-max="{{ grupo.maxselecciones|default:0 }}"
-                    data-nombre="{{ grupo.nombre }}"
-                >
-
-                    <h3 class="grupo-titulo">
-                        {{ grupo.nombre }}
-                    </h3>
-
-
-                    {% if grupo.minselecciones > 0 %}
-
-                        <p class="grupo-estado grupo-obligatorio">
-
-                            <i class="fa-solid fa-circle-exclamation"></i>
-
-                            Obligatorio: seleccioná al menos
-                            {{ grupo.minselecciones }}
-
-                            {% if grupo.minselecciones == 1 %}
-                                opción
-                            {% else %}
-                                opciones
-                            {% endif %}
-
-                        </p>
-
-                    {% else %}
-
-                        <p class="grupo-estado">
-                            (Opcional)
-                        </p>
-
-                    {% endif %}
-
-
-                    <div class="opciones-lista">
-
-                        {% for opcion in item.opciones %}
-
-                            <div class="opcion-item">
-
-                                <label class="opcion-label">
-
-                                    {# Radio si el grupo permite una sola opción; checkbox si permite varias #}
-
-                                    <input
-                                        type="{% if grupo.maxselecciones == 1 %}radio{% else %}checkbox{% endif %}"
-                                        name="grupo_{{ grupo.idgrupo }}"
-                                        value="{{ opcion.idopcion }}"
-                                        data-precio="{{ opcion.precioadicional|default:0|unlocalize }}"
-                                        class="opcion-input"
-
-                                        {% if item_editando and opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}
-                                            checked
-                                        {% endif %}
-                                    >
-
-                                    <span>
-                                        {{ opcion.nombre }}
-                                    </span>
-
-                                </label>
-
-
-                                {% if opcion.precioadicional > 0 %}
-
-                                    <span class="opcion-precio-extra">
-                                        +${{ opcion.precioadicional }}
-                                    </span>
-
-                                {% endif %}
-
-                            </div>
-
-                        {% empty %}
-
-                            <p class="grupo-estado">
-                                No hay opciones disponibles.
+                        {% if grupo.minselecciones > 0 %}
+                            <p class="grupo-estado grupo-obligatorio">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                Obligatorio: seleccioná al menos {{ grupo.minselecciones }}
+                                {% if grupo.minselecciones == 1 %}opción{% else %}opciones{% endif %}
                             </p>
+                        {% else %}
+                            <p class="grupo-estado">(Opcional)</p>
+                        {% endif %}
 
-                        {% endfor %}
+                        <div class="opciones-lista">
+                            {% for opcion in item.opciones %}
+                                <div class="opcion-item">
+                                    <label class="opcion-label">
+                                        <input
+                                            type="{% if grupo.maxselecciones == 1 %}radio{% else %}checkbox{% endif %}"
+                                            name="grupo_{{ grupo.idgrupo }}"
+                                            value="{{ opcion.idopcion }}"
+                                            data-precio="{{ opcion.precioadicional|default:0|unlocalize }}"
+                                            class="opcion-input"
+                                            {% if item_editando and opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}checked{% endif %}
+                                        >
+                                        <span>{{ opcion.nombre }}</span>
+                                    </label>
 
-                    </div>
-
-
-                    {% if grupo.minselecciones > 0 %}
-
-                        <div
-                            class="mensaje-validacion-grupo"
-                            role="alert"
-                        >
-
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-
-                            Este grupo es obligatorio: tenés que seleccionar
-                            al menos {{ grupo.minselecciones }}
-
-                            {% if grupo.minselecciones == 1 %}
-                                opción
-                            {% else %}
-                                opciones
-                            {% endif %}
-
-                            para continuar.
-
+                                    {% if opcion.precioadicional > 0 %}
+                                        <span class="opcion-precio-extra">+${{ opcion.precioadicional }}</span>
+                                    {% endif %}
+                                </div>
+                            {% empty %}
+                                <p class="grupo-estado">No hay opciones disponibles.</p>
+                            {% endfor %}
                         </div>
 
-                    {% endif %}
-
-                </div>
-
+                        {% if grupo.minselecciones > 0 %}
+                            <div class="mensaje-validacion-grupo" role="alert">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                Este grupo es obligatorio: tenés que seleccionar al menos
+                                {{ grupo.minselecciones }}
+                                {% if grupo.minselecciones == 1 %}opción{% else %}opciones{% endif %}
+                                para continuar.
+                            </div>
+                        {% endif %}
+                    </div>
                 {% endwith %}
-
             {% empty %}
-
-                <p class="grupo-estado">
-                    Este producto no tiene opciones de personalización.
-                </p>
-
+                <p class="grupo-estado">Este producto no tiene opciones de personalización.</p>
             {% endfor %}
 
-
-            {# Ingredientes que el cliente puede quitar #}
-
             {% if insumos_removibles %}
-
                 <div class="grupo-opcion-seccion">
-
-                    <h3 class="grupo-titulo">
-                        Quitar ingredientes
-                    </h3>
-
-                    <p class="grupo-estado">
-                        (Opcional)
-                    </p>
-
+                    <h3 class="grupo-titulo">Quitar ingredientes</h3>
+                    <p class="grupo-estado">(Opcional)</p>
 
                     <div class="opciones-lista">
-
                         {% for item in insumos_removibles %}
-
                             <div class="opcion-item">
-
                                 <label class="opcion-label">
-
                                     <input
                                         type="checkbox"
                                         name="sin_insumo_{{ item.idinsumo.idinsumo }}"
                                         value="{{ item.idinsumo.idinsumo }}"
                                         class="opcion-input"
-
-                                        {% if item_editando and item.idinsumo.idinsumo|stringformat:"s" in item_editando.insumos_quitados_ids %}
-                                            checked
-                                        {% endif %}
+                                        {% if item_editando and item.idinsumo.idinsumo|stringformat:"s" in item_editando.insumos_quitados_ids %}checked{% endif %}
                                     >
-
-                                    <span>
-                                        Sin {{ item.idinsumo.nombreinsumo }}
-                                    </span>
-
+                                    <span>Sin {{ item.idinsumo.nombreinsumo }}</span>
                                 </label>
-
                             </div>
-
                         {% endfor %}
-
                     </div>
-
                 </div>
-
             {% endif %}
 
-
-            {# Extras, cada uno con su cantidad (1 a 5) #}
-
             {% if extras_producto %}
-
                 <div class="grupo-opcion-seccion">
-
-                    <h3 class="grupo-titulo">
-                        Agregá Extras
-                    </h3>
-
-                    <p class="grupo-estado">
-                        (Opcional)
-                    </p>
-
+                    <h3 class="grupo-titulo">Agregá Extras</h3>
+                    <p class="grupo-estado">(Opcional)</p>
 
                     <div class="opciones-lista">
-
                         {% for extra in extras_producto %}
-
                             <div class="opcion-item">
-
                                 <label class="opcion-label">
-
                                     <input
                                         type="checkbox"
                                         name="extra_{{ extra.idextra }}"
                                         value="{{ extra.idextra }}"
                                         data-precio="{{ extra.precio|unlocalize }}"
                                         class="opcion-input extra-checkbox"
-
-                                        {% if item_editando and extra.idextra|stringformat:"s" in item_editando.extras_ids %}
-                                            checked
-                                        {% endif %}
+                                        {% if item_editando and extra.idextra|stringformat:"s" in item_editando.extras_ids %}checked{% endif %}
                                     >
-
-                                    <span>
-                                        {{ extra.nombre }}
-                                    </span>
-
+                                    <span>{{ extra.nombre }}</span>
                                 </label>
 
-
-                                <span class="opcion-precio-extra">
-                                    +${{ extra.precio }}
-                                </span>
-
+                                <span class="opcion-precio-extra">+${{ extra.precio }}</span>
 
                                 <div class="cantidad-container">
-
-                                    <label
-                                        class="cantidad-label"
-                                        for="cantidad-extra-{{ extra.idextra }}"
-                                    >
-                                        Cant:
-                                    </label>
-
+                                    <label class="cantidad-label" for="cantidad-extra-{{ extra.idextra }}">Cant:</label>
                                     <input
                                         id="cantidad-extra-{{ extra.idextra }}"
                                         type="number"
@@ -373,40 +206,23 @@
                                         max="5"
                                         class="cantidad-extra"
                                     >
-
                                 </div>
-
                             </div>
-
                         {% endfor %}
-
                     </div>
-
                 </div>
-
             {% endif %}
 
-
-            {# RESUMEN DEL TOTAL #}
-
             <div class="resumen-total-box">
-
-                <span>
-                    Total del producto:
-                </span>
-
-                <span class="monto">
-                    $<span id="precio-total">{{ producto.precio }}</span>
-                </span>
-
+                <span>Total del producto:</span>
+                <span class="monto">$<span id="precio-total">{{ producto.precio }}</span></span>
             </div>
-
 
             {% if estado_local and not estado_local.abierto %}
                 <button
                     type="button"
                     class="btn-confirmar-pedido"
-                    style="background: #2a2a2a; color: #888; border: 1px solid #444; cursor: not-allowed; box-shadow: none;"
+                    style="background:#2a2a2a;color:#888;border:1px solid #444;cursor:not-allowed;box-shadow:none;"
                     disabled
                     title="En este momento el negocio está cerrado"
                 >
@@ -414,505 +230,21 @@
                     Negocio Cerrado
                 </button>
             {% else %}
-                <button
-                    type="submit"
-                    class="btn-confirmar-pedido"
-                    id="btn-confirmar-pedido"
-                >
+                <button type="submit" class="btn-confirmar-pedido" id="btn-confirmar-pedido">
                     <i class="fa-solid fa-cart-shopping"></i>
-                    {% if edit_item_id %}
-                        Guardar Cambios
-                    {% else %}
-                        Añadir al Pedido
-                    {% endif %}
+                    {% if edit_item_id %}Guardar Cambios{% else %}Añadir al Pedido{% endif %}
                 </button>
             {% endif %}
-
         </form>
-
     </div>
-
 </main>
 
-
-{# Aviso flotante que se muestra cuando falta completar un grupo obligatorio #}
-
-<div
-    id="aviso-obligatorio"
-    class="aviso-obligatorio"
-    role="alert"
-    aria-live="assertive"
-></div>
-
+<div id="aviso-obligatorio" class="aviso-obligatorio" role="alert" aria-live="assertive"></div>
 
 {% include 'components/footer.html' %}
 
-
-<script src="{% static 'java/header.js' %}"></script>
-
-
-<script>
-
-document.addEventListener('DOMContentLoaded', function () {
-
-    const MAX_CANTIDAD_EXTRA = 5;
-
-    const elementoPrecioBase =
-        document.querySelector('.detalle-precio-base');
-
-    const precioBase = elementoPrecioBase
-        ? parseFloat(
-            elementoPrecioBase.getAttribute('data-precio-base')
-        ) || 0
-        : 0;
-
-    const spanTotal =
-        document.getElementById('precio-total');
-
-    const form =
-        document.getElementById('form-personalizar');
-
-    const aviso =
-        document.getElementById('aviso-obligatorio');
-
-
-    // Solo los grupos de opciones tienen data-min
-    // (extras e ingredientes no).
-
-    const gruposSecciones =
-        document.querySelectorAll(
-            '.grupo-opcion-seccion[data-min]'
-        );
-
-    const inputsOpciones =
-        document.querySelectorAll(
-            '#form-personalizar input.opcion-input'
-        );
-
-    const inputsCantidad =
-        document.querySelectorAll('.cantidad-extra');
-
-
-    // Los grupos solo se marcan en rojo
-    // después de intentar enviar el formulario.
-
-    let intentoEnvio = false;
-    let temporizadorAviso = null;
-
-
-    function obtenerNumero(valor) {
-
-        const numero = parseFloat(valor);
-
-        return Number.isFinite(numero)
-            ? numero
-            : 0;
-    }
-
-
-    // Lleva la cantidad de un extra
-    // al rango 1..MAX_CANTIDAD_EXTRA.
-
-    function limitarCantidad(valor) {
-
-        const cantidad = parseInt(valor, 10);
-
-        if (Number.isNaN(cantidad) || cantidad < 1) {
-            return 1;
-        }
-
-        return Math.min(
-            cantidad,
-            MAX_CANTIDAD_EXTRA
-        );
-    }
-
-
-    function calcularTotal() {
-
-        let total = precioBase;
-
-
-        inputsOpciones.forEach(function (input) {
-
-            if (!input.checked) {
-                return;
-            }
-
-
-            let cantidad = 1;
-
-
-            // Los extras se multiplican
-            // por la cantidad elegida en su fila.
-
-            if (
-                input.classList.contains(
-                    'extra-checkbox'
-                )
-            ) {
-
-                const inputCantidad =
-                    input
-                        .closest('.opcion-item')
-                        .querySelector(
-                            '.cantidad-extra'
-                        );
-
-
-                if (inputCantidad) {
-
-                    cantidad =
-                        limitarCantidad(
-                            inputCantidad.value
-                        );
-                }
-            }
-
-
-            total +=
-                obtenerNumero(
-                    input.getAttribute(
-                        'data-precio'
-                    )
-                ) * cantidad;
-
-        });
-
-
-        if (spanTotal) {
-
-            spanTotal.textContent =
-                total.toFixed(2);
-        }
-    }
-
-
-    function seleccionadasEnGrupo(seccion) {
-
-        return seccion.querySelectorAll(
-            'input[type="radio"]:checked, input[type="checkbox"]:checked'
-        ).length;
-    }
-
-
-    // Devuelve los grupos obligatorios
-    // que todavía no alcanzan su mínimo.
-
-    function validarGrupos() {
-
-        const incompletos = [];
-
-
-        gruposSecciones.forEach(function (seccion) {
-
-            const min =
-                parseInt(
-                    seccion.getAttribute(
-                        'data-min'
-                    ),
-                    10
-                ) || 0;
-
-
-            const incompleto =
-                min > 0 &&
-                seleccionadasEnGrupo(seccion) < min;
-
-
-            if (incompleto) {
-                incompletos.push(seccion);
-            }
-
-
-            seccion.classList.toggle(
-                'grupo-incompleto',
-                intentoEnvio && incompleto
-            );
-
-
-            seccion.classList.toggle(
-                'grupo-completo',
-                intentoEnvio &&
-                min > 0 &&
-                !incompleto
-            );
-
-        });
-
-
-        return incompletos;
-    }
-
-
-    function mostrarAviso(texto) {
-
-        aviso.textContent = texto;
-
-        aviso.classList.add('visible');
-
-
-        clearTimeout(
-            temporizadorAviso
-        );
-
-
-        temporizadorAviso =
-            setTimeout(function () {
-
-                aviso.classList.remove(
-                    'visible'
-                );
-
-            }, 4000);
-    }
-
-
-    // Lleva al cliente al grupo
-    // que le falta completar.
-
-    function irAlGrupoIncompleto(seccion) {
-
-        const min =
-            parseInt(
-                seccion.getAttribute(
-                    'data-min'
-                ),
-                10
-            ) || 0;
-
-
-        const nombre =
-            seccion.getAttribute(
-                'data-nombre'
-            ) || 'Este grupo';
-
-
-        seccion.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
-
-
-        // Reinicia la animación
-        // aunque ya estuviera aplicada.
-
-        seccion.classList.remove(
-            'grupo-sacudir'
-        );
-
-
-        void seccion.offsetWidth;
-
-
-        seccion.classList.add(
-            'grupo-sacudir'
-        );
-
-
-        setTimeout(function () {
-
-            seccion.classList.remove(
-                'grupo-sacudir'
-            );
-
-        }, 2000);
-
-
-        const primerInput =
-            seccion.querySelector('input');
-
-
-        if (primerInput) {
-
-            primerInput.focus({
-                preventScroll: true
-            });
-        }
-
-
-        mostrarAviso(
-            '"' +
-            nombre +
-            '" es obligatorio: elegí al menos ' +
-            min +
-            (
-                min === 1
-                    ? ' opción.'
-                    : ' opciones.'
-            )
-        );
-    }
-
-
-    // Cambios en las opciones:
-    // se respeta el máximo del grupo
-    // y se recalcula.
-
-    gruposSecciones.forEach(function (seccion) {
-
-        const max =
-            parseInt(
-                seccion.getAttribute(
-                    'data-max'
-                ),
-                10
-            ) || 0;
-
-
-        const inputs =
-            seccion.querySelectorAll(
-                'input[type="radio"], input[type="checkbox"]'
-            );
-
-
-        inputs.forEach(function (input) {
-
-            input.addEventListener(
-                'change',
-                function () {
-
-                    if (
-                        max > 0 &&
-                        input.type === 'checkbox'
-                    ) {
-
-                        const marcados =
-                            seccion.querySelectorAll(
-                                'input[type="checkbox"]:checked'
-                            );
-
-
-                        if (
-                            marcados.length > max
-                        ) {
-
-                            input.checked =
-                                false;
-
-
-                            mostrarAviso(
-                                'En "' +
-                                (
-                                    seccion.getAttribute(
-                                        'data-nombre'
-                                    ) ||
-                                    'este grupo'
-                                ) +
-                                '" podés elegir como máximo ' +
-                                max +
-                                ' opciones.'
-                            );
-                        }
-                    }
-
-
-                    calcularTotal();
-                    validarGrupos();
-                }
-            );
-
-        });
-
-    });
-
-
-    // Los extras también recalculan el total.
-
-    document
-        .querySelectorAll('.extra-checkbox')
-        .forEach(function (input) {
-
-            input.addEventListener(
-                'change',
-                calcularTotal
-            );
-
-        });
-
-
-    inputsCantidad.forEach(function (input) {
-
-        // Mientras se escribe no se fuerza
-        // el 1 si el campo queda vacío.
-
-        input.addEventListener(
-            'input',
-            function () {
-
-                const cantidad =
-                    parseInt(
-                        input.value,
-                        10
-                    );
-
-
-                if (!Number.isNaN(cantidad)) {
-
-                    input.value =
-                        limitarCantidad(
-                            cantidad
-                        );
-                }
-
-
-                calcularTotal();
-            }
-        );
-
-
-        input.addEventListener(
-            'change',
-            function () {
-
-                input.value =
-                    limitarCantidad(
-                        input.value
-                    );
-
-
-                calcularTotal();
-            }
-        );
-
-    });
-
-
-    // Al enviar:
-    // si falta un grupo obligatorio,
-    // se frena el envío.
-
-    form.addEventListener(
-        'submit',
-        function (event) {
-
-            intentoEnvio = true;
-
-
-            const incompletos =
-                validarGrupos();
-
-
-            if (incompletos.length === 0) {
-                return;
-            }
-
-
-            event.preventDefault();
-
-
-            irAlGrupoIncompleto(
-                incompletos[0]
-            );
-        }
-    );
-
-
-    calcularTotal();
-
-});
-
-</script>
+<script src="{% static 'java/header.js' %}" defer></script>
+<script src="{% static 'java/detalleProducto.js' %}" defer></script>
 
 </body>
 </html>
