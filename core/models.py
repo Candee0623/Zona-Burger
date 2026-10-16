@@ -117,6 +117,9 @@ class Empleado(models.Model):
         import hashlib
         return hashlib.sha256((self.contrasena or '').encode()).hexdigest()
 
+    def get_session_auth_fallback_hash(self):
+        return []
+
     def get_username(self):
         return self.correo or self.nombre
 
