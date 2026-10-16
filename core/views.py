@@ -4869,6 +4869,13 @@ def zonas_entrega_eliminar(request, idzona):
 # ------------------------------------------------------------
 # historial de pedidos
 # ------------------------------------------------------------
+def _fecha_o_none(texto):
+    """Devuelve la fecha o None si el texto no es una fecha válida."""
+    try:
+        return parse_date(texto) if texto else None
+    except ValueError:
+        return None
+    
 def historial_pedidos(request):
     """Historial general de pedidos, independientemente de su estado."""
     pedidos = Pedido.objects.select_related(
