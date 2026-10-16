@@ -1,3 +1,4 @@
+
 {% extends 'panel/base.html' %}
 {% load static %}
 
@@ -255,7 +256,6 @@
         </div>
 
         {% if insumos %}
-
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -274,9 +274,7 @@
                             <tr>
                                 <td>
                                     {% if insumo.codigo %}
-                                        <span class="code">
-                                            {{ insumo.codigo }}
-                                        </span>
+                                        <span class="code">{{ insumo.codigo }}</span>
                                     {% else %}
                                         <span class="muted">Sin código</span>
                                     {% endif %}
@@ -298,13 +296,9 @@
 
                                 <td>
                                     {% if insumo.stockactual <= insumo.stockminimo %}
-                                        <span class="status status-low">
-                                            Stock bajo
-                                        </span>
+                                        <span class="status status-low">Stock bajo</span>
                                     {% else %}
-                                        <span class="status status-ok">
-                                            Disponible
-                                        </span>
+                                        <span class="status status-ok">Disponible</span>
                                     {% endif %}
                                 </td>
 
@@ -328,20 +322,16 @@
                     </tbody>
                 </table>
             </div>
-
         {% else %}
-
             <div class="empty-state">
                 <h3>Todavía no hay insumos</h3>
                 <p>
                     Creá tu primer ingrediente para comenzar a controlar el stock.
                 </p>
-
                 <a href="{% url 'stock_crear' %}" class="btn btn-primary">
                     + Crear insumo
                 </a>
             </div>
-
         {% endif %}
 
     </section>
@@ -362,12 +352,10 @@
                 <h2>Lotes de mercadería</h2>
                 <p>Cada lote representa una entrada de un insumo.</p>
             </div>
-
             <span class="section-label">Trazabilidad</span>
         </div>
 
         {% if lotes %}
-
             <div class="table-wrapper">
                 <table class="wide-table">
                     <thead>
@@ -420,15 +408,12 @@
                     </tbody>
                 </table>
             </div>
-
         {% else %}
-
             <div class="empty-state">
                 <h3>No hay lotes registrados</h3>
                 <p>
                     Cuando registres una compra, el lote aparecerá en esta pestaña.
                 </p>
-
                 <a
                     href="{% url 'registrar_compra_insumo' %}"
                     class="btn btn-primary"
@@ -436,7 +421,6 @@
                     + Registrar compra
                 </a>
             </div>
-
         {% endif %}
 
     </section>
@@ -467,7 +451,6 @@
         </div>
 
         {% if compras %}
-
             <div class="table-wrapper">
                 <table class="wide-table">
                     <thead>
@@ -508,7 +491,6 @@
                                     {% for detalle in compra.detallecompra_set.all %}
                                         <div class="purchase-item">
                                             {{ detalle.cantidad|floatformat:2 }}
-
                                             {% if detalle.idinsumo %}
                                                 {{ detalle.idinsumo.unidadmedidaingreso }}
                                             {% endif %}
@@ -532,16 +514,13 @@
                     </tbody>
                 </table>
             </div>
-
         {% else %}
-
             <div class="empty-state">
                 <h3>Todavía no hay compras</h3>
                 <p>
                     Las compras que registres aparecerán acá para que puedas
                     consultarlas después.
                 </p>
-
                 <a
                     href="{% url 'registrar_compra_insumo' %}"
                     class="btn btn-primary"
@@ -549,22 +528,21 @@
                     + Registrar primera compra
                 </a>
             </div>
-
         {% endif %}
 
     </section>
 
 </main>
 
-<!-- FUNCIONAMIENTO DE LAS PESTAÑAS -->
+<!-- FUNCIONAMIENTO DE LAS PESTAÑAS Y ACTUALIZACIÓN AUTOMÁTICA -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const tabs = document.querySelectorAll('.stock-tab');
     const panels = document.querySelectorAll('.stock-panel');
 
+    // Pestañas
     tabs.forEach(function (tab) {
         tab.addEventListener('click', function () {
-
             tabs.forEach(function (item) {
                 item.classList.remove('active');
                 item.setAttribute('aria-selected', 'false');
@@ -577,13 +555,41 @@ document.addEventListener('DOMContentLoaded', function () {
             tab.classList.add('active');
             tab.setAttribute('aria-selected', 'true');
 
-            const selectedPanel = document.getElementById(tab.dataset.panel);
+            const selectedPanel = document.getElementById(
+                tab.dataset.panel
+            );
 
             if (selectedPanel) {
                 selectedPanel.hidden = false;
             }
         });
     });
+
+    // Actualizar la información cada 30 segundos.
+    const INTERVALO_ACTUALIZACION = 30000;
+    let temporizadorActualizacion = null;
+
+    function programarActualizacion() {
+        clearTimeout(temporizadorActualizacion);
+
+        if (document.hidden) {
+            return;
+        }
+
+        temporizadorActualizacion = setTimeout(function () {
+            window.location.reload();
+        }, INTERVALO_ACTUALIZACION);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            clearTimeout(temporizadorActualizacion);
+        } else {
+            programarActualizacion();
+        }
+    });
+
+    programarActualizacion();
 });
 </script>
 

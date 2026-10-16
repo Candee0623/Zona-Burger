@@ -770,24 +770,31 @@ def calcular_consumo_insumos(carrito):
     return calcular_consumo_carrito(carrito)
 
 
+
 def procesar_checkout(request):
     info_estado = local_estado()
-    if not info_estado.get('abierto', True):
-        mensaje_cerrado = 'El negocio está cerrado en este momento. Podrás realizar tu pedido cuando vuelva a abrir.'
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or (
-            request.method == 'GET' and 'application/json' in request.META.get('HTTP_ACCEPT', '')
-        ):
-            return JsonResponse({'status': 'error', 'mensaje': mensaje_cerrado, 'cerrado': True}, status=403)
-        if request.method == 'POST':
-            messages.error(request, 'No se pudo confirmar tu pedido porque el negocio está cerrado. Intentá nuevamente cuando vuelva a abrir.')
-        else:
-            messages.warning(request, mensaje_cerrado)
-        return redirect('ver_carrito')
+    negocio_abierto = info_estado.get('abierto', True)
+
+    mensaje_cerrado = (
+        'El negocio está cerrado en este momento. '
+        'Podrás realizar tu pedido cuando vuelva a abrir.'
+    )
+
+    es_consulta_json = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or (
+            request.method == 'GET'
+            and 'application/json' in request.META.get('HTTP_ACCEPT', '')
+        )
+    )
 
     carrito = request.session.get('carrito', {})
 
     total_carrito = sum(
-        (Decimal(str(i.get('subtotal', 0))) for i in carrito.values()),
+        (
+            Decimal(str(i.get('subtotal', 0)))
+            for i in carrito.values()
+        ),
         Decimal('0.00'),
     )
 
@@ -799,45 +806,58 @@ def procesar_checkout(request):
         ZonasEntrega.objects.values('idzona', 'nombre', 'costoenvio')
     )
 
-    es_consulta_json = (
-        request.headers.get('x-requested-with') == 'XMLHttpRequest'
-        or (
-            request.method == 'GET'
-            and 'application/json' in request.META.get('HTTP_ACCEPT', '')
-        )
-    )
-
-    if es_consulta_json:
-        return JsonResponse({
-            'status': 'success',
-            'total_carrito': str(total_carrito),
-            'medios_pago': medios_pago,
-            'zonas_entrega': zonas_entrega,
-        })
-
     contexto = {
         'medios_pago': medios_pago,
         'zonas_entrega': zonas_entrega,
         'total_carrito': total_carrito,
         'carrito_items': _items_checkout(carrito),
-        'negocio_abierto': info_estado.get('abierto', True),
-        'mensaje_negocio': info_estado.get('mensaje', ''),
+        'negocio_abierto': negocio_abierto,
+        'mensaje_negocio': (
+            info_estado.get('mensaje', '')
+            if negocio_abierto
+            else mensaje_cerrado
+        ),
     }
 
-    if request.method != 'POST':
-        return render(request, 'publico/checkout.html', {
-            **contexto,
-            'total_estimado': total_carrito,
-            'errores': {'codigo_promocion': ''},
-            'codigo_promocion': '',
-            'datos_previos': {},
-            'hay_datos_previos': False,
-            'error_telefono': '',
-            'error_medio_pago': '',
-            'error_promocion': '',
-            'descuento_promocion': Decimal('0.00'),
-            'objeto_promocion': None,
+    # Consulta AJAX: informar el estado sin redirigir al cliente.
+    if es_consulta_json:
+        if not negocio_abierto:
+            return JsonResponse(
+                {
+                    'status': 'error',
+                    'mensaje': mensaje_cerrado,
+                    'cerrado': True,
+                },
+                status=403,
+            )
+
+        return JsonResponse({
+            'status': 'success',
+            'total_carrito': str(total_carrito),
+            'medios_pago': medios_pago,
+            'zonas_entrega': zonas_entrega,
+            'cerrado': False,
         })
+
+    # Valores iniciales del formulario.
+    if request.method != 'POST':
+        return render(
+            request,
+            'publico/checkout.html',
+            {
+                **contexto,
+                'total_estimado': total_carrito,
+                'errores': {'codigo_promocion': ''},
+                'codigo_promocion': '',
+                'datos_previos': {},
+                'hay_datos_previos': False,
+                'error_telefono': '',
+                'error_medio_pago': '',
+                'error_promocion': '',
+                'descuento_promocion': Decimal('0.00'),
+                'objeto_promocion': None,
+            },
+        )
 
     def campo(nombre):
         return (request.POST.get(nombre) or '').strip()
@@ -854,22 +874,56 @@ def procesar_checkout(request):
     comentario = campo('comentario')
     id_medio_pago = request.POST.get('medio_pago')
 
+    errores = {'codigo_promocion': ''}
+    error_promocion = ''
+    objeto_promocion = None
+    descuento_promocion = Decimal('0.00')
+
+    # Si se cerró el negocio, no procesar ni crear el pedido.
+    # Volver a renderizar el checkout con los datos ingresados.
+    if not negocio_abierto:
+        errores['negocio'] = mensaje_cerrado
+
+        return render(
+            request,
+            'publico/checkout.html',
+            {
+                **contexto,
+                'total_estimado': total_carrito,
+                'datos_previos': request.POST,
+                'hay_datos_previos': True,
+                'errores': errores,
+                'error_telefono': '',
+                'error_medio_pago': '',
+                'error_promocion': '',
+                'descuento_promocion': Decimal('0.00'),
+                'objeto_promocion': None,
+                'codigo_promocion': codigo_promo,
+            },
+        )
+
+    # Si el carrito está vacío, volver al carrito.
     if not carrito:
         messages.error(request, 'Tu carrito está vacío.')
         return redirect('ver_carrito')
 
-    errores = {'codigo_promocion': ''}
-
+    # Validación del nombre.
     if not nombre:
         errores['nombre'] = 'Ingresá tu nombre.'
     elif not 2 <= len(nombre) <= 100:
-        errores['nombre'] = 'El nombre debe tener entre 2 y 100 caracteres.'
+        errores['nombre'] = (
+            'El nombre debe tener entre 2 y 100 caracteres.'
+        )
 
+    # Validación del apellido.
     if not apellido:
         errores['apellido'] = 'Ingresá tu apellido.'
     elif not 2 <= len(apellido) <= 100:
-        errores['apellido'] = 'El apellido debe tener entre 2 y 100 caracteres.'
+        errores['apellido'] = (
+            'El apellido debe tener entre 2 y 100 caracteres.'
+        )
 
+    # Validación del teléfono.
     telefono_limpio = limpiar_numero_telefono(telefono)
 
     if not es_telefono_cliente_valido(telefono_limpio):
@@ -878,6 +932,7 @@ def procesar_checkout(request):
             '(solo números, entre 8 y 13 dígitos).'
         )
 
+    # Validación de la dirección.
     if not calle:
         errores['calle'] = 'Ingresá la calle.'
     elif len(calle) > 150:
@@ -888,41 +943,52 @@ def procesar_checkout(request):
     elif len(numero) > 20:
         errores['numero'] = 'El número de calle es demasiado largo.'
 
+    # Validación del método de pago.
     medio_pago = None
 
     if not id_medio_pago:
         errores['medio_pago'] = 'Seleccioná un método de pago.'
     else:
-        medio_pago = MedioPago.objects.filter(pk=id_medio_pago).first()
+        medio_pago = MedioPago.objects.filter(
+            pk=id_medio_pago
+        ).first()
 
         if medio_pago is None:
-            errores['medio_pago'] = 'Seleccioná un método de pago válido.'
+            errores['medio_pago'] = (
+                'Seleccioná un método de pago válido.'
+            )
 
+    # Validación del horario de entrega.
     horario_deseado = None
 
     if horario_entrega:
         try:
             horario_deseado = datetime.strptime(
-                horario_entrega, '%H:%M'
+                horario_entrega,
+                '%H:%M',
             ).time()
         except ValueError:
-            errores['horario_entrega'] = 'El horario de entrega no es válido.'
+            errores['horario_entrega'] = (
+                'El horario de entrega no es válido.'
+            )
 
-    zona = ZonasEntrega.objects.filter(nombre__iexact=localidad).first()
+    # Cálculo del costo de envío.
+    zona = ZonasEntrega.objects.filter(
+        nombre__iexact=localidad
+    ).first()
 
     if zona and zona.costoenvio is not None:
         costo_envio = Decimal(str(zona.costoenvio))
         costo_envio_texto = (
-            'Envío gratis' if costo_envio == 0 else f'${costo_envio:.2f}'
+            'Envío gratis'
+            if costo_envio == 0
+            else f'${costo_envio:.2f}'
         )
     else:
         costo_envio = Decimal('0.00')
         costo_envio_texto = 'A coordinar'
 
-    objeto_promocion = None
-    descuento_promocion = Decimal('0.00')
-    error_promocion = ''
-
+    # Validación de la promoción.
     if codigo_promo:
         objeto_promocion = Promocion.objects.filter(
             palabraclave__iexact=codigo_promo
@@ -936,36 +1002,48 @@ def procesar_checkout(request):
 
         else:
             descuento_promocion, mensaje_promocion = (
-                calcular_descuento_promocion(carrito, objeto_promocion)
+                calcular_descuento_promocion(
+                    carrito,
+                    objeto_promocion,
+                )
             )
 
             if descuento_promocion <= 0:
                 error_promocion = (
                     mensaje_promocion
-                    or 'La promoción no aplica a los productos de tu carrito.'
+                    or (
+                        'La promoción no aplica a los productos '
+                        'de tu carrito.'
+                    )
                 )
 
         if error_promocion:
             errores['codigo_promocion'] = error_promocion
 
+    # Si hay errores, mantener los datos en el checkout.
     if any(errores.values()):
         total_estimado = max(
             Decimal('0.00'),
-            total_carrito - descuento_promocion,
+            total_carrito - descuento_promocion + costo_envio,
         )
 
-        return render(request, 'publico/checkout.html', {
-            **contexto,
-            'total_estimado': total_estimado,
-            'datos_previos': request.POST,
-            'hay_datos_previos': True,
-            'errores': errores,
-            'error_telefono': errores.get('telefono', ''),
-            'error_medio_pago': errores.get('medio_pago', ''),
-            'error_promocion': error_promocion,
-            'descuento_promocion': descuento_promocion,
-            'objeto_promocion': objeto_promocion,
-        })
+        return render(
+            request,
+            'publico/checkout.html',
+            {
+                **contexto,
+                'total_estimado': total_estimado,
+                'datos_previos': request.POST,
+                'hay_datos_previos': True,
+                'errores': errores,
+                'error_telefono': errores.get('telefono', ''),
+                'error_medio_pago': errores.get('medio_pago', ''),
+                'error_promocion': error_promocion,
+                'descuento_promocion': descuento_promocion,
+                'objeto_promocion': objeto_promocion,
+                'codigo_promocion': codigo_promo,
+            },
+        )
 
     telefono = telefono_limpio
 
@@ -976,19 +1054,27 @@ def procesar_checkout(request):
 
     consumo_insumos = calcular_consumo_carrito(carrito)
 
-    # 1. Verificación previa de stock disponible
-    stock_ok, errores_stock = verificar_stock_disponible(consumo_insumos)
+    # Verificación previa del stock.
+    stock_ok, errores_stock = verificar_stock_disponible(
+        consumo_insumos
+    )
+
     if not stock_ok:
         for err in errores_stock:
             messages.error(request, err)
+
         return redirect('ver_carrito')
 
     try:
         with transaction.atomic():
+            # Revalidar el estado inmediatamente antes de crear el pedido.
             info_confirmacion = local_estado()
+
             if not info_confirmacion.get('abierto', True):
                 raise ValueError(
-                    'No se pudo confirmar tu pedido porque el negocio está cerrado. Intentá nuevamente cuando vuelva a abrir.'
+                    'El negocio acaba de cerrar. '
+                    'Tu pedido no fue confirmado. '
+                    'Podés volver a intentarlo cuando abra.'
                 )
 
             cliente = Cliente.objects.create(
@@ -1005,14 +1091,19 @@ def procesar_checkout(request):
                 localidad=localidad,
             )
 
-            estado_inicial = get_object_or_404(EstadoPedido, pk=1)
+            estado_inicial = get_object_or_404(
+                EstadoPedido,
+                pk=1,
+            )
 
             pedido = Pedido.objects.create(
                 idcliente=cliente,
                 idmediopago=medio_pago,
                 idestadopedido=estado_inicial,
                 idpromocion=(
-                    objeto_promocion.idpromocion if objeto_promocion else None
+                    objeto_promocion.idpromocion
+                    if objeto_promocion
+                    else None
                 ),
                 horarioentregadeseado=horario_deseado,
                 total=total_general,
@@ -1028,7 +1119,9 @@ def procesar_checkout(request):
                     continue
 
                 cantidad = item.get('cantidad', 1) or 1
-                subtotal_item = Decimal(str(item.get('subtotal', 0)))
+                subtotal_item = Decimal(
+                    str(item.get('subtotal', 0))
+                )
                 detalles = item.get('detalles')
 
                 DetallePedido.objects.create(
@@ -1037,20 +1130,60 @@ def procesar_checkout(request):
                     cantidad=cantidad,
                     preciounitario=subtotal_item / cantidad,
                     observaciones=(
-                        ', '.join(detalles) if isinstance(detalles, list) else ''
+                        ', '.join(detalles)
+                        if isinstance(detalles, list)
+                        else ''
                     ),
                 )
 
-            # Descontar stock atómicamente y registrar movimientos
-            descontar_stock_pedido(pedido, consumo_insumos)
+            # Descontar stock y registrar movimientos.
+            descontar_stock_pedido(
+                pedido,
+                consumo_insumos,
+            )
 
     except ValueError as e:
+        # Si cerró durante la confirmación, quedarse en checkout.
+        info_estado = local_estado()
+        negocio_abierto = info_estado.get('abierto', True)
+
+        if not negocio_abierto:
+            contexto['negocio_abierto'] = False
+            contexto['mensaje_negocio'] = (
+                info_estado.get('mensaje', '') or mensaje_cerrado
+            )
+
+            messages.error(request, str(e))
+
+            return render(
+                request,
+                'publico/checkout.html',
+                {
+                    **contexto,
+                    'total_estimado': total_general,
+                    'datos_previos': request.POST,
+                    'hay_datos_previos': True,
+                    'errores': {
+                        'codigo_promocion': '',
+                        'negocio': str(e),
+                    },
+                    'error_telefono': '',
+                    'error_medio_pago': '',
+                    'error_promocion': '',
+                    'descuento_promocion': descuento_promocion,
+                    'objeto_promocion': objeto_promocion,
+                    'codigo_promocion': codigo_promo,
+                },
+            )
+
         messages.error(request, str(e))
         return redirect('ver_carrito')
+
     except StockInsuficienteError as e:
         messages.error(request, str(e))
         return redirect('ver_carrito')
 
+    # Preparar mensaje para WhatsApp.
     mensaje = '*¡Nuevo Pedido! 🍔*\n\n'
 
     mensaje += '*Datos del Cliente:*\n'
@@ -1069,7 +1202,9 @@ def procesar_checkout(request):
         mensaje += f'• Horario Deseado: {horario_entrega}\n'
 
     if objeto_promocion and descuento_promocion > 0:
-        mensaje += f'• Palabra Clave Promo: {codigo_promo} (Aplicada)\n'
+        mensaje += (
+            f'• Palabra Clave Promo: {codigo_promo} (Aplicada)\n'
+        )
 
     mensaje += '\n*Detalle del Pedido:*\n'
 
@@ -1088,7 +1223,9 @@ def procesar_checkout(request):
     mensaje += f'\n• Subtotal Productos: ${total_carrito:.2f}\n'
 
     if descuento_promocion > 0:
-        mensaje += f'• Descuento Promo: -${descuento_promocion:.2f}\n'
+        mensaje += (
+            f'• Descuento Promo: -${descuento_promocion:.2f}\n'
+        )
 
     mensaje += f'• Costo de Envío: {costo_envio_texto}\n'
     mensaje += f'*Total a Pagar:* ${total_general:.2f}\n'
@@ -1100,7 +1237,9 @@ def procesar_checkout(request):
     negocio = Negocio.objects.first()
 
     numero_whatsapp = limpiar_numero_telefono(
-        str(negocio.telefono) if negocio and negocio.telefono else ''
+        str(negocio.telefono)
+        if negocio and negocio.telefono
+        else ''
     )
 
     if 'carrito' in request.session:
@@ -1567,15 +1706,38 @@ def grupo_eliminar(request, idgrupo):
     grupo = get_object_or_404(GrupoOpcion, pk=idgrupo)
 
     if request.method == 'POST':
-        grupo.delete()
-        messages.success(request, 'Grupo eliminado correctamente.')
-        return redirect('grupo_lista')
+        try:
+            with transaction.atomic():
+                # Eliminar primero las opciones pertenecientes al grupo.
+                grupo.opcion_set.all().delete()
 
-    return render(request, 'panel/menu/opciones/eliminarGrupo.html', {
-        'titulo': 'grupo de opciones',
-        'objeto': grupo,
-        'cancel_url': 'grupo_lista',
-    })
+                # Eliminar el grupo cuando ya no tenga opciones.
+                grupo.delete()
+
+            messages.success(
+                request,
+                'Grupo y opciones eliminados correctamente.'
+            )
+            return redirect('grupo_lista')
+
+        except (ProtectedError, IntegrityError):
+            messages.error(
+                request,
+                'No se puede eliminar este grupo porque sus opciones '
+                'están relacionadas con otros registros. '
+                'Primero debes quitar o modificar esas relaciones.'
+            )
+            return redirect('grupo_lista')
+
+    return render(
+        request,
+        'panel/menu/opciones/eliminarGrupo.html',
+        {
+            'titulo': 'grupo de opciones',
+            'objeto': grupo,
+            'cancel_url': 'grupo_lista',
+        }
+    )
 
 
 # ------------------------------------------------------------
@@ -2369,11 +2531,11 @@ def crear_tipo_beneficio(request):
 
     if not nombre:
         messages.error(request, 'Debes ingresar un nombre para el beneficio.')
-        return redirect('crear_tipo_beneficio')
+        return redirect('panel_crear_tipo_beneficio')
 
     if not comportamiento:
         messages.error(request, 'Debes seleccionar un comportamiento.')
-        return redirect('crear_tipo_beneficio')
+        return redirect('panel_crear_tipo_beneficio')
 
     # Si no se indica código, se genera a partir del nombre.
     if not codigo:
@@ -2383,13 +2545,13 @@ def crear_tipo_beneficio(request):
         messages.error(
             request, 'Ya existe un tipo de beneficio con ese código.'
         )
-        return redirect('crear_tipo_beneficio')
+        return redirect('panel_crear_tipo_beneficio')
 
     if TipoBeneficio.objects.filter(nombre__iexact=nombre).exists():
         messages.error(
             request, 'Ya existe un tipo de beneficio con ese nombre.'
         )
-        return redirect('crear_tipo_beneficio')
+        return redirect('panel_crear_tipo_beneficio')
 
     TipoBeneficio.objects.create(
         codigo=codigo,
@@ -2399,8 +2561,7 @@ def crear_tipo_beneficio(request):
     )
 
     messages.success(request, 'Tipo de beneficio creado correctamente.')
-    return redirect('lista_tipos_beneficio')
-
+    return redirect('panel_lista_tipos_beneficio')
 
 @panel_login_requerido
 @requiere_permiso('tipos_beneficio.administrar')
@@ -2414,29 +2575,36 @@ def editar_tipo_beneficio(request, pk):
 
         if not nombre:
             messages.error(request, 'El nombre no puede estar vacío.')
-            return redirect('editar_tipo_beneficio', pk=pk)
+            return redirect('panel_editar_tipo_beneficio', pk=pk)
 
         if not codigo:
             codigo = nombre.upper().replace(' ', '_')
 
-        # Se excluye el propio registro para poder conservar sus valores.
+        # Evitar códigos duplicados en otros registros.
         if (
             TipoBeneficio.objects
             .filter(codigo__iexact=codigo)
             .exclude(pk=pk)
             .exists()
         ):
-            messages.error(request, 'Ya existe otro beneficio con ese código.')
-            return redirect('editar_tipo_beneficio', pk=pk)
+            messages.error(
+                request,
+                'Ya existe otro beneficio con ese código.'
+            )
+            return redirect('panel_editar_tipo_beneficio', pk=pk)
 
+        # Evitar nombres duplicados en otros registros.
         if (
             TipoBeneficio.objects
             .filter(nombre__iexact=nombre)
             .exclude(pk=pk)
             .exists()
         ):
-            messages.error(request, 'Ya existe otro beneficio con ese nombre.')
-            return redirect('editar_tipo_beneficio', pk=pk)
+            messages.error(
+                request,
+                'Ya existe otro beneficio con ese nombre.'
+            )
+            return redirect('panel_editar_tipo_beneficio', pk=pk)
 
         tipo.codigo = codigo
         tipo.nombre = nombre
@@ -2444,9 +2612,10 @@ def editar_tipo_beneficio(request, pk):
         tipo.save()
 
         messages.success(
-            request, 'Tipo de beneficio modificado correctamente.'
+            request,
+            'Tipo de beneficio modificado correctamente.'
         )
-        return redirect('lista_tipos_beneficio')
+        return redirect('panel_lista_tipos_beneficio')
 
     return render(
         request,
@@ -2494,13 +2663,14 @@ def stock_lista(request):
 
     insumos = Insumo.objects.all().order_by('nombreinsumo')
 
-    # Stock en el mínimo o por debajo.
+    # Insumos con stock en el mínimo o por debajo.
     insumos_criticos = [
-        insumo for insumo in insumos
+        insumo
+        for insumo in insumos
         if insumo.stockactual <= insumo.stockminimo
     ]
 
-    # Lotes que vencen entre hoy y los próximos 7 días.
+    # Lotes que vencen hoy o durante los próximos 7 días.
     lotes_por_vencer = (
         Lote.objects
         .filter(
@@ -2509,10 +2679,13 @@ def stock_lista(request):
             cantidadactual__gt=0,
         )
         .select_related('idinsumo')
-        .order_by('fechavencimiento', 'idinsumo__nombreinsumo')
+        .order_by(
+            'fechavencimiento',
+            'idinsumo__nombreinsumo',
+        )
     )
 
-    # Lotes que ya vencieron y todavía tienen cantidad registrada.
+    # Lotes vencidos que todavía tienen cantidad registrada.
     lotes_vencidos = (
         Lote.objects
         .filter(
@@ -2520,23 +2693,27 @@ def stock_lista(request):
             cantidadactual__gt=0,
         )
         .select_related('idinsumo')
-        .order_by('fechavencimiento', 'idinsumo__nombreinsumo')
+        .order_by(
+            'fechavencimiento',
+            'idinsumo__nombreinsumo',
+        )
     )
 
-    # Se conserva el listado completo de lotes.
+    # Listado completo de lotes.
     lotes = (
         Lote.objects
         .select_related('idinsumo')
         .order_by('-fechaingreso', '-idlote')
     )
 
+    # Historial de compras y sus detalles.
     compras = (
         Compras.objects
         .prefetch_related('detallecompra_set__idinsumo')
         .order_by('-fecha', '-idcompra')
     )
 
-    return render(request, 'panel/stock/stockLista.html', {
+    contexto = {
         'insumos': insumos,
         'insumos_criticos': insumos_criticos,
         'lotes': lotes,
@@ -2545,7 +2722,14 @@ def stock_lista(request):
         'lotes_vencidos': lotes_vencidos,
         'hoy': hoy,
         'fecha_limite': fecha_limite,
-    })
+    }
+
+    return render(
+        request,
+        'panel/stock/stockLista.html',
+        contexto,
+    )
+
 
 
 
@@ -5166,14 +5350,14 @@ def local_estado():
 def local_calcular_estado():
     ahora = local_ahora()
     negocio = Negocio.objects.select_related("idestado").first()
+
     if negocio is None:
         return local_estado_por_defecto()
 
-    descripcion = negocio.idestado.descripcion if negocio.idestado_id else ""
-    modo = LOCAL_MODOS.get(local_normalizar(descripcion), LOCAL_AUTOMATICO)
-
+    # Obtener el último cambio manual registrado.
     registro = (
-        UltimaModificacion.objects.select_related("idempleado")
+        UltimaModificacion.objects
+        .select_related("idempleado")
         .filter(
             idnegocio=negocio.idnegocio,
             descripcioncambio__startswith=LOCAL_PREFIJO_LOG,
@@ -5182,47 +5366,84 @@ def local_calcular_estado():
         .first()
     )
 
-    # El modo manual solo vale el día en que se activó
+    # Determinar el modo guardado actualmente en el negocio.
+    descripcion = (
+        negocio.idestado.descripcion
+        if negocio.idestado_id
+        else ""
+    )
+    modo = LOCAL_MODOS.get(
+        local_normalizar(descripcion),
+        LOCAL_AUTOMATICO,
+    )
+
+    # El modo manual solo tiene validez durante el día en que
+    # se registró la última apertura o cierre manual.
     manual_vigente = (
         modo != LOCAL_AUTOMATICO
         and registro is not None
         and local_a_local(registro.fecha).date() == ahora.date()
     )
 
-    franjas = local_franjas(Horario.objects.filter(idnegocio=negocio))
+    # Obtener los horarios configurados del negocio.
+    franjas = local_franjas(
+        Horario.objects.filter(idnegocio=negocio)
+    )
 
     if manual_vigente:
+        # Respetar la apertura o el cierre manual de hoy.
         abierto = modo == LOCAL_ABIERTO_MANUAL
+
     elif franjas:
+        # Si el cambio manual es de otro día, volver al horario.
         abierto = local_abierto_por_horario(franjas, ahora)
+
     else:
+        # Mantener el comportamiento configurado si no hay horarios.
         abierto = LOCAL_SIN_HORARIOS_ABIERTO
 
     if abierto:
         mensaje = "Estamos abiertos."
+
     else:
         if manual_vigente:
+            # Si se cerró manualmente, buscar la próxima apertura
+            # a partir del final del día actual.
             medianoche = datetime.combine(
                 ahora.date() + timedelta(days=1),
                 datetime.min.time(),
                 tzinfo=ahora.tzinfo,
             )
+
             proxima = local_proxima_apertura(
-                franjas, medianoche - timedelta(seconds=1)
+                franjas,
+                medianoche - timedelta(seconds=1),
             )
+
             mensaje = "Hoy el local permanece cerrado."
+
         else:
             proxima = local_proxima_apertura(franjas, ahora)
             mensaje = "En este momento estamos cerrados."
+
         if proxima:
-            mensaje += f" Volvemos a abrir {local_texto_apertura(proxima, ahora)}."
+            mensaje += (
+                f" Volvemos a abrir "
+                f"{local_texto_apertura(proxima, ahora)}."
+            )
 
     return {
         "abierto": abierto,
         "manual": manual_vigente,
         "mensaje": mensaje,
-        "ultimo_cambio": local_a_local(registro.fecha) if registro else None,
-        "ultimo_por": local_nombre_empleado(registro.idempleado) if registro else "",
+        "ultimo_cambio": (
+            local_a_local(registro.fecha)
+            if registro else None
+        ),
+        "ultimo_por": (
+            local_nombre_empleado(registro.idempleado)
+            if registro else ""
+        ),
     }
 
 
@@ -5402,54 +5623,117 @@ def api_estado_negocio(request):
 # ============================================================
 
 def panel_login(request):
-    """
-    Login personalizado del panel de administración de Zona Burger.
-    Reutiliza el sistema de autenticación de Django mediante EmpleadoAuthBackend.
-    """
-    if getattr(request.user, 'is_authenticated', False) and getattr(request.user, 'is_active', False):
-        return redirect('panel_inicio')
+
+    # Si ya inició sesión, comprobar que la cuenta siga activa.
+    if getattr(request.user, 'is_authenticated', False):
+        empleado_actual = Empleado.objects.filter(
+            pk=request.user.pk
+        ).first()
+
+        cuenta_activa = (
+            empleado_actual is not None
+            and empleado_actual.activo
+            and getattr(request.user, 'is_active', True)
+        )
+
+        if cuenta_activa:
+            return redirect('panel_inicio')
+
+        # Cerrar la sesión si la cuenta fue desactivada.
+        logout(request)
+        messages.error(
+            request,
+            'Tu cuenta está desactivada. Por favor contactá al administrador.'
+        )
 
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
-        next_url = request.POST.get('next') or request.GET.get('next') or reverse('panel_inicio')
+
+        next_url = (
+            request.POST.get('next')
+            or request.GET.get('next')
+            or reverse('panel_inicio')
+        )
 
         if not username or not password:
-            messages.error(request, 'Por favor ingresá tu usuario/correo y contraseña.')
+            messages.error(
+                request,
+                'Por favor ingresá tu usuario/correo y contraseña.'
+            )
             return render(request, 'panel/login.html')
 
-        user = authenticate(request, username=username, password=password)
+        # Buscar al empleado por correo o nombre.
+        empleado = (
+            Empleado.objects.filter(correo__iexact=username).first()
+            or Empleado.objects.filter(nombre__iexact=username).first()
+        )
+
+        # Bloquear explícitamente las cuentas desactivadas antes de autenticar.
+        if empleado and not empleado.activo:
+            messages.error(
+                request,
+                'Tu cuenta está desactivada. Por favor contactá al administrador.'
+            )
+            return render(request, 'panel/login.html')
+
+        user = authenticate(
+            request,
+            username=username,
+            password=password
+        )
 
         if user is not None:
-            if getattr(user, 'activo', True):
-                login(request, user, backend='core.auth_backend.EmpleadoAuthBackend')
-                user.ultimo_login = timezone.now()
-                user.save(update_fields=['last_login'])
-                registrar_auditoria(request, 'LOGIN', f'Inicio de sesión exitoso: {user.get_username()}')
+            # Verificar tanto el estado del empleado como el de Django.
+            empleado_autenticado = Empleado.objects.filter(
+                pk=user.pk
+            ).first()
 
-                if not url_has_allowed_host_and_scheme(
-                    next_url,
-                    allowed_hosts={request.get_host()},
-                    require_https=request.is_secure()
-                ):
-                    next_url = reverse('panel_inicio')
-
-                messages.success(request, f'¡Bienvenido/a, {user.nombre}!')
-                return redirect(next_url)
-            else:
-                messages.error(request, 'Tu cuenta está desactivada. Por favor contactá al administrador.')
+            if (
+                empleado_autenticado is None
+                or not empleado_autenticado.activo
+                or not getattr(user, 'is_active', True)
+            ):
+                messages.error(
+                    request,
+                    'Tu cuenta está desactivada. Por favor contactá al administrador.'
+                )
                 return render(request, 'panel/login.html')
-        else:
-            # Comprobar si existe la cuenta pero está inactiva para emitir un aviso preciso
-            empleado_inactivo = (
-                Empleado.objects.filter(correo__iexact=username.lower()).first()
-                or Empleado.objects.filter(nombre__iexact=username).first()
+
+            login(
+                request,
+                user,
+                backend='core.auth_backend.EmpleadoAuthBackend'
             )
-            if empleado_inactivo and not empleado_inactivo.activo:
-                messages.error(request, 'Tu cuenta ha sido desactivada. Por favor contactá al administrador.')
-            else:
-                messages.error(request, 'Usuario/correo o contraseña incorrectos.')
-            return render(request, 'panel/login.html')
+
+            user.ultimo_login = timezone.now()
+            user.save(update_fields=['last_login'])
+
+            registrar_auditoria(
+                request,
+                'LOGIN',
+                f'Inicio de sesión exitoso: {user.get_username()}'
+            )
+
+            if not url_has_allowed_host_and_scheme(
+                next_url,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure()
+            ):
+                next_url = reverse('panel_inicio')
+
+            messages.success(
+                request,
+                f'¡Bienvenido/a, {user.nombre}!'
+            )
+
+            return redirect(next_url)
+
+        messages.error(
+            request,
+            'Usuario/correo o contraseña incorrectos.'
+        )
+        return render(request, 'panel/login.html')
 
     return render(request, 'panel/login.html')
 
