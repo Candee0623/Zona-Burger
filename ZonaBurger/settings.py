@@ -18,6 +18,7 @@ allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = allowed_hosts_env.split(',') if allowed_hosts_env else []
 
 INSTALLED_APPS = [
+    'cloudinary_storage',
     'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -25,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary',
     'django_ckeditor_5',
     'core',
 ]
@@ -121,6 +123,27 @@ MAILERS = {
     },
 }
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Zona Burger <no-reply@zonaburger.com>')
+
+# --- CONFIGURACIÓN DE CLOUDINARY ---
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+    secure=True
+)
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 JAZZMIN_SETTINGS = {
     "site_title": "Zona-Burger Admin",

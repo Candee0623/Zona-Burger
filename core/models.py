@@ -7,7 +7,6 @@ import io
 from django_ckeditor_5.fields import CKEditor5Field
 
 
-
 class Rol(models.Model):
     idrol = models.AutoField(db_column='IdRol', primary_key=True)
     nombrerol = models.CharField(db_column='NombreRol', max_length=50, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
@@ -17,24 +16,21 @@ class Rol(models.Model):
  
     class Meta:
         db_table = 'Rol'
- 
- 
+
+
 class Empleado(models.Model):
     id_empleado = models.AutoField(
         primary_key=True,
         db_column='IdEmpleado'
     )
-
     nombre = models.CharField(
         max_length=100,
         db_column='Nombre'
     )
-
     apellido = models.CharField(
         max_length=100,
         db_column='Apellido'
     )
-
     idrol = models.ForeignKey(
         Rol,
         models.DO_NOTHING,
@@ -43,42 +39,35 @@ class Empleado(models.Model):
         blank=True,
         related_name='empleados'
     )
-
     contrasena = models.CharField(
         max_length=255,
         db_column='Contrasena'
     )
-
     correo = models.EmailField(
         max_length=255,
         db_column='CorreoElectronico'
     )
-
     activo = models.BooleanField(
         db_column='Activo',
         default=True
     )
-
     fecha_creacion = models.DateTimeField(
         db_column='FechaCreacion',
         auto_now_add=True,
         null=True,
         blank=True
     )
-
     token_recuperacion = models.CharField(
         db_column='TokenRecuperacion',
         max_length=128,
         null=True,
         blank=True
     )
-
     token_expiracion = models.DateTimeField(
         db_column='TokenExpiracion',
         null=True,
         blank=True
     )
-
     last_login = models.DateTimeField(
         db_column='UltimoLogin',
         null=True,
@@ -155,22 +144,8 @@ class Empleado(models.Model):
 
     class Meta:
         db_table = 'Empleado'
-        managed = False
 
- 
- 
-class UltimaModificacion(models.Model):
-    idmodificacion = models.AutoField(db_column='IdModificacion', primary_key=True)
-    fecha = models.DateTimeField(db_column='Fecha')
-    idempleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='IdEmpleado', blank=True, null=True)
-    descripcioncambio = models.CharField(db_column='DescripcionCambio', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
-    idnegocio = models.IntegerField(db_column='IdNegocio', blank=True, null=True)
-    idestado = models.ForeignKey('EstadoNegocio', models.DO_NOTHING, db_column='IdEstado', blank=True, null=True)
- 
-    class Meta:
-        db_table = 'UltimaModificacion'
- 
- 
+
 class EstadoNegocio(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
     descripcion = models.CharField(db_column='Descripcion', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
@@ -180,34 +155,34 @@ class EstadoNegocio(models.Model):
 
     class Meta:
         db_table = 'EstadoNegocio'
- 
- 
+
+
 class RedesSociales(models.Model):
     idredsocial = models.AutoField(db_column='IdRedSocial', primary_key=True)
     plataforma = models.CharField(db_column='Plataforma', max_length=50, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     enlace = models.CharField(db_column='Enlace', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     idnegocio = models.IntegerField(db_column='IdNegocio', blank=True, null=True)
- 
+
     def __str__(self):
         return self.plataforma or f"Red {self.idredsocial}"
- 
+
     class Meta:
         db_table = 'RedesSociales'
- 
- 
+
+
 class ZonasEntrega(models.Model):
     idzona = models.AutoField(db_column='IdZona', primary_key=True)
     nombre = models.CharField(db_column='Nombre', max_length=50, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     costoenvio = models.DecimalField(db_column='CostoEnvio', max_digits=10, decimal_places=2, blank=True, null=True, default=0.00)
     idnegocio = models.IntegerField(db_column='IdNegocio', blank=True, null=True)
- 
+
     def __str__(self):
         return f"{self.nombre} (${self.costoenvio})"
- 
+
     class Meta:
         db_table = 'ZonasEntrega'
- 
- 
+
+
 class Negocio(models.Model):
     idnegocio = models.AutoField(db_column='IdNegocio', primary_key=True)
     idempleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='IdEmpleado', blank=True, null=True)
@@ -216,14 +191,26 @@ class Negocio(models.Model):
     telefono = models.CharField(db_column='Telefono', max_length=30, db_collation='Modern_Spanish_CI_AS')
     idestado = models.ForeignKey(EstadoNegocio, models.DO_NOTHING, db_column='IdEstado', blank=True, null=True)
     idzona = models.ForeignKey(ZonasEntrega, models.DO_NOTHING, db_column='IdZona', blank=True, null=True)
- 
+
     def __str__(self):
         return self.nombre
- 
+
     class Meta:
         db_table = 'Negocio'
- 
- 
+
+
+class UltimaModificacion(models.Model):
+    idmodificacion = models.AutoField(db_column='IdModificacion', primary_key=True)
+    fecha = models.DateTimeField(db_column='Fecha')
+    idempleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='IdEmpleado', blank=True, null=True)
+    descripcioncambio = models.CharField(db_column='DescripcionCambio', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    idnegocio = models.IntegerField(db_column='IdNegocio', blank=True, null=True)
+    idestado = models.ForeignKey('EstadoNegocio', models.DO_NOTHING, db_column='IdEstado', blank=True, null=True)
+
+    class Meta:
+        db_table = 'UltimaModificacion'
+
+
 class Horario(models.Model):
     idhorario = models.AutoField(db_column='IdHorario', primary_key=True)
     idnegocio = models.ForeignKey(Negocio, models.DO_NOTHING, db_column='IdNegocio', blank=True, null=True)
@@ -231,45 +218,45 @@ class Horario(models.Model):
     horaapertura = models.TimeField(db_column='HoraApertura', blank=True, null=True)
     horacierre = models.TimeField(db_column='HoraCierre', blank=True, null=True)
     estaabierto = models.IntegerField(db_column='EstaAbierto', blank=True, null=True)
- 
+
     class Meta:
         db_table = 'Horario'
- 
- 
+
+
 class CategoriaProducto(models.Model):
     idcategoria = models.AutoField(db_column='IdCategoria', primary_key=True)
     nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
- 
+
     def __str__(self):
         return self.nombre
- 
+
     class Meta:
         db_table = 'CategoriaProducto'
- 
- 
+
+
 class EstadoStock(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
     descripcion = models.CharField(db_column='Descripcion', max_length=10, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     nivelcritico = models.DecimalField(db_column='NivelCritico', max_digits=10, decimal_places=2, blank=True, null=True)
- 
+
     def __str__(self):
         return self.descripcion or f"Estado {self.idestado}"
- 
+
     class Meta:
         db_table = 'EstadoStock'
- 
- 
+
+
 class EstadoProducto(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
     descripcion = models.CharField(db_column='Descripcion', max_length=50, db_collation='Modern_Spanish_CI_AS')
- 
+
     def __str__(self):
         return self.descripcion
- 
+
     class Meta:
         db_table = 'EstadoProducto'
- 
- 
+
+
 class Producto(models.Model):
     idproducto = models.AutoField(db_column='IdProducto', primary_key=True)
     nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
@@ -280,10 +267,10 @@ class Producto(models.Model):
     idestadostock = models.ForeignKey(EstadoStock, models.DO_NOTHING, db_column='IdEstadoStock', blank=True, null=True)
     idestadoproducto = models.ForeignKey(EstadoProducto, models.DO_NOTHING, db_column='IdEstadoProducto', blank=True, null=True)
     idnegocio = models.ForeignKey(Negocio, models.DO_NOTHING, db_column='IdNegocio', blank=True, null=True)
- 
+
     def __str__(self):
         return self.nombre
- 
+
     def save(self, *args, **kwargs):
         if not self.imagen:
             super().save(*args, **kwargs)
@@ -298,53 +285,51 @@ class Producto(models.Model):
             buffer = io.BytesIO()
             img.save(buffer, format='WEBP', quality=80, method=6)
             buffer.seek(0)
-            
-            # Nombre de archivo único y seguro
             file_name = os.path.splitext(self.imagen.name)[0] + '.webp'
             self.imagen.save(file_name, ContentFile(buffer.read()), save=False)
         except Exception as e:
             print(f"Error al procesar la imagen: {e}")
             
         super().save(*args, **kwargs)
- 
+
     class Meta:
         db_table = 'Producto'
- 
- 
+
+
 class Extras(models.Model):
     idextra = models.AutoField(db_column='IdExtra', primary_key=True)
     nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
     precio = models.DecimalField(db_column='Precio', max_digits=10, decimal_places=2)
- 
+
     def __str__(self):
         return f"{self.nombre} (${self.precio})"
- 
+
     class Meta:
         db_table = 'Extras'
- 
- 
+
+
 class ProductoExtras(models.Model):
     idproductoextra = models.AutoField(db_column='IdProductoExtra', primary_key=True)
     idproducto = models.ForeignKey(Producto, models.DO_NOTHING, db_column='IdProducto')
     idextra = models.ForeignKey(Extras, models.DO_NOTHING, db_column='IdExtra')
- 
+
     class Meta:
         db_table = 'ProductoExtras'
- 
- 
+
+
 class GrupoOpcion(models.Model):
     idgrupo = models.AutoField(db_column='IdGrupo', primary_key=True)
     nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
     minselecciones = models.IntegerField(db_column='MinSelecciones', blank=True, null=True)
     maxselecciones = models.IntegerField(db_column='MaxSelecciones', blank=True, null=True)
- 
+
     def __str__(self):
         return self.nombre
- 
+
     class Meta:
         db_table = 'GrupoOpcion'
- 
- 
+
+
 class Opcion(models.Model):
     idopcion = models.AutoField(db_column='IdOpcion', primary_key=True)
     idgrupo = models.ForeignKey(GrupoOpcion, models.DO_NOTHING, db_column='IdGrupo', blank=True, null=True)
@@ -352,23 +337,21 @@ class Opcion(models.Model):
     precioadicional = models.DecimalField(db_column='PrecioAdicional', max_digits=10, decimal_places=2, blank=True, null=True)
     idinsumo = models.ForeignKey('Insumo', models.DO_NOTHING, db_column='IdInsumo', blank=True, null=True, related_name='opciones')
     cantidad_insumo = models.DecimalField(db_column='CantidadInsumo', max_digits=10, decimal_places=2, default=Decimal('1.00'))
- 
+
     def __str__(self):
         return self.nombre
- 
+
     class Meta:
         db_table = 'Opcion'
- 
- 
+
+
 class ProductoGrupoOpcion(models.Model):
     idproductogrupo = models.AutoField(db_column='IdProductoGrupo', primary_key=True)
     idproducto = models.ForeignKey(Producto, models.DO_NOTHING, db_column='IdProducto', blank=True, null=True)
     idgrupo = models.ForeignKey(GrupoOpcion, models.DO_NOTHING, db_column='IdGrupo', blank=True, null=True)
- 
+
     class Meta:
         db_table = 'ProductoGrupoOpcion'
- 
- 
 
 
 class Insumo(models.Model):
@@ -396,90 +379,47 @@ class Insumo(models.Model):
     class Meta:
         db_table = 'Insumo'
 
+
 class AjusteStock(models.Model):
-  idajuste = models.AutoField(db_column='IdAjuste', primary_key=True)
-  idinsumo = models.ForeignKey(
-      Insumo, models.DO_NOTHING, db_column='IdInsumo'
-  )
-  cantidadanterior = models.DecimalField(
-      db_column='CantidadAnterior', max_digits=10, decimal_places=2
-  )
-  cantidadnueva = models.DecimalField(
-      db_column='CantidadNueva', max_digits=10, decimal_places=2
-  )
-  motivo = models.CharField(
-      db_column='Motivo',
-      max_length=250,
-      db_collation='Modern_Spanish_CI_AS',
-  )  # Motivo obligatorio
-  fecha = models.DateTimeField(db_column='Fecha', auto_now_add=True)
+    idajuste = models.AutoField(db_column='IdAjuste', primary_key=True)
+    idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo')
+    cantidadanterior = models.DecimalField(db_column='CantidadAnterior', max_digits=10, decimal_places=2)
+    cantidadnueva = models.DecimalField(db_column='CantidadNueva', max_digits=10, decimal_places=2)
+    motivo = models.CharField(db_column='Motivo', max_length=250, db_collation='Modern_Spanish_CI_AS')
+    fecha = models.DateTimeField(db_column='Fecha', auto_now_add=True)
 
-  def __str__(self):
-    return (
-        f'Ajuste en {self.idinsumo.nombreinsumo} - Motivo: {self.motivo[:30]}'
-    )
+    def __str__(self):
+        return f'Ajuste en {self.idinsumo.nombreinsumo} - Motivo: {self.motivo[:30]}'
 
-  class Meta:
-    db_table = 'AjusteStock'
- 
+    class Meta:
+        db_table = 'AjusteStock'
+
 
 class Compras(models.Model):
     idcompra = models.AutoField(db_column='IdCompra', primary_key=True)
     fecha = models.DateTimeField(db_column='Fecha')
-    preciototal = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
+    preciototal = models.DecimalField(max_digits=12, decimal_places=2)
 
     class Meta:
         db_table = 'Compras'
 
+
 class Lote(models.Model):
-    idlote = models.AutoField(
-        db_column='IdLote',
-        primary_key=True,
-    )
-    codigo = models.CharField(
-        db_column='Codigo',
-        max_length=50,
-        unique=True,
-        blank=True,
-        null=True,
-    )
-    idinsumo = models.ForeignKey(
-        Insumo,
-        models.DO_NOTHING,
-        db_column='IdInsumo',
-    )
-    fechaingreso = models.DateTimeField(
-        db_column='FechaIngreso',
-    )
-    fechavencimiento = models.DateField(
-        db_column='FechaVencimiento',
-        blank=True,
-        null=True,
-    )
-    cantidadinicial = models.DecimalField(
-        db_column='CantidadInicial',
-        max_digits=10,
-        decimal_places=2,
-    )
-    cantidadactual = models.DecimalField(
-        db_column='CantidadActual',
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-    )
+    idlote = models.AutoField(db_column='IdLote', primary_key=True)
+    codigo = models.CharField(db_column='Codigo', max_length=50, unique=True, blank=True, null=True)
+    idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo')
+    fechaingreso = models.DateTimeField(db_column='FechaIngreso')
+    fechavencimiento = models.DateField(db_column='FechaVencimiento', blank=True, null=True)
+    cantidadinicial = models.DecimalField(db_column='CantidadInicial', max_digits=10, decimal_places=2)
+    cantidadactual = models.DecimalField(db_column='CantidadActual', max_digits=10, decimal_places=2, default=0)
 
     def save(self, *args, **kwargs):
         es_nuevo = self.pk is None
-
         if es_nuevo and not self.codigo:
             super().save(*args, **kwargs)
             self.codigo = f'LOT-{self.pk:03d}'
             super().save(update_fields=['codigo'])
             return
-
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -488,67 +428,63 @@ class Lote(models.Model):
     class Meta:
         db_table = 'Lote'
 
- 
+
 class DetalleCompra(models.Model):
     iddetallecompra = models.AutoField(db_column='IdDetalleCompra', primary_key=True)
     idcompra = models.ForeignKey(Compras, models.DO_NOTHING, db_column='IdCompra', blank=True, null=True)
     idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo', blank=True, null=True)
     cantidad = models.DecimalField(db_column='Cantidad', max_digits=10, decimal_places=2)
-    costounitario = models.DecimalField(
-        max_digits=12,
-        decimal_places=4
-    )
- 
+    costounitario = models.DecimalField(max_digits=12, decimal_places=4)
+
     class Meta:
         db_table = 'DetalleCompra'
- 
- 
+
+
 class Receta(models.Model):
     idreceta = models.AutoField(db_column='IdReceta', primary_key=True)
     idproducto = models.ForeignKey(Producto, models.DO_NOTHING, db_column='IdProducto', blank=True, null=True)
     idinsumo = models.IntegerField(db_column='IdInsumo', blank=True, null=True)
- 
+
     class Meta:
         db_table = 'Receta'
- 
- 
+
 
 class RecetaInsumo(models.Model):
-    idrecetainsumo = models.AutoField(db_column='IdRecetaInsumo',primary_key=True)
-    idinsumo = models.ForeignKey(Insumo,models.DO_NOTHING,db_column='IdInsumo',blank=True,null=True)
-    idreceta = models.ForeignKey(Receta,models.DO_NOTHING,db_column='IdReceta',blank=True,null=True)
-    cantidadinsumo = models.DecimalField(db_column='CantidadInsumo',max_digits=10,decimal_places=2,default=0)
+    idrecetainsumo = models.AutoField(db_column='IdRecetaInsumo', primary_key=True)
+    idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo', blank=True, null=True)
+    idreceta = models.ForeignKey(Receta, models.DO_NOTHING, db_column='IdReceta', blank=True, null=True)
+    cantidadinsumo = models.DecimalField(db_column='CantidadInsumo', max_digits=10, decimal_places=2, default=0)
     es_removible = models.BooleanField(default=False)
-    unidadmedida = models.CharField(db_column='UnidadMedida',max_length=20,default='unidad')
+    unidadmedida = models.CharField(db_column='UnidadMedida', max_length=20, default='unidad')
 
     class Meta:
         db_table = 'RecetaInsumo'
 
- 
+
 class MedioPago(models.Model):
     idmediopago = models.AutoField(db_column='IdMedioPago', primary_key=True)
     nombremetodo = models.CharField(db_column='NombreMetodo', max_length=50, db_collation='Modern_Spanish_CI_AS')
- 
+
     def __str__(self):
         return self.nombremetodo
- 
+
     class Meta:
         db_table = 'MedioPago'
- 
- 
+
+
 class Cliente(models.Model):
     idcliente = models.AutoField(db_column='IdCliente', primary_key=True)
     nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
     apellido = models.CharField(db_column='Apellido', max_length=100, db_collation='Modern_Spanish_CI_AS')
     telefono = models.CharField(db_column='Telefono', max_length=30, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
- 
+
     def __str__(self):
         return f"{self.nombre} {self.apellido}"
- 
+
     class Meta:
         db_table = 'Cliente'
- 
- 
+
+
 class Direccion(models.Model):
     iddireccion = models.AutoField(db_column='IdDireccion', primary_key=True)
     idcliente = models.ForeignKey(Cliente, models.DO_NOTHING, db_column='IdCliente', blank=True, null=True, related_name='direcciones')
@@ -556,25 +492,25 @@ class Direccion(models.Model):
     numero = models.CharField(db_column='Numero', max_length=20, db_collation='Modern_Spanish_CI_AS')
     piso = models.CharField(db_column='Piso', max_length=10, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
     localidad = models.CharField(db_column='Localidad', max_length=100, db_collation='Modern_Spanish_CI_AS')
- 
+
     def __str__(self):
         return f"{self.calle} {self.numero}, {self.localidad}"
- 
+
     class Meta:
         db_table = 'Direccion'
- 
- 
+
+
 class EstadoPedido(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
     descripcion = models.CharField(db_column='Descripcion', max_length=50, db_collation='Modern_Spanish_CI_AS')
- 
+
     def __str__(self):
         return self.descripcion
- 
+
     class Meta:
         db_table = 'EstadoPedido'
- 
- 
+
+
 class Pedido(models.Model):
     idpedido = models.AutoField(db_column='IdPedido', primary_key=True)
     idcliente = models.ForeignKey('Cliente', models.DO_NOTHING, db_column='IdCliente', blank=True, null=True)
@@ -593,18 +529,17 @@ class Pedido(models.Model):
 
     class Meta:
         db_table = 'Pedido'
- 
- 
+
+
 class DetallePedido(models.Model):
     iddetallepedido = models.AutoField(db_column='IdDetallePedido', primary_key=True)
     idpedido = models.ForeignKey(Pedido, models.DO_NOTHING, db_column='IdPedido', blank=True, null=True)
     idproducto = models.ForeignKey('Producto', models.DO_NOTHING, db_column='IdProducto', blank=True, null=True)
     cantidad = models.IntegerField(db_column='Cantidad')
     preciounitario = models.DecimalField(db_column='PrecioUnitario', max_digits=10, decimal_places=2)
-    observaciones = models.CharField(db_column='Observaciones', max_length=255, blank=True, null=True) # <-- Nuevo campo
+    observaciones = models.CharField(db_column='Observaciones', max_length=255, blank=True, null=True)
 
     class Meta:
-        managed = False # O true dependiendo de si manejas migraciones
         db_table = 'DetallePedido'
 
 
@@ -628,6 +563,7 @@ class MovimientoStock(models.Model):
     class Meta:
         db_table = 'MovimientoStock'
 
+
 class TipoBeneficio(models.Model):
     TIPO_PORCENTAJE = 'PORCENTAJE'
     TIPO_MONTO_FIJO = 'MONTO_FIJO'
@@ -648,23 +584,21 @@ class TipoBeneficio(models.Model):
         choices=OPCIONES_COMPORTAMIENTO,
         default=TIPO_SIN_VALOR,
         verbose_name="Comportamiento",
-        db_column='comportamiento' # Asegúrate de que en SQL Server la columna se llame así (o 'Comportamiento')
+        db_column='comportamiento'
     )
 
     def __str__(self):
         return self.nombre
 
     class Meta:
-        managed = False  # Evita que Django intente recrear la tabla o modificarla
-        db_table = 'TipoBeneficio'  # Fuerza a usar la tabla oficial de SQL Server donde apunta la FK
+        db_table = 'TipoBeneficio'
+
 
 class Promocion(models.Model):
-
     idpromocion = models.AutoField(
         db_column='IdPromocion',
         primary_key=True
     )
-
     palabraclave = models.CharField(
         db_column='PalabraClave',
         max_length=50,
@@ -672,7 +606,6 @@ class Promocion(models.Model):
         blank=True,
         null=True
     )
-
     tipobeneficio = models.ForeignKey(
         'TipoBeneficio',
         on_delete=models.DO_NOTHING,
@@ -680,7 +613,6 @@ class Promocion(models.Model):
         blank=True,
         null=True
     )
-
     valor = models.DecimalField(
         db_column='Valor',
         max_digits=10,
@@ -688,19 +620,16 @@ class Promocion(models.Model):
         blank=True,
         null=True
     )
-
     fechainicio = models.DateField(
         db_column='FechaInicio',
         blank=True,
         null=True
     )
-
     fechafin = models.DateField(
         db_column='FechaFin',
         blank=True,
         null=True
     )
-
     activo = models.IntegerField(
         db_column='Activo',
         blank=True,
@@ -714,44 +643,27 @@ class Promocion(models.Model):
     @property
     def descripcion_amigable(self):
         tipo = self.tipobeneficio.codigo if self.tipobeneficio else None
-
         if tipo == 'DESCUENTO_PORCENTAJE':
-            return (
-                f"Descuento del {int(self.valor)}%"
-                if self.valor
-                else "Descuento porcentual"
-            )
-
+            return f"Descuento del {int(self.valor)}%" if self.valor else "Descuento porcentual"
         elif tipo == 'DESCUENTO_FIJO':
-            return (
-                f"Descuento de ${self.valor}"
-                if self.valor
-                else "Descuento fijo"
-            )
-
+            return f"Descuento de ${self.valor}" if self.valor else "Descuento fijo"
         elif tipo == 'PRODUCTO_GRATIS':
             return "¡Llevá un Producto Gratis!"
-
         elif tipo == '2x1':
             return "Promoción 2 x 1"
-
         elif tipo == '3x2':
             return "Promoción 3 x 2"
-
         return str(self.tipobeneficio)
 
     class Meta:
         db_table = 'Promocion'
-        managed = False
- 
- 
-class ProductoPromocion(models.Model):
 
+
+class ProductoPromocion(models.Model):
     idproductopromocion = models.AutoField(
         db_column='IdProductoPromocion',
         primary_key=True
     )
-
     idproducto = models.ForeignKey(
         Producto,
         models.DO_NOTHING,
@@ -759,7 +671,6 @@ class ProductoPromocion(models.Model):
         blank=True,
         null=True
     )
-
     idpromocion = models.ForeignKey(
         Promocion,
         models.DO_NOTHING,
@@ -850,4 +761,3 @@ class RegistroAuditoria(models.Model):
     class Meta:
         db_table = 'RegistroAuditoria'
         ordering = ['-fecha']
-
