@@ -15,7 +15,11 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
-ALLOWED_HOSTS = allowed_hosts_env.split(',') if allowed_hosts_env else []
+ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_env.split(',') if h.strip()]
+if DEBUG or not ALLOWED_HOSTS:
+    for default_host in ['localhost', '127.0.0.1', 'testserver', '[::1]']:
+        if default_host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(default_host)
 
 INSTALLED_APPS = [
     'cloudinary_storage',
@@ -204,3 +208,19 @@ CKEDITOR_5_CONFIGS = {
         'language': 'es',
     }
 }
+
+# --- CONFIGURACIÓN DE SEGURIDAD Y SESIÓN (12 HORAS) ---
+# La sesión expira exactamente a las 12 horas (43.200 segundos), tras lo cual se debe volver a ingresar
+SESSION_COOKIE_AGE = 43200  # 12 horas en segundos
+SESSION_SAVE_EVERY_REQUEST = False  # No reiniciar el contador en cada petición; expira a las 12h
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_HTTPONLY = True  # Protege la cookie contra robo por JavaScript (XSS)
+SESSION_COOKIE_SAMESITE = 'Lax'  # Protección contra ataques CSRF de origen cruzado
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False
+
+# Cabeceras de seguridad HTTP
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Evita que el navegador intente adivinar tipos MIME incorrectos
+SECURE_BROWSER_XSS_FILTER = True  # Activa el filtro contra scripts maliciosos reflejados
+X_FRAME_OPTIONS = 'DENY'  # Evita ataques de clickjacking bloqueando incrustación en iframes
+SECURE_REFERRER_POLICY = 'same-origin'  # Protege rutas internas contra fugas en el Referer

@@ -127,6 +127,54 @@
             color: #fcd34d;
         }
 
+        /* ---------- Contador de bloqueo ---------- */
+
+        .login-bloqueo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+
+            margin-bottom: 24px;
+            padding: 16px;
+
+            text-align: center;
+
+            background: rgba(220, 38, 38, 0.08);
+            border: 1px solid rgba(220, 38, 38, 0.35);
+            border-radius: 10px;
+        }
+
+        .login-bloqueo[hidden] {
+            display: none;
+        }
+
+        .login-bloqueo-texto {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--zb-texto-mutado);
+        }
+
+        .login-bloqueo-contador {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            line-height: 1.1;
+            color: #ff5635;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .login-bloqueo.liberado {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.35);
+        }
+
+        .login-bloqueo.liberado .login-bloqueo-texto {
+            color: #6ee7b7;
+        }
+
+        /* ---------- Formulario ---------- */
+
         .form-group {
             margin-bottom: 20px;
         }
@@ -251,6 +299,14 @@
             transform: translateY(0);
         }
 
+        .btn-submit:disabled {
+            background: #2d2d35;
+            color: #6b7280;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .login-footer {
             margin-top: 28px;
             text-align: center;
@@ -288,13 +344,21 @@
         {% if messages %}
             <div class="login-messages">
                 {% for message in messages %}
-                    <div class="login-alert login-alert-{{ message.tags|default:'error' }}">
+                    <div class="login-alert login-alert-{{ message.tags|default:'error' }}" {% if "bloqueado" in message|lower %}data-bloqueo="true"{% endif %}>
                         <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-exclamation{% endif %}"></i>
                         <span>{{ message }}</span>
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
+
+        <!-- Contador de bloqueo: lo muestra el JavaScript de más abajo -->
+        <div class="login-bloqueo" id="login-bloqueo" role="status" aria-live="polite" hidden>
+            <span class="login-bloqueo-texto" id="bloqueo-texto">
+                Podrás volver a intentar en
+            </span>
+            <strong class="login-bloqueo-contador" id="contador-bloqueo">--:--</strong>
+        </div>
 
         <form method="POST" action="{% url 'panel_login' %}" autocomplete="off">
             {% csrf_token %}
@@ -343,7 +407,7 @@
                 </a>
             </div>
 
-            <button type="submit" class="btn-submit">
+            <button type="submit" class="btn-submit" id="btn-ingresar">
                 <span>Ingresar al panel</span>
                 <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -359,6 +423,8 @@
 </div>
 
 <script>
+    /* ---------- Mostrar / ocultar contraseña ---------- */
+
     const toggleBtn = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     const toggleIcon = document.getElementById('togglePasswordIcon');
@@ -371,6 +437,102 @@
             toggleIcon.classList.toggle('fa-eye-slash', isPassword);
         });
     }
+
+
+    /* ---------- Contador de bloqueo (solo HTML/JS) ---------- */
+
+    (function () {
+
+        // Debe coincidir con TIEMPO_BLOQUEO_SEGUNDOS de utils.py (900 = 15 min)
+        const DURACION_BLOQUEO_SEG = 900;
+        const CLAVE = 'zb_login_bloqueo_hasta';
+
+        const caja = document.getElementById('login-bloqueo');
+        const texto = document.getElementById('bloqueo-texto');
+        const contador = document.getElementById('contador-bloqueo');
+        const boton = document.getElementById('btn-ingresar');
+
+        if (!caja || !contador) {
+            return;
+        }
+
+        function leerFin() {
+            try {
+                return parseInt(localStorage.getItem(CLAVE), 10) || 0;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function guardarFin(valor) {
+            try {
+                localStorage.setItem(CLAVE, String(valor));
+            } catch (e) {}
+        }
+
+        function borrarFin() {
+            try {
+                localStorage.removeItem(CLAVE);
+            } catch (e) {}
+        }
+
+        let fin = leerFin();
+
+        // Si la página trae el mensaje de bloqueo y no hay un bloqueo
+        // vigente guardado, se inicia uno nuevo.
+        const hayMensajeBloqueo = document.querySelector('[data-bloqueo="true"]');
+
+        if (hayMensajeBloqueo && fin <= Date.now()) {
+            fin = Date.now() + DURACION_BLOQUEO_SEG * 1000;
+            guardarFin(fin);
+        }
+
+        // Sin bloqueo vigente: no se muestra nada.
+        if (fin <= Date.now()) {
+            borrarFin();
+            return;
+        }
+
+        caja.hidden = false;
+
+        if (boton) {
+            boton.disabled = true;
+        }
+
+        function pintar(restantes) {
+            const minutos = String(Math.floor(restantes / 60)).padStart(2, '0');
+            const segundos = String(restantes % 60).padStart(2, '0');
+            contador.textContent = minutos + ':' + segundos;
+        }
+
+        function liberar() {
+            clearInterval(temporizador);
+            borrarFin();
+
+            caja.classList.add('liberado');
+            texto.textContent = 'Ya podés intentar de nuevo.';
+            contador.style.display = 'none';
+
+            if (boton) {
+                boton.disabled = false;
+            }
+        }
+
+        function actualizar() {
+            const restantes = Math.ceil((fin - Date.now()) / 1000);
+
+            if (restantes <= 0) {
+                liberar();
+                return;
+            }
+
+            pintar(restantes);
+        }
+
+        const temporizador = setInterval(actualizar, 1000);
+        actualizar();
+
+    })();
 </script>
 
 </body>

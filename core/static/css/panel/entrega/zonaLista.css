@@ -193,6 +193,19 @@
     white-space: nowrap;
 }
 
+.zonas-container .zona-costo-gratis {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    border-radius: 6px;
+    color: #4ade80;
+    font-weight: 700;
+    font-size: 12px;
+}
+
 .zonas-container .zona-negocio {
     display: inline-block;
     padding: 4px 8px;

@@ -1,0 +1,267 @@
+
+/* ==========================================================
+   FIX RESPONSIVE — ZONA BURGER
+   Prioridad: móviles de 320px a 480px
+   Colocar al final de carrito.css
+   ========================================================== */
+
+.carrito-container,
+.carrito-card,
+.carrito-item,
+.carrito-info {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.carrito-container {
+    width: min(940px, calc(100% - 32px));
+}
+
+/* Tablet y móvil */
+@media (max-width: 760px) {
+    .carrito-container {
+        width: calc(100% - 24px);
+        padding: 22px 0 36px;
+    }
+
+    .carrito-container > h1 {
+        font-size: clamp(1.25rem, 5vw, 1.65rem);
+        overflow-wrap: anywhere;
+    }
+
+    .carrito-card {
+        padding: 8px 16px 18px;
+        border-radius: 12px;
+    }
+
+    .carrito-item {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 18px 0;
+    }
+
+    .carrito-info {
+        width: 100%;
+    }
+
+    .carrito-info h3 {
+        font-size: 1rem;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+    }
+
+    .carrito-detalles-lista {
+        margin-bottom: 14px;
+    }
+
+    /* Los botones pueden ocupar más de una fila */
+    .carrito-acciones {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .cantidad-control {
+        flex-shrink: 0;
+        min-height: 42px;
+    }
+
+    .btn-cant {
+        width: 32px;
+        min-height: 32px;
+    }
+
+    .btn-editar-item,
+    .btn-eliminar-item {
+        min-height: 42px;
+        padding: 0 11px;
+        font-size: .75rem;
+    }
+
+    /* Precio separado de los controles */
+    .carrito-precio-col {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+        padding-top: 12px;
+        border-top: 1px dashed var(--zb-border, rgba(255,255,255,.12));
+        text-align: left;
+    }
+
+    .carrito-unitario-ref {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .carrito-subtotal-item {
+        flex-shrink: 0;
+        font-size: 1.15rem;
+    }
+
+    .carrito-botones-accion {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .btn-seguir,
+    .btn-checkout {
+        width: 100%;
+        min-height: 48px;
+        padding: 12px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+    .carrito-container {
+        width: calc(100% - 20px);
+        padding-top: 18px;
+        padding-bottom: 28px;
+    }
+
+    .carrito-container > h1 {
+        margin-bottom: 16px;
+        padding-left: 13px;
+        padding-bottom: 13px;
+        font-size: 1.3rem;
+    }
+
+    .carrito-container > h1::before {
+        bottom: 13px;
+    }
+
+    .carrito-card {
+        padding: 7px 12px 15px;
+    }
+
+    .carrito-item {
+        gap: 13px;
+        padding: 16px 0;
+    }
+
+    .carrito-info h3 {
+        font-size: .94rem;
+    }
+
+    .carrito-detalles-lista li {
+        font-size: .75rem;
+        line-height: 1.55;
+    }
+
+    /* Cantidad en su propia fila */
+    .carrito-acciones {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .cantidad-control {
+        grid-column: 1 / -1;
+        justify-self: start;
+        min-height: 42px;
+    }
+
+    .btn-cant {
+        width: 34px;
+        min-height: 32px;
+    }
+
+    .cantidad-val {
+        min-width: 30px;
+    }
+
+    .btn-editar-item,
+    .btn-eliminar-item {
+        width: 100%;
+        min-width: 0;
+        min-height: 42px;
+        gap: 6px;
+        padding: 0 5px;
+        font-size: .72rem;
+        white-space: nowrap;
+    }
+
+    .carrito-precio-col {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .carrito-unitario-ref {
+        max-width: 60%;
+        font-size: .7rem;
+    }
+
+    .carrito-subtotal-item {
+        font-size: 1.05rem;
+    }
+
+    /* Totales */
+    .carrito-resumen-totales {
+        padding-top: 16px;
+    }
+
+    .resumen-linea {
+        gap: 10px;
+        font-size: .8rem;
+    }
+
+    .resumen-linea.total-final {
+        align-items: center;
+        font-size: .88rem;
+    }
+
+    .resumen-linea.total-final span:last-child {
+        font-size: clamp(1.2rem, 6vw, 1.5rem);
+    }
+
+    .carrito-card.carrito-vacio {
+        padding: 36px 12px;
+    }
+
+    .carrito-vacio .btn-checkout {
+        min-width: 0;
+    }
+}
+
+/* Teléfonos de 320px a 360px */
+@media (max-width: 360px) {
+    .carrito-container {
+        width: calc(100% - 16px);
+    }
+
+    .carrito-card {
+        padding-inline: 10px;
+    }
+
+    .carrito-container > h1 {
+        font-size: 1.2rem;
+    }
+
+    .btn-editar-item,
+    .btn-eliminar-item {
+        gap: 4px;
+        font-size: .66rem;
+    }
+
+    .carrito-precio-col {
+        gap: 6px;
+    }
+
+    .carrito-unitario-ref {
+        font-size: .66rem;
+    }
+
+    .carrito-subtotal-item {
+        font-size: .98rem;
+    }
+}

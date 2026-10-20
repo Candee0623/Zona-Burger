@@ -310,7 +310,7 @@ content="width=device-width, initial-scale=1.0"
 
     <a
         href="{% url 'zonas_entrega_lista' %}"
-        class="menu-item {% if request.resolver_match.url_name == 'entrega' %}active{% endif %}"
+        class="menu-item {% if 'zonas_entrega' in request.resolver_match.url_name or 'entrega' in request.resolver_match.url_name %}active{% endif %}"
     >
 
         <span class="menu-icon">
@@ -470,6 +470,33 @@ content="width=device-width, initial-scale=1.0"
 
 <section class="page-content">
 
+    <!-- NOTIFICACIONES GLOBALES DEL PANEL (ACTUALIZACIONES, EDICIONES, ERRORES, AVISOS) -->
+    {% if messages %}
+        <div class="panel-messages-container" id="panelGlobalAlerts">
+            {% for message in messages %}
+                <div class="panel-alert-banner panel-alert-{{ message.tags|default:'info' }}" role="alert">
+                    <div class="alert-icon">
+                        {% if 'success' in message.tags %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% elif 'error' in message.tags or 'danger' in message.tags %}
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        {% elif 'warning' in message.tags %}
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info"></i>
+                        {% endif %}
+                    </div>
+                    <div class="alert-message">
+                        {{ message }}
+                    </div>
+                    <button type="button" class="alert-close-btn" onclick="this.closest('.panel-alert-banner').remove()" aria-label="Cerrar notificación">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     {% block content %}
     {% endblock %}
 
@@ -487,6 +514,22 @@ content="width=device-width, initial-scale=1.0"
 <!-- ================================================== -->
 
 <script src="{% static 'java/panel.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Auto-ocultar alertas de éxito e informativas después de 6 segundos
+    const banners = document.querySelectorAll('.panel-alert-success, .panel-alert-info');
+    banners.forEach(function (banner) {
+        setTimeout(function () {
+            banner.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            banner.style.opacity = '0';
+            banner.style.transform = 'translateY(-6px)';
+            setTimeout(function () {
+                banner.remove();
+            }, 400);
+        }, 6000);
+    });
+});
+</script>
 
 </body>
 

@@ -778,3 +778,153 @@ textarea {
     }
 
 }
+
+/* =========================================================
+   ZONAS DE ENTREGA Y COSTO DE ENVÍO DINÁMICO
+   ========================================================= */
+
+.zona-selector-group {
+    grid-column: 1 / -1;
+    margin-bottom: 5px;
+}
+
+.zona-select {
+    width: 100%;
+    height: 48px;
+    padding: 10px 14px;
+    background: #141414;
+    border: 1px solid #363636;
+    border-radius: 9px;
+    color: #ffffff;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.zona-select:focus {
+    outline: none;
+    border-color: #d82505;
+    box-shadow: 0 0 0 3px rgba(216, 37, 5, 0.2);
+}
+
+.zona-status-banner {
+    width: 100%;
+    margin: 14px 0;
+    animation: zonaFadeIn 0.3s ease;
+}
+
+@keyframes zonaFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.zona-banner-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.zona-banner-box i {
+    font-size: 1.3rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.zona-box-text strong {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.zona-box-text span {
+    font-size: 0.84rem;
+    opacity: 0.92;
+}
+
+.zona-box-free {
+    background: #0f2c1b;
+    border: 1px solid #1e7040;
+    color: #4ade80;
+}
+
+.zona-box-free i {
+    color: #22c55e;
+}
+
+.zona-box-paid {
+    background: #19273c;
+    border: 1px solid #28548c;
+    color: #93c5fd;
+}
+
+.zona-box-paid i {
+    color: #3b82f6;
+}
+
+.zona-box-unmatched {
+    background: #2b2313;
+    border: 1px solid #7c581d;
+    color: #fde047;
+}
+
+.zona-box-unmatched i {
+    color: #eab308;
+}
+
+.badge-envio-gratis {
+    background: #143521;
+    color: #4ade80;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: 1px solid #166534;
+}
+
+.badge-envio-coordinar {
+    background: #2b2313;
+    color: #fde047;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: 1px solid #7c581d;
+}
+
+.badge-opcional {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #a0a0b0;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.total-pendiente-aviso {
+    font-size: 0.76rem;
+    color: #fde047;
+    background: rgba(253, 224, 71, 0.08);
+    border: 1px dashed rgba(253, 224, 71, 0.35);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.4;
+}

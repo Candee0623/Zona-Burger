@@ -28,18 +28,15 @@
         </div>
         {% endif %}
 
-        <!-- HORA DE ENTREGA DESEADA -->
+        <!-- HORA DE ENTREGA DESEADA (solo se muestra si existe) -->
         {% if pedido.horarioentregadeseado %}
         <div class="cocina-hora-entrega">
-
             <span class="cocina-hora-label">
                 HORA DE ENTREGA
             </span>
-
             <strong class="cocina-hora-valor">
-                {{ pedido.horarioentregadeseado|time:"H:i" }}
+                {{ pedido.horarioentregadeseado|time:"H:i" }} hs
             </strong>
-
         </div>
         {% endif %}
 

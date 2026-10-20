@@ -350,9 +350,20 @@
         <div class="panel-heading">
             <div>
                 <h2>Lotes de mercadería</h2>
-                <p>Cada lote representa una entrada de un insumo.</p>
+                <p>Cada lote representa una entrada de un insumo con su código de trazabilidad.</p>
             </div>
-            <span class="section-label">Trazabilidad</span>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a
+                    href="{% url 'imprimir_lotes_codigos' %}"
+                    target="_blank"
+                    class="btn btn-outline"
+                    title="Imprimir hoja completa de códigos y etiquetas de todos los lotes"
+                >
+                    <i class="fa-solid fa-print"></i>
+                    Imprimir todos los lotes
+                </a>
+                <span class="section-label">Trazabilidad</span>
+            </div>
         </div>
 
         {% if lotes %}
@@ -366,6 +377,7 @@
                             <th>Vencimiento</th>
                             <th>Cantidad inicial</th>
                             <th>Cantidad actual</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
 
@@ -402,6 +414,19 @@
                                 <td class="number-cell">
                                     {{ lote.cantidadactual|floatformat:2 }}
                                     {{ lote.idinsumo.unidadmedidaingreso }}
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="{% url 'imprimir_lote_codigo' lote.idlote %}?autoprint=1"
+                                        target="_blank"
+                                        class="action-link"
+                                        style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;"
+                                        title="Imprimir etiqueta y código de barras del lote {{ lote.codigo }}"
+                                    >
+                                        <i class="fa-solid fa-barcode"></i>
+                                        Imprimir código
+                                    </a>
                                 </td>
                             </tr>
                         {% endfor %}

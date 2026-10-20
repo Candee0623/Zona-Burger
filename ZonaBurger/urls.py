@@ -19,6 +19,7 @@ urlpatterns = [
 
     # API en tiempo real
     path('api/negocio/estado/', views.api_estado_negocio, name='api_estado_negocio'),
+    path('api/detectar-zona/', views.api_detectar_zona, name='api_detectar_zona'),
 
     # Vistas Públicas / Tienda
     path('', views.index, name='index'),
@@ -94,6 +95,8 @@ urlpatterns = [
     path('panel/stock/compras/registrar/', views.registrar_compra_insumo, name='registrar_compra_insumo'),
     path('panel/stock/<int:idinsumo>/ajustar/', views.ajustar_stock, name='ajustar_stock'),
     path('panel/stock/editar/<int:idinsumo>/', views.stock_editar, name='stock_editar'),
+    path('panel/stock/lote/<int:idlote>/imprimir/', views.imprimir_lote_codigo, name='imprimir_lote_codigo'),
+    path('panel/stock/lotes/imprimir/', views.imprimir_lotes_codigos, name='imprimir_lotes_codigos'),
 
     # Recetas - Insumos
     path('panel/receta/insumo/<int:idrecetainsumo>/editar/', views.editar_cantidad_insumo_receta, name='editar_cantidad_insumo_receta'),

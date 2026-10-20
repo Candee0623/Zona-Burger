@@ -77,9 +77,9 @@
                 <span>Horario de entrega deseado</span>
                 <strong>
                     {% if pedido.horarioentregadeseado %}
-                        {{ pedido.horarioentregadeseado|time:"H:i" }}
+                        <span style="color:#ffffff;">{{ pedido.horarioentregadeseado|time:"H:i" }} hs</span>
                     {% else %}
-                        No especificado
+                        <span style="color:#fde047; font-weight:700;">Pendiente de acordar</span>
                     {% endif %}
                 </strong>
             </div>

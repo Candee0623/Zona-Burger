@@ -1,0 +1,396 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imprimir Código de Lote | Zona Burger</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .no-print-toolbar {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e1e1e;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            margin-bottom: 24px;
+            gap: 12px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+        }
+
+        .no-print-toolbar .info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .no-print-toolbar .info i {
+            color: #d82505;
+            font-size: 1.4rem;
+        }
+
+        .no-print-toolbar .info h1 {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .no-print-toolbar .info p {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #d82505;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #f03816;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #2a2a2a;
+            color: #eee;
+            border: 1px solid #444;
+        }
+
+        .btn-secondary:hover {
+            background: #333;
+        }
+
+        /* CONTENEDOR DE ETIQUETAS */
+        .etiquetas-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* TARJETA DE ETIQUETA INDIVIDUAL */
+        .etiqueta-lote {
+            width: 380px;
+            background: #ffffff;
+            color: #111111;
+            border-radius: 10px;
+            border: 2px solid #222222;
+            padding: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            page-break-inside: avoid;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        .etiqueta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 6px;
+        }
+
+        .etiqueta-brand {
+            font-size: 0.95rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #d82505;
+            text-transform: uppercase;
+        }
+
+        .etiqueta-tipo {
+            font-size: 0.65rem;
+            font-weight: 700;
+            background: #000;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .etiqueta-barcode-container {
+            background: #fafafa;
+            border: 1px dashed #ccc;
+            border-radius: 6px;
+            padding: 10px 8px 6px 8px;
+            text-align: center;
+        }
+
+        .etiqueta-barcode-svg {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 55px;
+        }
+
+        .etiqueta-codigo-texto {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin-top: 4px;
+            color: #000;
+        }
+
+        .etiqueta-body {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+
+        .etiqueta-insumo-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .etiqueta-insumo-nombre {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #111;
+            line-height: 1.2;
+        }
+
+        .etiqueta-insumo-code {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.75rem;
+            color: #555;
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .etiqueta-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            background: #f4f4f4;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 2px;
+        }
+
+        .etiqueta-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .etiqueta-info-item span.label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .etiqueta-info-item strong.val {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #111;
+        }
+
+        .etiqueta-vencimiento-alerta {
+            color: #b30000 !important;
+        }
+
+        .etiqueta-footer {
+            border-top: 1px solid #ddd;
+            padding-top: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.65rem;
+            color: #777;
+        }
+
+        /* ESTILOS DE IMPRESIÓN */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                padding: 0 !important;
+            }
+
+            .no-print-toolbar {
+                display: none !important;
+            }
+
+            .etiquetas-grid {
+                max-width: 100% !important;
+                gap: 15px !important;
+            }
+
+            .etiqueta-lote {
+                box-shadow: none !important;
+                border: 1.5px solid #000 !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA DE HERRAMIENTAS (SE OCULTA AL IMPRIMIR) -->
+    <header class="no-print-toolbar">
+        <div class="info">
+            <i class="fa-solid fa-barcode"></i>
+            <div>
+                <h1>Impresión de Códigos de Lotes</h1>
+                <p>
+                    {% if es_lote_individual %}
+                        Etiqueta del lote {{ lote.codigo|default:"Sin código" }}
+                    {% else %}
+                        Listado completo de {{ lotes_con_svg|length }} lotes registrados
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary" onclick="window.print()">
+                <i class="fa-solid fa-print"></i> Imprimir
+            </button>
+            <a href="{% url 'stock_lista' %}" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> Volver a Stock
+            </a>
+        </div>
+    </header>
+
+    <!-- GRID DE ETIQUETAS DE LOTES -->
+    <main class="etiquetas-grid">
+        {% for item in lotes_con_svg %}
+            <article class="etiqueta-lote">
+                <header class="etiqueta-header">
+                    <span class="etiqueta-brand">Zona Burger</span>
+                    <span class="etiqueta-tipo">LOTE DE INSUMO</span>
+                </header>
+
+                <div class="etiqueta-barcode-container">
+                    <div class="etiqueta-barcode-svg">
+                        {{ item.barcode_svg|safe }}
+                    </div>
+                    <div class="etiqueta-codigo-texto">
+                        {{ item.lote.codigo|default:"SIN-CODIGO" }}
+                    </div>
+                </div>
+
+                <div class="etiqueta-body">
+                    <div class="etiqueta-insumo-row">
+                        <span class="etiqueta-insumo-nombre">
+                            {{ item.lote.idinsumo.nombreinsumo }}
+                        </span>
+                        {% if item.lote.idinsumo.codigo %}
+                            <span class="etiqueta-insumo-code">{{ item.lote.idinsumo.codigo }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="etiqueta-info-grid">
+                        <div class="etiqueta-info-item">
+                            <span class="label">Ingreso</span>
+                            <strong class="val">{{ item.lote.fechaingreso|date:"d/m/Y H:i" }}</strong>
+                        </div>
+
+                        <div class="etiqueta-info-item">
+                            <span class="label">Vencimiento</span>
+                            <strong class="val {% if item.esta_vencido or item.vence_pronto %}etiqueta-vencimiento-alerta{% endif %}">
+                                {% if item.lote.fechavencimiento %}
+                                    {{ item.lote.fechavencimiento|date:"d/m/Y" }}
+                                    {% if item.esta_vencido %}(Vencido){% elif item.vence_pronto %}(Próx. a vencer){% endif %}
+                                {% else %}
+                                    No registrado
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="etiqueta-info-item">
+                            <span class="label">Cant. Actual</span>
+                            <strong class="val">
+                                {{ item.lote.cantidadactual|floatformat:2 }} {{ item.lote.idinsumo.unidadmedidaingreso }}
+                            </strong>
+                        </div>
+
+                        <div class="etiqueta-info-item">
+                            <span class="label">Cant. Inicial</span>
+                            <strong class="val">
+                                {{ item.lote.cantidadinicial|floatformat:2 }} {{ item.lote.idinsumo.unidadmedidaingreso }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="etiqueta-footer">
+                    <span>Control de Inventario y Trazabilidad</span>
+                    <span>Lote #{{ item.lote.idlote }}</span>
+                </footer>
+            </article>
+        {% empty %}
+            <div style="background:#1e1e1e;padding:30px;border-radius:12px;text-align:center;">
+                <p>No se encontraron lotes registrados para imprimir.</p>
+                <a href="{% url 'stock_lista' %}" class="btn btn-primary" style="margin-top:15px;">
+                    Volver a Stock
+                </a>
+            </div>
+        {% endfor %}
+    </main>
+
+    {% if autoprint %}
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                window.print();
+            }, 400);
+        });
+    </script>
+    {% endif %}
+
+</body>
+</html>

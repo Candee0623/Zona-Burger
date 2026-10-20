@@ -56,9 +56,15 @@
                     </td>
 
                     <td data-label="Costo de envío">
-                        <span class="zona-costo">
-                            ${{ zona.costoenvio|default_if_none:"0.00" }}
-                        </span>
+                        {% if zona.costoenvio == 0 %}
+                            <span class="zona-costo-gratis">
+                                <i class="fa-solid fa-gift"></i> Envío gratis
+                            </span>
+                        {% else %}
+                            <span class="zona-costo">
+                                ${{ zona.costoenvio|default_if_none:"0.00" }}
+                            </span>
+                        {% endif %}
                     </td>
 
                     <td data-label="Acciones" class="acciones">

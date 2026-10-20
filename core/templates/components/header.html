@@ -68,10 +68,76 @@
 
         </nav>
     </header>
+
+    {% if messages %}
+        <div class="zb-public-messages" id="zbPublicMessages">
+            {% for message in messages %}
+                <div class="zb-alert-toast zb-alert-{{ message.tags|default:'info' }}" role="alert">
+                    <div class="zb-alert-icon">
+                        {% if 'success' in message.tags %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% elif 'error' in message.tags or 'danger' in message.tags %}
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        {% elif 'warning' in message.tags %}
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info"></i>
+                        {% endif %}
+                    </div>
+                    <div class="zb-alert-content">
+                        {{ message }}
+                    </div>
+                    <button type="button" class="zb-alert-close" onclick="this.closest('.zb-alert-toast').remove()" aria-label="Cerrar">
+                        &times;
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const publicAlerts = document.querySelectorAll('.zb-alert-success, .zb-alert-info');
+            publicAlerts.forEach(function (alert) {
+                setTimeout(function () {
+                    alert.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-6px)';
+                    setTimeout(function () { alert.remove(); }, 400);
+                }, 6000);
+            });
+        });
+        </script>
+    {% endif %}
 </div>
 
 
 <style>
+.zb-public-messages {
+    max-width: 1200px;
+    margin: 12px auto 0 auto;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    z-index: 3001;
+}
+.zb-alert-toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+.zb-alert-success { background: #143521; color: #4ade80; border: 1px solid #15803d; }
+.zb-alert-error, .zb-alert-danger { background: #391313; color: #fca5a5; border: 1px solid #b91c1c; }
+.zb-alert-warning { background: #3a2b0e; color: #fde047; border: 1px solid #a16207; }
+.zb-alert-info { background: #0e2a3a; color: #7dd3fc; border: 1px solid #0369a1; }
+.zb-alert-close { background: none; border: none; color: inherit; font-size: 1.2rem; cursor: pointer; opacity: 0.7; margin-left: auto; }
+.zb-alert-close:hover { opacity: 1; }
+
 
 /* ============================================================
    ZONA BURGER — HEADER

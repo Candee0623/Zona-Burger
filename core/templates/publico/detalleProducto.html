@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/Index.css' %}">
-    <link rel="stylesheet" href="{% static 'css/productos/detalleProducto.css' %}">
     <link rel="stylesheet" href="{% static 'css/publico/detalleProducto.css' %}">
 </head>
 <body>
@@ -115,7 +114,7 @@
                                 <div class="opcion-item">
                                     <label class="opcion-label">
                                         <input
-                                            type="{% if grupo.maxselecciones == 1 %}radio{% else %}checkbox{% endif %}"
+                                            type="checkbox"
                                             name="grupo_{{ grupo.idgrupo }}"
                                             value="{{ opcion.idopcion }}"
                                             data-precio="{{ opcion.precioadicional|default:0|unlocalize }}"

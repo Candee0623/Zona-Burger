@@ -176,6 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ).length;
     }
 
+    
     function validarGrupos() {
         const incompletos = [];
 
@@ -186,27 +187,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const faltaMinimo = minimo > 0 && cantidad < minimo;
             const superaMaximo = maximo > 0 && cantidad > maximo;
+            const invalido = faltaMinimo || superaMaximo;
 
-            if (faltaMinimo || superaMaximo) {
+            if (invalido) {
                 incompletos.push(seccion);
             }
 
+            // Mostrar el estado de error al intentar enviar,
+            // o cuando el usuario ya empezó a corregir ese grupo.
             seccion.classList.toggle(
                 'grupo-incompleto',
-                intentoEnvio && (faltaMinimo || superaMaximo)
+                invalido && intentoEnvio
             );
 
             seccion.classList.toggle(
                 'grupo-completo',
-                intentoEnvio &&
-                minimo > 0 &&
-                !faltaMinimo &&
-                !superaMaximo
+                intentoEnvio && !invalido && minimo > 0
             );
+
+            // Actualizar el mensaje de validación si existe.
+            const mensaje = seccion.querySelector(
+                '.mensaje-validacion-grupo'
+            );
+
+            if (mensaje) {
+                mensaje.style.display = faltaMinimo && intentoEnvio
+                    ? 'flex'
+                    : 'none';
+            }
         });
 
         return incompletos;
     }
+
 
     function mostrarAviso(texto) {
         if (!aviso) return;
@@ -347,6 +360,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Guardar cada modificación sin esperar al envío.
+    
     form.addEventListener('change', function (event) {
         const input = event.target;
 
@@ -358,7 +372,19 @@ document.addEventListener('DOMContentLoaded', function () {
             );
 
             if (seccion) {
-                controlarMaximo(seccion, input);
+                const maximoRespetado = controlarMaximo(
+                    seccion,
+                    input
+                );
+
+                // Si se supera el máximo, controlarMaximo
+                // desmarca la opción recién seleccionada.
+                if (!maximoRespetado) {
+                    calcularTotal();
+                    validarGrupos();
+                    guardarEstadoSeguro();
+                    return;
+                }
             }
         }
 
@@ -370,6 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
         validarGrupos();
         guardarEstadoSeguro();
     });
+
 
     form.addEventListener('input', function (event) {
         if (event.target.matches('.cantidad-extra')) {

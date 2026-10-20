@@ -91,7 +91,14 @@ from .decorators import (
     requiere_permiso,
     requiere_algun_permiso,
 )
-from .utils import registrar_auditoria, obtener_ip_cliente
+from .utils import (
+    registrar_auditoria,
+    obtener_ip_cliente,
+    generar_codigo_barras_svg,
+    verificar_bloqueo_fuerza_bruta,
+    registrar_intento_fallido_login,
+    limpiar_intentos_fallidos_login,
+)
 from .stock_service import (
     calcular_consumo_carrito,
     descontar_stock_pedido,
@@ -166,6 +173,7 @@ def calcular_ingresos_del_dia(pedidos):
 
 def index(request):
     negocio = Negocio.objects.first()
+    hoy = timezone.localdate()
 
     horarios = (
         Horario.objects.filter(idnegocio=negocio)
@@ -179,15 +187,20 @@ def index(request):
         if negocio else ZonasEntrega.objects.none()
     )
 
+    promociones_activas = Promocion.objects.filter(
+        activo=1,
+        fechainicio__lte=hoy,
+        fechafin__gte=hoy,
+    )
+
     return render(request, 'publico/index.html', {
         'negocio': negocio,
         'horarios': horarios,
         'zonas': zonas,
         'instagram': obtener_instagram(),
-        'promociones_activas': Promocion.objects.filter(activo=1),
+        'promociones_activas': promociones_activas,
         'estado_local': local_estado(),
     })
-
 
 def menu(request):
     productos_visibles = Producto.objects.exclude(
@@ -851,6 +864,8 @@ def procesar_checkout(request):
                 'codigo_promocion': '',
                 'datos_previos': {},
                 'hay_datos_previos': False,
+                'coord_lat': '',
+                'coord_lng': '',
                 'error_telefono': '',
                 'error_medio_pago': '',
                 'error_promocion': '',
@@ -972,21 +987,27 @@ def procesar_checkout(request):
                 'El horario de entrega no es válido.'
             )
 
-    # Cálculo del costo de envío.
-    zona = ZonasEntrega.objects.filter(
-        nombre__iexact=localidad
-    ).first()
+    # Cálculo y análisis geográfico y automático de zonas de entrega
+    id_zona = campo('id_zona')
+    coord_lat = campo('coord_lat')
+    coord_lng = campo('coord_lng')
 
-    if zona and zona.costoenvio is not None:
-        costo_envio = Decimal(str(zona.costoenvio))
-        costo_envio_texto = (
-            'Envío gratis'
-            if costo_envio == 0
-            else f'${costo_envio:.2f}'
-        )
-    else:
-        costo_envio = Decimal('0.00')
-        costo_envio_texto = 'A coordinar'
+    from core.geo_zonas import detectar_zona_entrega
+
+    resultado_zona = detectar_zona_entrega(
+        calle=calle,
+        numero=numero,
+        localidad=localidad,
+        lat=coord_lat,
+        lon=coord_lng,
+        id_zona_sugerida=id_zona if (id_zona and id_zona != 'otro') else None,
+    )
+
+    zona = resultado_zona.get('zona')
+    costo_envio = resultado_zona.get('costoenvio', Decimal('0.00'))
+    costo_envio_texto = resultado_zona.get('costoenvio_texto', 'A coordinar')
+    localidad_guardar = resultado_zona.get('localidad_guardar') or (localidad or 'A coordinar con el vendedor')
+    zona_seleccionada_id = resultado_zona.get('idzona')
 
     # Validación de la promoción.
     if codigo_promo:
@@ -1033,6 +1054,12 @@ def procesar_checkout(request):
             {
                 **contexto,
                 'total_estimado': total_estimado,
+                'costo_envio': costo_envio,
+                'costo_envio_texto': costo_envio_texto,
+                'zona_seleccionada_id': zona_seleccionada_id,
+                'resultado_zona': resultado_zona,
+                'coord_lat': coord_lat,
+                'coord_lng': coord_lng,
                 'datos_previos': request.POST,
                 'hay_datos_previos': True,
                 'errores': errores,
@@ -1088,7 +1115,7 @@ def procesar_checkout(request):
                 calle=calle,
                 numero=numero,
                 piso=piso,
-                localidad=localidad,
+                localidad=localidad_guardar,
             )
 
             estado_inicial = get_object_or_404(
@@ -1196,7 +1223,7 @@ def procesar_checkout(request):
     if piso:
         mensaje += f' (Piso/Depto: {piso})'
 
-    mensaje += f'\n• Localidad / Zona: {localidad}\n'
+    mensaje += f'\n• Localidad / Zona: {localidad_guardar}\n'
 
     if horario_entrega:
         mensaje += f'• Horario Deseado: {horario_entrega}\n'
@@ -2729,6 +2756,84 @@ def stock_lista(request):
         'panel/stock/stockLista.html',
         contexto,
     )
+
+
+@panel_login_requerido
+@requiere_permiso('stock.ver')
+def imprimir_lote_codigo(request, idlote):
+    """
+    Vista de impresión de etiqueta individual de un lote con su código de barras Code 128.
+    """
+    lote = get_object_or_404(
+        Lote.objects.select_related('idinsumo'),
+        pk=idlote
+    )
+    hoy = timezone.localdate()
+    fecha_limite = hoy + timedelta(days=7)
+
+    esta_vencido = bool(lote.fechavencimiento and lote.fechavencimiento < hoy)
+    vence_pronto = bool(lote.fechavencimiento and hoy <= lote.fechavencimiento <= fecha_limite)
+
+    codigo_para_barras = lote.codigo or f"LOT-{lote.pk:03d}"
+    barcode_svg = generar_codigo_barras_svg(codigo_para_barras)
+
+    item = {
+        'lote': lote,
+        'barcode_svg': barcode_svg,
+        'esta_vencido': esta_vencido,
+        'vence_pronto': vence_pronto,
+    }
+
+    return render(
+        request,
+        'panel/stock/etiquetaLote.html',
+        {
+            'lote': lote,
+            'lotes_con_svg': [item],
+            'es_lote_individual': True,
+            'autoprint': request.GET.get('autoprint') == '1',
+        }
+    )
+
+
+@panel_login_requerido
+@requiere_permiso('stock.ver')
+def imprimir_lotes_codigos(request):
+    """
+    Vista para imprimir todas las etiquetas de lotes registrados en lote.
+    """
+    lotes = (
+        Lote.objects
+        .select_related('idinsumo')
+        .order_by('-fechaingreso', '-idlote')
+    )
+
+    hoy = timezone.localdate()
+    fecha_limite = hoy + timedelta(days=7)
+
+    lotes_con_svg = []
+    for lote in lotes:
+        esta_vencido = bool(lote.fechavencimiento and lote.fechavencimiento < hoy)
+        vence_pronto = bool(lote.fechavencimiento and hoy <= lote.fechavencimiento <= fecha_limite)
+        codigo_para_barras = lote.codigo or f"LOT-{lote.pk:03d}"
+        barcode_svg = generar_codigo_barras_svg(codigo_para_barras)
+        lotes_con_svg.append({
+            'lote': lote,
+            'barcode_svg': barcode_svg,
+            'esta_vencido': esta_vencido,
+            'vence_pronto': vence_pronto,
+        })
+
+    return render(
+        request,
+        'panel/stock/etiquetaLote.html',
+        {
+            'lotes_con_svg': lotes_con_svg,
+            'es_lote_individual': False,
+            'autoprint': request.GET.get('autoprint') == '1',
+        }
+    )
+
 
 
 
@@ -5656,6 +5761,55 @@ def api_estado_negocio(request):
     })
 
 
+def api_detectar_zona(request):
+    """
+    API en tiempo real para detectar la zona de entrega y calcular automáticamente el costo de envío
+    según la dirección real y ubicación geográfica del cliente.
+    """
+    calle = request.GET.get('calle') or request.POST.get('calle') or ''
+    numero = request.GET.get('numero') or request.POST.get('numero') or ''
+    localidad = request.GET.get('localidad') or request.POST.get('localidad') or ''
+    lat = request.GET.get('lat') or request.POST.get('lat')
+    lon = request.GET.get('lon') or request.POST.get('lon')
+    id_zona = request.GET.get('id_zona') or request.POST.get('id_zona')
+
+    from core.geo_zonas import detectar_zona_entrega
+
+    resultado = detectar_zona_entrega(
+        calle=calle,
+        numero=numero,
+        localidad=localidad,
+        lat=lat,
+        lon=lon,
+        id_zona_sugerida=id_zona if (id_zona and id_zona != 'otro') else None,
+    )
+
+    zona_obj = resultado.get('zona')
+    zona_data = None
+    if zona_obj:
+        zona_data = {
+            'idzona': zona_obj.idzona,
+            'nombre': zona_obj.nombre,
+            'costoenvio': str(resultado.get('costoenvio')),
+            'es_gratis': resultado.get('es_gratis', False),
+        }
+
+    return JsonResponse({
+        'status': 'success',
+        'cobertura': resultado.get('cobertura', False),
+        'es_a_coordinar': resultado.get('es_a_coordinar', True),
+        'zona': zona_data,
+        'idzona': resultado.get('idzona'),
+        'nombre_zona': resultado.get('nombre'),
+        'costo_envio': float(resultado.get('costoenvio', 0)),
+        'es_gratis': resultado.get('es_gratis', False),
+        'costo_envio_texto': resultado.get('costoenvio_texto'),
+        'localidad_guardar': resultado.get('localidad_guardar'),
+        'mensaje': resultado.get('mensaje'),
+        'metodo_deteccion': resultado.get('metodo_deteccion'),
+    })
+
+
 # ============================================================
 # 13. PANEL - AUTENTICACIÓN, PERFIL Y SEGURIDAD
 # ============================================================
@@ -5687,6 +5841,7 @@ def panel_login(request):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
+        ip_cliente = obtener_ip_cliente(request)
 
         next_url = (
             request.POST.get('next')
@@ -5698,6 +5853,17 @@ def panel_login(request):
             messages.error(
                 request,
                 'Por favor ingresá tu usuario/correo y contraseña.'
+            )
+            return render(request, 'panel/login.html')
+
+        # Control de seguridad: Verificar bloqueo por intentos fallidos excesivos (fuerza bruta)
+        esta_bloqueado, tiempo_bloqueo = verificar_bloqueo_fuerza_bruta(username, ip_cliente)
+        if esta_bloqueado:
+            messages.error(
+                request,
+                'Demasiados intentos fallidos de inicio de sesión. '
+                'Por motivos de seguridad, el acceso ha sido bloqueado temporalmente. '
+                'Por favor, esperá unos minutos e intentá nuevamente.'
             )
             return render(request, 'panel/login.html')
 
@@ -5738,11 +5904,18 @@ def panel_login(request):
                 )
                 return render(request, 'panel/login.html')
 
+            # Login exitoso: limpiar intentos fallidos
+            limpiar_intentos_fallidos_login(username, ip_cliente)
+
             login(
                 request,
                 user,
                 backend='core.auth_backend.EmpleadoAuthBackend'
             )
+
+            # Configuración estricta de sesión de 12 horas (43.200 segundos)
+            request.session['login_time'] = timezone.now().timestamp()
+            request.session.set_expiry(43200)
 
             user.ultimo_login = timezone.now()
             user.save(update_fields=['last_login'])
@@ -5767,10 +5940,25 @@ def panel_login(request):
 
             return redirect(next_url)
 
-        messages.error(
+        # Registrar intento fallido para protección contra fuerza bruta
+        intentos = registrar_intento_fallido_login(username, ip_cliente)
+        registrar_auditoria(
             request,
-            'Usuario/correo o contraseña incorrectos.'
+            'LOGIN_FALLIDO',
+            f'Intento fallido de login para: {username} desde IP: {ip_cliente} (intento #{intentos})'
         )
+
+        if intentos >= 5:
+            messages.error(
+                request,
+                'Has superado el límite de 5 intentos fallidos. Tu acceso ha sido bloqueado temporalmente por seguridad.'
+            )
+        else:
+            intentos_restantes = 5 - intentos
+            messages.error(
+                request,
+                f'Usuario/correo o contraseña incorrectos. Intentos restantes antes del bloqueo temporal: {intentos_restantes}.'
+            )
         return render(request, 'panel/login.html')
 
     return render(request, 'panel/login.html')
