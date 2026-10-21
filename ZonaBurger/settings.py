@@ -13,7 +13,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+# Mantenemos DEBUG en True como lo solicitaste para tus pruebas universitarias
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_env.split(',') if h.strip()]
@@ -22,7 +23,6 @@ if DEBUG or not ALLOWED_HOSTS:
         if default_host not in ALLOWED_HOSTS:
             ALLOWED_HOSTS.append(default_host)
 
-# Configuración de orígenes confiables para evitar errores CSRF (en ngrok y Render)
 CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.app',
     'https://*.ngrok-free.dev',
@@ -45,7 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Crucial para servir estáticos correctamente
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -75,7 +75,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ZonaBurger.wsgi.application'
 
-# --- CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL CON RENDER) ---
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv('DATABASE_URL'),
@@ -112,7 +111,6 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# --- CONFIGURACIÓN DE CORREO ELECTRÓNICO ---
 EMAIL_BACKEND_ELEGIDO = os.getenv(
     'EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'
 )
@@ -135,7 +133,6 @@ MAILERS = {
 }
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Zona Burger <no-reply@zonaburger.com>')
 
-# --- CONFIGURACIÓN DE CLOUDINARY ---
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -197,7 +194,6 @@ LOGIN_URL = '/panel/login/'
 LOGIN_REDIRECT_URL = '/panel/'
 LOGOUT_REDIRECT_URL = '/panel/login/'
 
-# --- CONFIGURACIÓN DE CKEDITOR 5 ---
 CKEDITOR_5_CUSTOM_CSS = 'css/admin_custom.css'
 CKEDITOR_5_CONFIGS = {
     'extends': {
@@ -216,8 +212,7 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
-# --- CONFIGURACIÓN DE SEGURIDAD Y SESIÓN ---
-SESSION_COOKIE_AGE = 43200  # 12 horas
+SESSION_COOKIE_AGE = 43200
 SESSION_SAVE_EVERY_REQUEST = False
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_HTTPONLY = True
