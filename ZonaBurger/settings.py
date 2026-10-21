@@ -102,16 +102,8 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Clase segura para evitar que falten archivos al compilar estáticos de terceros
-from whitenoise.storage import CompressedManifestStaticFilesStorage
-class SafeStaticFilesStorage(CompressedManifestStaticFilesStorage):
-    def hashed_name(self, name, content=None, fallback=True):
-        try:
-            return super().hashed_name(name, content, fallback=fallback)
-        except ValueError:
-            return name
-
-STATICFILES_STORAGE = '__main__.SafeStaticFilesStorage'
+# Usamos CompressedStaticFilesStorage estándar para empaquetar sin errores de manifiesto estricto
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -161,7 +153,7 @@ STORAGES = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "__main__.SafeStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
