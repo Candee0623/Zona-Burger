@@ -13,7 +13,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-# Mantenemos DEBUG en True como lo solicitaste para tus pruebas universitarias
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
@@ -95,7 +94,8 @@ TIME_ZONE = 'America/Argentina/Buenos_Aires'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+# Corregido con la barra inicial obligatoria para producción
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'core', 'static'),
 ]
