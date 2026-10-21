@@ -9,7 +9,7 @@ from django_ckeditor_5.fields import CKEditor5Field
 
 class Rol(models.Model):
     idrol = models.AutoField(db_column='IdRol', primary_key=True)
-    nombrerol = models.CharField(db_column='NombreRol', max_length=50, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    nombrerol = models.CharField(db_column='NombreRol', max_length=50, blank=True, null=True)
  
     def __str__(self):
         return self.nombrerol or f"Rol {self.idrol}"
@@ -148,7 +148,7 @@ class Empleado(models.Model):
 
 class EstadoNegocio(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
-    descripcion = models.CharField(db_column='Descripcion', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    descripcion = models.CharField(db_column='Descripcion', max_length=250, blank=True, null=True)
 
     def __str__(self):
         return self.descripcion or f"Estado {self.idestado}"
@@ -159,8 +159,8 @@ class EstadoNegocio(models.Model):
 
 class RedesSociales(models.Model):
     idredsocial = models.AutoField(db_column='IdRedSocial', primary_key=True)
-    plataforma = models.CharField(db_column='Plataforma', max_length=50, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
-    enlace = models.CharField(db_column='Enlace', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    plataforma = models.CharField(db_column='Plataforma', max_length=50, blank=True, null=True)
+    enlace = models.CharField(db_column='Enlace', max_length=250, blank=True, null=True)
     idnegocio = models.IntegerField(db_column='IdNegocio', blank=True, null=True)
 
     def __str__(self):
@@ -172,7 +172,7 @@ class RedesSociales(models.Model):
 
 class ZonasEntrega(models.Model):
     idzona = models.AutoField(db_column='IdZona', primary_key=True)
-    nombre = models.CharField(db_column='Nombre', max_length=50, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    nombre = models.CharField(db_column='Nombre', max_length=50, blank=True, null=True)
     costoenvio = models.DecimalField(db_column='CostoEnvio', max_digits=10, decimal_places=2, blank=True, null=True, default=0.00)
     idnegocio = models.IntegerField(db_column='IdNegocio', blank=True, null=True)
 
@@ -187,8 +187,8 @@ class Negocio(models.Model):
     idnegocio = models.AutoField(db_column='IdNegocio', primary_key=True)
     idempleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='IdEmpleado', blank=True, null=True)
     idredsocial = models.ForeignKey(RedesSociales, models.DO_NOTHING, db_column='IdRedSocial', blank=True, null=True)
-    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
-    telefono = models.CharField(db_column='Telefono', max_length=30, db_collation='Modern_Spanish_CI_AS')
+    nombre = models.CharField(db_column='Nombre', max_length=100)
+    telefono = models.CharField(db_column='Telefono', max_length=30)
     idestado = models.ForeignKey(EstadoNegocio, models.DO_NOTHING, db_column='IdEstado', blank=True, null=True)
     idzona = models.ForeignKey(ZonasEntrega, models.DO_NOTHING, db_column='IdZona', blank=True, null=True)
 
@@ -203,7 +203,7 @@ class UltimaModificacion(models.Model):
     idmodificacion = models.AutoField(db_column='IdModificacion', primary_key=True)
     fecha = models.DateTimeField(db_column='Fecha')
     idempleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='IdEmpleado', blank=True, null=True)
-    descripcioncambio = models.CharField(db_column='DescripcionCambio', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    descripcioncambio = models.CharField(db_column='DescripcionCambio', max_length=250, blank=True, null=True)
     idnegocio = models.IntegerField(db_column='IdNegocio', blank=True, null=True)
     idestado = models.ForeignKey('EstadoNegocio', models.DO_NOTHING, db_column='IdEstado', blank=True, null=True)
 
@@ -214,7 +214,7 @@ class UltimaModificacion(models.Model):
 class Horario(models.Model):
     idhorario = models.AutoField(db_column='IdHorario', primary_key=True)
     idnegocio = models.ForeignKey(Negocio, models.DO_NOTHING, db_column='IdNegocio', blank=True, null=True)
-    diasemana = models.CharField(db_column='DiaSemana', max_length=20, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    diasemana = models.CharField(db_column='DiaSemana', max_length=20, blank=True, null=True)
     horaapertura = models.TimeField(db_column='HoraApertura', blank=True, null=True)
     horacierre = models.TimeField(db_column='HoraCierre', blank=True, null=True)
     estaabierto = models.IntegerField(db_column='EstaAbierto', blank=True, null=True)
@@ -225,7 +225,7 @@ class Horario(models.Model):
 
 class CategoriaProducto(models.Model):
     idcategoria = models.AutoField(db_column='IdCategoria', primary_key=True)
-    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
+    nombre = models.CharField(db_column='Nombre', max_length=100)
 
     def __str__(self):
         return self.nombre
@@ -236,7 +236,7 @@ class CategoriaProducto(models.Model):
 
 class EstadoStock(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
-    descripcion = models.CharField(db_column='Descripcion', max_length=10, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    descripcion = models.CharField(db_column='Descripcion', max_length=10, blank=True, null=True)
     nivelcritico = models.DecimalField(db_column='NivelCritico', max_digits=10, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
@@ -248,7 +248,7 @@ class EstadoStock(models.Model):
 
 class EstadoProducto(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
-    descripcion = models.CharField(db_column='Descripcion', max_length=50, db_collation='Modern_Spanish_CI_AS')
+    descripcion = models.CharField(db_column='Descripcion', max_length=50)
 
     def __str__(self):
         return self.descripcion
@@ -259,7 +259,7 @@ class EstadoProducto(models.Model):
 
 class Producto(models.Model):
     idproducto = models.AutoField(db_column='IdProducto', primary_key=True)
-    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
+    nombre = models.CharField(db_column='Nombre', max_length=100)
     descripcion = CKEditor5Field('Descripcion', config_name='extends', db_column='Descripcion', blank=True, null=True)
     precio = models.DecimalField(db_column='Precio', max_digits=10, decimal_places=2)
     imagen = models.ImageField(db_column='Imagen', upload_to='productos/', max_length=2000, blank=True, null=True)
@@ -298,7 +298,7 @@ class Producto(models.Model):
 
 class Extras(models.Model):
     idextra = models.AutoField(db_column='IdExtra', primary_key=True)
-    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
+    nombre = models.CharField(db_column='Nombre', max_length=100)
     precio = models.DecimalField(db_column='Precio', max_digits=10, decimal_places=2)
 
     def __str__(self):
@@ -319,7 +319,7 @@ class ProductoExtras(models.Model):
 
 class GrupoOpcion(models.Model):
     idgrupo = models.AutoField(db_column='IdGrupo', primary_key=True)
-    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
+    nombre = models.CharField(db_column='Nombre', max_length=100)
     minselecciones = models.IntegerField(db_column='MinSelecciones', blank=True, null=True)
     maxselecciones = models.IntegerField(db_column='MaxSelecciones', blank=True, null=True)
 
@@ -333,7 +333,7 @@ class GrupoOpcion(models.Model):
 class Opcion(models.Model):
     idopcion = models.AutoField(db_column='IdOpcion', primary_key=True)
     idgrupo = models.ForeignKey(GrupoOpcion, models.DO_NOTHING, db_column='IdGrupo', blank=True, null=True)
-    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
+    nombre = models.CharField(db_column='Nombre', max_length=100)
     precioadicional = models.DecimalField(db_column='PrecioAdicional', max_digits=10, decimal_places=2, blank=True, null=True)
     idinsumo = models.ForeignKey('Insumo', models.DO_NOTHING, db_column='IdInsumo', blank=True, null=True, related_name='opciones')
     cantidad_insumo = models.DecimalField(db_column='CantidadInsumo', max_digits=10, decimal_places=2, default=Decimal('1.00'))
@@ -357,9 +357,9 @@ class ProductoGrupoOpcion(models.Model):
 class Insumo(models.Model):
     idinsumo = models.AutoField(db_column='IdInsumo', primary_key=True)
     codigo = models.CharField(max_length=50, unique=True, blank=True, null=True)
-    nombreinsumo = models.CharField(db_column='NombreInsumo', max_length=100, db_collation='Modern_Spanish_CI_AS')
-    unidadmedidaingreso = models.CharField(db_column='UnidadMedidaIngreso', max_length=30, db_collation='Modern_Spanish_CI_AS')
-    unidadmedidaegreso = models.CharField(db_column='UnidadMedidaEgreso', max_length=30, db_collation='Modern_Spanish_CI_AS')
+    nombreinsumo = models.CharField(db_column='NombreInsumo', max_length=100)
+    unidadmedidaingreso = models.CharField(db_column='UnidadMedidaIngreso', max_length=30)
+    unidadmedidaegreso = models.CharField(db_column='UnidadMedidaEgreso', max_length=30)
     stockactual = models.DecimalField(db_column='StockActual', max_digits=10, decimal_places=2, default=0.00)
     stockminimo = models.DecimalField(max_digits=10, decimal_places=2, default=5.00)
     descontar_stock_automaticamente = models.BooleanField(db_column='DescontarStockAutomaticamente', default=False)
@@ -385,11 +385,11 @@ class AjusteStock(models.Model):
     idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo')
     cantidadanterior = models.DecimalField(db_column='CantidadAnterior', max_digits=10, decimal_places=2)
     cantidadnueva = models.DecimalField(db_column='CantidadNueva', max_digits=10, decimal_places=2)
-    motivo = models.CharField(db_column='Motivo', max_length=250, db_collation='Modern_Spanish_CI_AS')
+    motivo = models.CharField(db_column='Motivo', max_length=250)
     fecha = models.DateTimeField(db_column='Fecha', auto_now_add=True)
 
     def __str__(self):
-        return f'Ajuste en {self.idinsumo.nombreinsumo} - Motivo: {self.motivo[:30]}'
+        return f'Ajuste en {self.idinsumo.nombreinsumo}. Motivo: {self.motivo[:30]}'
 
     class Meta:
         db_table = 'AjusteStock'
@@ -463,7 +463,7 @@ class RecetaInsumo(models.Model):
 
 class MedioPago(models.Model):
     idmediopago = models.AutoField(db_column='IdMedioPago', primary_key=True)
-    nombremetodo = models.CharField(db_column='NombreMetodo', max_length=50, db_collation='Modern_Spanish_CI_AS')
+    nombremetodo = models.CharField(db_column='NombreMetodo', max_length=50)
 
     def __str__(self):
         return self.nombremetodo
@@ -474,9 +474,9 @@ class MedioPago(models.Model):
 
 class Cliente(models.Model):
     idcliente = models.AutoField(db_column='IdCliente', primary_key=True)
-    nombre = models.CharField(db_column='Nombre', max_length=100, db_collation='Modern_Spanish_CI_AS')
-    apellido = models.CharField(db_column='Apellido', max_length=100, db_collation='Modern_Spanish_CI_AS')
-    telefono = models.CharField(db_column='Telefono', max_length=30, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    nombre = models.CharField(db_column='Nombre', max_length=100)
+    apellido = models.CharField(db_column='Apellido', max_length=100)
+    telefono = models.CharField(db_column='Telefono', max_length=30, blank=True, null=True)
 
     def __str__(self):
         return f"{self.nombre} {self.apellido}"
@@ -488,10 +488,10 @@ class Cliente(models.Model):
 class Direccion(models.Model):
     iddireccion = models.AutoField(db_column='IdDireccion', primary_key=True)
     idcliente = models.ForeignKey(Cliente, models.DO_NOTHING, db_column='IdCliente', blank=True, null=True, related_name='direcciones')
-    calle = models.CharField(db_column='Calle', max_length=150, db_collation='Modern_Spanish_CI_AS')
-    numero = models.CharField(db_column='Numero', max_length=20, db_collation='Modern_Spanish_CI_AS')
-    piso = models.CharField(db_column='Piso', max_length=10, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
-    localidad = models.CharField(db_column='Localidad', max_length=100, db_collation='Modern_Spanish_CI_AS')
+    calle = models.CharField(db_column='Calle', max_length=150)
+    numero = models.CharField(db_column='Numero', max_length=20)
+    piso = models.CharField(db_column='Piso', max_length=10, blank=True, null=True)
+    localidad = models.CharField(db_column='Localidad', max_length=100)
 
     def __str__(self):
         return f"{self.calle} {self.numero}, {self.localidad}"
@@ -502,7 +502,7 @@ class Direccion(models.Model):
 
 class EstadoPedido(models.Model):
     idestado = models.AutoField(db_column='IdEstado', primary_key=True)
-    descripcion = models.CharField(db_column='Descripcion', max_length=50, db_collation='Modern_Spanish_CI_AS')
+    descripcion = models.CharField(db_column='Descripcion', max_length=50)
 
     def __str__(self):
         return self.descripcion
@@ -517,7 +517,7 @@ class Pedido(models.Model):
     idmediopago = models.ForeignKey('MedioPago', models.DO_NOTHING, db_column='IdMedioPago', blank=True, null=True)
     idestadopedido = models.ForeignKey('EstadoPedido', models.DO_NOTHING, db_column='IdEstadoPedido', blank=True, null=True)
     horarioentregadeseado = models.TimeField(db_column='HorarioEntregaDeseado', blank=True, null=True)
-    justificacioncancelacion = models.CharField(db_column='JustificacionCancelacion', max_length=250, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    justificacioncancelacion = models.CharField(db_column='JustificacionCancelacion', max_length=250, blank=True, null=True)
     idpromocion = models.IntegerField(db_column='IdPromocion', blank=True, null=True)
     total = models.DecimalField(db_column='Total', max_digits=10, decimal_places=2, blank=True, null=True)
     fecha_creacion = models.DateTimeField(db_column='FechaCreacion', auto_now_add=True, blank=True, null=True)
@@ -602,7 +602,6 @@ class Promocion(models.Model):
     palabraclave = models.CharField(
         db_column='PalabraClave',
         max_length=50,
-        db_collation='Modern_Spanish_CI_AS',
         blank=True,
         null=True
     )

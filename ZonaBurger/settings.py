@@ -4,6 +4,7 @@ Django settings for ZonaBurger project.
 
 from pathlib import Path
 import os
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,9 +18,16 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_env.split(',') if h.strip()]
 if DEBUG or not ALLOWED_HOSTS:
-    for default_host in ['localhost', '127.0.0.1', 'testserver', '[::1]']:
+    for default_host in ['localhost', '127.0.0.1', 'testserver', '[::1]', '.ngrok-free.app', '.ngrok-free.dev', '.onrender.com']:
         if default_host not in ALLOWED_HOSTS:
             ALLOWED_HOSTS.append(default_host)
+
+# Configuración de orígenes confiables para evitar errores CSRF (en ngrok y Render)
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.app',
+    'https://*.ngrok-free.dev',
+    'https://*.onrender.com',
+]
 
 INSTALLED_APPS = [
     'cloudinary_storage',
@@ -37,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -66,17 +75,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ZonaBurger.wsgi.application'
 
+# --- CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL CON RENDER) ---
 DATABASES = {
-    'default': {
-        'ENGINE': 'mssql',
-        'NAME': os.getenv('DB_NAME'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT', ''),
-        'OPTIONS': {
-            'driver': os.getenv('DB_DRIVER', 'ODBC Driver 17 for SQL Server'),
-            'trusted_connection': os.getenv('DB_TRUSTED_CONNECTION', 'yes'),
-        },
-    }
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -96,6 +101,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'core', 'static'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# Configuración optimizada de WhiteNoise para archivos estáticos
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -105,7 +112,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# --- CONFIGURACIÓN DE CORREO ELECTRÓNICO (Django 6 MAILERS) ---
+# --- CONFIGURACIÓN DE CORREO ELECTRÓNICO ---
 EMAIL_BACKEND_ELEGIDO = os.getenv(
     'EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'
 )
@@ -145,7 +152,7 @@ STORAGES = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
@@ -209,18 +216,16 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
-# --- CONFIGURACIÓN DE SEGURIDAD Y SESIÓN (12 HORAS) ---
-# La sesión expira exactamente a las 12 horas (43.200 segundos), tras lo cual se debe volver a ingresar
-SESSION_COOKIE_AGE = 43200  # 12 horas en segundos
-SESSION_SAVE_EVERY_REQUEST = False  # No reiniciar el contador en cada petición; expira a las 12h
+# --- CONFIGURACIÓN DE SEGURIDAD Y SESIÓN ---
+SESSION_COOKIE_AGE = 43200  # 12 horas
+SESSION_SAVE_EVERY_REQUEST = False
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_HTTPONLY = True  # Protege la cookie contra robo por JavaScript (XSS)
-SESSION_COOKIE_SAMESITE = 'Lax'  # Protección contra ataques CSRF de origen cruzado
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = False
 
-# Cabeceras de seguridad HTTP
-SECURE_CONTENT_TYPE_NOSNIFF = True  # Evita que el navegador intente adivinar tipos MIME incorrectos
-SECURE_BROWSER_XSS_FILTER = True  # Activa el filtro contra scripts maliciosos reflejados
-X_FRAME_OPTIONS = 'DENY'  # Evita ataques de clickjacking bloqueando incrustación en iframes
-SECURE_REFERRER_POLICY = 'same-origin'  # Protege rutas internas contra fugas en el Referer
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'same-origin'
