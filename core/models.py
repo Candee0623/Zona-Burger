@@ -102,6 +102,18 @@ class Empleado(models.Model):
     def is_active(self):
         return bool(self.activo)
 
+    @property
+    def is_staff(self):
+        return (
+            self.is_active
+            and self.idrol is not None
+            and (self.idrol.nombrerol or "").strip().lower() == "administrador"
+        )
+
+    @property
+    def is_superuser(self):
+        return self.is_staff
+
     def get_session_auth_hash(self):
         import hashlib
         return hashlib.sha256((self.contrasena or '').encode()).hexdigest()
@@ -112,8 +124,29 @@ class Empleado(models.Model):
     def get_username(self):
         return self.correo or self.nombre
 
+    def has_perm(self, perm, obj=None):
+        if not self.is_active:
+            return False
+
+        if self.is_superuser:
+            return True
+
+        return False
+
+    def has_module_perms(self, app_label):
+        return self.is_active and self.is_staff
+
     def __str__(self):
         return f"{self.nombre} {self.apellido}".strip() or self.correo
+
+    def get_all_permissions(self, obj=None):
+            if not self.is_active:
+                return set()
+
+            if self.is_superuser:
+                return set()
+
+            return set()
 
     def tiene_permiso(self, codigo):
         if not self.activo:
