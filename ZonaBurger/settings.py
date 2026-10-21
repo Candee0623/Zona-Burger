@@ -102,7 +102,7 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Clase personalizada para ignorar archivos faltantes de librerías de terceros (Jazzmin/AdminLTE)
+# Clase segura para evitar que falten archivos al compilar estáticos de terceros
 from whitenoise.storage import CompressedManifestStaticFilesStorage
 class SafeStaticFilesStorage(CompressedManifestStaticFilesStorage):
     def hashed_name(self, name, content=None, fallback=True):
@@ -161,7 +161,7 @@ STORAGES = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "__main__.SafeStaticFilesStorage",
     },
 }
 
@@ -206,7 +206,7 @@ LOGIN_URL = '/panel/login/'
 LOGIN_REDIRECT_URL = '/panel/'
 LOGOUT_REDIRECT_URL = '/panel/login/'
 
-# --- CONFIGURCKEDITOR 5 ---
+# --- CONFIGURACIÓN DE CKEDITOR 5 ---
 CKEDITOR_5_CUSTOM_CSS = 'css/admin_custom.css'
 CKEDITOR_5_CONFIGS = {
     'extends': {
