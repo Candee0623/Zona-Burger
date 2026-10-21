@@ -102,8 +102,8 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Usamos CompressedStaticFilesStorage estándar para empaquetar sin errores de manifiesto estricto
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Usamos StaticFilesStorage para servir los estáticos de forma limpia sin errores de archivos faltantes
+STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -153,7 +153,7 @@ STORAGES = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.StaticFilesStorage",
     },
 }
 
