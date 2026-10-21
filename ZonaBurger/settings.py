@@ -101,8 +101,17 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'core', 'static'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# Usamos CompressedStaticFilesStorage para empaquetar los estilos correctamente
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# Clase personalizada para ignorar archivos faltantes de librerías de terceros (Jazzmin/AdminLTE)
+from whitenoise.storage import CompressedManifestStaticFilesStorage
+class SafeStaticFilesStorage(CompressedManifestStaticFilesStorage):
+    def hashed_name(self, name, content=None, fallback=True):
+        try:
+            return super().hashed_name(name, content, fallback=fallback)
+        except ValueError:
+            return name
+
+STATICFILES_STORAGE = '__main__.SafeStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -197,7 +206,7 @@ LOGIN_URL = '/panel/login/'
 LOGIN_REDIRECT_URL = '/panel/'
 LOGOUT_REDIRECT_URL = '/panel/login/'
 
-# --- CONFIGURACIÓN DE CKEDITOR 5 ---
+# --- CONFIGURCKEDITOR 5 ---
 CKEDITOR_5_CUSTOM_CSS = 'css/admin_custom.css'
 CKEDITOR_5_CONFIGS = {
     'extends': {
