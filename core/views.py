@@ -4,6 +4,7 @@ import re
 import secrets
 import urllib.parse
 import unicodedata
+from .auth_backend import EmpleadoAuthBackend
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -5881,13 +5882,15 @@ def panel_login(request):
             )
             return render(request, 'panel/login.html')
 
-        user = authenticate(
+        user = EmpleadoAuthBackend().authenticate(
             request,
             username=username,
             password=password
         )
 
         if user is not None:
+            user.backend = 'core.auth_backend.EmpleadoAuthBackend'
+
             # Verificar tanto el estado del empleado como el de Django.
             empleado_autenticado = Empleado.objects.filter(
                 pk=user.pk
