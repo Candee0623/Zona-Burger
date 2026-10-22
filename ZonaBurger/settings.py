@@ -26,6 +26,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.app',
     'https://*.ngrok-free.dev',
     'https://*.onrender.com',
+    'https://zonaburger.com.ar',
+    'https://www.zonaburger.com.ar',
 ]
 
 INSTALLED_APPS = [
@@ -94,10 +96,6 @@ TIME_ZONE = 'America/Argentina/Buenos_Aires'
 USE_I18N = True
 USE_TZ = True
 
-# Corregido con la barra inicial obligatoria para producción
-
-
-
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [
@@ -112,7 +110,6 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
-
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -154,7 +151,6 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET'),
     secure=True
 )
-
 
 JAZZMIN_SETTINGS = {
     "site_title": "Zona-Burger Admin",
