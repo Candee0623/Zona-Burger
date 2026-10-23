@@ -1424,11 +1424,20 @@ document.addEventListener(
             sincronizando = true;
 
 
-            const scrollX =
-                window.scrollX;
+            const posiciones = [];
+            let el = document.getElementById('pedidos-panel');
 
-            const scrollY =
-                window.scrollY;
+            while (el) {
+                posiciones.push([el, el.scrollLeft, el.scrollTop]);
+                el = el.parentElement;
+            }
+
+            const restaurarScroll = () => {
+                posiciones.forEach(([nodo, left, top]) => {
+                    nodo.scrollLeft = left;
+                    nodo.scrollTop = top;
+                });
+            };
 
 
             try {

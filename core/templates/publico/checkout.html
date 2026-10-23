@@ -43,6 +43,40 @@
             </div>
         </div>
 
+
+        <!-- ===================================================== -->
+        <!-- AVISOS EN VIVO (estado del negocio y productos) -->
+        <!-- ===================================================== -->
+
+        <div
+            id="aviso-negocio"
+            class="checkout-aviso"
+            role="alert"
+            aria-live="assertive"
+            {% if negocio_abierto %}hidden{% endif %}
+        >
+            <i class="fa-solid fa-store-slash"></i>
+            <div>
+                <strong>El negocio está cerrado en este momento.</strong>
+                <span>{{ mensaje_negocio }}</span>
+            </div>
+        </div>
+
+        <div
+            id="aviso-productos"
+            class="checkout-aviso checkout-aviso-productos"
+            role="alert"
+            aria-live="assertive"
+            {% if not avisos %}hidden{% endif %}
+        >
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div id="aviso-productos-texto">
+                {% for aviso in avisos %}<p>{{ aviso }}</p>{% endfor %}
+            </div>
+            <button type="button" id="cerrar-aviso-productos" aria-label="Cerrar aviso">&times;</button>
+        </div>
+
+
         <div id="restore-notice" class="restore-notice">
             <div class="restore-notice-content">
                 <i class="fa-solid fa-rotate-left"></i>
@@ -327,6 +361,13 @@
 
                         </div>
 
+                        {% if errores.direccion %}
+                            <div class="field-error">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                {{ errores.direccion }}
+                            </div>
+                        {% endif %}
+
 
                         <!-- Mapa -->
 
@@ -491,12 +532,33 @@
                                 <i class="fa-solid fa-comment"></i>
                                 Comentarios
                             </label>
+
+                            <!-- Sin maxlength: el aviso aparece solo al pasarse del límite -->
                             <textarea
                                 id="comentario"
                                 name="comentario"
-                                maxlength="500"
                                 placeholder="Alguna indicación para tu pedido..."
                             >{{ datos_previos.comentario|default:'' }}</textarea>
+
+                            <div class="comment-footer">
+                                <div
+                                    id="comentario-aviso"
+                                    class="comment-aviso"
+                                    role="alert"
+                                    aria-live="polite"
+                                    hidden
+                                ></div>
+                                <span id="comentario-contador" class="comment-counter">
+                                    0 / {{ comentario_max|default:500|unlocalize }}
+                                </span>
+                            </div>
+
+                            {% if errores.comentario %}
+                                <div class="field-error" data-frontend="true">
+                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                    {{ errores.comentario }}
+                                </div>
+                            {% endif %}
                         </div>
 
                     </section>
@@ -545,7 +607,7 @@
 
                         <div class="summary-row">
                             <span>Productos</span>
-                            <strong>${{ total_carrito|floatformat:"2" }}</strong>
+                            <strong id="subtotal-productos">${{ total_carrito|floatformat:"2" }}</strong>
                         </div>
 
                         <div class="summary-row">
@@ -572,7 +634,7 @@
 
                     <div class="checkout-actions">
 
-                        <button type="submit" class="btn-confirm">
+                        <button type="submit" class="btn-confirm" {% if not negocio_abierto %}disabled{% endif %}>
                             <i class="fa-solid fa-check"></i>
                             Confirmar pedido
                         </button>
@@ -638,23 +700,48 @@ document.addEventListener('DOMContentLoaded', function () {
     const restoreNotice = $('restore-notice');
     const clearSavedDataButton = $('clear-saved-data');
 
+    const avisoNegocio = $('aviso-negocio');
+    const avisoProductos = $('aviso-productos');
+    const avisoProductosTexto = $('aviso-productos-texto');
+    const cerrarAvisoProductos = $('cerrar-aviso-productos');
+    const subtotalProductos = $('subtotal-productos');
+
+    const comentarioInput = $('comentario');
+    const comentarioContador = $('comentario-contador');
+    const comentarioAviso = $('comentario-aviso');
+
 
     /* ================================================================
      * 2. ESTADO Y CONSTANTES
      * ================================================================ */
 
-    const subtotal = parseFloat('{{ total_carrito|unlocalize }}') || 0;
+    let subtotal = parseFloat('{{ total_carrito|unlocalize }}') || 0;
     let descuento = parseFloat('{{ descuento_promocion|default:"0.00"|unlocalize }}') || 0;
     let costoEnvio = 0;
     let zonas = [];
 
     const STORAGE_KEY = 'checkout_datos_temporales';
     const tieneDatosPrevios = '{{ hay_datos_previos|yesno:"true,false" }}' === 'true';
+    let negocioAbierto = '{{ negocio_abierto|yesno:"true,false" }}' === 'true';
+    const COMENTARIO_MAX = parseInt('{{ comentario_max|default:500|unlocalize }}', 10) || 500;
 
     const TEXTO_A_COORDINAR = 'A coordinar con el vendedor';
 
     const NEGOCIO_BASE = { lat: -34.6785, lon: -58.4940 };
     const RADIO_MAXIMO_COBERTURA_KM = 3.8;
+
+    // Zona donde se entrega. bbox = [latMin, latMax, lngMin, lngMax] (solo respaldo).
+    const PAIS_PERMITIDO = 'ar';
+    const PROVINCIA_PERMITIDA = {
+        iso: 'AR-C',
+        nombres: ['ciudad autonoma de buenos aires', 'capital federal', 'caba'],
+        bbox: [-34.7055, -34.5265, -58.5315, -58.3350],
+        texto: 'la Ciudad Autónoma de Buenos Aires'
+    };
+
+    let estadoDireccion = { valida: null, mensaje: '' };   // null = sin verificar
+    let ticketBusqueda = 0;
+    let verificacionesPendientes = 0;
 
     const ZONAS_GEO_CONFIG = {
         'piedrabuena': {
@@ -800,7 +887,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * 5. BANNER DE ESTADO DE ZONA
      * ================================================================ */
 
-    /* tipo: 'free' | 'paid' | 'unmatched'. Los textos ya deben venir seguros. */
+    /* tipo: 'free' | 'paid' | 'unmatched' | 'error'. Los textos ya deben venir seguros. */
     function mostrarBannerZona(tipo, icono, titulo, mensajeHtml) {
         if (!zonaStatusBanner) return;
 
@@ -1081,14 +1168,85 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* ================================================================
-     * 8. GEOCODIFICACIÓN (Nominatim)
+     * 8. VALIDACIÓN DE DIRECCIÓN Y GEOCODIFICACIÓN (Nominatim)
      * ================================================================ */
+
+    function consultaDireccion() {
+        return calleInput.value.trim() + ' ' + numeroInput.value.trim() +
+            ', CABA, Buenos Aires, Argentina';
+    }
+
+    /* Evalúa si una respuesta de Nominatim está en el país y la provincia de entrega. */
+    function evaluarUbicacion(direccion, lat, lon) {
+        const d = direccion || {};
+        const pais = String(d.country_code || '').toLowerCase();
+
+        if (pais && pais !== PAIS_PERMITIDO) {
+            return { valida: false, motivo: 'pais' };
+        }
+
+        const iso = String(d['ISO3166-2-lvl4'] || '').toUpperCase();
+        const provincia = normalizarTexto(d.state || '');
+
+        if (iso) {
+            return { valida: iso === PROVINCIA_PERMITIDA.iso, motivo: 'provincia' };
+        }
+
+        if (provincia) {
+            return {
+                valida: PROVINCIA_PERMITIDA.nombres.indexOf(provincia) !== -1,
+                motivo: 'provincia'
+            };
+        }
+
+        // Sin datos de provincia: se usa el rectángulo como respaldo
+        if (!isNaN(lat) && !isNaN(lon)) {
+            const b = PROVINCIA_PERMITIDA.bbox;
+            const dentro = b[0] <= lat && lat <= b[1] && b[2] <= lon && lon <= b[3];
+            return { valida: dentro, motivo: pais ? 'provincia' : 'pais' };
+        }
+
+        return { valida: true };
+    }
+
+    function mensajeUbicacionInvalida(motivo) {
+        if (motivo === 'pais') {
+            return 'La dirección marcada está fuera de Argentina. Solo realizamos entregas en ' +
+                PROVINCIA_PERMITIDA.texto + '.';
+        }
+        if (motivo === 'provincia') {
+            return 'La dirección marcada está en otra provincia. Solo realizamos entregas en ' +
+                PROVINCIA_PERMITIDA.texto + '.';
+        }
+        return 'No encontramos esa dirección. Revisá la calle y el número e intentá de nuevo.';
+    }
+
+    function marcarDireccionInvalida(motivo) {
+        estadoDireccion = { valida: false, mensaje: mensajeUbicacionInvalida(motivo) };
+
+        aplicarEnvioACoordinar();
+        mostrarBannerZona(
+            'error',
+            'fa-triangle-exclamation',
+            'Dirección no válida',
+            escaparHtml(estadoDireccion.mensaje)
+        );
+        if (mapStatus) mapStatus.textContent = estadoDireccion.mensaje;
+        actualizarTotal();
+    }
+
+    function marcarDireccionValida() {
+        estadoDireccion = { valida: true, mensaje: '' };
+    }
 
     /* Dirección escrita -> coordenadas. */
     async function buscarDireccion(direccion) {
 
         if (!direccion.trim()) return;
 
+        const ticket = ++ticketBusqueda;
+        verificacionesPendientes++;
+        estadoDireccion = { valida: null, mensaje: '' };
         mapStatus.textContent = 'Buscando ubicación...';
 
         try {
@@ -1106,18 +1264,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const resultados = await respuesta.json();
 
+            // Si el usuario siguió escribiendo, este resultado ya quedó viejo
+            if (ticket !== ticketBusqueda) return;
+
             if (!resultados.length) {
-                mapStatus.textContent = 'No se encontró esa dirección.';
-                aplicarZona({
-                    calle: calleInput.value,
-                    numero: numeroInput.value,
-                    localidad: localidadHidden.value
-                });
+                if (coordLat) coordLat.value = '';
+                if (coordLng) coordLng.value = '';
+                marcarDireccionInvalida('noexiste');
                 return;
             }
 
             const lat = Number(resultados[0].lat);
             const lon = Number(resultados[0].lon);
+
+            const evaluacion = evaluarUbicacion(resultados[0].address, lat, lon);
+
+            if (!evaluacion.valida) {
+                if (coordLat) coordLat.value = '';
+                if (coordLng) coordLng.value = '';
+                marcarDireccionInvalida(evaluacion.motivo);
+                return;
+            }
+
+            marcarDireccionValida();
 
             if (coordLat) coordLat.value = lat;
             if (coordLng) coordLng.value = lon;
@@ -1131,12 +1300,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             console.error(error);
-            mapStatus.textContent = 'No se pudo buscar la dirección.';
+            mapStatus.textContent = 'No se pudo verificar la dirección.';
             aplicarZona({
                 calle: calleInput.value,
                 numero: numeroInput.value,
                 localidad: localidadHidden.value
             });
+        } finally {
+            verificacionesPendientes--;
         }
     }
 
@@ -1146,6 +1317,8 @@ document.addEventListener('DOMContentLoaded', function () {
      * sobrescribir = false: viene de la búsqueda escrita, no se pisan sus datos.
      */
     async function actualizarDireccionDesdeMapa(lat, lon, sobrescribir) {
+
+        verificacionesPendientes++;
 
         try {
             if (coordLat) coordLat.value = lat;
@@ -1164,6 +1337,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const resultado = await respuesta.json();
             const direccion = resultado.address || {};
+
+            // Punto sin dirección (mar, ruta, etc.) o fuera de la zona de entrega
+            const evaluacion = resultado.error
+                ? { valida: false, motivo: 'noexiste' }
+                : evaluarUbicacion(direccion, lat, lon);
 
             const calle = direccion.road || direccion.pedestrian || direccion.residential || '';
             const numero = direccion.house_number || '';
@@ -1184,15 +1362,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 localidadHidden.value = localidad;
             }
 
-            aplicarZona({
-                lat: lat,
-                lon: lon,
-                calle: calle || calleInput.value,
-                numero: numero || numeroInput.value,
-                localidad: localidad,
-                displayName: resultado.display_name || '',
-                componentes: direccion
-            });
+            if (!evaluacion.valida) {
+                marcarDireccionInvalida(evaluacion.motivo);
+            } else {
+                marcarDireccionValida();
+                aplicarZona({
+                    lat: lat,
+                    lon: lon,
+                    calle: calle || calleInput.value,
+                    numero: numero || numeroInput.value,
+                    localidad: localidad,
+                    displayName: resultado.display_name || '',
+                    componentes: direccion
+                });
+            }
 
             guardarCheckout();
 
@@ -1204,6 +1387,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 calle: calleInput.value,
                 numero: numeroInput.value
             });
+        } finally {
+            verificacionesPendientes--;
         }
     }
 
@@ -1217,6 +1402,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function programarBusqueda() {
 
         clearTimeout(temporizadorBusqueda);
+        temporizadorBusqueda = null;
 
         if (!calleInput.value.trim() || !numeroInput.value.trim()) {
             aplicarZona({
@@ -1236,13 +1422,15 @@ document.addEventListener('DOMContentLoaded', function () {
         );
 
         temporizadorBusqueda = setTimeout(function () {
-            buscarDireccion(
-                calleInput.value.trim() + ' ' + numeroInput.value.trim() + ', CABA, Buenos Aires, Argentina'
-            );
+            temporizadorBusqueda = null;
+            buscarDireccion(consultaDireccion());
         }, 650);
     }
 
     function alCambiarDireccion() {
+        ticketBusqueda++;
+        estadoDireccion = { valida: null, mensaje: '' };
+
         aplicarZona({
             calle: calleInput.value,
             numero: numeroInput.value,
@@ -1513,10 +1701,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             localidadHidden.value = '';
             descuento = 0;
+            estadoDireccion = { valida: null, mensaje: '' };
             if (promoStatus) promoStatus.textContent = '';
 
             restoreNotice.classList.remove('visible');
             limpiarTodosLosErrores();
+            actualizarContadorComentario();
 
             aplicarZona('');
             actualizarTotal();
@@ -1593,6 +1783,56 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* ================================================================
+     * 12b. COMENTARIO: CONTADOR Y AVISO AUTOMÁTICO AL PASARSE
+     * ================================================================ */
+
+    /* Cuenta caracteres reales (un emoji cuenta 1) y los saltos de línea como 1. */
+    function contarCaracteres(texto) {
+        return Array.from(String(texto || '').replace(/\r\n/g, '\n')).length;
+    }
+
+    /* Actualiza contador y aviso en vivo. Devuelve true si el comentario está dentro del límite. */
+    function actualizarContadorComentario() {
+        if (!comentarioInput) return true;
+
+        const usados = contarCaracteres(comentarioInput.value);
+        const exceso = usados - COMENTARIO_MAX;
+        const grupo = comentarioInput.closest('.form-group');
+
+        if (comentarioContador) {
+            comentarioContador.textContent = usados + ' / ' + COMENTARIO_MAX;
+            comentarioContador.classList.toggle('contador-alerta', exceso <= 0 && usados >= COMENTARIO_MAX * 0.9);
+            comentarioContador.classList.toggle('contador-excedido', exceso > 0);
+        }
+
+        if (grupo) grupo.classList.toggle('input-error', exceso > 0);
+
+        if (comentarioAviso) {
+            if (exceso > 0) {
+                comentarioAviso.innerHTML =
+                    '<i class="fa-solid fa-circle-exclamation"></i> ' +
+                    'Te pasaste por ' + exceso + ' caracter' + (exceso === 1 ? '' : 'es') +
+                    '. Acortá el comentario para poder confirmar el pedido.';
+                comentarioAviso.hidden = false;
+            } else {
+                comentarioAviso.hidden = true;
+                comentarioAviso.textContent = '';
+            }
+        }
+
+        return exceso <= 0;
+    }
+
+    if (comentarioInput) {
+        comentarioInput.addEventListener('input', actualizarContadorComentario);
+        comentarioInput.addEventListener('change', actualizarContadorComentario);
+        comentarioInput.addEventListener('paste', function () {
+            setTimeout(actualizarContadorComentario, 0);
+        });
+    }
+
+
+    /* ================================================================
      * 13. VALIDACIÓN DEL CHECKOUT
      * ================================================================ */
 
@@ -1639,6 +1879,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!numeroInput.value.trim()) {
             mostrarErrorCampo(numeroInput, 'Ingresá el número de la calle.');
             errores.push({ campo: numeroInput, mensaje: 'Número de la calle' });
+        }
+
+        // Dirección: debe existir y estar dentro del país y la provincia de entrega
+        if (estadoDireccion.valida === false && calleInput.value.trim()) {
+            mostrarErrorCampo(calleInput, estadoDireccion.mensaje);
+            errores.push({ campo: calleInput, mensaje: 'Dirección dentro de la zona de entrega' });
+        }
+
+        // Comentario: no puede superar el máximo permitido
+        if (!actualizarContadorComentario()) {
+            errores.push({
+                campo: comentarioInput,
+                mensaje: 'Comentarios: superaste el máximo de ' + COMENTARIO_MAX + ' caracteres'
+            });
         }
 
         // Localidad (la asigna el sistema de detección de zonas)
@@ -1693,9 +1947,105 @@ document.addEventListener('DOMContentLoaded', function () {
         return false;
     }
 
+    // Espera (hasta 8 s) a que terminen las verificaciones de dirección en curso
+    function esperarVerificaciones() {
+        return new Promise(function (resolve) {
+            const inicio = Date.now();
+            (function revisar() {
+                if (!verificacionesPendientes || Date.now() - inicio > 8000) return resolve();
+                setTimeout(revisar, 100);
+            })();
+        });
+    }
+
+    // Botón "Confirmar pedido": se bloquea apenas se acepta el primer clic
+    const btnConfirmar = form.querySelector('.btn-confirm');
+    const htmlBtnConfirmar = btnConfirmar ? btnConfirmar.innerHTML : '';
+
+    function setBotonEnviando(activo) {
+        if (!btnConfirmar) return;
+
+        btnConfirmar.disabled = activo || !negocioAbierto;
+        btnConfirmar.setAttribute('aria-busy', activo ? 'true' : 'false');
+        btnConfirmar.innerHTML = activo
+            ? '<i class="fa-solid fa-spinner fa-spin"></i> Enviando pedido...'
+            : htmlBtnConfirmar;
+    }
+
+    let enviando = false;     // hay un envío (o una espera previa al envío) en curso
+    let reenviando = false;
+
     form.addEventListener('submit', function (evento) {
-        if (!validarCheckout()) evento.preventDefault();
+
+        // Segundo clic (o Enter) mientras el pedido ya se está enviando: se ignora
+        if (enviando) {
+            evento.preventDefault();
+            return;
+        }
+
+        // Negocio cerrado: no se puede confirmar el pedido
+        if (!negocioAbierto) {
+            evento.preventDefault();
+            if (avisoNegocio) avisoNegocio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        const hayBusquedaProgramada = !!temporizadorBusqueda;
+
+        // Si todavía se está verificando la dirección, se espera el resultado antes de enviar
+        if (!reenviando && (hayBusquedaProgramada || verificacionesPendientes > 0)) {
+            evento.preventDefault();
+
+            enviando = true;
+            setBotonEnviando(true);
+
+            if (hayBusquedaProgramada) {
+                clearTimeout(temporizadorBusqueda);
+                temporizadorBusqueda = null;
+                buscarDireccion(consultaDireccion());
+            }
+
+            esperarVerificaciones().then(function () {
+                // Se libera el bloqueo para que el reenvío pase por la validación;
+                // si es válido, el propio handler lo vuelve a bloquear.
+                enviando = false;
+                reenviando = true;
+
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else if (validarCheckout()) {
+                    enviando = true;
+                    setBotonEnviando(true);
+                    form.submit();
+                }
+
+                reenviando = false;
+
+                // Si la validación falló, el usuario puede corregir y volver a confirmar
+                if (!enviando) setBotonEnviando(false);
+            });
+            return;
+        }
+
+        if (!validarCheckout()) {
+            evento.preventDefault();
+            return;
+        }
+
         guardarCheckout();
+
+        // Pedido válido: desde acá no se aceptan más envíos
+        enviando = true;
+        setBotonEnviando(true);
+    });
+
+    // Si el usuario vuelve con "Atrás" y el navegador restaura la página, se libera el botón
+    window.addEventListener('pageshow', function (evento) {
+        if (evento.persisted) {
+            enviando = false;
+            setBotonEnviando(false);
+            consultarEstadoCheckout();
+        }
     });
 
 
@@ -1704,6 +2054,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * ================================================================ */
 
     recuperarCheckout();
+    actualizarContadorComentario();
 
     const hayCalle = calleInput.value.trim();
     const hayNumero = numeroInput.value.trim();
@@ -1715,6 +2066,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!isNaN(latInit) && !isNaN(lonInit)) {
             moverMapa(latInit, lonInit);
+
+            // Verifica de nuevo que la ubicación guardada siga siendo válida
+            actualizarDireccionDesdeMapa(latInit, lonInit, false);
+
             aplicarZona({
                 lat: latInit,
                 lon: lonInit,
@@ -1757,6 +2112,176 @@ document.addEventListener('DOMContentLoaded', function () {
     if (form.querySelector('input[name="medio_pago"]:checked')) {
         limpiarErrorPago();
     }
+
+
+    /* ================================================================
+     * 15. ACTUALIZACIÓN AUTOMÁTICA (estado del negocio y productos)
+     * ================================================================ */
+
+    const URL_CHECKOUT = "{% url 'procesar_checkout' %}";
+    const URL_CARRITO = "{% url 'ver_carrito' %}";
+    const INTERVALO_ESTADO_MS = 3000;
+
+    let consultandoEstado = false;
+    let carritoVacio = false;
+    let temporizadorAvisoAbierto = null;
+
+    function mostrarAvisoNegocio(tipo, icono, titulo, texto) {
+        if (!avisoNegocio) return;
+
+        clearTimeout(temporizadorAvisoAbierto);
+
+        avisoNegocio.classList.toggle('checkout-aviso-ok', tipo === 'ok');
+        avisoNegocio.innerHTML =
+            '<i class="fa-solid ' + icono + '"></i>' +
+            '<div><strong>' + titulo + '</strong> <span>' + escaparHtml(texto) + '</span></div>';
+        avisoNegocio.hidden = false;
+    }
+
+    function ocultarAvisoNegocio() {
+        if (avisoNegocio) avisoNegocio.hidden = true;
+    }
+
+    /* Aplica el estado actual del negocio (abierto/cerrado) sin recargar la página. */
+    function aplicarEstadoNegocio(abierto, mensaje) {
+        const cambio = (abierto !== negocioAbierto);
+        negocioAbierto = abierto;
+
+        if (!abierto) {
+            mostrarAvisoNegocio(
+                'cerrado',
+                'fa-store-slash',
+                'El negocio está cerrado en este momento.',
+                mensaje || 'Podrás realizar tu pedido cuando vuelva a abrir.'
+            );
+        } else if (cambio) {
+            mostrarAvisoNegocio(
+                'ok',
+                'fa-circle-check',
+                '¡El negocio volvió a abrir!',
+                'Ya podés confirmar tu pedido.'
+            );
+            temporizadorAvisoAbierto = setTimeout(ocultarAvisoNegocio, 8000);
+        }
+
+        if (btnConfirmar && !enviando) {
+            btnConfirmar.disabled = !abierto || carritoVacio;
+        }
+    }
+
+    function mostrarAvisoProductos(texto) {
+        if (!avisoProductos || !avisoProductosTexto) return;
+
+        avisoProductosTexto.innerHTML = '<p>' + escaparHtml(texto) + '</p>';
+        avisoProductos.hidden = false;
+        avisoProductos.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    if (cerrarAvisoProductos && avisoProductos) {
+        cerrarAvisoProductos.addEventListener('click', function () {
+            avisoProductos.hidden = true;
+        });
+    }
+
+    /* Vuelve a dibujar el resumen del pedido con los productos vigentes. */
+    function renderizarResumen(items) {
+        const contenedor = document.querySelector('.summary-items');
+        if (!contenedor) return;
+
+        if (!items.length) {
+            contenedor.innerHTML = '<div class="summary-empty">No hay productos en el carrito.</div>';
+            return;
+        }
+
+        contenedor.innerHTML = items.map(function (item) {
+            const detalles = (Array.isArray(item.detalles) && item.detalles.length)
+                ? '<div class="summary-item-details">' + item.detalles.map(escaparHtml).join(', ') + '</div>'
+                : '';
+
+            return (
+                '<div class="summary-item">' +
+                    '<div class="summary-item-info">' +
+                        '<div class="summary-item-name">' +
+                            escaparHtml(item.cantidad) + 'x ' + escaparHtml(item.nombre) +
+                        '</div>' +
+                        detalles +
+                    '</div>' +
+                    '<div class="summary-item-price">$' + escaparHtml(item.subtotal) + '</div>' +
+                '</div>'
+            );
+        }).join('');
+    }
+
+    /* Se quitaron productos del carrito (eliminados o no disponibles). */
+    function aplicarCambioDeProductos(datos) {
+        renderizarResumen(datos.carrito_items || []);
+
+        subtotal = parsearMonto(datos.total_carrito);
+        if (subtotalProductos) subtotalProductos.textContent = '$' + subtotal.toFixed(2);
+
+        // El descuento pudo dejar de aplicar: se pide volver a aplicar la promoción
+        if (descuento > 0) {
+            descuento = 0;
+            if (promoStatus) promoStatus.textContent = 'Tu pedido cambió. Volvé a aplicar la promoción.';
+        }
+
+        actualizarTotal();
+
+        mostrarAvisoProductos(
+            datos.aviso_productos ||
+            'Algunos productos ya no están disponibles y se quitaron de tu pedido.'
+        );
+
+        if (datos.carrito_vacio) {
+            carritoVacio = true;
+            if (btnConfirmar) btnConfirmar.disabled = true;
+
+            setTimeout(function () { window.location.href = URL_CARRITO; }, 4000);
+        }
+    }
+
+    async function consultarEstadoCheckout() {
+
+        if (consultandoEstado || enviando || document.hidden) return;
+
+        consultandoEstado = true;
+
+        try {
+            const respuesta = await fetch(URL_CHECKOUT + '?_=' + Date.now(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                cache: 'no-store',
+                credentials: 'same-origin'
+            });
+
+            // Con el negocio cerrado el servidor responde 403, pero igual manda JSON
+            const datos = await respuesta.json();
+            if (!datos) return;
+
+            aplicarEstadoNegocio(datos.cerrado !== true, datos.mensaje_negocio || datos.mensaje);
+
+            if (Array.isArray(datos.quitados) && datos.quitados.length) {
+                aplicarCambioDeProductos(datos);
+            }
+
+        } catch (error) {
+            // Sin conexión o respuesta inesperada: se reintenta en el próximo ciclo
+        } finally {
+            consultandoEstado = false;
+        }
+    }
+
+    setInterval(consultarEstadoCheckout, INTERVALO_ESTADO_MS);
+
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) consultarEstadoCheckout();
+    });
+    window.addEventListener('focus', consultarEstadoCheckout);
+    window.addEventListener('online', consultarEstadoCheckout);
+
+    consultarEstadoCheckout();
 
 });
 </script>

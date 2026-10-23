@@ -784,6 +784,103 @@ def calcular_consumo_insumos(carrito):
     return calcular_consumo_carrito(carrito)
 
 
+def _producto_disponible(producto):
+    """False si el producto está marcado como no disponible/inactivo.
+
+    Revisa los campos booleanos habituales que existan en el modelo. Si tu modelo
+    usa otro nombre, agregalo a CAMPOS_DISPONIBILIDAD.
+    """
+    from django.core.exceptions import FieldDoesNotExist
+
+    CAMPOS_DISPONIBILIDAD = ('disponible', 'activo', 'habilitado', 'visible')
+
+    for nombre_campo in CAMPOS_DISPONIBILIDAD:
+        try:
+            producto._meta.get_field(nombre_campo)
+        except FieldDoesNotExist:
+            continue
+
+        if getattr(producto, nombre_campo) is False:
+            return False
+
+    return True
+
+
+def _depurar_carrito(request, carrito):
+    """Quita del carrito (y de la sesión) los productos eliminados o no disponibles.
+
+    Devuelve (carrito_actualizado, nombres_quitados).
+    """
+    if not carrito:
+        return carrito, []
+
+    ids = {
+        item.get('producto_id')
+        for item in carrito.values()
+        if item.get('producto_id') is not None
+    }
+    productos = {
+        str(p.pk): p for p in Producto.objects.filter(pk__in=ids)
+    }
+
+    vigente = {}
+    quitados = []
+
+    for clave, item in carrito.items():
+        producto = productos.get(str(item.get('producto_id')))
+
+        if producto is None or not _producto_disponible(producto):
+            quitados.append(item.get('nombre') or 'Producto')
+            continue
+
+        vigente[clave] = item
+
+    if quitados:
+        request.session['carrito'] = vigente
+        request.session.modified = True
+
+    return vigente, quitados
+
+
+def _aviso_productos_quitados(nombres):
+    if not nombres:
+        return ''
+
+    if len(nombres) == 1:
+        return f'Quitamos "{nombres[0]}" de tu pedido porque ya no está disponible.'
+
+    listado = ', '.join(f'"{n}"' for n in nombres)
+    return (
+        'Quitamos de tu pedido los siguientes productos porque ya no están '
+        f'disponibles: {listado}.'
+    )
+
+
+def _json_sin_cache(datos, status=200):
+    """JsonResponse que el navegador nunca guarda en caché (para el estado en vivo)."""
+    respuesta = JsonResponse(datos, status=status)
+    respuesta['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    respuesta['Pragma'] = 'no-cache'
+    respuesta['Vary'] = 'X-Requested-With, Accept'
+    return respuesta
+
+
+def _items_para_json(carrito):
+    """Items del carrito en un formato seguro para JSON."""
+    items = []
+
+    for item in _items_checkout(carrito):
+        detalles = item.get('detalles')
+
+        items.append({
+            'cantidad': item.get('cantidad', 1),
+            'nombre': item.get('nombre', ''),
+            'detalles': list(detalles) if isinstance(detalles, (list, tuple)) else [],
+            'subtotal': f"{item['subtotal']:.2f}",
+        })
+
+    return items
+
 
 def procesar_checkout(request):
     info_estado = local_estado()
@@ -804,6 +901,10 @@ def procesar_checkout(request):
 
     carrito = request.session.get('carrito', {})
 
+    # Quitar productos eliminados o no disponibles antes de calcular nada.
+    carrito, productos_quitados = _depurar_carrito(request, carrito)
+    avisos = [_aviso_productos_quitados(productos_quitados)] if productos_quitados else []
+
     total_carrito = sum(
         (
             Decimal(str(i.get('subtotal', 0)))
@@ -820,11 +921,18 @@ def procesar_checkout(request):
         ZonasEntrega.objects.values('idzona', 'nombre', 'costoenvio')
     )
 
+    # Límite real del comentario según el campo del modelo (fallback: 500).
+    comentario_max = (
+        Pedido._meta.get_field('justificacioncancelacion').max_length or 500
+    )
+
     contexto = {
         'medios_pago': medios_pago,
         'zonas_entrega': zonas_entrega,
         'total_carrito': total_carrito,
+        'comentario_max': comentario_max,
         'carrito_items': _items_checkout(carrito),
+        'avisos': avisos,
         'negocio_abierto': negocio_abierto,
         'mensaje_negocio': (
             info_estado.get('mensaje', '')
@@ -835,22 +943,34 @@ def procesar_checkout(request):
 
     # Consulta AJAX: informar el estado sin redirigir al cliente.
     if es_consulta_json:
+        # Datos que el checkout usa para actualizarse solo (sin recargar).
+        estado_checkout = {
+            'mensaje_negocio': contexto['mensaje_negocio'],
+            'quitados': productos_quitados,
+            'aviso_productos': avisos[0] if avisos else '',
+            'carrito_items': _items_para_json(carrito),
+            'carrito_vacio': not carrito,
+        }
+
         if not negocio_abierto:
-            return JsonResponse(
+            return _json_sin_cache(
                 {
                     'status': 'error',
                     'mensaje': mensaje_cerrado,
                     'cerrado': True,
+                    'total_carrito': str(total_carrito),
+                    **estado_checkout,
                 },
                 status=403,
             )
 
-        return JsonResponse({
+        return _json_sin_cache({
             'status': 'success',
             'total_carrito': str(total_carrito),
             'medios_pago': medios_pago,
             'zonas_entrega': zonas_entrega,
             'cerrado': False,
+            **estado_checkout,
         })
 
     # Valores iniciales del formulario.
@@ -887,7 +1007,9 @@ def procesar_checkout(request):
     localidad = campo('localidad') or 'A coordinar con el vendedor'
     horario_entrega = campo('horario_entrega')
     codigo_promo = campo('codigo_promocion').upper()
-    comentario = campo('comentario')
+    # El navegador envía cada salto de línea como \r\n (2 caracteres),
+    # aunque el textarea cuente 1. Se normaliza para no pasarse del límite.
+    comentario = campo('comentario').replace('\r\n', '\n').replace('\r', '\n')
     id_medio_pago = request.POST.get('medio_pago')
 
     errores = {'codigo_promocion': ''}
@@ -918,8 +1040,40 @@ def procesar_checkout(request):
             },
         )
 
+    # Si se quitaron productos al confirmar, no se crea el pedido:
+    # se muestra el checkout actualizado para que el cliente revise el total.
+    if productos_quitados:
+        if not carrito:
+            messages.warning(request, avisos[0])
+            return redirect('ver_carrito')
+
+        return render(
+            request,
+            'publico/checkout.html',
+            {
+                **contexto,
+                'total_estimado': total_carrito,
+                'datos_previos': request.POST,
+                'hay_datos_previos': True,
+                'errores': {'codigo_promocion': ''},
+                'coord_lat': campo('coord_lat'),
+                'coord_lng': campo('coord_lng'),
+                'error_telefono': '',
+                'error_medio_pago': '',
+                'error_promocion': '',
+                'descuento_promocion': Decimal('0.00'),
+                'objeto_promocion': None,
+                'codigo_promocion': codigo_promo,
+            },
+        )
+
     # Si el carrito está vacío, volver al carrito.
     if not carrito:
+        # Envío duplicado: el pedido ya se procesó y el carrito se vació,
+        # así que se lleva al cliente a la pantalla de éxito en vez de mostrar un error.
+        if request.session.get('whatsapp_url'):
+            return redirect('pedido_exitoso')
+
         messages.error(request, 'Tu carrito está vacío.')
         return redirect('ver_carrito')
 
@@ -959,6 +1113,13 @@ def procesar_checkout(request):
     elif len(numero) > 20:
         errores['numero'] = 'El número de calle es demasiado largo.'
 
+    # Validación del comentario.
+    if len(comentario) > comentario_max:
+        errores['comentario'] = (
+            f'El comentario no puede superar los {comentario_max} caracteres '
+            f'(escribiste {len(comentario)}).'
+        )
+
     # Validación del método de pago.
     medio_pago = None
 
@@ -992,6 +1153,29 @@ def procesar_checkout(request):
     id_zona = campo('id_zona')
     coord_lat = campo('coord_lat')
     coord_lng = campo('coord_lng')
+
+    # La ubicación marcada debe estar dentro de la zona de entrega (CABA).
+    # Es una red de seguridad gruesa: el rectángulo contiene a toda la ciudad,
+    # así que solo rechaza ubicaciones claramente fuera (otro país o provincia lejana).
+    # Formato: (lat_min, lat_max, lng_min, lng_max)
+    caba_bbox = (-34.7055, -34.5265, -58.5315, -58.3350)
+
+    if coord_lat and coord_lng:
+        try:
+            lat_valor = float(coord_lat.replace(',', '.'))
+            lng_valor = float(coord_lng.replace(',', '.'))
+        except ValueError:
+            errores['direccion'] = 'La ubicación marcada no es válida.'
+        else:
+            dentro_de_zona = (
+                caba_bbox[0] <= lat_valor <= caba_bbox[1]
+                and caba_bbox[2] <= lng_valor <= caba_bbox[3]
+            )
+            if not dentro_de_zona:
+                errores['direccion'] = (
+                    'La dirección marcada está fuera de nuestra zona de entrega. '
+                    'Solo realizamos entregas en la Ciudad Autónoma de Buenos Aires.'
+                )
 
     from core.geo_zonas import detectar_zona_entrega
 
@@ -1144,7 +1328,10 @@ def procesar_checkout(request):
                 ).first()
 
                 if not producto:
-                    continue
+                    raise ValueError(
+                        'Uno de los productos de tu pedido ya no está disponible. '
+                        'Revisá tu carrito.'
+                    )
 
                 cantidad = item.get('cantidad', 1) or 1
                 subtotal_item = Decimal(
@@ -1212,55 +1399,74 @@ def procesar_checkout(request):
         return redirect('ver_carrito')
 
     # Preparar mensaje para WhatsApp.
-    mensaje = '*¡Nuevo Pedido! 🍔*\n\n'
+    # Los emojis van como escapes Unicode para no depender de la codificación del archivo.
+    E_BURGER = '\U0001F354'
+    E_CLIENTE = '\U0001F464'
+    E_TEL = '\U0001F4DE'
+    E_PIN = '\U0001F4CD'
+    E_RELOJ = '\U0001F552'
+    E_TICKET = '\U0001F9FE'
+    E_PROMO = '\U0001F381'
+    E_MOTO = '\U0001F6F5'
+    E_TOTAL = '\U0001F4B0'
+    E_PAGO = '\U0001F4B3'
+    E_NOTA = '\U0001F4AC'
+    E_CHECK = '\u2705'
+    LINEA = '\u2501' * 16
 
-    mensaje += '*Datos del Cliente:*\n'
-    mensaje += f'• Nombre: {nombre} {apellido}\n'
-    mensaje += f'• Teléfono: {telefono}\n\n'
-
-    mensaje += '*Dirección de Envío:*\n'
-    mensaje += f'• Calle: {calle} {numero}'
-
+    direccion_txt = f'{calle} {numero}'
     if piso:
-        mensaje += f' (Piso/Depto: {piso})'
+        direccion_txt += f' (Piso/Depto: {piso})'
 
-    mensaje += f'\n• Localidad / Zona: {localidad_guardar}\n'
+    lineas = [
+        f'\u00A1Hola! Acabo de realizar un pedido desde la web {E_BURGER}',
+        f'*Pedido N\u00B0 {pedido.pk}*',
+        LINEA,
+        '',
+        f'{E_CLIENTE} *Mis datos*',
+        f'{nombre} {apellido}',
+        f'{E_TEL} {telefono}',
+        '',
+        f'{E_PIN} *Dirección de entrega*',
+        direccion_txt,
+        f'{localidad_guardar}',
+    ]
 
     if horario_entrega:
-        mensaje += f'• Horario Deseado: {horario_entrega}\n'
+        lineas.append(f'{E_RELOJ} Horario de entrega deseado: {horario_entrega} hs')
 
-    if objeto_promocion and descuento_promocion > 0:
-        mensaje += (
-            f'• Palabra Clave Promo: {codigo_promo} (Aplicada)\n'
-        )
-
-    mensaje += '\n*Detalle del Pedido:*\n'
+    lineas += ['', f'{E_TICKET} *Mi pedido*']
 
     for item in carrito.values():
         subtotal = Decimal(str(item.get('subtotal', 0)))
 
-        mensaje += (
-            f'• {item.get("cantidad")}x '
-            f'{item.get("nombre")} '
-            f'(${subtotal:.2f})\n'
+        lineas.append(
+            f'\u25AA {item.get("cantidad")}x {item.get("nombre")} '
+            f'\u2014 *${subtotal:.2f}*'
         )
 
         for detalle in item.get('detalles', []):
-            mensaje += f'   - {detalle}\n'
+            lineas.append(f'     \u21B3 _{detalle}_')
 
-    mensaje += f'\n• Subtotal Productos: ${total_carrito:.2f}\n'
+    lineas += ['', LINEA]
+    lineas.append(f'Subtotal: ${total_carrito:.2f}')
 
-    if descuento_promocion > 0:
-        mensaje += (
-            f'• Descuento Promo: -${descuento_promocion:.2f}\n'
+    if objeto_promocion and descuento_promocion > 0:
+        lineas.append(
+            f'{E_PROMO} Promo {codigo_promo}: -${descuento_promocion:.2f}'
         )
 
-    mensaje += f'• Costo de Envío: {costo_envio_texto}\n'
-    mensaje += f'*Total a Pagar:* ${total_general:.2f}\n'
-    mensaje += f'*Método de Pago:* {medio_pago.nombremetodo}\n'
+    lineas.append(f'{E_MOTO} Envío: {costo_envio_texto}')
+    lineas.append(LINEA)
+    lineas.append(f'{E_TOTAL} *Total a pagar: ${total_general:.2f}*')
+    lineas.append(f'{E_PAGO} Pago con: *{medio_pago.nombremetodo}*')
 
     if comentario:
-        mensaje += f'*Comentarios:* {comentario}\n'
+        lineas += ['', f'{E_NOTA} *Aclaraciones:*', f'_{comentario}_']
+
+    lineas += ['', f'Quedo atento a la confirmaci\u00F3n. \u00A1Gracias! {E_CHECK}']
+
+    mensaje = '\n'.join(lineas)
 
     negocio = Negocio.objects.first()
 
@@ -1281,7 +1487,8 @@ def procesar_checkout(request):
         return redirect('menu')
 
     request.session['whatsapp_url'] = (
-        f'https://wa.me/{numero_whatsapp}?text={quote(mensaje)}'
+        f'https://api.whatsapp.com/send?phone={numero_whatsapp}'
+        f'&text={quote(mensaje, safe="", encoding="utf-8")}'
     )
     request.session['limpiar_checkout'] = True
     request.session.modified = True
