@@ -261,7 +261,11 @@
             </span>
 
             <strong>
-                ID {{ pedido.idpromocion }}
+                {% if promocion %}
+                    {{ promocion.palabraclave|default:promocion.descripcion_amigable }}
+                {% else %}
+                    Promoción #{{ pedido.idpromocion }}
+                {% endif %}
             </strong>
 
         </div>

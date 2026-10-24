@@ -534,9 +534,7 @@
                             </label>
 
                             <!-- Sin maxlength: el aviso aparece solo al pasarse del límite -->
-                            <textarea
-                                id="comentario"
-                                name="comentario"
+                            <textarea id="comentario" name="comentario" maxlength="{{ comentario_max|default:250|unlocalize }}"
                                 placeholder="Alguna indicación para tu pedido..."
                             >{{ datos_previos.comentario|default:'' }}</textarea>
 
@@ -1966,6 +1964,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!btnConfirmar) return;
 
         btnConfirmar.disabled = activo || !negocioAbierto;
+        btnConfirmar.style.pointerEvents = activo ? 'none' : '';
+        btnConfirmar.style.opacity = activo ? '0.7' : '';
         btnConfirmar.setAttribute('aria-busy', activo ? 'true' : 'false');
         btnConfirmar.innerHTML = activo
             ? '<i class="fa-solid fa-spinner fa-spin"></i> Enviando pedido...'

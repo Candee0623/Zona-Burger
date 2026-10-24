@@ -190,8 +190,10 @@ def index(request):
 
     promociones_activas = Promocion.objects.filter(
         activo=1,
-        fechainicio__lte=hoy,
-        fechafin__gte=hoy,
+    ).filter(
+        Q(fechainicio__isnull=True) | Q(fechainicio__lte=hoy)
+    ).filter(
+        Q(fechafin__isnull=True) | Q(fechafin__gte=hoy)
     )
 
     return render(request, 'publico/index.html', {
@@ -296,6 +298,10 @@ def menu_actualizaciones(request):
 def detalleProducto(request, idproducto):
     producto = get_object_or_404(Producto, pk=idproducto)
 
+    if not _producto_disponible(producto):
+        messages.error(request, 'El producto seleccionado no está disponible.')
+        return redirect('menu')
+
     relaciones_grupos = (
         ProductoGrupoOpcion.objects
         .filter(idproducto=producto)
@@ -364,6 +370,14 @@ def agregar_al_carrito(request, idproducto):
 
     producto = get_object_or_404(Producto, pk=idproducto)
 
+    # DEF-002: Validar disponibilidad antes de agregar al carrito
+    if not _producto_disponible(producto):
+        msg = 'El producto seleccionado no está disponible.'
+        if es_peticion_ajax(request):
+            return JsonResponse({'status': 'error', 'message': msg}, status=400)
+        messages.error(request, msg)
+        return redirect('menu')
+
     # Cada grupo de opciones puede exigir una cantidad mínima de selecciones.
     relaciones_grupos = (
         ProductoGrupoOpcion.objects
@@ -379,6 +393,7 @@ def agregar_al_carrito(request, idproducto):
 
         min_selecciones = int(grupo.minselecciones or 0)
 
+        # DEF-003: Grupos opcionales (min_selecciones <= 0) se pueden desmarcar o dejar vacíos libremente
         if min_selecciones <= 0:
             continue
 
@@ -386,7 +401,7 @@ def agregar_al_carrito(request, idproducto):
 
         if len(seleccionadas) < min_selecciones:
             # Se conserva el ítem en edición para volver a cargarlo.
-            edit_id = request.POST.get('edit_id')
+            edit_id = request.POST.get('edit_id') or request.session.get('edit_item_id')
 
             if edit_id:
                 request.session['edit_item_id'] = edit_id
@@ -436,10 +451,12 @@ def agregar_al_carrito(request, idproducto):
 
     carrito = request.session.setdefault('carrito', {})
 
-    # Al editar un ítem se reemplaza la versión anterior.
-    edit_id = request.POST.get('edit_id')
+    edit_id = request.POST.get('edit_id') or request.session.get('edit_item_id')
+    cantidad_item = 1
 
+    # DEF-003: Al editar un ítem se recupera su cantidad previa y se reemplaza la versión anterior
     if edit_id and edit_id in carrito:
+        cantidad_item = carrito[edit_id].get('cantidad', 1)
         del carrito[edit_id]
 
     request.session.pop('edit_item_id', None)
@@ -452,7 +469,10 @@ def agregar_al_carrito(request, idproducto):
     )
 
     if item_id in carrito:
-        carrito[item_id]['cantidad'] += 1
+        if edit_id:
+            carrito[item_id]['cantidad'] += cantidad_item
+        else:
+            carrito[item_id]['cantidad'] += 1
         carrito[item_id]['subtotal'] = (
             carrito[item_id]['cantidad'] * precio_unitario
         )
@@ -462,15 +482,15 @@ def agregar_al_carrito(request, idproducto):
             'nombre': producto.nombre,
             'imagen': producto.imagen.url if producto.imagen else '',
             'precio_unitario': precio_unitario,
-            'cantidad': 1,
-            'subtotal': precio_unitario,
+            'cantidad': cantidad_item,
+            'subtotal': cantidad_item * precio_unitario,
             'detalles': detalle_opciones,
             'opciones_ids': opciones_seleccionadas,
             'extras_ids': extras_seleccionados,
             'insumos_quitados_ids': insumos_quitados_ids,
         }
 
-    # Django no detecta cambios dentro de diccionarios anidados de la sesión.
+    request.session['carrito'] = carrito
     request.session.modified = True
 
     return redirect('ver_carrito')
@@ -495,7 +515,12 @@ def ver_carrito(request):
         request.session.modified = True
 
     carrito = request.session.get('carrito', {})
-    total_carrito = sum(item['subtotal'] for item in carrito.values())
+    # DEF-002, DEF-010, DEF-011: Depurar carrito y reflejar precios actuales vigentes
+    carrito, quitados = _depurar_carrito(request, carrito)
+    if quitados:
+        messages.warning(request, _aviso_productos_quitados(quitados))
+
+    total_carrito = sum(item.get('subtotal', 0) for item in carrito.values())
 
     return render(request, 'publico/carrito.html', {
         'carrito': carrito,
@@ -540,7 +565,49 @@ def eliminar_del_carrito(request, item_id):
 
     if item_id in carrito:
         del carrito[item_id]
+        request.session['carrito'] = carrito
         request.session.modified = True
+
+    # DEF-004: Recalcular subtotales, totales y revalidar promociones en sesión
+    if not carrito:
+        request.session.pop('promocion_id', None)
+        request.session.pop('codigo_promocion', None)
+        request.session.pop('descuento_promocion', None)
+    else:
+        for it in carrito.values():
+            try:
+                pu = float(it.get('precio_unitario', 0))
+                cnt = int(it.get('cantidad', 1))
+                it['subtotal'] = pu * cnt
+            except (ValueError, TypeError):
+                pass
+
+        promo_id = request.session.get('promocion_id')
+        if promo_id:
+            promo = Promocion.objects.filter(pk=promo_id, activo=1).first()
+            if promo and promocion_es_valida(promo):
+                res = calcular_total_pedido(carrito, promo)
+                if res['descuento'] > 0:
+                    request.session['descuento_promocion'] = str(res['descuento'])
+                else:
+                    request.session.pop('promocion_id', None)
+                    request.session.pop('codigo_promocion', None)
+                    request.session.pop('descuento_promocion', None)
+            else:
+                request.session.pop('promocion_id', None)
+                request.session.pop('codigo_promocion', None)
+                request.session.pop('descuento_promocion', None)
+
+    request.session['carrito'] = carrito
+    request.session.modified = True
+
+    if es_peticion_ajax(request):
+        total_carrito = sum(item.get('subtotal', 0) for item in carrito.values())
+        return JsonResponse({
+            'status': 'ok',
+            'total_carrito': float(total_carrito),
+            'cantidad_items': len(carrito),
+        })
 
     return redirect('ver_carrito')
 
@@ -631,33 +698,39 @@ def calcular_descuento_promocion(carrito, promocion):
             'La promoción no aplica a los productos del carrito.',
         )
 
-    tipo = promocion.tipobeneficio.codigo if promocion.tipobeneficio else None
+    tipo = (promocion.tipobeneficio.codigo or '').upper().strip() if promocion.tipobeneficio else ''
+    comportamiento = (getattr(promocion.tipobeneficio, 'comportamiento', '') or '').upper().strip()
     valor = promocion.valor or Decimal('0.00')
     descuento = Decimal('0.00')
     mensaje = ''
 
-    if tipo == '2x1':
+    if tipo in ('2X1', '2_X_1'):
         unidades.sort()
         descuento = sum(unidades[:len(unidades) // 2], Decimal('0.00'))
         mensaje = 'Promoción 2 x 1 aplicada.'
 
-    elif tipo == '3x2':
+    elif tipo in ('3X2', '3_X_2'):
         unidades.sort()
         descuento = sum(unidades[:len(unidades) // 3], Decimal('0.00'))
         mensaje = 'Promoción 3 x 2 aplicada.'
 
-    elif tipo == 'PRODUCTO_GRATIS':
+    elif tipo in ('PRODUCTO_GRATIS', 'REGALO'):
         descuento = min(unidades)
         mensaje = 'Producto gratis aplicado.'
 
-    elif tipo == 'DESCUENTO_PORCENTAJE':
+    # DEF-007: Reconocer descuentos porcentuales según código o comportamiento del tipo de beneficio
+    elif tipo in ('DESCUENTO_PORCENTAJE', 'PORCENTAJE') or comportamiento == 'PORCENTAJE':
         porcentaje = max(Decimal('0.00'), min(valor, Decimal('100.00')))
         descuento = subtotal_elegible * porcentaje / Decimal('100')
         mensaje = f'Descuento del {porcentaje}% aplicado.'
 
-    elif tipo == 'DESCUENTO_FIJO':
+    elif tipo in ('DESCUENTO_FIJO', 'MONTO_FIJO', 'FIJO') or comportamiento == 'MONTO_FIJO':
         descuento = min(valor, subtotal_elegible)
         mensaje = f'Descuento de ${descuento} aplicado.'
+
+    elif comportamiento == 'SIN_VALOR':
+        descuento = min(unidades)
+        mensaje = 'Beneficio aplicado.'
 
     else:
         return Decimal('0.00'), 'Tipo de promoción no válido.'
@@ -785,30 +858,29 @@ def calcular_consumo_insumos(carrito):
 
 
 def _producto_disponible(producto):
-    """False si el producto está marcado como no disponible/inactivo.
+    """False si el producto está marcado como no disponible/inactivo/eliminado/oculto."""
+    if not producto:
+        return False
 
-    Revisa los campos booleanos habituales que existan en el modelo. Si tu modelo
-    usa otro nombre, agregalo a CAMPOS_DISPONIBILIDAD.
-    """
-    from django.core.exceptions import FieldDoesNotExist
+    # DEF-002 / DEF-010: Validar estado del producto según EstadoProducto
+    if getattr(producto, 'idestadoproducto_id', None) in ESTADOS_NO_VISIBLES:
+        return False
 
-    CAMPOS_DISPONIBILIDAD = ('disponible', 'activo', 'habilitado', 'visible')
-
-    for nombre_campo in CAMPOS_DISPONIBILIDAD:
-        try:
-            producto._meta.get_field(nombre_campo)
-        except FieldDoesNotExist:
-            continue
-
-        if getattr(producto, nombre_campo) is False:
+    if hasattr(producto, 'idestadoproducto') and producto.idestadoproducto:
+        if producto.idestadoproducto_id != ESTADO_ACTIVO:
             return False
+
+    for nombre_campo in ('disponible', 'activo', 'habilitado', 'visible'):
+        if hasattr(producto, nombre_campo):
+            if getattr(producto, nombre_campo) is False:
+                return False
 
     return True
 
 
 def _depurar_carrito(request, carrito):
     """Quita del carrito (y de la sesión) los productos eliminados o no disponibles.
-
+    Y actualiza los precios vigentes de los productos, opciones y extras (DEF-011).
     Devuelve (carrito_actualizado, nombres_quitados).
     """
     if not carrito:
@@ -833,9 +905,35 @@ def _depurar_carrito(request, carrito):
             quitados.append(item.get('nombre') or 'Producto')
             continue
 
+        # DEF-011: Actualizar precio vigente del producto y sus opciones/extras
+        try:
+            precio_unitario = Decimal(str(producto.precio))
+
+            opciones_ids = item.get('opciones_ids') or []
+            if opciones_ids:
+                for opc in Opcion.objects.filter(pk__in=opciones_ids):
+                    precio_unitario += Decimal(str(opc.precioadicional or 0))
+
+            extras_dict = item.get('extras_ids') or {}
+            if extras_dict:
+                for extra_id, cant in extras_dict.items():
+                    ext = Extras.objects.filter(pk=extra_id).first()
+                    if ext:
+                        precio_unitario += Decimal(str(ext.precio or 0)) * int(cant or 1)
+
+            item['precio_unitario'] = float(precio_unitario)
+            cantidad = int(item.get('cantidad', 1) or 1)
+            item['cantidad'] = cantidad
+            item['subtotal'] = float(precio_unitario * cantidad)
+            item['nombre'] = producto.nombre
+            if producto.imagen:
+                item['imagen'] = producto.imagen.url
+        except Exception as e:
+            logger.warning(f"Error al actualizar precio vigente del item {clave}: {e}")
+
         vigente[clave] = item
 
-    if quitados:
+    if quitados or len(vigente) != len(carrito):
         request.session['carrito'] = vigente
         request.session.modified = True
 
@@ -994,6 +1092,14 @@ def procesar_checkout(request):
                 'objeto_promocion': None,
             },
         )
+
+    # DEF-008: Bloquear solicitudes repetidas / doble clic en backend
+    if request.session.get('checkout_procesando'):
+        if request.session.get('whatsapp_url'):
+            return redirect('pedido_exitoso')
+        return redirect('ver_carrito')
+    request.session['checkout_procesando'] = True
+    request.session.modified = True
 
     def campo(nombre):
         return (request.POST.get(nombre) or '').strip()
@@ -1228,6 +1334,8 @@ def procesar_checkout(request):
 
     # Si hay errores, mantener los datos en el checkout.
     if any(errores.values()):
+        request.session['checkout_procesando'] = False
+        request.session.modified = True
         total_estimado = max(
             Decimal('0.00'),
             total_carrito - descuento_promocion + costo_envio,
@@ -1319,17 +1427,18 @@ def procesar_checkout(request):
                 ),
                 horarioentregadeseado=horario_deseado,
                 total=total_general,
-                justificacioncancelacion=comentario,
+                justificacioncancelacion=(comentario[:comentario_max] if comentario else None),
             )
 
+            # DEF-002, DEF-010: Revalidación completa del carrito justo antes de confirmar
             for item in carrito.values():
                 producto = Producto.objects.filter(
                     pk=item.get('producto_id')
                 ).first()
 
-                if not producto:
+                if not producto or not _producto_disponible(producto):
                     raise ValueError(
-                        'Uno de los productos de tu pedido ya no está disponible. '
+                        f"El producto '{item.get('nombre', 'Producto')}' ya no está disponible o fue eliminado. "
                         'Revisá tu carrito.'
                     )
 
@@ -1339,16 +1448,17 @@ def procesar_checkout(request):
                 )
                 detalles = item.get('detalles')
 
+                # DEF-009: Asegurar longitud máxima en observaciones de DetallePedido (250 chars)
+                detalles_txt = ', '.join(detalles) if isinstance(detalles, list) else ''
+                if len(detalles_txt) > 250:
+                    detalles_txt = detalles_txt[:247] + '...'
+
                 DetallePedido.objects.create(
                     idpedido=pedido,
                     idproducto=producto,
                     cantidad=cantidad,
                     preciounitario=subtotal_item / cantidad,
-                    observaciones=(
-                        ', '.join(detalles)
-                        if isinstance(detalles, list)
-                        else ''
-                    ),
+                    observaciones=detalles_txt,
                 )
 
             # Descontar stock y registrar movimientos.
@@ -1358,6 +1468,8 @@ def procesar_checkout(request):
             )
 
     except ValueError as e:
+        request.session['checkout_procesando'] = False
+        request.session.modified = True
         # Si cerró durante la confirmación, quedarse en checkout.
         info_estado = local_estado()
         negocio_abierto = info_estado.get('abierto', True)
@@ -1395,6 +1507,8 @@ def procesar_checkout(request):
         return redirect('ver_carrito')
 
     except StockInsuficienteError as e:
+        request.session['checkout_procesando'] = False
+        request.session.modified = True
         messages.error(request, str(e))
         return redirect('ver_carrito')
 
@@ -1451,9 +1565,24 @@ def procesar_checkout(request):
     lineas += ['', LINEA]
     lineas.append(f'Subtotal: ${total_carrito:.2f}')
 
-    if objeto_promocion and descuento_promocion > 0:
+    # DEF-012: Formateador del mensaje de WhatsApp con nombre, palabra clave o descripción amigable
+    promo_obj = objeto_promocion
+    if not promo_obj and getattr(pedido, 'idpromocion', None):
+        promo_obj = Promocion.objects.filter(pk=pedido.idpromocion).first()
+
+    if promo_obj and descuento_promocion > 0:
+        desc_amigable = getattr(promo_obj, 'descripcion_amigable', '')
+        clave = getattr(promo_obj, 'palabraclave', '') or codigo_promo
+        if clave and desc_amigable:
+            texto_promo = f"{clave} ({desc_amigable})"
+        elif clave:
+            texto_promo = clave
+        elif desc_amigable:
+            texto_promo = desc_amigable
+        else:
+            texto_promo = f"Promoción #{promo_obj.pk}"
         lineas.append(
-            f'{E_PROMO} Promo {codigo_promo}: -${descuento_promocion:.2f}'
+            f'{E_PROMO} Promo {texto_promo}: -${descuento_promocion:.2f}'
         )
 
     lineas.append(f'{E_MOTO} Envío: {costo_envio_texto}')
@@ -1491,6 +1620,7 @@ def procesar_checkout(request):
         f'&text={quote(mensaje, safe="", encoding="utf-8")}'
     )
     request.session['limpiar_checkout'] = True
+    request.session.pop('checkout_procesando', None)
     request.session.modified = True
 
     return redirect('pedido_exitoso')
@@ -1587,10 +1717,16 @@ def obtener_ticket_modal(request, idpedido):
     for detalle in detalles:
         detalle.subtotal_item = detalle.preciounitario * detalle.cantidad
 
+    # DEF-012: Obtener información amigable de la promoción para el ticket
+    promocion = None
+    if getattr(pedido, 'idpromocion', None):
+        promocion = Promocion.objects.filter(pk=pedido.idpromocion).first()
+
     return render(request, 'panel/parcialTicket.html', {
         'pedido': pedido,
         'detalles': detalles,
         'direccion_cliente': direccion_cliente,
+        'promocion': promocion,
     })
 
 
@@ -2553,6 +2689,30 @@ def crear_promocion(request):
             request, contexto, 'Seleccioná un producto.'
         )
 
+    # DEF-014: Validar palabra clave duplicada en otras promociones
+    if Promocion.objects.filter(palabraclave__iexact=palabraclave).exclude(pk=promocion.pk).exists():
+        return _form_promocion_con_error(
+            request, contexto, f'Ya existe otra promoción registrada con la palabra clave "{palabraclave}".'
+        )
+
+    # DEF-013: Validar que fecha de finalización no sea menor a la de inicio
+    if fechainicio and fechafin and fechafin < fechainicio:
+        return _form_promocion_con_error(
+            request, contexto, 'La fecha de finalización no puede ser menor a la fecha de inicio.'
+        )
+
+    # DEF-014: Validar promociones duplicadas con la misma palabra clave
+    if Promocion.objects.filter(palabraclave__iexact=palabraclave).exists():
+        return _form_promocion_con_error(
+            request, contexto, f'Ya existe una promoción registrada con la palabra clave "{palabraclave}".'
+        )
+
+    # DEF-013: Validar que fecha de finalización no sea menor a la de inicio
+    if fechainicio and fechafin and fechafin < fechainicio:
+        return _form_promocion_con_error(
+            request, contexto, 'La fecha de finalización no puede ser menor a la fecha de inicio.'
+        )
+
     try:
         tipo_beneficio = TipoBeneficio.objects.get(pk=tipobeneficio_id)
     except TipoBeneficio.DoesNotExist:
@@ -2725,11 +2885,14 @@ def eliminar_promocion(request, idpromocion):
     promocion = get_object_or_404(Promocion, pk=idpromocion)
 
     if request.method == 'POST':
+        nombre_promo = promocion.palabraclave or f"#{promocion.pk}"
         with transaction.atomic():
             ProductoPromocion.objects.filter(idpromocion=promocion).delete()
             promocion.delete()
 
-        return redirect('lista_promociones')
+        # DEF-015: Redirección limpia y mensaje de éxito
+        messages.success(request, f'La promoción "{nombre_promo}" fue eliminada correctamente.')
+        return redirect('panel_lista_promociones')
 
     return render(request, 'panel/promociones/EliminarPromocion.html', {
         'promocion': promocion,
