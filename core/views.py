@@ -1,4 +1,5 @@
 import hashlib
+import json
 import logging
 import re
 import secrets
@@ -21,6 +22,7 @@ from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db.models import (
     Avg,
     Count,
@@ -295,57 +297,150 @@ def menu_actualizaciones(request):
     })
 
 
+def _id_texto(valor):
+    """Normaliza identificadores para compararlos con datos de sesión."""
+    return str(valor)
+
+
+def _decimal_seguro(valor):
+    """Convierte un importe a Decimal sin aceptar valores inválidos."""
+    try:
+        numero = Decimal(str(valor if valor is not None else 0))
+        if not numero.is_finite():
+            return Decimal("0")
+        return numero
+    except (InvalidOperation, TypeError, ValueError):
+        return Decimal("0")
+
+
+def _precio_dos_decimales(valor):
+    return _decimal_seguro(valor).quantize(Decimal("0.01"))
+
+
+def _volver_a_detalle(request, producto, mensaje):
+    """Conserva la edición cuando hay un error de validación."""
+    messages.error(request, mensaje)
+    return redirect("detalleProducto", idproducto=producto.idproducto)
+
+
 def detalleProducto(request, idproducto):
     producto = get_object_or_404(Producto, pk=idproducto)
 
     if not _producto_disponible(producto):
-        messages.error(request, 'El producto seleccionado no está disponible.')
-        return redirect('menu')
+        messages.error(
+            request,
+            "El producto seleccionado no está disponible."
+        )
+        return redirect("menu")
 
     relaciones_grupos = (
         ProductoGrupoOpcion.objects
         .filter(idproducto=producto)
-        .select_related('idgrupo')
+        .select_related("idgrupo")
     )
 
-    grupos_opciones = [
-        {'grupo': rel.idgrupo, 'opciones': rel.idgrupo.opcion_set.all()}
-        for rel in relaciones_grupos
-        if rel.idgrupo
-    ]
+    grupos_opciones = []
 
-    extras_producto = [
-        rel.idextra
-        for rel in producto.productoextras_set.select_related('idextra')
-        if rel.idextra
-    ]
+    for relacion in relaciones_grupos:
+        grupo = relacion.idgrupo
 
-    # Ingredientes de la receta que el cliente puede quitar.
-    insumos_removibles = (
+        if not grupo:
+            continue
+
+        opciones = list(grupo.opcion_set.all())
+
+        grupos_opciones.append({
+            "grupo": grupo,
+            "opciones": opciones,
+        })
+
+    relaciones_extras = producto.productoextras_set.select_related(
+        "idextra"
+    )
+
+    edit_item_id = request.session.get("edit_item_id")
+    carrito = request.session.get("carrito", {})
+
+    item_editando = (
+        carrito.get(str(edit_item_id))
+        if edit_item_id is not None
+        else None
+    )
+
+    # Compatibilidad con carritos antiguos que guardaban cantidades
+    # de extras dentro de extras_ids como {id_extra: cantidad}.
+    extras_seleccionados = {}
+
+    if item_editando:
+        extras_anteriores = item_editando.get("extras_ids", {})
+
+        if isinstance(extras_anteriores, dict):
+            extras_seleccionados = {
+                str(k): int(v)
+                for k, v in extras_anteriores.items()
+            }
+        elif isinstance(extras_anteriores, list):
+            extras_seleccionados = {
+                str(k): 1 for k in extras_anteriores
+            }
+
+    extras_producto = []
+
+    for relacion in relaciones_extras:
+        extra = relacion.idextra
+
+        if not extra:
+            continue
+
+        extras_producto.append({
+            "extra": extra,
+            "seleccionado": str(extra.idextra) in extras_seleccionados,
+            "cantidad": extras_seleccionados.get(
+                str(extra.idextra), 1
+            ),
+        })
+
+    relaciones_insumos = (
         RecetaInsumo.objects
         .filter(
             idreceta__idproducto=producto,
             es_removible=True,
             idinsumo__isnull=False,
         )
-        .select_related('idinsumo')
+        .select_related("idinsumo")
     )
 
-    # Si el cliente está editando un ítem, se recupera su configuración.
-    edit_item_id = request.session.get('edit_item_id')
-    carrito = request.session.get('carrito', {})
-    item_editando = carrito.get(edit_item_id) if edit_item_id else None
+    insumos_removibles = list(relaciones_insumos)
 
-    return render(request, 'publico/detalleProducto.html', {
-        'producto': producto,
-        'grupos_opciones': grupos_opciones,
-        'extras_producto': extras_producto,
-        'insumos_removibles': insumos_removibles,
-        'negocio': Negocio.objects.first(),
-        'instagram': obtener_instagram(),
-        'item_editando': item_editando,
-        'edit_item_id': edit_item_id,
-        'estado_local': local_estado(),
+    if item_editando:
+        opciones_ids = [
+            str(valor)
+            for valor in item_editando.get("opciones_ids", [])
+        ]
+
+        insumos_quitados_ids = [
+            str(valor)
+            for valor in item_editando.get(
+                "insumos_quitados_ids", []
+            )
+        ]
+    else:
+        opciones_ids = []
+        insumos_quitados_ids = []
+
+    return render(request, "publico/detalleProducto.html", {
+        "producto": producto,
+        "grupos_opciones": grupos_opciones,
+        "extras_producto": extras_producto,
+        "insumos_removibles": insumos_removibles,
+        "negocio": Negocio.objects.first(),
+        "instagram": obtener_instagram(),
+        "item_editando": item_editando,
+        "edit_item_id": edit_item_id,
+        "opciones_ids_editando": opciones_ids,
+        "insumos_quitados_ids_editando": insumos_quitados_ids,
+        "extras_seleccionados": extras_seleccionados,
+        "estado_local": local_estado(),
     })
 
 
@@ -354,36 +449,91 @@ def detalleProducto(request, idproducto):
 # ============================================================
 
 def agregar_al_carrito(request, idproducto):
-    if request.method != 'POST':
-        return redirect('menu')
-
-    estado = local_estado()
-    if not estado.get('abierto', True):
-        msg = "En este momento el negocio está cerrado. No es posible agregar productos al carrito."
-        if es_peticion_ajax(request):
-            return JsonResponse({'status': 'error', 'message': msg}, status=400)
-        messages.error(request, msg)
-        referer = request.META.get('HTTP_REFERER')
-        if referer and url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
-            return redirect(referer)
-        return redirect('menu')
+    if request.method != "POST":
+        return redirect("menu")
 
     producto = get_object_or_404(Producto, pk=idproducto)
 
-    # DEF-002: Validar disponibilidad antes de agregar al carrito
-    if not _producto_disponible(producto):
-        msg = 'El producto seleccionado no está disponible.'
-        if es_peticion_ajax(request):
-            return JsonResponse({'status': 'error', 'message': msg}, status=400)
-        messages.error(request, msg)
-        return redirect('menu')
+    # Volver a comprobar el estado del negocio en el servidor.
+    estado = local_estado()
 
-    # Cada grupo de opciones puede exigir una cantidad mínima de selecciones.
-    relaciones_grupos = (
+    if not estado.get("abierto", True):
+        mensaje = (
+            "En este momento el negocio está cerrado. "
+            "No es posible agregar productos al carrito."
+        )
+
+        if es_peticion_ajax(request):
+            return JsonResponse({
+                "status": "error",
+                "message": mensaje,
+            }, status=400)
+
+        messages.error(request, mensaje)
+
+        referer = request.META.get("HTTP_REFERER")
+
+        if referer and url_has_allowed_host_and_scheme(
+            referer,
+            allowed_hosts={request.get_host()},
+        ):
+            return redirect(referer)
+
+        return redirect("menu")
+
+    if not _producto_disponible(producto):
+        mensaje = "El producto seleccionado no está disponible."
+
+        if es_peticion_ajax(request):
+            return JsonResponse({
+                "status": "error",
+                "message": mensaje,
+            }, status=400)
+
+        messages.error(request, mensaje)
+        return redirect("menu")
+
+    carrito = request.session.get("carrito", {})
+
+    edit_id = request.POST.get("edit_id") or request.session.get(
+        "edit_item_id"
+    )
+    edit_id = str(edit_id) if edit_id else None
+
+    # No permitir editar un ítem que ya no está en el carrito.
+    if edit_id and edit_id not in carrito:
+        request.session.pop("edit_item_id", None)
+        messages.error(
+            request,
+            "No se encontró el producto que intentabas editar. "
+            "Volvé a abrirlo desde el carrito."
+        )
+        return redirect("ver_carrito")
+
+    if edit_id:
+        item_anterior = carrito[edit_id]
+
+        if str(item_anterior.get("producto_id")) != str(
+            producto.idproducto
+        ):
+            messages.error(
+                request,
+                "El producto que intentás editar no coincide."
+            )
+            return redirect("ver_carrito")
+
+    # --------------------------------------------------
+    # 1. Cargar los grupos y sus opciones válidas
+    # --------------------------------------------------
+
+    relaciones_grupos = list(
         ProductoGrupoOpcion.objects
         .filter(idproducto=producto)
-        .select_related('idgrupo')
+        .select_related("idgrupo")
     )
+
+    opciones_por_grupo = {}
+    grupos_por_id = {}
 
     for relacion in relaciones_grupos:
         grupo = relacion.idgrupo
@@ -391,109 +541,277 @@ def agregar_al_carrito(request, idproducto):
         if not grupo:
             continue
 
-        min_selecciones = int(grupo.minselecciones or 0)
+        grupo_id = str(grupo.idgrupo)
+        grupos_por_id[grupo_id] = grupo
 
-        # DEF-003: Grupos opcionales (min_selecciones <= 0) se pueden desmarcar o dejar vacíos libremente
-        if min_selecciones <= 0:
-            continue
+        opciones_por_grupo[grupo_id] = {
+            str(opcion.pk): opcion
+            for opcion in grupo.opcion_set.all()
+        }
 
-        seleccionadas = request.POST.getlist(f'grupo_{grupo.idgrupo}')
+    opciones_seleccionadas = []
+    detalle_opciones = []
 
-        if len(seleccionadas) < min_selecciones:
-            # Se conserva el ítem en edición para volver a cargarlo.
-            edit_id = request.POST.get('edit_id') or request.session.get('edit_item_id')
+    precio_unitario = _decimal_seguro(producto.precio)
 
-            if edit_id:
-                request.session['edit_item_id'] = edit_id
+    # --------------------------------------------------
+    # 2. Validar opciones y guardar sus nombres
+    # --------------------------------------------------
 
-            messages.error(
+    for grupo_id, grupo in grupos_por_id.items():
+        clave = f"grupo_{grupo_id}"
+        seleccionadas = request.POST.getlist(clave)
+
+        # No aceptar opciones repetidas.
+        if len(seleccionadas) != len(set(seleccionadas)):
+            return _volver_a_detalle(
                 request,
-                f'Debés seleccionar al menos {min_selecciones} '
+                producto,
+                f'Hay opciones repetidas en el grupo "{grupo.nombre}".'
+            )
+
+        minimo = max(0, int(grupo.minselecciones or 0))
+        maximo = max(0, int(grupo.maxselecciones or 0))
+        cantidad = len(seleccionadas)
+
+        if cantidad < minimo:
+            return _volver_a_detalle(
+                request,
+                producto,
+                f'Debés seleccionar al menos {minimo} '
                 f'opción(es) en "{grupo.nombre}".'
             )
 
-            return redirect('detalleProducto', idproducto=producto.idproducto)
+        if maximo > 0 and cantidad > maximo:
+            return _volver_a_detalle(
+                request,
+                producto,
+                f'El grupo "{grupo.nombre}" permite un máximo '
+                f'de {maximo} opción(es).'
+            )
 
-    precio_unitario = float(producto.precio)
-    detalle_opciones = []
-    opciones_seleccionadas = []
-    extras_seleccionados = {}
-    insumos_quitados_ids = []
+        opciones_validas = opciones_por_grupo[grupo_id]
 
-    for key in request.POST:
-        if key.startswith('grupo_'):
-            for value in request.POST.getlist(key):
-                opcion = Opcion.objects.filter(pk=value).first()
+        for opcion_id in seleccionadas:
+            opcion = opciones_validas.get(str(opcion_id))
 
-                if opcion:
-                    precio_unitario += float(opcion.precioadicional or 0)
-                    detalle_opciones.append(opcion.nombre)
-                    opciones_seleccionadas.append(str(value))
-
-    for key, value in request.POST.items():
-        if key.startswith('extra_'):
-            extra = Extras.objects.filter(pk=value).first()
-
-            if extra:
-                cantidad_extra = int(
-                    request.POST.get(f'cantidad_extra_{value}', 1)
+            if not opcion:
+                return _volver_a_detalle(
+                    request,
+                    producto,
+                    f'Una opción seleccionada no pertenece '
+                    f'al grupo "{grupo.nombre}".'
                 )
-                precio_unitario += float(extra.precio or 0) * cantidad_extra
-                detalle_opciones.append(f'{extra.nombre} (x{cantidad_extra})')
-                extras_seleccionados[str(value)] = cantidad_extra
 
-        elif key.startswith('sin_insumo_'):
-            insumo = Insumo.objects.filter(pk=value).first()
+            # Conservar los IDs para identificar la configuración.
+            opciones_seleccionadas.append(str(opcion.pk))
 
-            if insumo:
-                detalle_opciones.append(f'Sin {insumo.nombreinsumo}')
-                insumos_quitados_ids.append(str(value))
+            # Guardar un texto legible para mostrar en el carrito.
+            detalle_opciones.append(
+                f"{grupo.nombre}: {opcion.nombre}"
+            )
 
-    carrito = request.session.setdefault('carrito', {})
+            # Calcular el precio usando el dato de la base de datos.
+            precio_unitario += _decimal_seguro(
+                opcion.precioadicional
+            )
 
-    edit_id = request.POST.get('edit_id') or request.session.get('edit_item_id')
-    cantidad_item = 1
+    # --------------------------------------------------
+    # 3. Validar extras, cantidades y precios
+    # --------------------------------------------------
 
-    # DEF-003: Al editar un ítem se recupera su cantidad previa y se reemplaza la versión anterior
-    if edit_id and edit_id in carrito:
-        cantidad_item = carrito[edit_id].get('cantidad', 1)
-        del carrito[edit_id]
-
-    request.session.pop('edit_item_id', None)
-
-    # El ID combina producto y opciones: dos configuraciones distintas del
-    # mismo producto quedan como ítems separados.
-    item_id = (
-        f"{idproducto}_" + '_'.join(detalle_opciones)
-        if detalle_opciones else str(idproducto)
+    relaciones_extras = (
+        producto.productoextras_set
+        .select_related("idextra")
     )
 
+    extras_validos = {
+        str(relacion.idextra.pk): relacion.idextra
+        for relacion in relaciones_extras
+        if relacion.idextra
+    }
+
+    extras_seleccionados = {}
+
+    for clave, valor in request.POST.items():
+        if not clave.startswith("extra_"):
+            continue
+
+        extra_id = clave[len("extra_"):]
+
+        if extra_id not in extras_validos:
+            return _volver_a_detalle(
+                request,
+                producto,
+                "Se recibió un extra que no pertenece a este producto."
+            )
+
+        if str(valor) != extra_id:
+            return _volver_a_detalle(
+                request,
+                producto,
+                "La selección de un extra no es válida."
+            )
+
+        extra = extras_validos[extra_id]
+
+        try:
+            cantidad_extra = int(
+                request.POST.get(
+                    f"cantidad_extra_{extra_id}", "1"
+                )
+            )
+        except (TypeError, ValueError):
+            cantidad_extra = 0
+
+        if not 1 <= cantidad_extra <= 5:
+            return _volver_a_detalle(
+                request,
+                producto,
+                f'La cantidad del extra "{extra.nombre}" '
+                f'debe estar entre 1 y 5.'
+            )
+
+        extras_seleccionados[extra_id] = cantidad_extra
+
+        precio_unitario += (
+            _decimal_seguro(extra.precio) * cantidad_extra
+        )
+
+        # Mostrar el nombre del extra y su cantidad.
+        detalle_opciones.append(
+            f"Extra: {extra.nombre} (x{cantidad_extra})"
+        )
+
+    # --------------------------------------------------
+    # 4. Validar ingredientes removibles
+    # --------------------------------------------------
+
+    relaciones_insumos = (
+        RecetaInsumo.objects
+        .filter(
+            idreceta__idproducto=producto,
+            es_removible=True,
+            idinsumo__isnull=False,
+        )
+        .select_related("idinsumo")
+    )
+
+    insumos_validos = {
+        str(relacion.idinsumo.pk): relacion.idinsumo
+        for relacion in relaciones_insumos
+        if relacion.idinsumo
+    }
+
+    insumos_quitados_ids = []
+
+    for clave, valor in request.POST.items():
+        if not clave.startswith("sin_insumo_"):
+            continue
+
+        insumo_id = clave[len("sin_insumo_"):]
+
+        if (
+            insumo_id not in insumos_validos
+            or str(valor) != insumo_id
+        ):
+            return _volver_a_detalle(
+                request,
+                producto,
+                "Se recibió un ingrediente no válido."
+            )
+
+        insumo = insumos_validos[insumo_id]
+
+        if insumo_id not in insumos_quitados_ids:
+            insumos_quitados_ids.append(insumo_id)
+
+            # Mostrar el nombre del ingrediente quitado.
+            detalle_opciones.append(
+                f"Sin {insumo.nombre}"
+            )
+
+    # --------------------------------------------------
+    # 5. Construir una identidad estable de configuración
+    # --------------------------------------------------
+
+    opciones_seleccionadas.sort()
+    insumos_quitados_ids.sort()
+
+    configuracion = {
+        "producto_id": str(producto.idproducto),
+        "opciones": opciones_seleccionadas,
+        "extras": extras_seleccionados,
+        "insumos": insumos_quitados_ids,
+    }
+
+    firma = hashlib.sha256(
+        json.dumps(
+            configuracion,
+            sort_keys=True,
+            ensure_ascii=False,
+        ).encode("utf-8")
+    ).hexdigest()[:20]
+
+    item_id = f"{producto.idproducto}_{firma}"
+
+    # Mantener la cantidad original al editar.
+    cantidad_item = (
+        int(carrito[edit_id].get("cantidad", 1))
+        if edit_id
+        else 1
+    )
+
+    if cantidad_item < 1:
+        cantidad_item = 1
+
+    precio_unitario = _precio_dos_decimales(precio_unitario)
+
+    nuevo_item = {
+        "producto_id": producto.idproducto,
+        "nombre": producto.nombre,
+        "imagen": producto.imagen.url if producto.imagen else "",
+        "precio_unitario": float(precio_unitario),
+        "cantidad": cantidad_item,
+        "subtotal": float(
+            _precio_dos_decimales(
+                precio_unitario * cantidad_item
+            )
+        ),
+        "detalles": detalle_opciones,
+        "opciones_ids": opciones_seleccionadas,
+        "extras_ids": extras_seleccionados,
+        "insumos_quitados_ids": insumos_quitados_ids,
+    }
+
+    # No modificar el carrito hasta validar toda la configuración.
+    if edit_id:
+        carrito.pop(edit_id, None)
+
     if item_id in carrito:
-        if edit_id:
-            carrito[item_id]['cantidad'] += cantidad_item
-        else:
-            carrito[item_id]['cantidad'] += 1
-        carrito[item_id]['subtotal'] = (
-            carrito[item_id]['cantidad'] * precio_unitario
+        # Acumular cantidades si la configuración ya existe.
+        carrito[item_id]["cantidad"] = (
+            int(carrito[item_id].get("cantidad", 1))
+            + cantidad_item
+        )
+
+        carrito[item_id]["subtotal"] = float(
+            _precio_dos_decimales(
+                _decimal_seguro(
+                    carrito[item_id]["precio_unitario"]
+                )
+                * carrito[item_id]["cantidad"]
+            )
         )
     else:
-        carrito[item_id] = {
-            'producto_id': producto.idproducto,
-            'nombre': producto.nombre,
-            'imagen': producto.imagen.url if producto.imagen else '',
-            'precio_unitario': precio_unitario,
-            'cantidad': cantidad_item,
-            'subtotal': cantidad_item * precio_unitario,
-            'detalles': detalle_opciones,
-            'opciones_ids': opciones_seleccionadas,
-            'extras_ids': extras_seleccionados,
-            'insumos_quitados_ids': insumos_quitados_ids,
-        }
+        carrito[item_id] = nuevo_item
 
-    request.session['carrito'] = carrito
+    request.session["carrito"] = carrito
     request.session.modified = True
+    request.session.pop("edit_item_id", None)
 
-    return redirect('ver_carrito')
+    return redirect("ver_carrito")
+
 
 
 def editar_item_carrito(request, item_id):
@@ -508,7 +826,7 @@ def editar_item_carrito(request, item_id):
 
     return redirect('ver_carrito')
 
-
+@ensure_csrf_cookie
 def ver_carrito(request):
     # Al volver al carrito se descarta el estado de edición.
     if request.session.pop('edit_item_id', None) is not None:
@@ -879,61 +1197,98 @@ def _producto_disponible(producto):
 
 
 def _depurar_carrito(request, carrito):
-    """Quita del carrito (y de la sesión) los productos eliminados o no disponibles.
-    Y actualiza los precios vigentes de los productos, opciones y extras (DEF-011).
-    Devuelve (carrito_actualizado, nombres_quitados).
-    """
+    """Revalida el carrito contra la BD: quita lo no disponible, actualiza
+    precios, nombres y detalles. Devuelve (carrito, nombres_quitados)."""
     if not carrito:
         return carrito, []
 
-    ids = {
-        item.get('producto_id')
-        for item in carrito.values()
-        if item.get('producto_id') is not None
-    }
-    productos = {
-        str(p.pk): p for p in Producto.objects.filter(pk__in=ids)
-    }
+    antes = json.dumps(carrito, sort_keys=True, default=str)
 
-    vigente = {}
-    quitados = []
+    # Normalizar extras (carritos viejos guardaban una lista).
+    for item in carrito.values():
+        extras = item.get('extras_ids') or {}
+        if isinstance(extras, list):
+            extras = {str(k): 1 for k in extras}
+        item['extras_ids'] = {str(k): v for k, v in extras.items()}
+
+    ids_prod, ids_opc, ids_ext, ids_ins = set(), set(), set(), set()
+    for item in carrito.values():
+        if item.get('producto_id') is not None:
+            ids_prod.add(item['producto_id'])
+        ids_opc.update(str(x) for x in item.get('opciones_ids') or [])
+        ids_ext.update(item['extras_ids'].keys())
+        ids_ins.update(str(x) for x in item.get('insumos_quitados_ids') or [])
+
+    productos = {str(p.pk): p for p in Producto.objects.filter(pk__in=ids_prod)}
+    opciones = {
+        str(o.pk): o
+        for o in Opcion.objects.filter(pk__in=ids_opc).select_related('idgrupo')
+    }
+    extras_bd = {str(e.pk): e for e in Extras.objects.filter(pk__in=ids_ext)}
+    insumos = {str(i.pk): i for i in Insumo.objects.filter(pk__in=ids_ins)}
+
+    vigente, quitados = {}, []
 
     for clave, item in carrito.items():
+        nombre_previo = item.get('nombre') or 'Producto'
         producto = productos.get(str(item.get('producto_id')))
 
         if producto is None or not _producto_disponible(producto):
-            quitados.append(item.get('nombre') or 'Producto')
+            quitados.append(nombre_previo)
             continue
 
-        # DEF-011: Actualizar precio vigente del producto y sus opciones/extras
+        precio = _decimal_seguro(producto.precio)
+        detalles = []
+        valido = True
+
+        for oid in sorted(str(x) for x in item.get('opciones_ids') or []):
+            opc = opciones.get(oid)
+            if opc is None:
+                valido = False
+                break
+            precio += _decimal_seguro(opc.precioadicional)
+            grupo = opc.idgrupo.nombre if opc.idgrupo else 'Opción'
+            detalles.append(f"{grupo}: {opc.nombre}")
+
+        if valido:
+            for eid, cant in sorted(item['extras_ids'].items()):
+                ext = extras_bd.get(str(eid))
+                if ext is None:
+                    valido = False
+                    break
+                try:
+                    cant = max(1, int(cant))
+                except (TypeError, ValueError):
+                    cant = 1
+                precio += _decimal_seguro(ext.precio) * cant
+                detalles.append(f"Extra: {ext.nombre} (x{cant})")
+
+        if not valido:
+            quitados.append(nombre_previo)
+            continue
+
+        for iid in sorted(str(x) for x in item.get('insumos_quitados_ids') or []):
+            ins = insumos.get(iid)
+            if ins:
+                detalles.append(f"Sin {ins.nombreinsumo}")
+
         try:
-            precio_unitario = Decimal(str(producto.precio))
+            cantidad = max(1, int(item.get('cantidad', 1) or 1))
+        except (TypeError, ValueError):
+            cantidad = 1
 
-            opciones_ids = item.get('opciones_ids') or []
-            if opciones_ids:
-                for opc in Opcion.objects.filter(pk__in=opciones_ids):
-                    precio_unitario += Decimal(str(opc.precioadicional or 0))
-
-            extras_dict = item.get('extras_ids') or {}
-            if extras_dict:
-                for extra_id, cant in extras_dict.items():
-                    ext = Extras.objects.filter(pk=extra_id).first()
-                    if ext:
-                        precio_unitario += Decimal(str(ext.precio or 0)) * int(cant or 1)
-
-            item['precio_unitario'] = float(precio_unitario)
-            cantidad = int(item.get('cantidad', 1) or 1)
-            item['cantidad'] = cantidad
-            item['subtotal'] = float(precio_unitario * cantidad)
-            item['nombre'] = producto.nombre
-            if producto.imagen:
-                item['imagen'] = producto.imagen.url
-        except Exception as e:
-            logger.warning(f"Error al actualizar precio vigente del item {clave}: {e}")
+        precio = _precio_dos_decimales(precio)
+        item['nombre'] = producto.nombre
+        item['detalles'] = detalles
+        item['cantidad'] = cantidad
+        item['precio_unitario'] = float(precio)
+        item['subtotal'] = float(_precio_dos_decimales(precio * cantidad))
+        if producto.imagen:
+            item['imagen'] = producto.imagen.url
 
         vigente[clave] = item
 
-    if quitados or len(vigente) != len(carrito):
+    if json.dumps(vigente, sort_keys=True, default=str) != antes:
         request.session['carrito'] = vigente
         request.session.modified = True
 
@@ -967,17 +1322,46 @@ def _items_para_json(carrito):
     """Items del carrito en un formato seguro para JSON."""
     items = []
 
-    for item in _items_checkout(carrito):
+    for item_id, item in zip(carrito.keys(), _items_checkout(carrito)):
         detalles = item.get('detalles')
 
         items.append({
+            'id': str(item_id),
             'cantidad': item.get('cantidad', 1),
             'nombre': item.get('nombre', ''),
             'detalles': list(detalles) if isinstance(detalles, (list, tuple)) else [],
+            'precio_unitario': f"{item['precio_unitario']:.2f}",
             'subtotal': f"{item['subtotal']:.2f}",
         })
 
     return items
+
+
+# Reemplaza la vista procesar_checkout completa en views.py.
+# Requiere que ya existan en views.py (las del mensaje anterior):
+#   local_ventanas_entrega, error_horario_entrega, _items_para_json (versión nueva)
+
+
+CHECKOUT_BLOQUEO_SEGUNDOS = 60
+
+
+def _checkout_en_proceso(request):
+    """True si hay otro envío del checkout en curso (con vencimiento)."""
+    marca = request.session.get('checkout_procesando')
+
+    if not marca:
+        return False
+
+    try:
+        return (timezone.now().timestamp() - float(marca)) < CHECKOUT_BLOQUEO_SEGUNDOS
+    except (TypeError, ValueError):
+        # Valor viejo (True): se considera vencido.
+        return False
+
+
+def _checkout_liberar(request):
+    request.session.pop('checkout_procesando', None)
+    request.session.modified = True
 
 
 def procesar_checkout(request):
@@ -1024,12 +1408,17 @@ def procesar_checkout(request):
         Pedido._meta.get_field('justificacioncancelacion').max_length or 500
     )
 
+    # Horarios en los que se puede pedir la entrega (según el horario de atención).
+    entrega = local_ventanas_entrega(info_estado)
+
     contexto = {
         'medios_pago': medios_pago,
         'zonas_entrega': zonas_entrega,
         'total_carrito': total_carrito,
         'comentario_max': comentario_max,
         'carrito_items': _items_checkout(carrito),
+        'items_json': _items_para_json(carrito),
+        'entrega': entrega,
         'avisos': avisos,
         'negocio_abierto': negocio_abierto,
         'mensaje_negocio': (
@@ -1039,15 +1428,18 @@ def procesar_checkout(request):
         ),
     }
 
-    # Consulta AJAX: informar el estado sin redirigir al cliente.
+    # ------------------------------------------------------------
+    # Consulta AJAX: devuelve el estado actual sin redirigir.
+    # ------------------------------------------------------------
     if es_consulta_json:
-        # Datos que el checkout usa para actualizarse solo (sin recargar).
         estado_checkout = {
             'mensaje_negocio': contexto['mensaje_negocio'],
             'quitados': productos_quitados,
             'aviso_productos': avisos[0] if avisos else '',
-            'carrito_items': _items_para_json(carrito),
+            'carrito_items': contexto['items_json'],
             'carrito_vacio': not carrito,
+            'entrega': entrega,
+            'zonas_entrega': zonas_entrega,
         }
 
         if not negocio_abierto:
@@ -1071,7 +1463,9 @@ def procesar_checkout(request):
             **estado_checkout,
         })
 
-    # Valores iniciales del formulario.
+    # ------------------------------------------------------------
+    # GET: mostrar el formulario.
+    # ------------------------------------------------------------
     if request.method != 'POST':
         return render(
             request,
@@ -1093,12 +1487,17 @@ def procesar_checkout(request):
             },
         )
 
-    # DEF-008: Bloquear solicitudes repetidas / doble clic en backend
-    if request.session.get('checkout_procesando'):
+    # ------------------------------------------------------------
+    # POST: confirmar el pedido.
+    # ------------------------------------------------------------
+
+    # Bloquear solicitudes repetidas / doble clic.
+    if _checkout_en_proceso(request):
         if request.session.get('whatsapp_url'):
             return redirect('pedido_exitoso')
         return redirect('ver_carrito')
-    request.session['checkout_procesando'] = True
+
+    request.session['checkout_procesando'] = timezone.now().timestamp()
     request.session.modified = True
 
     def campo(nombre):
@@ -1124,8 +1523,8 @@ def procesar_checkout(request):
     descuento_promocion = Decimal('0.00')
 
     # Si se cerró el negocio, no procesar ni crear el pedido.
-    # Volver a renderizar el checkout con los datos ingresados.
     if not negocio_abierto:
+        _checkout_liberar(request)
         errores['negocio'] = mensaje_cerrado
 
         return render(
@@ -1149,6 +1548,8 @@ def procesar_checkout(request):
     # Si se quitaron productos al confirmar, no se crea el pedido:
     # se muestra el checkout actualizado para que el cliente revise el total.
     if productos_quitados:
+        _checkout_liberar(request)
+
         if not carrito:
             messages.warning(request, avisos[0])
             return redirect('ver_carrito')
@@ -1175,8 +1576,10 @@ def procesar_checkout(request):
 
     # Si el carrito está vacío, volver al carrito.
     if not carrito:
+        _checkout_liberar(request)
+
         # Envío duplicado: el pedido ya se procesó y el carrito se vació,
-        # así que se lleva al cliente a la pantalla de éxito en vez de mostrar un error.
+        # así que se lleva al cliente a la pantalla de éxito.
         if request.session.get('whatsapp_url'):
             return redirect('pedido_exitoso')
 
@@ -1241,7 +1644,8 @@ def procesar_checkout(request):
                 'Seleccioná un método de pago válido.'
             )
 
-    # Validación del horario de entrega.
+    # Validación del horario de entrega (dentro del horario de atención,
+    # con margen antes del cierre).
     horario_deseado = None
 
     if horario_entrega:
@@ -1254,6 +1658,11 @@ def procesar_checkout(request):
             errores['horario_entrega'] = (
                 'El horario de entrega no es válido.'
             )
+        else:
+            error_horario = error_horario_entrega(horario_deseado, entrega)
+
+            if error_horario:
+                errores['horario_entrega'] = error_horario
 
     # Cálculo y análisis geográfico y automático de zonas de entrega
     id_zona = campo('id_zona')
@@ -1262,7 +1671,7 @@ def procesar_checkout(request):
 
     # La ubicación marcada debe estar dentro de la zona de entrega (CABA).
     # Es una red de seguridad gruesa: el rectángulo contiene a toda la ciudad,
-    # así que solo rechaza ubicaciones claramente fuera (otro país o provincia lejana).
+    # así que solo rechaza ubicaciones claramente fuera.
     # Formato: (lat_min, lat_max, lng_min, lng_max)
     caba_bbox = (-34.7055, -34.5265, -58.5315, -58.3350)
 
@@ -1297,7 +1706,10 @@ def procesar_checkout(request):
     zona = resultado_zona.get('zona')
     costo_envio = resultado_zona.get('costoenvio', Decimal('0.00'))
     costo_envio_texto = resultado_zona.get('costoenvio_texto', 'A coordinar')
-    localidad_guardar = resultado_zona.get('localidad_guardar') or (localidad or 'A coordinar con el vendedor')
+    localidad_guardar = (
+        resultado_zona.get('localidad_guardar')
+        or (localidad or 'A coordinar con el vendedor')
+    )
     zona_seleccionada_id = resultado_zona.get('idzona')
 
     # Validación de la promoción.
@@ -1334,8 +1746,8 @@ def procesar_checkout(request):
 
     # Si hay errores, mantener los datos en el checkout.
     if any(errores.values()):
-        request.session['checkout_procesando'] = False
-        request.session.modified = True
+        _checkout_liberar(request)
+
         total_estimado = max(
             Decimal('0.00'),
             total_carrito - descuento_promocion + costo_envio,
@@ -1380,6 +1792,8 @@ def procesar_checkout(request):
     )
 
     if not stock_ok:
+        _checkout_liberar(request)
+
         for err in errores_stock:
             messages.error(request, err)
 
@@ -1396,6 +1810,13 @@ def procesar_checkout(request):
                     'Tu pedido no fue confirmado. '
                     'Podés volver a intentarlo cuando abra.'
                 )
+
+            # Revalidar también el horario de entrega contra la hora actual.
+            if horario_deseado is not None:
+                error_horario_final = error_horario_entrega(horario_deseado)
+
+                if error_horario_final:
+                    raise ValueError(error_horario_final)
 
             cliente = Cliente.objects.create(
                 nombre=nombre,
@@ -1427,10 +1848,12 @@ def procesar_checkout(request):
                 ),
                 horarioentregadeseado=horario_deseado,
                 total=total_general,
-                justificacioncancelacion=(comentario[:comentario_max] if comentario else None),
+                justificacioncancelacion=(
+                    comentario[:comentario_max] if comentario else None
+                ),
             )
 
-            # DEF-002, DEF-010: Revalidación completa del carrito justo antes de confirmar
+            # Revalidación completa del carrito justo antes de confirmar.
             for item in carrito.values():
                 producto = Producto.objects.filter(
                     pk=item.get('producto_id')
@@ -1438,7 +1861,8 @@ def procesar_checkout(request):
 
                 if not producto or not _producto_disponible(producto):
                     raise ValueError(
-                        f"El producto '{item.get('nombre', 'Producto')}' ya no está disponible o fue eliminado. "
+                        f"El producto '{item.get('nombre', 'Producto')}' "
+                        'ya no está disponible o fue eliminado. '
                         'Revisá tu carrito.'
                     )
 
@@ -1448,8 +1872,10 @@ def procesar_checkout(request):
                 )
                 detalles = item.get('detalles')
 
-                # DEF-009: Asegurar longitud máxima en observaciones de DetallePedido (250 chars)
-                detalles_txt = ', '.join(detalles) if isinstance(detalles, list) else ''
+                # Longitud máxima en observaciones de DetallePedido (250 chars).
+                detalles_txt = (
+                    ', '.join(detalles) if isinstance(detalles, list) else ''
+                )
                 if len(detalles_txt) > 250:
                     detalles_txt = detalles_txt[:247] + '...'
 
@@ -1468,8 +1894,8 @@ def procesar_checkout(request):
             )
 
     except ValueError as e:
-        request.session['checkout_procesando'] = False
-        request.session.modified = True
+        _checkout_liberar(request)
+
         # Si cerró durante la confirmación, quedarse en checkout.
         info_estado = local_estado()
         negocio_abierto = info_estado.get('abierto', True)
@@ -1503,17 +1929,51 @@ def procesar_checkout(request):
                 },
             )
 
+        # El horario dejó de ser válido durante la confirmación:
+        # se vuelve al checkout con el error marcado en ese campo.
+        if horario_deseado is not None and error_horario_entrega(horario_deseado):
+            contexto['entrega'] = local_ventanas_entrega(info_estado)
+
+            return render(
+                request,
+                'publico/checkout.html',
+                {
+                    **contexto,
+                    'total_estimado': total_general,
+                    'costo_envio': costo_envio,
+                    'costo_envio_texto': costo_envio_texto,
+                    'zona_seleccionada_id': zona_seleccionada_id,
+                    'resultado_zona': resultado_zona,
+                    'coord_lat': coord_lat,
+                    'coord_lng': coord_lng,
+                    'datos_previos': request.POST,
+                    'hay_datos_previos': True,
+                    'errores': {
+                        'codigo_promocion': '',
+                        'horario_entrega': str(e),
+                    },
+                    'error_telefono': '',
+                    'error_medio_pago': '',
+                    'error_promocion': '',
+                    'descuento_promocion': descuento_promocion,
+                    'objeto_promocion': objeto_promocion,
+                    'codigo_promocion': codigo_promo,
+                },
+            )
+
         messages.error(request, str(e))
         return redirect('ver_carrito')
 
     except StockInsuficienteError as e:
-        request.session['checkout_procesando'] = False
-        request.session.modified = True
+        _checkout_liberar(request)
         messages.error(request, str(e))
         return redirect('ver_carrito')
 
-    # Preparar mensaje para WhatsApp.
-    # Los emojis van como escapes Unicode para no depender de la codificación del archivo.
+    # ------------------------------------------------------------
+    # Pedido creado: preparar mensaje para WhatsApp.
+    # Los emojis van como escapes Unicode para no depender de la
+    # codificación del archivo.
+    # ------------------------------------------------------------
     E_BURGER = '\U0001F354'
     E_CLIENTE = '\U0001F464'
     E_TEL = '\U0001F4DE'
@@ -1565,7 +2025,7 @@ def procesar_checkout(request):
     lineas += ['', LINEA]
     lineas.append(f'Subtotal: ${total_carrito:.2f}')
 
-    # DEF-012: Formateador del mensaje de WhatsApp con nombre, palabra clave o descripción amigable
+    # Línea de promoción con palabra clave o descripción amigable.
     promo_obj = objeto_promocion
     if not promo_obj and getattr(pedido, 'idpromocion', None):
         promo_obj = Promocion.objects.filter(pk=pedido.idpromocion).first()
@@ -1605,9 +2065,11 @@ def procesar_checkout(request):
         else ''
     )
 
-    if 'carrito' in request.session:
-        del request.session['carrito']
-        request.session.modified = True
+    # El pedido ya está creado: vaciar el carrito y liberar el bloqueo.
+    request.session.pop('carrito', None)
+    for clave_promo in ('promocion_id', 'codigo_promocion', 'descuento_promocion'):
+        request.session.pop(clave_promo, None)
+    _checkout_liberar(request)
 
     if not numero_whatsapp:
         logger.warning(
@@ -1620,13 +2082,16 @@ def procesar_checkout(request):
         f'&text={quote(mensaje, safe="", encoding="utf-8")}'
     )
     request.session['limpiar_checkout'] = True
-    request.session.pop('checkout_procesando', None)
     request.session.modified = True
 
     return redirect('pedido_exitoso')
 
 
 def pedido_exitoso(request):
+    # Solo se llega acá después de confirmar un pedido en el checkout.
+    if not request.session.get('whatsapp_url'):
+        return redirect('menu')
+
     limpiar_checkout = request.session.pop('limpiar_checkout', False)
 
     return render(request, 'publico/pedidoExitoso.html', {
@@ -1641,9 +2106,13 @@ def pedido_exitoso(request):
 # ============================================================
 
 @panel_login_requerido
+
 def panel_inicio(request):
     hoy = timezone.localdate()
-    pedidos_hoy_base = Pedido.objects.filter(fecha_creacion__date=hoy)
+
+    pedidos_hoy_base = Pedido.objects.filter(
+        fecha_creacion__date=hoy
+    ).order_by('fecha_creacion', 'idpedido')
 
     filtro_estado = request.GET.get('estado')
     filtro_cliente = request.GET.get('cliente', '').strip()
@@ -1676,7 +2145,9 @@ def panel_inicio(request):
     pedidos_hoy = pedidos_hoy_base
 
     if filtro_estado:
-        pedidos_hoy = pedidos_hoy.filter(idestadopedido_id=filtro_estado)
+        pedidos_hoy = pedidos_hoy.filter(
+            idestadopedido_id=filtro_estado
+        )
 
     # Cada palabra debe coincidir con el comienzo del nombre o del apellido.
     if filtro_cliente:
@@ -1699,6 +2170,7 @@ def panel_inicio(request):
         'total_efectivo': total_efectivo,
         'total_transferencia': total_transferencia,
     })
+
 
 
 @panel_login_requerido
@@ -1999,6 +2471,8 @@ def grupo_editar(request, idgrupo):
     errores = []
     insumos = Insumo.objects.all().order_by('nombreinsumo')
 
+    print(request.POST)
+    
     if request.method == 'POST':
         nombre = request.POST.get('nombre', '').strip()
 
@@ -2018,8 +2492,22 @@ def grupo_editar(request, idgrupo):
             opcion_cantidades = request.POST.getlist('opcion_cantidad_insumo[]')
             opcion_eliminar = set(request.POST.getlist('opcion_eliminar[]'))
 
-            if opcion_eliminar:
-                Opcion.objects.filter(idgrupo=grupo, pk__in=opcion_eliminar).delete()
+            no_eliminadas = []
+            for opc_eliminar in Opcion.objects.filter(idgrupo=grupo, pk__in=opcion_eliminar):
+                # Una por una: si una está vinculada a otros registros no
+                # bloquea la eliminación de las demás.
+                try:
+                    with transaction.atomic():
+                        opc_eliminar.delete()
+                except (ProtectedError, IntegrityError):
+                    no_eliminadas.append(opc_eliminar.nombre)
+
+            if no_eliminadas:
+                messages.warning(
+                    request,
+                    'No se pudieron eliminar estas opciones porque están vinculadas '
+                    'a otros registros: ' + ', '.join(no_eliminadas) + '.'
+                )
 
             total_opc = len(opcion_nombres)
             for i in range(total_opc):
@@ -2060,7 +2548,8 @@ def grupo_editar(request, idgrupo):
                         cantidad_insumo=cant_dec,
                     )
 
-            messages.success(request, 'Grupo actualizado correctamente.')
+            if not no_eliminadas:
+                messages.success(request, 'Grupo actualizado correctamente.')
             return redirect('grupo_lista')
 
     return render(request, 'panel/menu/opciones/editarGrupo.html', {
@@ -2075,10 +2564,13 @@ def grupo_editar(request, idgrupo):
 @requiere_permiso('opciones.eliminar')
 def grupo_eliminar(request, idgrupo):
     grupo = get_object_or_404(GrupoOpcion, pk=idgrupo)
-
+    
     if request.method == 'POST':
         try:
             with transaction.atomic():
+                # Desvincular de productos antes de eliminar para no violar integridad referencial
+                ProductoGrupoOpcion.objects.filter(idgrupo=grupo).delete()
+
                 # Eliminar primero las opciones pertenecientes al grupo.
                 grupo.opcion_set.all().delete()
 
@@ -2689,25 +3181,13 @@ def crear_promocion(request):
             request, contexto, 'Seleccioná un producto.'
         )
 
-    # DEF-014: Validar palabra clave duplicada en otras promociones
-    if Promocion.objects.filter(palabraclave__iexact=palabraclave).exclude(pk=promocion.pk).exists():
-        return _form_promocion_con_error(
-            request, contexto, f'Ya existe otra promoción registrada con la palabra clave "{palabraclave}".'
-        )
-
-    # DEF-013: Validar que fecha de finalización no sea menor a la de inicio
-    if fechainicio and fechafin and fechafin < fechainicio:
-        return _form_promocion_con_error(
-            request, contexto, 'La fecha de finalización no puede ser menor a la fecha de inicio.'
-        )
-
-    # DEF-014: Validar promociones duplicadas con la misma palabra clave
+    # Validar palabra clave duplicada
     if Promocion.objects.filter(palabraclave__iexact=palabraclave).exists():
         return _form_promocion_con_error(
             request, contexto, f'Ya existe una promoción registrada con la palabra clave "{palabraclave}".'
         )
 
-    # DEF-013: Validar que fecha de finalización no sea menor a la de inicio
+    # Validar que fecha de finalización no sea menor a la de inicio
     if fechainicio and fechafin and fechafin < fechainicio:
         return _form_promocion_con_error(
             request, contexto, 'La fecha de finalización no puede ser menor a la fecha de inicio.'
@@ -2821,6 +3301,18 @@ def editar_promocion(request, idpromocion):
     if not producto_id:
         return _form_promocion_con_error(
             request, contexto, 'Seleccioná un producto.'
+        )
+
+    # Validar palabra clave duplicada en otras promociones
+    if Promocion.objects.filter(palabraclave__iexact=palabraclave).exclude(pk=promocion.pk).exists():
+        return _form_promocion_con_error(
+            request, contexto, f'Ya existe otra promoción registrada con la palabra clave "{palabraclave}".'
+        )
+
+    # Validar que fecha de finalización no sea menor a la de inicio
+    if fechainicio and fechafin and fechafin < fechainicio:
+        return _form_promocion_con_error(
+            request, contexto, 'La fecha de finalización no puede ser menor a la fecha de inicio.'
         )
 
     try:
@@ -2970,9 +3462,14 @@ def editar_tipo_beneficio(request, pk):
         codigo = request.POST.get('codigo', '').strip()
         nombre = request.POST.get('nombre', '').strip()
         descripcion = request.POST.get('descripcion', '').strip()
+        comportamiento = request.POST.get('comportamiento', '').strip()
 
         if not nombre:
             messages.error(request, 'El nombre no puede estar vacío.')
+            return redirect('panel_editar_tipo_beneficio', pk=pk)
+
+        if not comportamiento:
+            messages.error(request, 'Debes seleccionar un comportamiento.')
             return redirect('panel_editar_tipo_beneficio', pk=pk)
 
         if not codigo:
@@ -3007,6 +3504,7 @@ def editar_tipo_beneficio(request, pk):
         tipo.codigo = codigo
         tipo.nombre = nombre
         tipo.descripcion = descripcion
+        tipo.comportamiento = comportamiento
         tipo.save()
 
         messages.success(
@@ -3213,13 +3711,54 @@ def imprimir_lotes_codigos(request):
 @requiere_permiso('stock.crear')
 def stock_crear(request):
     if request.method == 'POST':
-        Insumo.objects.create(
-            nombreinsumo=request.POST.get('nombreinsumo'),
-            unidadmedidaingreso=request.POST.get('unidadmedidaingreso'),
-            unidadmedidaegreso=request.POST.get('unidadmedidaegreso'),
-            stockactual=request.POST.get('stockactual', 0),
-            stockminimo=request.POST.get('stockminimo', 5),
-        )
+        nombre = request.POST.get('nombreinsumo', '').strip()
+        unidad_ingreso = request.POST.get('unidadmedidaingreso', '').strip()
+        unidad_egreso = request.POST.get('unidadmedidaegreso', '').strip()
+        descontar_auto = request.POST.get('descontar_stock_automaticamente') == 'on'
+
+        if not nombre or not unidad_ingreso or not unidad_egreso:
+            messages.error(request, 'Completá el nombre y las unidades de medida.')
+            return render(request, 'panel/stock/stockForm.html')
+
+        try:
+            stock_inicial = Decimal(str(request.POST.get('stockactual', 0) or 0))
+            if stock_inicial < 0:
+                stock_inicial = Decimal('0.00')
+        except (InvalidOperation, ValueError, TypeError):
+            stock_inicial = Decimal('0.00')
+
+        try:
+            stock_minimo = Decimal(str(request.POST.get('stockminimo', 5) or 5))
+            if stock_minimo < 0:
+                stock_minimo = Decimal('5.00')
+        except (InvalidOperation, ValueError, TypeError):
+            stock_minimo = Decimal('5.00')
+
+        with transaction.atomic():
+            insumo = Insumo.objects.create(
+                nombreinsumo=nombre,
+                unidadmedidaingreso=unidad_ingreso,
+                unidadmedidaegreso=unidad_egreso,
+                stockactual=stock_inicial,
+                stockminimo=stock_minimo,
+                descontar_stock_automaticamente=descontar_auto,
+            )
+
+            # Carga inicial: diferenciarla de una venta real registrando Lote y MovimientoStock específico
+            if stock_inicial > 0:
+                Lote.objects.create(
+                    idinsumo=insumo,
+                    fechaingreso=timezone.now(),
+                    cantidadinicial=stock_inicial,
+                    cantidadactual=stock_inicial,
+                )
+                MovimientoStock.objects.create(
+                    idinsumo=insumo,
+                    cantidad=stock_inicial,
+                    idpedido=None,
+                    tipomovimiento='CARGA_INICIAL',
+                    descripcion=f"Carga inicial de stock al crear el insumo '{insumo.nombreinsumo}'",
+                )
 
         messages.success(
             request, 'Insumo creado correctamente en el stock.'
@@ -3514,6 +4053,7 @@ def empleado_lista(request):
     )
 
 
+@panel_login_requerido
 def empleado_crear(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre', '').strip()
@@ -3578,6 +4118,7 @@ def empleado_crear(request):
         {'roles': Rol.objects.all()},
     )
 
+@panel_login_requerido
 def empleado_editar(request, idempleado):
     empleado = get_object_or_404(Empleado, pk=idempleado)
 
@@ -3704,6 +4245,7 @@ def empleado_editar(request, idempleado):
         },
     )
 
+@panel_login_requerido
 def empleado_eliminar(request, idempleado):
     empleado = get_object_or_404(Empleado, pk=idempleado)
 
@@ -3739,6 +4281,7 @@ def empleado_eliminar(request, idempleado):
 # 10. PANEL - ROLES
 # ============================================================
 
+@panel_login_requerido
 def rol_lista(request):
     roles = Rol.objects.all().order_by('nombrerol')
 
@@ -3749,6 +4292,7 @@ def rol_lista(request):
     )
 
 
+@panel_login_requerido
 def rol_crear(request):
     permisos = Permiso.objects.all().order_by('modulo', 'accion')
     permisos_seleccionados = []
@@ -3819,6 +4363,7 @@ def rol_crear(request):
     )
 
 
+@panel_login_requerido
 def rol_editar(request, idrol):
     rol = get_object_or_404(Rol, pk=idrol)
 
@@ -3911,6 +4456,7 @@ def rol_editar(request, idrol):
         }
     )
 
+@panel_login_requerido
 @require_POST
 def rol_eliminar(request, idrol):
     rol = get_object_or_404(Rol, pk=idrol)
@@ -3936,6 +4482,7 @@ def rol_eliminar(request, idrol):
 
     return redirect('rol_lista')
 
+@panel_login_requerido
 def rol_permisos(request, idrol):
     rol = get_object_or_404(Rol, pk=idrol)
 
@@ -5141,10 +5688,12 @@ def exportar_dinero_pdf(request):
 # VENTAS
 # ------------------------------------------------------------
  
+@panel_login_requerido
 def reportes(request):
     return render(request, 'panel/reportes/reportes.html')
  
  
+@panel_login_requerido
 def reporte_resumen_ventas(request):
     hoy = timezone.localdate()
  
@@ -5218,6 +5767,13 @@ def reporte_resumen_ventas(request):
     return render(request, 'panel/reportes/resumenVentas.html', contexto)
  
  
+def _pedidos_vendidos():
+    return Pedido.objects.filter(pagado=True).exclude(
+        idestadopedido__descripcion__iexact='Cancelado'
+    )
+
+
+@panel_login_requerido
 def reporte_historial_ventas(request):
     """
     Historial de pedidos pagados (sin cancelados).
@@ -5381,6 +5937,32 @@ class HorarioForm(forms.ModelForm):
             "estaabierto",
         ]
 
+    def clean(self):
+        cleaned_data = super().clean()
+        estaabierto = cleaned_data.get("estaabierto")
+        apertura = cleaned_data.get("horaapertura")
+        cierre = cleaned_data.get("horacierre")
+
+        if estaabierto == 1:
+            if not apertura or not cierre:
+                raise forms.ValidationError(
+                    "Si el día está configurado como abierto, debés indicar la hora de apertura y de cierre."
+                )
+
+            # Validar margen mínimo de aproximadamente 30 minutos entre apertura y cierre
+            if apertura != cierre:  # Misma hora significa 24 horas continuas
+                ap_min = apertura.hour * 60 + apertura.minute
+                ci_min = cierre.hour * 60 + cierre.minute
+                duracion = (ci_min + 1440 - ap_min) if ci_min < ap_min else (ci_min - ap_min)
+
+                if duracion < 30:
+                    raise forms.ValidationError(
+                        "El horario de atención configurado debe tener una duración mínima de al menos 30 minutos."
+                    )
+
+        return cleaned_data
+
+@panel_login_requerido
 def horarios_lista(request):
     horarios = Horario.objects.select_related("idnegocio").order_by(
         "idnegocio__nombre", "idhorario"
@@ -5392,6 +5974,7 @@ def horarios_lista(request):
     )
 
 
+@panel_login_requerido
 def horarios_crear(request):
     if request.method == "POST":
         form = HorarioForm(request.POST)
@@ -5409,6 +5992,7 @@ def horarios_crear(request):
     })
 
 
+@panel_login_requerido
 def horarios_editar(request, idhorario):
     horario = get_object_or_404(Horario, pk=idhorario)
 
@@ -5428,6 +6012,7 @@ def horarios_editar(request, idhorario):
     })
 
 
+@panel_login_requerido
 def horarios_eliminar(request, idhorario):
     horario = get_object_or_404(Horario, pk=idhorario)
 
@@ -5444,6 +6029,7 @@ def horarios_eliminar(request, idhorario):
 # ------------------------------------------------------------
 # ZONAS ENTREGA
 # ------------------------------------------------------------
+@panel_login_requerido
 def zonas_entrega_lista(request):
     zonas = ZonasEntrega.objects.all().order_by("nombre", "idzona")
 
@@ -5454,6 +6040,7 @@ def zonas_entrega_lista(request):
     )
 
 
+@panel_login_requerido
 def zonas_entrega_crear(request):
     negocios = Negocio.objects.all().order_by("idnegocio")
 
@@ -5537,6 +6124,7 @@ def zonas_entrega_crear(request):
     )
 
 
+@panel_login_requerido
 def zonas_entrega_editar(request, idzona):
     zona = get_object_or_404(ZonasEntrega, pk=idzona)
 
@@ -5579,6 +6167,7 @@ def zonas_entrega_editar(request, idzona):
     )
 
 
+@panel_login_requerido
 def zonas_entrega_eliminar(request, idzona):
     zona = get_object_or_404(ZonasEntrega, pk=idzona)
 
@@ -5602,6 +6191,7 @@ def _fecha_o_none(texto):
     except ValueError:
         return None
     
+@panel_login_requerido
 def historial_pedidos(request):
     """Historial general de pedidos, independientemente de su estado."""
     pedidos = Pedido.objects.select_related(
@@ -5687,6 +6277,7 @@ def historial_pedidos(request):
     })
 
 
+@panel_login_requerido
 def detalle_historial_pedido(request, idpedido):
     """Detalle completo de un pedido del historial."""
     pedido = get_object_or_404(
@@ -5960,6 +6551,117 @@ def local_calcular_estado():
         ),
     }
 
+# Entrega programada
+ENTREGA_MARGEN_CIERRE_MIN = 30   # última entrega: 30 min antes de cerrar
+ENTREGA_ANTICIPACION_MIN = 20    # mínimo: dentro de 20 min a partir de ahora
+
+
+def _min_a_hhmm(minutos):
+    minutos %= 1440
+    return f"{minutos // 60:02d}:{minutos % 60:02d}"
+
+
+def local_ventanas_entrega(estado=None):
+    """
+    Franjas en las que se puede pedir un horario de entrega, en minutos desde
+    las 00:00 de hoy (pueden pasar de 1440 si cruzan la medianoche).
+    """
+    libre = {
+        'restringido': False,
+        'ventanas': [],
+        'texto': '',
+        'margen': ENTREGA_MARGEN_CIERRE_MIN,
+    }
+
+    try:
+        negocio = Negocio.objects.first()
+        if negocio is None:
+            return libre
+
+        franjas = local_franjas(Horario.objects.filter(idnegocio=negocio))
+        if not franjas:
+            return libre
+
+        ahora = local_ahora()
+        ahora_min = ahora.hour * 60 + ahora.minute + (1 if ahora.second else 0)
+        hoy = ahora.weekday()
+        ayer = (hoy - 1) % 7
+
+        brutas = []
+        for d, apertura, cierre in franjas:
+            ap = apertura.hour * 60 + apertura.minute
+            ci = cierre.hour * 60 + cierre.minute
+            if ap == ci:                       # 24 horas
+                if d == hoy:
+                    brutas.append((0, 1440))
+            elif ap < ci:                      # mismo día
+                if d == hoy:
+                    brutas.append((ap, ci))
+            else:                              # cruza la medianoche
+                if d == hoy:
+                    brutas.append((ap, ci + 1440))
+                if d == ayer:
+                    brutas.append((ap - 1440, ci))
+
+        estado = estado if estado is not None else local_estado()
+
+        # Abierto a mano fuera de horario: no hay cierre conocido.
+        if (
+            estado.get('abierto') and estado.get('manual')
+            and not any(i <= ahora_min < f for i, f in brutas)
+        ):
+            return libre
+
+        ventanas = []
+        for inicio, fin in sorted(brutas):
+            desde = max(inicio, ahora_min + ENTREGA_ANTICIPACION_MIN)
+            hasta = fin - ENTREGA_MARGEN_CIERRE_MIN
+            if hasta >= desde:
+                ventanas.append({'desde': desde, 'hasta': hasta})
+
+        texto = ' y '.join(
+            f"{_min_a_hhmm(v['desde'])} a {_min_a_hhmm(v['hasta'])}"
+            for v in ventanas
+        )
+
+        return {
+            'restringido': True,
+            'ventanas': ventanas,
+            'texto': texto,
+            'margen': ENTREGA_MARGEN_CIERRE_MIN,
+        }
+
+    except Exception:
+        logger.exception("No se pudieron calcular los horarios de entrega")
+        return libre
+
+
+def error_horario_entrega(hora, info=None):
+    """Devuelve el mensaje de error o '' si el horario es válido."""
+    info = info or local_ventanas_entrega()
+
+    if not info['restringido']:
+        return ''
+
+    minutos = hora.hour * 60 + hora.minute
+
+    for v in info['ventanas']:
+        if (
+            v['desde'] <= minutos <= v['hasta']
+            or v['desde'] <= minutos + 1440 <= v['hasta']
+        ):
+            return ''
+
+    if info['ventanas']:
+        return (
+            f"Elegí un horario dentro de: {info['texto']} hs. "
+            f"Dejamos {info['margen']} minutos antes del cierre para llegar a tiempo."
+        )
+
+    return (
+        'Hoy ya no hay horarios de entrega disponibles. '
+        'Dejá el horario vacío para coordinarlo con el local.'
+    )
 
 # ------------------------------------------------------------
 # 11.5 Cambio de modo (abrir / cerrar / automático)
@@ -6118,18 +6820,182 @@ def cambiar_estado_local(request):
 # 12. API DE ESTADO EN TIEMPO REAL
 # ============================================================
 
-def api_estado_negocio(request):
-    """
-    API pública en tiempo real para consultar el estado del negocio (abierto/cerrado).
-    Utilizado por la tienda pública (index, carrito, etc.) para sincronizar el estado sin recargar la página.
-    """
+def _payload_carrito(request):
+    carrito = request.session.get('carrito', {})
+    carrito, quitados = _depurar_carrito(request, carrito)
     estado = local_estado()
-    return JsonResponse({
-        'status': 'success',
+
+    items = []
+    for item_id, it in carrito.items():
+        items.append({
+            'id': str(item_id),
+            'nombre': it.get('nombre', ''),
+            'detalles': list(it.get('detalles') or []),
+            'cantidad': it.get('cantidad', 1),
+            'precio_unitario': float(it.get('precio_unitario', 0)),
+            'subtotal': float(it.get('subtotal', 0)),
+            'url_editar': reverse('editar_item_carrito', args=[item_id]),
+        })
+
+    payload = {
         'abierto': bool(estado.get('abierto', True)),
         'mensaje': estado.get('mensaje', ''),
-        'manual': bool(estado.get('manual', False)),
+        'items': items,
+        'total': round(sum(i['subtotal'] for i in items), 2),
+    }
+    payload['version'] = hashlib.sha1(
+        json.dumps(payload, sort_keys=True).encode()
+    ).hexdigest()
+    payload['quitados'] = quitados  # evento, fuera del hash
+    return payload
+
+
+def api_carrito_estado(request):
+    return _json_sin_cache(_payload_carrito(request))
+
+
+@require_POST
+def api_carrito_accion(request):
+    item_id = request.POST.get('item_id', '')
+    accion = request.POST.get('accion', '')
+    carrito = request.session.get('carrito', {})
+    error = ''
+
+    if item_id in carrito:
+        item = carrito[item_id]
+        if accion == 'aumentar':
+            if not local_estado().get('abierto', True):
+                error = ('En este momento el negocio está cerrado. '
+                         'No es posible agregar productos al carrito.')
+            else:
+                item['cantidad'] = int(item.get('cantidad', 1)) + 1
+        elif accion == 'disminuir':
+            item['cantidad'] = int(item.get('cantidad', 1)) - 1
+            if item['cantidad'] <= 0:
+                del carrito[item_id]
+        elif accion == 'eliminar':
+            del carrito[item_id]
+
+        if item_id in carrito:
+            carrito[item_id]['subtotal'] = float(_precio_dos_decimales(
+                _decimal_seguro(carrito[item_id]['precio_unitario'])
+                * carrito[item_id]['cantidad']
+            ))
+
+        if not carrito:
+            for k in ('promocion_id', 'codigo_promocion', 'descuento_promocion'):
+                request.session.pop(k, None)
+
+        request.session['carrito'] = carrito
+        request.session.modified = True
+
+    payload = _payload_carrito(request)
+    if error:
+        payload['error'] = error
+    return _json_sin_cache(payload, status=400 if error else 200)
+
+def api_estado_negocio(request):
+    """
+    Devuelve el estado del local, las promociones activas,
+    los horarios y las zonas de entrega en formato JSON.
+    """
+    negocio = Negocio.objects.first()
+    hoy = timezone.localdate()
+
+    # Estado actual del negocio
+    estado = local_estado()
+
+    if isinstance(estado, dict):
+        abierto = bool(estado.get("abierto", False))
+        mensaje = estado.get("mensaje", "")
+    else:
+        abierto = bool(getattr(estado, "abierto", False))
+        mensaje = getattr(estado, "mensaje", "")
+
+    # Promociones vigentes
+    promociones_qs = Promocion.objects.filter(
+        activo=1
+    ).filter(
+        Q(fechainicio__isnull=True) | Q(fechainicio__lte=hoy)
+    ).filter(
+        Q(fechafin__isnull=True) | Q(fechafin__gte=hoy)
+    )
+
+    promociones = []
+
+    for promo in promociones_qs:
+        productos = []
+
+        for relacion in promo.productopromocion_set.select_related(
+            "idproducto"
+        ).all():
+            producto = relacion.idproducto
+
+            if producto:
+                productos.append({
+                    "nombre": producto.nombre
+                })
+
+        promociones.append({
+            "id": promo.pk,
+            "palabraclave": promo.palabraclave or "",
+            "descripcion_amigable": (
+                promo.descripcion_amigable or ""
+            ),
+            "fechafin": (
+                promo.fechafin.isoformat()
+                if promo.fechafin else None
+            ),
+            "productos": productos
+        })
+
+    # Horarios del negocio
+    if negocio:
+        horarios_qs = Horario.objects.filter(
+            idnegocio=negocio
+        )
+    else:
+        horarios_qs = Horario.objects.none()
+
+    horarios = []
+
+    for horario in horarios_qs:
+        horarios.append({
+            "diasemana": str(horario.diasemana or ""),
+            "horaapertura": (
+                horario.horaapertura.strftime("%H:%M")
+                if horario.horaapertura else ""
+            ),
+            "horacierre": (
+                horario.horacierre.strftime("%H:%M")
+                if horario.horacierre else ""
+            )
+        })
+
+    # Zonas de entrega
+    if negocio:
+        zonas_qs = ZonasEntrega.objects.filter(
+            idnegocio=negocio.idnegocio
+        )
+    else:
+        zonas_qs = ZonasEntrega.objects.none()
+
+    zonas = []
+
+    for zona in zonas_qs:
+        zonas.append({
+            "nombre": str(zona.nombre or ""),
+            "costoenvio": zona.costoenvio
+        })
+
+    return JsonResponse({
+        "abierto": abierto,
+        "mensaje": mensaje,
+        "promociones": promociones,
+        "horarios": horarios,
+        "zonas": zonas
     })
+
 
 
 def api_detectar_zona(request):

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Zona-Burger | Nuevo tipo de beneficio
+Zona-Burger | Editar tipo de beneficio
 {% endblock %}
 
 {% block extra_css %}
@@ -62,9 +62,9 @@ Zona-Burger | Nuevo tipo de beneficio
         </div>
 
         <div class="tipo-beneficio-header-text">
-            <h1>Nuevo tipo de beneficio</h1>
+            <h1>Editar tipo de beneficio</h1>
             <p>
-                Configura un nuevo tipo de beneficio para tus promociones.
+                Modificá la configuración del beneficio seleccionado.
             </p>
         </div>
 
@@ -116,6 +116,7 @@ Zona-Burger | Nuevo tipo de beneficio
                 id="codigo"
                 name="codigo"
                 maxlength="50"
+                value="{{ tipo.codigo }}"
                 placeholder="Ej: DESCUENTO_20"
             >
 
@@ -136,6 +137,7 @@ Zona-Burger | Nuevo tipo de beneficio
                 id="nombre"
                 name="nombre"
                 maxlength="100"
+                value="{{ tipo.nombre }}"
                 placeholder="Ej: Descuento 20%"
                 required
             >
@@ -153,15 +155,15 @@ Zona-Burger | Nuevo tipo de beneficio
                 name="comportamiento"
                 required
             >
-                <option value="SIN_VALOR">
+                <option value="SIN_VALOR" {% if tipo.comportamiento == 'SIN_VALOR' %}selected{% endif %}>
                     Sin valor (Ej: 2x1, 3x2, Producto de regalo)
                 </option>
 
-                <option value="PORCENTAJE">
+                <option value="PORCENTAJE" {% if tipo.comportamiento == 'PORCENTAJE' %}selected{% endif %}>
                     Descuento porcentual (%)
                 </option>
 
-                <option value="MONTO_FIJO">
+                <option value="MONTO_FIJO" {% if tipo.comportamiento == 'MONTO_FIJO' %}selected{% endif %}>
                     Descuento en dinero fijo ($)
                 </option>
             </select>
@@ -184,7 +186,7 @@ Zona-Burger | Nuevo tipo de beneficio
                 maxlength="255"
                 rows="4"
                 placeholder="Describe el tipo de beneficio..."
-            ></textarea>
+            >{{ tipo.descripcion|default:'' }}</textarea>
 
         </div>
 

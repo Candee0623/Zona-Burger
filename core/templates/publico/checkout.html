@@ -416,9 +416,8 @@
 
                             <div class="schedule-info">
                                 <i class="fa-solid fa-circle-info"></i>
-                                <span>
-                                    Ingresá el horario que preferís. Al confirmar el pedido
-                                    verificaremos que esté dentro del horario de atención del local.
+                                <span id="horario-ayuda-texto">
+                                    Dejalo vacío si querés recibirlo lo antes posible.
                                 </span>
                             </div>
                         </div>
@@ -656,6 +655,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 {{ zonas_entrega|json_script:"zonas-data" }}
+{{ entrega|json_script:"entrega-data" }}
+{{ items_json|json_script:"items-data" }}
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -707,7 +708,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const comentarioInput = $('comentario');
     const comentarioContador = $('comentario-contador');
     const comentarioAviso = $('comentario-aviso');
-
+    const horarioInput = $('horario_entrega');
+    const horarioAyudaTexto = $('horario-ayuda-texto');
 
     /* ================================================================
      * 2. ESTADO Y CONSTANTES
@@ -780,6 +782,23 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('No se pudieron cargar las zonas.', error);
     }
 
+        let entrega = { restringido: false, ventanas: [], texto: '', margen: 30 };
+    let itemsActuales = [];
+
+    try {
+        const entregaEl = $('entrega-data');
+        if (entregaEl) entrega = JSON.parse(entregaEl.textContent) || entrega;
+    } catch (error) {
+        console.error('No se pudieron cargar los horarios de entrega.', error);
+    }
+
+    try {
+        const itemsEl = $('items-data');
+        if (itemsEl) itemsActuales = JSON.parse(itemsEl.textContent) || [];
+    } catch (error) {
+        console.error('No se pudieron cargar los productos.', error);
+    }
+
 
     /* ================================================================
      * 3. UTILIDADES
@@ -819,6 +838,32 @@ document.addEventListener('DOMContentLoaded', function () {
             Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function errorHorarioEntrega(valor) {
+        if (!valor || !String(valor).trim()) return '';
+        if (!entrega || !entrega.restringido) return '';
+
+        const partes = String(valor).trim().split(':');
+        if (partes.length < 2) return 'El horario ingresado no es válido.';
+        const horas = parseInt(partes[0], 10);
+        const mins = parseInt(partes[1], 10);
+        if (isNaN(horas) || isNaN(mins)) return 'El horario ingresado no es válido.';
+
+        const minutos = horas * 60 + mins;
+        if (!entrega.ventanas || entrega.ventanas.length === 0) {
+            return 'Hoy ya no hay horarios de entrega disponibles. Dejá el horario vacío para coordinarlo con el local.';
+        }
+
+        const valido = entrega.ventanas.some(function (v) {
+            return (minutos >= v.desde && minutos <= v.hasta) ||
+                   (minutos + 1440 >= v.desde && minutos + 1440 <= v.hasta);
+        });
+
+        if (valido) return '';
+
+        const margenTexto = entrega.margen ? ' Dejamos ' + entrega.margen + ' minutos antes del cierre para llegar a tiempo.' : '';
+        return 'Elegí un horario dentro de: ' + (entrega.texto || '') + ' hs.' + margenTexto;
     }
 
     /* Convierte "1500.00", "1.500,00" o "1,500.00" en número. */
@@ -1528,63 +1573,64 @@ document.addEventListener('DOMContentLoaded', function () {
      * 10. PROMOCIÓN
      * ================================================================ */
 
+        async function aplicarPromocion() {
+
+        const codigo = promoInput.value.trim().toUpperCase();
+
+        // Código vacío: se quita el descuento visual
+        if (!codigo) {
+            descuento = 0;
+            promoStatus.textContent = 'Ingresá una palabra clave.';
+            actualizarTotal();
+            guardarCheckout();
+            return;
+        }
+
+        promoInput.value = codigo;
+        if (promoButton) promoButton.disabled = true;
+        promoStatus.textContent = 'Verificando promoción...';
+
+        try {
+            const csrfToken = form.querySelector('[name="csrfmiddlewaretoken"]').value;
+
+            const respuesta = await fetch("{% url 'aplicar_promocion' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({ codigo_promocion: codigo })
+            });
+
+            if (!respuesta.ok) throw new Error('HTTP ' + respuesta.status);
+
+            const datos = await respuesta.json();
+
+            if (!datos.ok) {
+                descuento = 0;
+                promoStatus.textContent = datos.mensaje || 'La promoción no se puede aplicar.';
+            } else {
+                descuento = parsearMonto(datos.descuento);
+                promoStatus.textContent = datos.mensaje || 'Promoción aplicada correctamente.';
+            }
+
+            actualizarTotal();
+            guardarCheckout();
+
+        } catch (error) {
+            console.error('Error al aplicar promoción:', error);
+            descuento = 0;
+            promoStatus.textContent = 'No se pudo verificar la promoción.';
+            actualizarTotal();
+
+        } finally {
+            if (promoButton) promoButton.disabled = false;
+        }
+    }
+
     if (promoButton && promoInput) {
-
-        promoButton.addEventListener('click', async function () {
-
-            const codigo = promoInput.value.trim().toUpperCase();
-
-            // Código vacío: se quita el descuento visual
-            if (!codigo) {
-                descuento = 0;
-                promoStatus.textContent = 'Ingresá una palabra clave.';
-                actualizarTotal();
-                guardarCheckout();
-                return;
-            }
-
-            promoInput.value = codigo;
-            promoButton.disabled = true;
-            promoStatus.textContent = 'Verificando promoción...';
-
-            try {
-                const csrfToken = form.querySelector('[name="csrfmiddlewaretoken"]').value;
-
-                const respuesta = await fetch("{% url 'aplicar_promocion' %}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                        'X-CSRFToken': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: new URLSearchParams({ codigo_promocion: codigo })
-                });
-
-                if (!respuesta.ok) throw new Error('HTTP ' + respuesta.status);
-
-                const datos = await respuesta.json();
-
-                if (!datos.ok) {
-                    descuento = 0;
-                    promoStatus.textContent = datos.mensaje || 'La promoción no se puede aplicar.';
-                } else {
-                    descuento = parsearMonto(datos.descuento);
-                    promoStatus.textContent = datos.mensaje || 'Promoción aplicada correctamente.';
-                }
-
-                actualizarTotal();
-                guardarCheckout();
-
-            } catch (error) {
-                console.error('Error al aplicar promoción:', error);
-                descuento = 0;
-                promoStatus.textContent = 'No se pudo verificar la promoción.';
-                actualizarTotal();
-
-            } finally {
-                promoButton.disabled = false;
-            }
-        });
+        promoButton.addEventListener('click', aplicarPromocion);
     }
 
 
@@ -1885,6 +1931,16 @@ document.addEventListener('DOMContentLoaded', function () {
             errores.push({ campo: calleInput, mensaje: 'Dirección dentro de la zona de entrega' });
         }
 
+        // Horario de entrega: dentro del horario de atención (con margen antes del cierre)
+        const errorHorario = horarioInput ? errorHorarioEntrega(horarioInput.value) : '';
+        if (errorHorario) {
+            mostrarErrorCampo(horarioInput, errorHorario);
+            errores.push({
+                campo: horarioInput,
+                mensaje: 'Horario de entrega dentro del horario de atención'
+            });
+        }
+        
         // Comentario: no puede superar el máximo permitido
         if (!actualizarContadorComentario()) {
             errores.push({
@@ -2047,6 +2103,13 @@ document.addEventListener('DOMContentLoaded', function () {
             consultarEstadoCheckout();
         }
     });
+
+    // Evitar cambios accidentales con la rueda del mouse en inputs numéricos
+    document.addEventListener('wheel', function (e) {
+        if (document.activeElement && document.activeElement.type === 'number') {
+            document.activeElement.blur();
+        }
+    }, { passive: true });
 
 
     /* ================================================================

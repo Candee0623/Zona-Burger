@@ -331,17 +331,12 @@ document.addEventListener(
             // --------------------------------------------------------
 
             if (
+                document.hidden ||
                 !menuDinamico ||
                 !categoriasDinamicas ||
                 !menuActualizacionesUrl
             ) {
-
-                console.warn(
-                    'No se encontraron los elementos necesarios para actualizar el menú.'
-                );
-
                 return;
-
             }
 
 
@@ -618,12 +613,18 @@ document.addEventListener(
 
 
         // ============================================================
-        // ACTUALIZACIÓN CADA 2 SEGUNDOS
+        // ACTUALIZACIÓN PERIÓDICA (OPTIMIZADA)
         // ============================================================
+
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+                sincronizarMenu();
+            }
+        });
 
         setInterval(
             sincronizarMenu,
-            2000
+            10000
         );
 
     }

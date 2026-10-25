@@ -350,4 +350,16 @@
     .grupo-edit-btn {
         width: 100%;
     }
+
+    /* Fila marcada para eliminar */
+.grupo-edit-table tr:has(.grupo-delete-checkbox:checked) td:not(.grupo-edit-action-cell) {
+    opacity: 0.4;
+    text-decoration: line-through;
+}
+
+.grupo-delete-option input:checked + span {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
 }

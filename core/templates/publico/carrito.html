@@ -787,7 +787,7 @@
 
     {% include 'components/header.html' %}
 
-    <main class="carrito-container">
+        <main class="carrito-container">
 
         <h1>
             Tu Carrito de Compras
@@ -804,13 +804,19 @@
             </div>
         {% endif %}
 
-        <!-- Aviso dinámico: se muestra u oculta según el estado actual. -->
+        <!-- Avisos flotantes (los usa el JS) -->
+        <div
+            id="carrito-avisos"
+            aria-live="polite"
+            style="position: fixed; top: 80px; right: 15px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; max-width: 340px;"
+        ></div>
+
+        <!-- Aviso de negocio cerrado: lo muestra u oculta el JS -->
         <div
             id="aviso-negocio-cerrado"
             style="display: none; align-items: flex-start; gap: 12px; padding: 16px; border-radius: 10px; margin-bottom: 20px; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.45); color: #fca5a5;"
             role="status"
             aria-live="polite"
-            hidden
         >
             <i class="fa-solid fa-clock" style="font-size: 1.2rem; color: #ef4444; margin-top: 2px;"></i>
             <div>
@@ -818,203 +824,28 @@
                     El negocio está cerrado en este momento.
                 </strong>
                 <span style="font-size: 0.84rem; color: #d1d5db;">
-                    Podrás realizar tu pedido cuando vuelva a abrir. Podés mantener tus productos seleccionados en el carrito mientras tanto.
+                    Podrás realizar tu pedido cuando vuelva a abrir. Tus productos se mantienen en el carrito.
                 </span>
             </div>
         </div>
 
-        {% if carrito %}
-
-            <div class="carrito-card">
-
-                {% for item_id, item in carrito.items %}
-
-                    <div class="carrito-item">
-
-                        <div class="carrito-info">
-
-                            <h3>
-                                {{ item.nombre }}
-                            </h3>
-
-                            {% if item.detalles %}
-
-                                <ul class="carrito-detalles-lista">
-
-                                    {% for detalle in item.detalles %}
-
-                                        <li>
-                                            {{ detalle }}
-                                        </li>
-
-                                    {% endfor %}
-
-                                </ul>
-
-                            {% endif %}
-
-                            <div class="carrito-acciones">
-
-                                <div class="cantidad-control">
-
-                                    <a
-                                        href="{% url 'actualizar_cantidad_carrito' item_id 'disminuir' %}"
-                                        class="btn-cant"
-                                        aria-label="Disminuir cantidad"
-                                    >
-                                        -
-                                    </a>
-
-                                    <span class="cantidad-val">
-                                        {{ item.cantidad }}
-                                    </span>
-
-                                    <a
-                                        href="{% url 'actualizar_cantidad_carrito' item_id 'aumentar' %}"
-                                        class="btn-cant"
-                                        aria-label="Aumentar cantidad"
-                                    >
-                                        +
-                                    </a>
-
-                                </div>
-
-                                <a
-                                    href="{% url 'editar_item_carrito' item_id %}"
-                                    class="btn-editar-item"
-                                >
-                                    <i class="fa-solid fa-pen"></i>
-                                    Editar
-                                </a>
-
-                                <a
-                                    href="{% url 'eliminar_del_carrito' item_id %}"
-                                    class="btn-eliminar-item"
-                                >
-                                    <i class="fa-solid fa-trash"></i>
-                                    Eliminar
-                                </a>
-
-                            </div>
-
-                        </div>
-
-                        <div class="carrito-precio-col">
-
-                            <span class="carrito-unitario-ref">
-                                ${{ item.precio_unitario|floatformat:2 }} c/u
-                            </span>
-
-                            <span class="carrito-subtotal-item">
-                                ${{ item.subtotal|floatformat:2 }}
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                {% endfor %}
-
-                <div class="carrito-resumen-totales">
-
-                    <div class="resumen-linea">
-
-                        <span>
-                            Subtotal:
-                        </span>
-
-                        <span>
-                            ${{ total_carrito|floatformat:2 }}
-                        </span>
-
-                    </div>
-
-                    <div class="resumen-linea total-final">
-
-                        <span>
-                            A Pagar:
-                        </span>
-
-                        <span>
-                            ${{ total_carrito|floatformat:2 }}
-                        </span>
-
-                    </div>
-
-                </div>
-
-                <div class="carrito-botones-accion">
-
-                    <a
-                        href="{% url 'menu' %}"
-                        class="btn-seguir"
-                    >
-                        Seguir Comprando
-                    </a>
-
-                    <!-- Un único botón permite actualizar su estado sin recargar. -->
-                    <button
-                        type="button"
-                        id="btn-checkout"
-                        class="btn-checkout"
-                        data-checkout-url="{% url 'procesar_checkout' %}"
-                        {% if not estado_local or not estado_local.abierto %}
-                            disabled
-                            aria-disabled="true"
-                            title="El negocio está cerrado en este momento"
-                            style="background: #2a2a2a; color: #888; border: 1px solid #444; cursor: not-allowed; box-shadow: none;"
-                        {% else %}
-                            aria-disabled="false"
-                        {% endif %}
-                    >
-                        <i
-                            class="fa-solid {% if estado_local and estado_local.abierto %}fa-arrow-right{% else %}fa-lock{% endif %}"
-                            style="margin-right: 8px;"
-                            aria-hidden="true"
-                        ></i>
-
-                        <span data-texto-boton>
-                            {% if estado_local and estado_local.abierto %}
-                                Ir al Checkout
-                            {% else %}
-                                Negocio Cerrado
-                            {% endif %}
-                        </span>
-                    </button>
-
-                </div>
-
-            </div>
-
-        {% else %}
-
-            <div class="carrito-card carrito-vacio">
-
-                <div class="carrito-vacio-icono">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                </div>
-
-                <p>
-                    Tu carrito está vacío.
-                </p>
-
-                <a
-                    href="{% url 'menu' %}"
-                    class="btn-checkout"
-                >
-                    Ver Menú
-                </a>
-
-            </div>
-
-        {% endif %}
+        <!-- El JS dibuja y actualiza el carrito acá adentro -->
+        <div
+            id="carrito-contenido"
+            data-menu-url="{% url 'menu' %}"
+            data-checkout-url="{% url 'procesar_checkout' %}"
+        >
+            <p style="color: #888; text-align: center; padding: 40px 0;">
+                Cargando carrito…
+            </p>
+        </div>
 
     </main>
 
     {% include 'components/footer.html' %}
 
     <script src="{% static 'java/header.js' %}" defer></script>
-    <script src="{% static 'java/carrito.js' %}" defer></script>
+    <script src="{% static 'java/carrito.js' %}?v=3" defer></script>
 
 </body>
 </html>

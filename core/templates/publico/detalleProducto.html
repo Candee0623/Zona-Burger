@@ -28,20 +28,24 @@
     </div>
 
     <div class="producto-card">
-        {% if producto.imagen %}
-            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="detalle-imagen">
-        {% else %}
-            <div class="producto-imagen-placeholder">🍔</div>
-        {% endif %}
 
-        <h2 class="detalle-titulo">{{ producto.nombre }}</h2>
+        {# ===== Info del producto (se refresca en vivo) ===== #}
+        <div id="producto-info">
+            {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="detalle-imagen">
+            {% else %}
+                <div class="producto-imagen-placeholder">🍔</div>
+            {% endif %}
 
-        {% if producto.descripcion %}
-            <p class="detalle-descripcion">{{ producto.descripcion }}</p>
-        {% endif %}
+            <h2 class="detalle-titulo">{{ producto.nombre }}</h2>
 
-        <div class="detalle-precio-base" data-precio-base="{{ producto.precio|unlocalize }}">
-            $<span id="base-val">{{ producto.precio }}</span>
+            {% if producto.descripcion %}
+                <p class="detalle-descripcion">{{ producto.descripcion }}</p>
+            {% endif %}
+
+            <div class="detalle-precio-base" data-precio-base="{{ producto.precio|unlocalize }}">
+                $<span id="base-val">{{ producto.precio }}</span>
+            </div>
         </div>
 
         <hr class="detalle-divider">
@@ -57,24 +61,21 @@
             </div>
         {% endif %}
 
-        {% if estado_local and not estado_local.abierto %}
-            <div
-                id="aviso-negocio-cerrado"
-                role="status"
-                aria-live="polite"
-                style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:10px;margin-bottom:20px;background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.45);color:#fca5a5;"
-            >
-                <i class="fa-solid fa-clock" style="font-size:1.15rem;color:#ef4444;margin-top:2px;"></i>
-                <div>
-                    <strong style="display:block;font-size:.9rem;color:#fff;margin-bottom:3px;">
-                        En este momento el negocio está cerrado.
-                    </strong>
-                    <span style="font-size:.82rem;color:#d1d5db;">
-                        No es posible agregar productos al carrito. Podrás realizar tu pedido cuando vuelva a abrir.
-                    </span>
-                </div>
+        {# Siempre presente; el JS lo muestra/oculta con el atributo hidden #}
+        <div
+            id="aviso-negocio-cerrado"
+            class="aviso-cerrado"
+            role="status"
+            aria-live="polite"
+            {% if not estado_local or estado_local.abierto %}hidden{% endif %}
+        >
+            <div class="aviso-cerrado__icono"><i class="fa-solid fa-store-slash"></i></div>
+            <div class="aviso-cerrado__texto">
+                <span class="aviso-cerrado__pill">Cerrado</span>
+                <strong>En este momento el negocio está cerrado</strong>
+                <p>No es posible agregar productos al carrito. Podrás hacer tu pedido cuando vuelva a abrir.</p>
             </div>
-        {% endif %}
+        </div>
 
         <form
             id="form-personalizar"
@@ -82,6 +83,7 @@
             action="{% url 'agregar_al_carrito' producto.idproducto %}"
             data-producto-id="{{ producto.idproducto }}"
             data-edit-id="{{ edit_item_id|default:'' }}"
+            data-abierto="{% if estado_local and not estado_local.abierto %}0{% else %}1{% endif %}"
         >
             {% csrf_token %}
 
@@ -89,128 +91,153 @@
                 <input type="hidden" name="edit_id" value="{{ edit_item_id }}">
             {% endif %}
 
-            {% for item in grupos_opciones %}
-                {% with grupo=item.grupo %}
-                    <div
-                        class="grupo-opcion-seccion"
-                        data-min="{{ grupo.minselecciones|default:0 }}"
-                        data-max="{{ grupo.maxselecciones|default:0 }}"
-                        data-nombre="{{ grupo.nombre }}"
-                    >
-                        <h3 class="grupo-titulo">{{ grupo.nombre }}</h3>
+            {# ===== Opciones (se refrescan en vivo conservando lo que el cliente eligió) ===== #}
+            <div id="opciones-dinamicas">
 
-                        {% if grupo.minselecciones > 0 %}
-                            <p class="grupo-estado grupo-obligatorio">
-                                <i class="fa-solid fa-circle-exclamation"></i>
-                                Obligatorio: seleccioná al menos {{ grupo.minselecciones }}
-                                {% if grupo.minselecciones == 1 %}opción{% else %}opciones{% endif %}
-                            </p>
-                        {% else %}
-                            <p class="grupo-estado">(Opcional)</p>
-                        {% endif %}
+                {% for item in grupos_opciones %}
+                    {% with grupo=item.grupo %}
+                        <div
+                            class="grupo-opcion-seccion"
+                            data-min="{{ grupo.minselecciones|default:0 }}"
+                            data-max="{{ grupo.maxselecciones|default:0 }}"
+                            data-nombre="{{ grupo.nombre }}"
+                        >
+                            <h3 class="grupo-titulo">
+                                {{ grupo.nombre }}
+                                {% if grupo.maxselecciones > 0 %}<span class="grupo-contador" data-contador></span>{% endif %}
+                            </h3>
+
+                            {% if grupo.minselecciones > 0 %}
+                                <p class="grupo-estado grupo-obligatorio">
+                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                    Obligatorio: seleccioná al menos {{ grupo.minselecciones }}
+                                    {% if grupo.minselecciones == 1 %}opción{% else %}opciones{% endif %}
+                                    {% if grupo.maxselecciones > 0 %}(máximo {{ grupo.maxselecciones }}){% endif %}
+                                </p>
+                            {% else %}
+                                <p class="grupo-estado">
+                                    (Opcional{% if grupo.maxselecciones > 0 %} · máximo {{ grupo.maxselecciones }}{% endif %})
+                                </p>
+                            {% endif %}
+
+                            <div class="opciones-lista">
+                                {% for opcion in item.opciones %}
+                                    <div class="opcion-item">
+                                        <label class="opcion-label">
+                                            <input
+                                                type="checkbox"
+                                                name="grupo_{{ grupo.idgrupo }}"
+                                                value="{{ opcion.idopcion }}"
+                                                data-precio="{{ opcion.precioadicional|default:0|unlocalize }}"
+                                                class="opcion-input"
+                                                {% if item_editando and opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}checked{% endif %}
+                                            >
+                                            <span class="opcion-nombre">{{ opcion.nombre }}</span>
+                                        </label>
+
+                                        {% if opcion.precioadicional > 0 %}
+                                            <span class="opcion-precio-extra">+${{ opcion.precioadicional }}</span>
+                                        {% endif %}
+                                    </div>
+                                {% empty %}
+                                    <p class="grupo-estado">No hay opciones disponibles.</p>
+                                {% endfor %}
+                            </div>
+
+                            {% if grupo.minselecciones > 0 %}
+                                <div class="mensaje-validacion-grupo" role="alert">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    Este grupo es obligatorio: tenés que seleccionar al menos
+                                    {{ grupo.minselecciones }}
+                                    {% if grupo.minselecciones == 1 %}opción{% else %}opciones{% endif %}
+                                    para continuar.
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+                {% empty %}
+                    <p class="grupo-estado">Este producto no tiene opciones de personalización.</p>
+                {% endfor %}
+
+                {% if insumos_removibles %}
+                    <div class="grupo-opcion-seccion">
+                        <h3 class="grupo-titulo">Quitar ingredientes</h3>
+                        <p class="grupo-estado">(Opcional)</p>
 
                         <div class="opciones-lista">
-                            {% for opcion in item.opciones %}
+                            {% for item in insumos_removibles %}
                                 <div class="opcion-item">
                                     <label class="opcion-label">
                                         <input
                                             type="checkbox"
-                                            name="grupo_{{ grupo.idgrupo }}"
-                                            value="{{ opcion.idopcion }}"
-                                            data-precio="{{ opcion.precioadicional|default:0|unlocalize }}"
+                                            name="sin_insumo_{{ item.idinsumo.idinsumo }}"
+                                            value="{{ item.idinsumo.idinsumo }}"
                                             class="opcion-input"
-                                            {% if item_editando and opcion.idopcion|stringformat:"s" in item_editando.opciones_ids %}checked{% endif %}
+                                            {% if item_editando and item.idinsumo.idinsumo|stringformat:"s" in item_editando.insumos_quitados_ids %}checked{% endif %}
                                         >
-                                        <span>{{ opcion.nombre }}</span>
+                                        <span class="opcion-nombre">Sin {{ item.idinsumo.nombreinsumo }}</span>
                                     </label>
-
-                                    {% if opcion.precioadicional > 0 %}
-                                        <span class="opcion-precio-extra">+${{ opcion.precioadicional }}</span>
-                                    {% endif %}
                                 </div>
-                            {% empty %}
-                                <p class="grupo-estado">No hay opciones disponibles.</p>
                             {% endfor %}
                         </div>
-
-                        {% if grupo.minselecciones > 0 %}
-                            <div class="mensaje-validacion-grupo" role="alert">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                                Este grupo es obligatorio: tenés que seleccionar al menos
-                                {{ grupo.minselecciones }}
-                                {% if grupo.minselecciones == 1 %}opción{% else %}opciones{% endif %}
-                                para continuar.
-                            </div>
-                        {% endif %}
                     </div>
-                {% endwith %}
-            {% empty %}
-                <p class="grupo-estado">Este producto no tiene opciones de personalización.</p>
-            {% endfor %}
+                {% endif %}
 
-            {% if insumos_removibles %}
-                <div class="grupo-opcion-seccion">
-                    <h3 class="grupo-titulo">Quitar ingredientes</h3>
-                    <p class="grupo-estado">(Opcional)</p>
+                {% if extras_producto %}
+                    <div class="grupo-opcion-seccion">
+                        <h3 class="grupo-titulo">Agregá Extras</h3>
+                        <p class="grupo-estado">(Opcional)</p>
 
-                    <div class="opciones-lista">
-                        {% for item in insumos_removibles %}
-                            <div class="opcion-item">
-                                <label class="opcion-label">
-                                    <input
-                                        type="checkbox"
-                                        name="sin_insumo_{{ item.idinsumo.idinsumo }}"
-                                        value="{{ item.idinsumo.idinsumo }}"
-                                        class="opcion-input"
-                                        {% if item_editando and item.idinsumo.idinsumo|stringformat:"s" in item_editando.insumos_quitados_ids %}checked{% endif %}
-                                    >
-                                    <span>Sin {{ item.idinsumo.nombreinsumo }}</span>
-                                </label>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endif %}
+                        <div class="opciones-lista">
+                            {% for item in extras_producto %}{% with extra=item.extra %}
+                                {% firstof extra.nombre extra.nombreextra extra.descripcion extra as nombre_extra %}
+                                <div class="opcion-item zx-fila">
+                                    <label class="zx-nombre-wrap">
+                                        <input
+                                            type="checkbox"
+                                            name="extra_{{ extra.idextra }}"
+                                            value="{{ extra.idextra }}"
+                                            data-precio="{{ extra.precio|unlocalize }}"
+                                            data-extra
+                                            class="opcion-input"
+                                            {% if item.seleccionado or item_editando and extra.idextra|stringformat:"s" in item_editando.extras_ids %}checked{% endif %}
+                                        >
+                                        <span class="zx-nombre">{{ nombre_extra }}</span>
+                                    </label>
 
-            {% if extras_producto %}
-                <div class="grupo-opcion-seccion">
-                    <h3 class="grupo-titulo">Agregá Extras</h3>
-                    <p class="grupo-estado">(Opcional)</p>
+                                    <span class="zx-precio">+${{ extra.precio }}</span>
 
-                    <div class="opciones-lista">
-                        {% for extra in extras_producto %}
-                            <div class="opcion-item">
-                                <label class="opcion-label">
-                                    <input
-                                        type="checkbox"
-                                        name="extra_{{ extra.idextra }}"
-                                        value="{{ extra.idextra }}"
-                                        data-precio="{{ extra.precio|unlocalize }}"
-                                        class="opcion-input extra-checkbox"
-                                        {% if item_editando and extra.idextra|stringformat:"s" in item_editando.extras_ids %}checked{% endif %}
-                                    >
-                                    <span>{{ extra.nombre }}</span>
-                                </label>
-
-                                <span class="opcion-precio-extra">+${{ extra.precio }}</span>
-
-                                <div class="cantidad-container">
-                                    <label class="cantidad-label" for="cantidad-extra-{{ extra.idextra }}">Cant:</label>
-                                    <input
-                                        id="cantidad-extra-{{ extra.idextra }}"
-                                        type="number"
-                                        name="cantidad_extra_{{ extra.idextra }}"
-                                        value="1"
-                                        min="1"
-                                        max="5"
-                                        class="cantidad-extra"
-                                    >
+                                    <div class="zx-cantidad">
+                                        <span class="zx-cantidad-txt">Cant:</span>
+                                        <div class="zx-stepper" data-stepper>
+                                            <button type="button" class="zx-btn" data-accion="restar"
+                                                    aria-label="Quitar una unidad de {{ nombre_extra }}">
+                                                <i class="fa-solid fa-minus"></i>
+                                            </button>
+                                            <input
+                                                type="text"
+                                                inputmode="numeric"
+                                                readonly
+                                                tabindex="-1"
+                                                name="cantidad_extra_{{ extra.idextra }}"
+                                                value="{{ item.cantidad|default:1 }}"
+                                                class="zx-num"
+                                                data-cantidad
+                                                aria-label="Cantidad de {{ nombre_extra }}"
+                                            >
+                                            <button type="button" class="zx-btn" data-accion="sumar"
+                                                    aria-label="Agregar una unidad de {{ nombre_extra }}">
+                                                <i class="fa-solid fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        {% endfor %}
+                            {% endwith %}{% endfor %}
+                        </div>
                     </div>
-                </div>
-            {% endif %}
+                {% endif %}
+
+            </div>
 
             <div class="resumen-total-box">
                 <span>Total del producto:</span>
@@ -218,20 +245,15 @@
             </div>
 
             {% if estado_local and not estado_local.abierto %}
-                <button
-                    type="button"
-                    class="btn-confirmar-pedido"
-                    style="background:#2a2a2a;color:#888;border:1px solid #444;cursor:not-allowed;box-shadow:none;"
-                    disabled
-                    title="En este momento el negocio está cerrado"
-                >
+                <button type="button" class="btn-confirmar-pedido cerrado" id="btn-confirmar-pedido"
+                        disabled title="En este momento el negocio está cerrado">
                     <i class="fa-solid fa-lock"></i>
-                    Negocio Cerrado
+                    <span data-texto-boton>Negocio Cerrado</span>
                 </button>
             {% else %}
                 <button type="submit" class="btn-confirmar-pedido" id="btn-confirmar-pedido">
                     <i class="fa-solid fa-cart-shopping"></i>
-                    {% if edit_item_id %}Guardar Cambios{% else %}Añadir al Pedido{% endif %}
+                    <span data-texto-boton>{% if edit_item_id %}Guardar Cambios{% else %}Añadir al Pedido{% endif %}</span>
                 </button>
             {% endif %}
         </form>

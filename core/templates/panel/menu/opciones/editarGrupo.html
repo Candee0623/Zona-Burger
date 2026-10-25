@@ -1,5 +1,6 @@
 {% extends 'panel/base.html' %}
 {% load static %}
+{% load l10n %}
 
 {% block title %}Zona-Burger | Editar grupo de opciones{% endblock %}
 
@@ -174,7 +175,7 @@
                                                 step="0.01"
                                                 name="opcion_precio[]"
                                                 class="grupo-edit-input"
-                                                value="{{ opcion.precioadicional|default:0 }}"
+                                                value="{{ opcion.precioadicional|default:0|unlocalize }}"
                                             >
                                         </td>
 
@@ -199,7 +200,7 @@
                                                 min="0.01"
                                                 name="opcion_cantidad_insumo[]"
                                                 class="grupo-edit-input"
-                                                value="{{ opcion.cantidad_insumo|default:'1.00' }}"
+                                                value="{{ opcion.cantidad_insumo|default:'1.00'|unlocalize }}"
                                             >
                                         </td>
 

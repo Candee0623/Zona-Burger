@@ -307,6 +307,60 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* ========================================
+       PREVENCIÓN DE CAMBIOS CON RUEDA DEL MOUSE
+       EN CAMPOS NUMÉRICOS
+    ======================================== */
+    document.addEventListener("wheel", function (event) {
+        if (document.activeElement && document.activeElement.type === "number") {
+            document.activeElement.blur();
+        }
+    }, { passive: true });
+
+    document.querySelectorAll('input[type="number"]').forEach(function (input) {
+        input.addEventListener("wheel", function (e) {
+            e.preventDefault();
+        }, { passive: false });
+    });
+
+
+    /* ========================================
+       PREVENCIÓN DE DOBLE ENVÍO EN FORMULARIOS
+       (Evita ventas y movimientos duplicados)
+    ======================================== */
+    document.addEventListener("submit", function (event) {
+        const form = event.target;
+        if (!form || form.tagName !== "FORM") return;
+
+        if (form.dataset.enviando === "true") {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        }
+
+        form.dataset.enviando = "true";
+
+        const botonSubmit = event.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+        if (botonSubmit) {
+            // Se deshabilita después de armar los datos del formulario;
+            // si no, un botón con name/value (ej. accion=abrir) no se envía.
+            setTimeout(function () {
+                botonSubmit.disabled = true;
+                botonSubmit.classList.add("btn-deshabilitado-enviando");
+            }, 0);
+        }
+
+        // Liberar bloqueo tras 8 segundos por seguridad en caso de fallos de red
+        setTimeout(function () {
+            form.dataset.enviando = "false";
+            if (botonSubmit) {
+                botonSubmit.disabled = false;
+                botonSubmit.classList.remove("btn-deshabilitado-enviando");
+            }
+        }, 8000);
+    });
+
+
+    /* ========================================
        ESTADO INICIAL DEL BOTÓN
     ======================================== */
 

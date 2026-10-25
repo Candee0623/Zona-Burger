@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
@@ -51,6 +52,7 @@
 
         <div class="hero-status" id="hero-status-box">
             <span class="hero-status-dot {% if estado_local.abierto %}dot-abierto{% else %}dot-cerrado{% endif %}" id="hero-status-dot"></span>
+
             <span id="hero-status-texto">
                 {% if estado_local %}
                     {{ estado_local.mensaje }}
@@ -61,6 +63,7 @@
                 {% endif %}
             </span>
         </div>
+
     </div>
 </section>
 
@@ -145,13 +148,14 @@
 </section>
 
 <!-- PROMOCIONES -->
-{% if promociones_activas %}
+<!-- La sección siempre existe para poder incorporar promociones nuevas -->
 <section class="promotions-section" id="promociones">
     <div class="container">
 
         <div class="promotions-header">
             <div>
                 <div class="section-label">Aprovechá hoy</div>
+
                 <h2 class="promotion-heading">
                     <i class="fa-solid fa-fire"></i>
                     Promociones
@@ -164,7 +168,9 @@
             </p>
         </div>
 
-        <div class="promotion-grid">
+        <!-- IMPORTANTE: este ID lo utiliza index.js -->
+        <div class="promotion-grid" id="index-promociones">
+
             {% for promo in promociones_activas %}
             <article class="promotion-card" data-promo-id="{{ promo.pk }}">
 
@@ -209,11 +215,15 @@
                 </div>
 
             </article>
+            {% empty %}
+            <p class="promotion-empty-initial">
+                No hay promociones activas en este momento.
+            </p>
             {% endfor %}
+
         </div>
     </div>
 </section>
-{% endif %}
 
 <!-- INFORMACIÓN DEL LOCAL -->
 <section class="info-section" id="info">
@@ -247,6 +257,7 @@
                     {% for h in horarios %}
                     <li>
                         <span>{{ h.diasemana }}</span>
+
                         <span class="info-value">
                             {{ h.horaapertura|time:"H:i" }}
                             -
@@ -261,7 +272,7 @@
                 </ul>
             </div>
 
-            <!-- ZONAS -->
+            <!-- ZONAS DE ENTREGA -->
             <div class="info-card">
                 <div class="info-card-header">
                     <div class="info-card-icon">
@@ -274,6 +285,7 @@
                     {% for zona in zonas %}
                     <li>
                         <span>{{ zona.nombre }}</span>
+
                         <span class="info-value">
                             {% if zona.costoenvio == 0 %}
                                 GRATIS
@@ -299,6 +311,7 @@
     {% include 'components/footer.html' %}
 </div>
 
+<!-- ESTILOS DEL ESTADO DEL NEGOCIO -->
 <style>
     .hero-kicker.abierto {
         background: rgba(40, 216, 5, .16) !important;
@@ -346,6 +359,7 @@
     }
 </style>
 
+<!-- JavaScript de actualización automática -->
 <script src="{% static 'java/index.js' %}" defer></script>
 
 </body>

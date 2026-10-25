@@ -95,7 +95,7 @@
                                     Venció: {{ lote.fechavencimiento|date:"d/m/Y" }}
                                 </span>
                                 <span>
-                                    Disponible: {{ lote.cantidadactual|floatformat:2 }}
+                                    Disponible: {{ lote.cantidadactual|floatformat:"-2" }}
                                     {{ lote.idinsumo.unidadmedidaingreso }}
                                 </span>
                             </li>
@@ -126,7 +126,7 @@
                                     Vence: {{ lote.fechavencimiento|date:"d/m/Y" }}
                                 </span>
                                 <span>
-                                    Disponible: {{ lote.cantidadactual|floatformat:2 }}
+                                    Disponible: {{ lote.cantidadactual|floatformat:"-2" }}
                                     {{ lote.idinsumo.unidadmedidaingreso }}
                                 </span>
                             </li>
@@ -151,11 +151,11 @@
                             <li>
                                 <strong>{{ insumo.nombreinsumo }}</strong>
                                 <span>
-                                    Actual: {{ insumo.stockactual|floatformat:2 }}
+                                    Actual: {{ insumo.stockactual|floatformat:"-2" }}
                                     {{ insumo.unidadmedidaingreso }}
                                 </span>
                                 <span>
-                                    Mínimo: {{ insumo.stockminimo|floatformat:2 }}
+                                    Mínimo: {{ insumo.stockminimo|floatformat:"-2" }}
                                     {{ insumo.unidadmedidaingreso }}
                                 </span>
                                 <a
@@ -285,12 +285,12 @@
                                 </td>
 
                                 <td class="number-cell">
-                                    {{ insumo.stockactual|floatformat:2 }}
+                                    {{ insumo.stockactual|floatformat:"-2" }}
                                     {{ insumo.unidadmedidaingreso }}
                                 </td>
 
                                 <td>
-                                    {{ insumo.stockminimo|floatformat:2 }}
+                                    {{ insumo.stockminimo|floatformat:"-2" }}
                                     {{ insumo.unidadmedidaingreso }}
                                 </td>
 
@@ -407,12 +407,12 @@
                                 </td>
 
                                 <td>
-                                    {{ lote.cantidadinicial|floatformat:2 }}
+                                    {{ lote.cantidadinicial|floatformat:"-2" }}
                                     {{ lote.idinsumo.unidadmedidaingreso }}
                                 </td>
 
                                 <td class="number-cell">
-                                    {{ lote.cantidadactual|floatformat:2 }}
+                                    {{ lote.cantidadactual|floatformat:"-2" }}
                                     {{ lote.idinsumo.unidadmedidaingreso }}
                                 </td>
 
@@ -515,7 +515,7 @@
                                 <td>
                                     {% for detalle in compra.detallecompra_set.all %}
                                         <div class="purchase-item">
-                                            {{ detalle.cantidad|floatformat:2 }}
+                                            {{ detalle.cantidad|floatformat:"-2" }}
                                             {% if detalle.idinsumo %}
                                                 {{ detalle.idinsumo.unidadmedidaingreso }}
                                             {% endif %}

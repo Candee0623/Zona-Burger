@@ -20,6 +20,8 @@ urlpatterns = [
     # API en tiempo real
     path('api/negocio/estado/', views.api_estado_negocio, name='api_estado_negocio'),
     path('api/detectar-zona/', views.api_detectar_zona, name='api_detectar_zona'),
+    path('api/carrito/estado/', views.api_carrito_estado, name='api_carrito_estado'),
+    path('api/carrito/accion/', views.api_carrito_accion, name='api_carrito_accion'),
 
     # Vistas Públicas / Tienda
     path('', views.index, name='index'),
