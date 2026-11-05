@@ -1,9 +1,11 @@
 from decimal import Decimal
-from django.test import TestCase
+from django.contrib.auth.hashers import make_password
+from django.test import Client, TestCase
+from django.urls import reverse
 from .models import (
     Insumo, Producto, CategoriaProducto, EstadoStock, EstadoProducto,
     GrupoOpcion, Opcion, Receta, RecetaInsumo, Cliente, MedioPago,
-    EstadoPedido, Pedido, DetallePedido, MovimientoStock
+    EstadoPedido, Pedido, DetallePedido, MovimientoStock, Rol, Empleado
 )
 from .stock_service import (
     calcular_consumo_carrito,
@@ -370,3 +372,50 @@ class StockOpcionesTestCase(TestCase):
         self.assertEqual(self.insumo_sprite.stockactual, Decimal('20.00'))
         self.assertEqual(self.insumo_cocacola.stockactual, Decimal('20.00'))
         self.assertEqual(self.insumo_fanta.stockactual, Decimal('20.00'))
+
+
+class TogglePagadoSeguridadTestCase(TestCase):
+    def setUp(self):
+        self.rol_admin = Rol.objects.create(nombrerol='Administrador')
+        self.empleado = Empleado.objects.create(
+            nombre='Admin',
+            apellido='Test',
+            correo='admin@zonaburger.com',
+            contrasena=make_password('Password123!'),
+            activo=True,
+            idrol=self.rol_admin,
+        )
+        self.estado_pedido = EstadoPedido.objects.create(descripcion='Pendiente')
+        self.cliente = Cliente.objects.create(nombre='Juan', apellido='Perez', telefono='12345678')
+        self.medio_pago = MedioPago.objects.create(nombremetodo='Efectivo')
+        self.pedido = Pedido.objects.create(
+            idcliente=self.cliente,
+            idestadopedido=self.estado_pedido,
+            idmediopago=self.medio_pago,
+            total=Decimal('1000.00'),
+            pagado=False,
+        )
+        self.url = reverse('toggle_pagado', kwargs={'idpedido': self.pedido.idpedido})
+
+    def test_get_retorna_405_y_no_cambia_pagado(self):
+        self.client.force_login(self.empleado)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 405)
+        self.pedido.refresh_from_db()
+        self.assertFalse(self.pedido.pagado)
+
+    def test_post_con_permisos_conmuta_pagado(self):
+        self.client.force_login(self.empleado)
+        response = self.client.post(self.url)
+        self.assertIn(response.status_code, [200, 302])
+        self.pedido.refresh_from_db()
+        self.assertTrue(self.pedido.pagado)
+
+    def test_post_sin_csrf_retorna_403_y_no_cambia_pagado(self):
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.empleado)
+        response = csrf_client.post(self.url)
+        self.assertEqual(response.status_code, 403)
+        self.pedido.refresh_from_db()
+        self.assertFalse(self.pedido.pagado)
+

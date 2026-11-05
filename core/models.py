@@ -1,10 +1,13 @@
 from decimal import Decimal
 from django.db import models
+from django.utils import timezone
 from PIL import Image
 import os
 from django.core.files.base import ContentFile
 import io
 from django_ckeditor_5.fields import CKEditor5Field
+
+from .unidades import factor_conversion, mismas_unidades
 
 
 class Rol(models.Model):
@@ -393,9 +396,43 @@ class Insumo(models.Model):
     nombreinsumo = models.CharField(db_column='NombreInsumo', max_length=100)
     unidadmedidaingreso = models.CharField(db_column='UnidadMedidaIngreso', max_length=30)
     unidadmedidaegreso = models.CharField(db_column='UnidadMedidaEgreso', max_length=30)
-    stockactual = models.DecimalField(db_column='StockActual', max_digits=10, decimal_places=2, default=0.00)
-    stockminimo = models.DecimalField(max_digits=10, decimal_places=2, default=5.00)
+    # El stock se guarda SIEMPRE en la unidad de ingreso (ej. kg). Se usan 4 decimales
+    # para no perder precisión al descontar cantidades chicas (ej. 5 g = 0,005 kg).
+    stockactual = models.DecimalField(db_column='StockActual', max_digits=14, decimal_places=4, default=0)
+    stockminimo = models.DecimalField(max_digits=14, decimal_places=4, default=5)
     descontar_stock_automaticamente = models.BooleanField(db_column='DescontarStockAutomaticamente', default=False)
+    # Cuántas unidades de egreso trae 1 unidad de ingreso (ej. 1 bolsa = 12 unidades).
+    # Solo es obligatorio cuando las unidades no se pueden convertir solas (kg <-> g sí se pueden).
+    equivalencia_egreso = models.DecimalField(
+        db_column='EquivalenciaEgreso', max_digits=14, decimal_places=4, null=True, blank=True
+    )
+
+    def factor_a_stock(self, unidad_origen=None):
+        """
+        Cuántas unidades de stock (unidad de ingreso) equivalen a 1 unidad de `unidad_origen`
+        (por defecto, la unidad de egreso). Devuelve None si no se puede convertir.
+        """
+        origen = unidad_origen or self.unidadmedidaegreso
+
+        if mismas_unidades(origen, self.unidadmedidaegreso):
+            if self.equivalencia_egreso and self.equivalencia_egreso > 0:
+                return Decimal('1') / self.equivalencia_egreso
+            return factor_conversion(self.unidadmedidaegreso, self.unidadmedidaingreso)
+
+        # La receta quedó guardada en otra unidad distinta a la de egreso actual.
+        directo = factor_conversion(origen, self.unidadmedidaingreso)
+        if directo is not None and not (self.equivalencia_egreso and self.equivalencia_egreso > 0):
+            return directo
+
+        a_egreso = factor_conversion(origen, self.unidadmedidaegreso)
+        egreso_a_stock = self.factor_a_stock(None)
+        if a_egreso is None or egreso_a_stock is None:
+            return None
+        return a_egreso * egreso_a_stock
+
+    @property
+    def conversion_valida(self):
+        return self.factor_a_stock() is not None
 
     def save(self, *args, **kwargs):
         es_nuevo = self.pk is None
@@ -416,8 +453,8 @@ class Insumo(models.Model):
 class AjusteStock(models.Model):
     idajuste = models.AutoField(db_column='IdAjuste', primary_key=True)
     idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo')
-    cantidadanterior = models.DecimalField(db_column='CantidadAnterior', max_digits=10, decimal_places=2)
-    cantidadnueva = models.DecimalField(db_column='CantidadNueva', max_digits=10, decimal_places=2)
+    cantidadanterior = models.DecimalField(db_column='CantidadAnterior', max_digits=14, decimal_places=4)
+    cantidadnueva = models.DecimalField(db_column='CantidadNueva', max_digits=14, decimal_places=4)
     motivo = models.CharField(db_column='Motivo', max_length=250)
     fecha = models.DateTimeField(db_column='Fecha', auto_now_add=True)
 
@@ -443,8 +480,18 @@ class Lote(models.Model):
     idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo')
     fechaingreso = models.DateTimeField(db_column='FechaIngreso')
     fechavencimiento = models.DateField(db_column='FechaVencimiento', blank=True, null=True)
-    cantidadinicial = models.DecimalField(db_column='CantidadInicial', max_digits=10, decimal_places=2)
-    cantidadactual = models.DecimalField(db_column='CantidadActual', max_digits=10, decimal_places=2, default=0)
+    cantidadinicial = models.DecimalField(db_column='CantidadInicial', max_digits=14, decimal_places=4)
+    cantidadactual = models.DecimalField(db_column='CantidadActual', max_digits=14, decimal_places=4, default=0)
+
+    @property
+    def esta_vencido(self):
+        return bool(self.fechavencimiento and self.fechavencimiento < timezone.localdate())
+
+    @property
+    def dias_para_vencer(self):
+        if not self.fechavencimiento:
+            return None
+        return (self.fechavencimiento - timezone.localdate()).days
 
     def save(self, *args, **kwargs):
         es_nuevo = self.pk is None
@@ -571,6 +618,20 @@ class DetallePedido(models.Model):
     cantidad = models.IntegerField(db_column='Cantidad')
     preciounitario = models.DecimalField(db_column='PrecioUnitario', max_digits=10, decimal_places=2)
     observaciones = models.CharField(db_column='Observaciones', max_length=255, blank=True, null=True)
+    # Copia del nombre del producto al momento de la venta: permite borrar el producto
+    # de verdad sin perder el historial de pedidos.
+    nombreproducto = models.CharField(db_column='NombreProducto', max_length=100, blank=True, null=True)
+
+    @property
+    def nombre_mostrado(self):
+        if self.idproducto_id and self.idproducto:
+            return self.idproducto.nombre
+        return self.nombreproducto or 'Producto eliminado'
+
+    def save(self, *args, **kwargs):
+        if self.idproducto_id and not self.nombreproducto:
+            self.nombreproducto = (self.idproducto.nombre or '')[:100]
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = 'DetallePedido'
@@ -584,7 +645,8 @@ class MovimientoStock(models.Model):
 
     idmovimiento = models.AutoField(db_column='IdMovimiento', primary_key=True)
     idinsumo = models.ForeignKey(Insumo, models.DO_NOTHING, db_column='IdInsumo', related_name='movimientos')
-    cantidad = models.DecimalField(db_column='Cantidad', max_digits=10, decimal_places=2)
+    cantidad = models.DecimalField(db_column='Cantidad', max_digits=14, decimal_places=4)
+    idlote = models.ForeignKey(Lote, models.SET_NULL, db_column='IdLote', blank=True, null=True, related_name='movimientos')
     idpedido = models.ForeignKey(Pedido, models.DO_NOTHING, db_column='IdPedido', blank=True, null=True, related_name='movimientos_stock')
     fecha = models.DateTimeField(db_column='Fecha', auto_now_add=True)
     tipomovimiento = models.CharField(db_column='TipoMovimiento', max_length=50)

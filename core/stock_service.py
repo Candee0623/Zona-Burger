@@ -1,11 +1,55 @@
 import logging
-from decimal import Decimal
+from datetime import date
+from decimal import Decimal, ROUND_HALF_UP
+
 from django.db import transaction
+from django.utils import timezone
+
 from .models import (
-    Insumo, Opcion, RecetaInsumo, Pedido, DetallePedido, MovimientoStock
+    AjusteStock, Insumo, Lote, Opcion, RecetaInsumo, Pedido, DetallePedido,
+    MovimientoStock,
 )
 
 logger = logging.getLogger(__name__)
+
+
+CUATRO_DECIMALES = Decimal('0.0001')
+
+TIPO_CARGA_INICIAL = 'CARGA_INICIAL'
+TIPO_BAJA_LOTE = 'BAJA_LOTE'
+
+
+def _a_decimales_stock(cantidad):
+    """Redondea a los 4 decimales que guarda la base para el stock."""
+    return Decimal(cantidad).quantize(CUATRO_DECIMALES, rounding=ROUND_HALF_UP)
+
+
+def _unidad_stock(insumo):
+    return insumo.unidadmedidaingreso or ''
+
+
+def cantidad_a_unidad_stock(insumo, cantidad, unidad_origen=None):
+    """
+    Convierte `cantidad` (expresada en `unidad_origen`, por defecto la unidad de egreso
+    del insumo) a la unidad en la que se guarda el stock (unidad de ingreso).
+    Ej.: 150 g de un insumo que se compra en kg -> 0,15 kg.
+    Si las unidades no son convertibles y no hay equivalencia cargada se deja la
+    cantidad tal cual y se avisa en el log (comportamiento anterior).
+    """
+    factor = insumo.factor_a_stock(unidad_origen)
+
+    if factor is None:
+        logger.warning(
+            "No se pueden convertir '%s' a '%s' para el insumo '%s' (ID %s). "
+            "Cargá la equivalencia en el insumo.",
+            unidad_origen or insumo.unidadmedidaegreso,
+            insumo.unidadmedidaingreso,
+            insumo.nombreinsumo,
+            insumo.pk,
+        )
+        factor = Decimal('1')
+
+    return Decimal(cantidad) * factor
 
 
 class StockInsuficienteError(Exception):
@@ -16,8 +60,15 @@ class StockInsuficienteError(Exception):
         self.necesario = necesario
         super().__init__(
             f"Stock insuficiente de {insumo.nombreinsumo}. "
-            f"Disponible: {disponible}. Necesario: {necesario}."
+            f"Disponible: {_fmt(disponible)} {_unidad_stock(insumo)}. "
+            f"Necesario: {_fmt(necesario)} {_unidad_stock(insumo)}."
         )
+
+
+def _fmt(cantidad):
+    """4 decimales máximo, sin ceros de más (0.1500 -> 0.15)."""
+    texto = f"{Decimal(cantidad):.4f}".rstrip('0').rstrip('.')
+    return texto or '0'
 
 
 def calcular_consumo_carrito(carrito):
@@ -76,7 +127,13 @@ def calcular_consumo_carrito(carrito):
                     'detalle': f"Receta base de producto #{producto_id}",
                 }
 
-            consumo[insumo.pk]['cantidad'] += cantidad_receta * Decimal(str(cantidad_producto))
+            # La receta está en su propia unidad (ej. g); el stock en la de ingreso (ej. kg).
+            cantidad_receta_stock = cantidad_a_unidad_stock(
+                insumo, cantidad_receta, detalle_receta.unidadmedida
+            )
+            consumo[insumo.pk]['cantidad'] += (
+                cantidad_receta_stock * Decimal(str(cantidad_producto))
+            )
 
         # 2. Insumos de opciones seleccionadas (ej: Sprite, Coca-Cola, etc.)
         opciones_ids = item.get('opciones_ids', [])
@@ -112,7 +169,9 @@ def calcular_consumo_carrito(carrito):
                 continue
 
             cant_por_opcion = opcion.cantidad_insumo if opcion.cantidad_insumo and opcion.cantidad_insumo > 0 else Decimal('1.00')
-            cantidad_total_opcion = cant_por_opcion * Decimal(str(cantidad_producto))
+            # La cantidad de la opción se expresa en la unidad de egreso del insumo.
+            cant_por_opcion_stock = cantidad_a_unidad_stock(insumo_opcion, cant_por_opcion)
+            cantidad_total_opcion = cant_por_opcion_stock * Decimal(str(cantidad_producto))
 
             if insumo_opcion.pk not in consumo:
                 consumo[insumo_opcion.pk] = {
@@ -122,6 +181,9 @@ def calcular_consumo_carrito(carrito):
                 }
 
             consumo[insumo_opcion.pk]['cantidad'] += cantidad_total_opcion
+
+    for dato in consumo.values():
+        dato['cantidad'] = _a_decimales_stock(dato['cantidad'])
 
     return consumo
 
@@ -138,9 +200,157 @@ def verificar_stock_disponible(consumo):
         if insumo.stockactual < cantidad_necesaria:
             errores.append(
                 f"Stock insuficiente de {insumo.nombreinsumo}. "
-                f"Disponible: {insumo.stockactual}. Necesario: {cantidad_necesaria}."
+                f"Disponible: {_fmt(insumo.stockactual)} {_unidad_stock(insumo)}. "
+                f"Necesario: {_fmt(cantidad_necesaria)} {_unidad_stock(insumo)}."
             )
     return len(errores) == 0, errores
+
+
+def _orden_fefo(lote, hoy):
+    """
+    Primero vence, primero sale (FEFO): los lotes vigentes con fecha de vencimiento más
+    próxima van primero, después los que no tienen fecha y por último los ya vencidos.
+    """
+    vencido = bool(lote.fechavencimiento and lote.fechavencimiento < hoy)
+    return (
+        vencido,
+        lote.fechavencimiento is None,
+        lote.fechavencimiento or date.max,
+        lote.fechaingreso,
+        lote.pk,
+    )
+
+
+def consumir_lotes(insumo, cantidad):
+    """
+    Resta `cantidad` (en unidad de stock) de los lotes del insumo siguiendo FEFO.
+    Debe llamarse dentro de una transacción. Devuelve [(lote, cantidad_tomada), ...].
+    Si los lotes no alcanzan (datos viejos que no cuadran) el resto se devuelve con
+    lote None para que igual quede registrado el movimiento.
+    """
+    restante = Decimal(cantidad)
+    if restante <= 0:
+        return []
+
+    hoy = timezone.localdate()
+    lotes = sorted(
+        Lote.objects.select_for_update().filter(idinsumo=insumo, cantidadactual__gt=0),
+        key=lambda l: _orden_fefo(l, hoy),
+    )
+
+    tomados = []
+    for lote in lotes:
+        if restante <= 0:
+            break
+        tomar = min(lote.cantidadactual, restante)
+        lote.cantidadactual -= tomar
+        lote.save(update_fields=['cantidadactual'])
+        restante -= tomar
+        tomados.append((lote, tomar))
+
+    if restante > 0:
+        tomados.append((None, restante))
+
+    return tomados
+
+
+def registrar_ingreso_lote(insumo, cantidad, fecha_vencimiento=None,
+                           tipo_movimiento=MovimientoStock.TIPO_COMPRA, descripcion=''):
+    """
+    Da entrada a stock creando un lote (con su fecha de vencimiento) y sumando al insumo.
+    `insumo` debe estar bloqueado (select_for_update) dentro de una transacción.
+    """
+    cantidad = _a_decimales_stock(cantidad)
+    ahora = timezone.now()
+
+    lote = Lote.objects.create(
+        idinsumo=insumo,
+        fechaingreso=ahora,
+        fechavencimiento=fecha_vencimiento,
+        cantidadinicial=cantidad,
+        cantidadactual=cantidad,
+    )
+
+    insumo.stockactual = (insumo.stockactual or Decimal('0')) + cantidad
+    insumo.save(update_fields=['stockactual'])
+
+    MovimientoStock.objects.create(
+        idinsumo=insumo,
+        idlote=lote,
+        cantidad=cantidad,
+        idpedido=None,
+        tipomovimiento=tipo_movimiento,
+        descripcion=(descripcion or f"Ingreso de {insumo.nombreinsumo}")[:250],
+    )
+    return lote
+
+
+@transaction.atomic
+def ajustar_stock_insumo(insumo_id, cantidad_nueva, motivo, fecha_vencimiento=None):
+    """
+    Ajuste manual de inventario manteniendo lotes y stock sincronizados:
+    - si sobra stock físico de más, se crea un lote nuevo por la diferencia;
+    - si falta, se descuenta de los lotes por orden de vencimiento.
+    """
+    insumo = Insumo.objects.select_for_update().get(pk=insumo_id)
+    anterior = insumo.stockactual or Decimal('0')
+    nueva = _a_decimales_stock(cantidad_nueva)
+    diferencia = nueva - anterior
+
+    AjusteStock.objects.create(
+        idinsumo=insumo,
+        cantidadanterior=anterior,
+        cantidadnueva=nueva,
+        motivo=motivo,
+    )
+
+    if diferencia > 0:
+        registrar_ingreso_lote(
+            insumo, diferencia, fecha_vencimiento,
+            tipo_movimiento=MovimientoStock.TIPO_AJUSTE,
+            descripcion=f"Ajuste de inventario (+). Motivo: {motivo}",
+        )
+    elif diferencia < 0:
+        for lote, cantidad_lote in consumir_lotes(insumo, -diferencia):
+            MovimientoStock.objects.create(
+                idinsumo=insumo,
+                idlote=lote,
+                cantidad=cantidad_lote,
+                idpedido=None,
+                tipomovimiento=MovimientoStock.TIPO_AJUSTE,
+                descripcion=f"Ajuste de inventario (-). Motivo: {motivo}"[:250],
+            )
+        insumo.stockactual = nueva
+        insumo.save(update_fields=['stockactual'])
+
+    return insumo, diferencia
+
+
+@transaction.atomic
+def dar_baja_lote(lote_id, motivo='Lote vencido'):
+    """Descarta lo que queda de un lote (por vencimiento o merma) y lo resta del stock."""
+    lote = Lote.objects.select_for_update().get(pk=lote_id)
+    insumo = Insumo.objects.select_for_update().get(pk=lote.idinsumo_id)
+    cantidad = lote.cantidadactual or Decimal('0')
+
+    if cantidad <= 0:
+        return lote, Decimal('0')
+
+    lote.cantidadactual = Decimal('0')
+    lote.save(update_fields=['cantidadactual'])
+
+    insumo.stockactual = max((insumo.stockactual or Decimal('0')) - cantidad, Decimal('0'))
+    insumo.save(update_fields=['stockactual'])
+
+    MovimientoStock.objects.create(
+        idinsumo=insumo,
+        idlote=lote,
+        cantidad=cantidad,
+        idpedido=None,
+        tipomovimiento=TIPO_BAJA_LOTE,
+        descripcion=f"Baja del lote {lote.codigo}. Motivo: {motivo}"[:250],
+    )
+    return lote, cantidad
 
 
 def descontar_stock_pedido(pedido, consumo_insumos=None):
@@ -184,20 +394,25 @@ def descontar_stock_pedido(pedido, consumo_insumos=None):
                 )
             insumos_bloqueados[insumo_id] = insumo
 
-        # Descontar stock y registrar movimientos
+        # Descontar stock (y lotes por orden de vencimiento) y registrar movimientos
         for insumo_id, dato in consumo_insumos.items():
             insumo = insumos_bloqueados[insumo_id]
             cantidad = dato['cantidad']
             insumo.stockactual -= cantidad
             insumo.save(update_fields=['stockactual'])
 
-            MovimientoStock.objects.create(
-                idinsumo=insumo,
-                cantidad=cantidad,
-                idpedido=pedido,
-                tipomovimiento=MovimientoStock.TIPO_DESCUENTO,
-                descripcion=f"Descuento automático por Pedido #{pedido.idpedido}. {dato.get('detalle', '')}".strip(),
-            )
+            detalle = f"Descuento automático por Pedido #{pedido.idpedido}. {dato.get('detalle', '')}".strip()
+            for lote, cantidad_lote in consumir_lotes(insumo, cantidad):
+                MovimientoStock.objects.create(
+                    idinsumo=insumo,
+                    idlote=lote,
+                    cantidad=cantidad_lote,
+                    idpedido=pedido,
+                    tipomovimiento=MovimientoStock.TIPO_DESCUENTO,
+                    descripcion=(
+                        f"{detalle} Lote {lote.codigo}." if lote else detalle
+                    )[:250],
+                )
 
         pedido.stock_descontado = True
         pedido.save(update_fields=['stock_descontado'])
@@ -240,8 +455,16 @@ def reintegrar_stock_pedido(pedido, motivo="Cancelación de pedido"):
             insumo.stockactual += mov.cantidad
             insumo.save(update_fields=['stockactual'])
 
+            lote = None
+            if mov.idlote_id:
+                lote = Lote.objects.select_for_update().filter(pk=mov.idlote_id).first()
+                if lote:
+                    lote.cantidadactual += mov.cantidad
+                    lote.save(update_fields=['cantidadactual'])
+
             MovimientoStock.objects.create(
                 idinsumo=insumo,
+                idlote=lote,
                 cantidad=mov.cantidad,
                 idpedido=pedido,
                 tipomovimiento=MovimientoStock.TIPO_REINTEGRO,

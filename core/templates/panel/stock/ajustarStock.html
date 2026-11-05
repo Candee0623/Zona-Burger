@@ -1,5 +1,6 @@
 {% extends "panel/base.html" %}
 {% load static %}
+{% load l10n %}
 
 {% block title %}Ajustar stock | Zona-Burger{% endblock %}
 
@@ -69,7 +70,7 @@
                 <div class="ajuste-stock-actual">
                     <span>Stock actual</span>
                     <strong>
-                        {{ insumo.stockactual }}
+                        {{ insumo.stockactual|floatformat:"-3" }}
                     </strong>
                     <small>{{ insumo.unidadmedidaingreso }}</small>
                 </div>
@@ -93,8 +94,8 @@
                     name="cantidadnueva"
                     class="ajuste-form-input"
                     min="0"
-                    step="0.01"
-                    value="{{ insumo.stockactual }}"
+                    step="0.001"
+                    value="{{ insumo.stockactual|unlocalize }}"
                     required
                 >
 
@@ -125,6 +126,24 @@
 
                 <p class="ajuste-form-help">
                     Selecciona la razón por la que necesitás corregir el stock.
+                </p>
+            </div>
+
+            <div class="ajuste-form-group">
+                <label for="fechavencimiento" class="ajuste-form-label">
+                    Vencimiento (solo si aumentás el stock)
+                </label>
+
+                <input
+                    type="date"
+                    id="fechavencimiento"
+                    name="fechavencimiento"
+                    class="ajuste-form-input"
+                >
+
+                <p class="ajuste-form-help">
+                    Si la cantidad nueva es mayor, la diferencia se registra como un lote
+                    nuevo con esta fecha. Si es menor, se descuenta de los lotes que vencen primero.
                 </p>
             </div>
 

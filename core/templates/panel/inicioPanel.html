@@ -500,10 +500,13 @@
 
                                 <td>
 
-                                    <a
-                                        href="{% url 'toggle_pagado' pedido.idpedido %}"
-                                        class="{% if pedido.pagado %}btn-pago-pagado{% else %}btn-pago-debe{% endif %}"
-                                    >
+                                    <form method="post" action="{% url 'toggle_pagado' pedido.idpedido %}" style="display:inline; margin:0;">
+                                        {% csrf_token %}
+                                        <button
+                                            type="submit"
+                                            class="{% if pedido.pagado %}btn-pago-pagado{% else %}btn-pago-debe{% endif %}"
+                                            style="cursor:pointer; font-family:inherit;"
+                                        >
 
                                         {% if pedido.pagado %}
 
@@ -524,7 +527,8 @@
 
                                         {% endif %}
 
-                                    </a>
+                                        </button>
+                                    </form>
 
                                 </td>
 

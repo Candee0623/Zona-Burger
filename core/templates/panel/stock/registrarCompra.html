@@ -72,7 +72,7 @@
                             value="{{ insumo.pk }}"
                             {% if request.POST.idinsumo == insumo.pk|stringformat:"s" %}selected{% endif %}
                         >
-                            {{ insumo.nombreinsumo }} — Stock actual: {{ insumo.stockactual }}
+                            {{ insumo.nombreinsumo }} — Stock actual: {{ insumo.stockactual|floatformat:"-3" }} {{ insumo.unidadmedidaingreso }}
                         </option>
                     {% endfor %}
                 </select>
@@ -98,8 +98,8 @@
                         type="number"
                         name="cantidad"
                         id="cantidad"
-                        min="0.01"
-                        step="0.01"
+                        min="0.001"
+                        step="0.001"
                         required
                     >
 
@@ -127,6 +127,24 @@
                     </p>
                 </div>
 
+            </div>
+
+            <div class="compra-form-group">
+                <label for="fechavencimiento" class="compra-form-label">
+                    Fecha de vencimiento del lote
+                </label>
+
+                <input
+                    type="date"
+                    name="fechavencimiento"
+                    id="fechavencimiento"
+                    value="{{ request.POST.fechavencimiento }}"
+                >
+
+                <p class="compra-form-help">
+                    Se guarda en el lote que se crea con esta compra. Las ventas
+                    descuentan primero de los lotes que vencen antes.
+                </p>
             </div>
 
             <div class="compra-form-total">

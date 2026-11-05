@@ -38,31 +38,43 @@
 
                 <div class="stock-field stock-field-full">
                     <label for="nombreinsumo">Nombre del insumo</label>
-                    <input type="text" name="nombreinsumo" id="nombreinsumo" class="stock-input" placeholder="Ej. Carne vacuna" required>
+                    <input type="text" name="nombreinsumo" id="nombreinsumo" class="stock-input" placeholder="Ej. Carne vacuna" value="{{ datos.nombreinsumo }}" required>
                     <small>Nombre con el que identificarás el ingrediente.</small>
                 </div>
 
                 <div class="stock-field">
                     <label for="unidadmedidaingreso">Unidad de medida de ingreso</label>
-                    <input type="text" name="unidadmedidaingreso" id="unidadmedidaingreso" class="stock-input" placeholder="Ej. kg, litro, unidad" required>
-                    <small>Unidad en la que recibís o comprás el insumo.</small>
+                    <input type="text" name="unidadmedidaingreso" id="unidadmedidaingreso" class="stock-input" list="unidades-sugeridas" placeholder="Ej. kg, litro, unidad" value="{{ datos.unidadmedidaingreso }}" required>
+                    <small>Unidad en la que comprás el insumo. El stock se guarda y se muestra en esta unidad.</small>
                 </div>
 
                 <div class="stock-field">
                     <label for="unidadmedidaegreso">Unidad de medida de egreso</label>
-                    <input type="text" name="unidadmedidaegreso" id="unidadmedidaegreso" class="stock-input" placeholder="Ej. gramo, ml, unidad" required>
-                    <small>Unidad usada al consumir el insumo.</small>
+                    <input type="text" name="unidadmedidaegreso" id="unidadmedidaegreso" class="stock-input" list="unidades-sugeridas" placeholder="Ej. g, ml, unidad" value="{{ datos.unidadmedidaegreso }}" required>
+                    <small>Unidad en la que cargás las cantidades de las recetas. Si compraés en kg y la receta usa g, el sistema convierte solo.</small>
+                </div>
+
+                <div class="stock-field">
+                    <label for="equivalencia_egreso">Equivalencia (opcional)</label>
+                    <input type="number" name="equivalencia_egreso" id="equivalencia_egreso" class="stock-input" min="0" step="0.0001" placeholder="Ej. 12" value="{{ datos.equivalencia_egreso }}">
+                    <small>Solo si las unidades no se convierten solas (kg/g, l/ml y unidad/docena sí). Cuántas unidades de egreso trae 1 de ingreso. Ej.: 1 bolsa = 12 unidades.</small>
                 </div>
 
                 <div class="stock-field">
                     <label for="stockactual">Stock inicial</label>
-                    <input type="number" name="stockactual" id="stockactual" class="stock-input" min="0" step="0.01" value="0" required>
-                    <small>Cantidad que tenés actualmente.</small>
+                    <input type="number" name="stockactual" id="stockactual" class="stock-input" min="0" step="0.001" value="{{ datos.stockactual|default:0 }}" required>
+                    <small>Cantidad que tenés actualmente, en la unidad de ingreso.</small>
+                </div>
+
+                <div class="stock-field">
+                    <label for="fechavencimiento">Vencimiento del stock inicial</label>
+                    <input type="date" name="fechavencimiento" id="fechavencimiento" class="stock-input" value="{{ datos.fechavencimiento }}">
+                    <small>Opcional. Se guarda en el lote creado con el stock inicial.</small>
                 </div>
 
                 <div class="stock-field">
                     <label for="stockminimo">Stock mínimo</label>
-                    <input type="number" name="stockminimo" id="stockminimo" class="stock-input" min="0" step="0.01" value="5" required>
+                    <input type="number" name="stockminimo" id="stockminimo" class="stock-input" min="0" step="0.001" value="{{ datos.stockminimo|default:5 }}" required>
                     <small>Umbral para identificar cuándo queda poco stock.</small>
                 </div>
 
@@ -75,6 +87,8 @@
                 </div>
 
             </div>
+
+            <datalist id="unidades-sugeridas">{% for u in unidades_sugeridas %}<option value="{{ u }}">{% endfor %}</datalist>
 
             <div class="stock-form-notice">
                 <span class="notice-symbol">i</span>

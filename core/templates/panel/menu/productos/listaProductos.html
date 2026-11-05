@@ -98,7 +98,7 @@
 
                     {% for producto in productos %}
 
-                    <tr class="producto-row {% if producto.idestadoproducto_id == ESTADO_ELIMINADO %}eliminado{% endif %}">
+                    <tr class="producto-row {% if producto.idestadoproducto_id == ESTADO_OCULTO or producto.idestadoproducto_id == ESTADO_ELIMINADO %}eliminado{% endif %}">
 
                         <td
                             class="producto-imagen-cell"
@@ -139,10 +139,10 @@
 
                                 {{ producto.nombre }}
 
-                                {% if producto.idestadoproducto_id == ESTADO_ELIMINADO %}
+                                {% if producto.idestadoproducto_id == ESTADO_OCULTO or producto.idestadoproducto_id == ESTADO_ELIMINADO %}
 
                                     <span class="producto-eliminado">
-                                        Eliminado
+                                        Oculto
                                     </span>
 
                                 {% endif %}
@@ -290,12 +290,12 @@
 
                                 </a>
 
-                                {% if producto.idestadoproducto_id == ESTADO_ELIMINADO %}
+                                {% if producto.idestadoproducto_id == ESTADO_OCULTO or producto.idestadoproducto_id == ESTADO_ELIMINADO %}
 
                                     <a
-                                        href="{% url 'producto_eliminar' producto.idproducto %}"
+                                        href="{% url 'producto_ocultar' producto.idproducto %}"
                                         class="btn-producto btn-restaurar"
-                                        title="Restaurar producto"
+                                        title="Mostrar en el menú"
                                     >
 
                                         <svg viewBox="0 0 24 24">
@@ -303,16 +303,16 @@
                                             <path d="M3 4v5h5"/>
                                         </svg>
 
-                                        Restaurar
+                                        Mostrar
 
                                     </a>
 
                                 {% else %}
 
                                     <a
-                                        href="{% url 'producto_eliminar' producto.idproducto %}"
-                                        class="btn-producto btn-eliminar"
-                                        title="Eliminar producto"
+                                        href="{% url 'producto_ocultar' producto.idproducto %}"
+                                        class="btn-producto btn-receta"
+                                        title="Ocultar del menú"
                                     >
 
                                         <svg viewBox="0 0 24 24">
@@ -323,7 +323,29 @@
                                             <path d="M14 11v5"/>
                                         </svg>
 
-                                        Eliminar
+                                        Ocultar
+
+                                    </a>
+
+                                {% endif %}
+
+                                {% if 'productos.eliminar' in permisos_usuario %}
+
+                                    <a
+                                        href="{% url 'producto_eliminar_definitivo' producto.idproducto %}"
+                                        class="btn-producto btn-eliminar"
+                                        title="Borrar definitivamente"
+                                    >
+
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M3 6h18"/>
+                                            <path d="M8 6V4h8v2"/>
+                                            <path d="M19 6l-1 14H6L5 6"/>
+                                            <path d="M10 11v5"/>
+                                            <path d="M14 11v5"/>
+                                        </svg>
+
+                                        Borrar
 
                                     </a>
 

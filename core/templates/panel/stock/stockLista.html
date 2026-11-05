@@ -95,7 +95,7 @@
                                     Venció: {{ lote.fechavencimiento|date:"d/m/Y" }}
                                 </span>
                                 <span>
-                                    Disponible: {{ lote.cantidadactual|floatformat:"-2" }}
+                                    Disponible: {{ lote.cantidadactual|floatformat:"-3" }}
                                     {{ lote.idinsumo.unidadmedidaingreso }}
                                 </span>
                             </li>
@@ -126,7 +126,7 @@
                                     Vence: {{ lote.fechavencimiento|date:"d/m/Y" }}
                                 </span>
                                 <span>
-                                    Disponible: {{ lote.cantidadactual|floatformat:"-2" }}
+                                    Disponible: {{ lote.cantidadactual|floatformat:"-3" }}
                                     {{ lote.idinsumo.unidadmedidaingreso }}
                                 </span>
                             </li>
@@ -151,11 +151,11 @@
                             <li>
                                 <strong>{{ insumo.nombreinsumo }}</strong>
                                 <span>
-                                    Actual: {{ insumo.stockactual|floatformat:"-2" }}
+                                    Actual: {{ insumo.stockactual|floatformat:"-3" }}
                                     {{ insumo.unidadmedidaingreso }}
                                 </span>
                                 <span>
-                                    Mínimo: {{ insumo.stockminimo|floatformat:"-2" }}
+                                    Mínimo: {{ insumo.stockminimo|floatformat:"-3" }}
                                     {{ insumo.unidadmedidaingreso }}
                                 </span>
                                 <a
@@ -175,7 +175,29 @@
             </article>
         {% endif %}
 
-        {% if not lotes_vencidos and not lotes_por_vencer and not insumos_criticos %}
+        {% if insumos_sin_conversion %}
+            <article class="stock-alert">
+                <div class="stock-alert__icon" aria-hidden="true">!</div>
+                <div class="stock-alert__content">
+                    <h2>Unidades sin equivalencia</h2>
+                    <p>
+                        Estos insumos tienen unidades que no se pueden convertir solas, por lo que
+                        las ventas pueden descontar cantidades incorrectas. Editá el insumo y cargá la equivalencia.
+                    </p>
+                    <ul class="stock-alert__list">
+                        {% for insumo in insumos_sin_conversion %}
+                            <li>
+                                <strong>{{ insumo.nombreinsumo }}</strong>
+                                <span>Ingreso: {{ insumo.unidadmedidaingreso }} / Egreso: {{ insumo.unidadmedidaegreso }}</span>
+                                <span><a href="{% url 'stock_editar' insumo.idinsumo %}">Corregir</a></span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </article>
+        {% endif %}
+
+        {% if not lotes_vencidos and not lotes_por_vencer and not insumos_criticos and not insumos_sin_conversion %}
             <article class="stock-alert stock-alert--ok">
                 <div class="stock-alert__icon" aria-hidden="true">&#10003;</div>
                 <div class="stock-alert__content">
@@ -285,12 +307,12 @@
                                 </td>
 
                                 <td class="number-cell">
-                                    {{ insumo.stockactual|floatformat:"-2" }}
+                                    {{ insumo.stockactual|floatformat:"-3" }}
                                     {{ insumo.unidadmedidaingreso }}
                                 </td>
 
                                 <td>
-                                    {{ insumo.stockminimo|floatformat:"-2" }}
+                                    {{ insumo.stockminimo|floatformat:"-3" }}
                                     {{ insumo.unidadmedidaingreso }}
                                 </td>
 
@@ -401,18 +423,25 @@
                                 <td>
                                     {% if lote.fechavencimiento %}
                                         {{ lote.fechavencimiento|date:"d/m/Y" }}
+                                        {% if lote.cantidadactual > 0 %}
+                                            {% if lote.esta_vencido %}
+                                                <span class="muted">(vencido)</span>
+                                            {% elif lote.dias_para_vencer <= 7 %}
+                                                <span class="muted">(vence en {{ lote.dias_para_vencer }} d)</span>
+                                            {% endif %}
+                                        {% endif %}
                                     {% else %}
                                         <span class="muted">No registrado</span>
                                     {% endif %}
                                 </td>
 
                                 <td>
-                                    {{ lote.cantidadinicial|floatformat:"-2" }}
+                                    {{ lote.cantidadinicial|floatformat:"-3" }}
                                     {{ lote.idinsumo.unidadmedidaingreso }}
                                 </td>
 
                                 <td class="number-cell">
-                                    {{ lote.cantidadactual|floatformat:"-2" }}
+                                    {{ lote.cantidadactual|floatformat:"-3" }}
                                     {{ lote.idinsumo.unidadmedidaingreso }}
                                 </td>
 
@@ -427,6 +456,16 @@
                                         <i class="fa-solid fa-barcode"></i>
                                         Imprimir código
                                     </a>
+
+                                    {% if lote.cantidadactual > 0 and lote.esta_vencido and 'stock.ajustar' in permisos_usuario %}
+                                        <form method="post" action="{% url 'lote_baja' lote.idlote %}" style="display:inline" onsubmit="return confirm('¿Dar de baja este lote vencido? La cantidad restante se descuenta del stock.');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="action-link" style="background:none;border:0;cursor:pointer;font-weight:600;margin-left:10px;">
+                                                <i class="fa-solid fa-trash"></i>
+                                                Dar de baja
+                                            </button>
+                                        </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}
@@ -515,7 +554,7 @@
                                 <td>
                                     {% for detalle in compra.detallecompra_set.all %}
                                         <div class="purchase-item">
-                                            {{ detalle.cantidad|floatformat:"-2" }}
+                                            {{ detalle.cantidad|floatformat:"-3" }}
                                             {% if detalle.idinsumo %}
                                                 {{ detalle.idinsumo.unidadmedidaingreso }}
                                             {% endif %}

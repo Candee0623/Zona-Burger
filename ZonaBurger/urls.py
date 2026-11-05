@@ -83,7 +83,8 @@ urlpatterns = [
     path('panel/productos/', views.producto_lista, name='producto_lista'),
     path('panel/productos/crear/', views.producto_crear, name='producto_crear'),
     path('panel/productos/<int:idproducto>/editar/', views.producto_editar, name='producto_editar'),
-    path('panel/productos/<int:idproducto>/eliminar/', views.producto_eliminar, name='producto_eliminar'),
+    path('panel/productos/<int:idproducto>/ocultar/', views.producto_ocultar, name='producto_ocultar'),
+    path('panel/productos/<int:idproducto>/eliminar-definitivo/', views.producto_eliminar_definitivo, name='producto_eliminar_definitivo'),
 
     # Menú - Extras
     path('panel/extras/', views.extra_lista, name='extra_lista'),
@@ -99,6 +100,7 @@ urlpatterns = [
     path('panel/stock/editar/<int:idinsumo>/', views.stock_editar, name='stock_editar'),
     path('panel/stock/lote/<int:idlote>/imprimir/', views.imprimir_lote_codigo, name='imprimir_lote_codigo'),
     path('panel/stock/lotes/imprimir/', views.imprimir_lotes_codigos, name='imprimir_lotes_codigos'),
+    path('panel/stock/lote/<int:idlote>/baja/', views.lote_baja, name='lote_baja'),
 
     # Recetas - Insumos
     path('panel/receta/insumo/<int:idrecetainsumo>/editar/', views.editar_cantidad_insumo_receta, name='editar_cantidad_insumo_receta'),
@@ -144,7 +146,7 @@ urlpatterns = [
 
     # Negocio
     path("panel/negocio/apertura/", views.estado_negocio_panel, name="estado_negocio"),
-path("panel/negocio/estado/", views.cambiar_estado_local, name="cambiar_estado_local"),
+    path("panel/negocio/estado/", views.cambiar_estado_local, name="cambiar_estado_local"),
 
     # Horarios - CRUD
     path('panel/horarios/', views.horarios_lista, name='horarios_lista'),

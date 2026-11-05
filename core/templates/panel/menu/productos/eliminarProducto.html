@@ -2,7 +2,9 @@
 {% load static %}
 
 {% block title %}
-    Zona-Burger | {% if esta_eliminado %}Restaurar{% else %}Eliminar{% endif %} Producto
+    Zona-Burger |
+    {% if modo == 'mostrar' %}Mostrar{% elif modo == 'eliminar' %}Borrar definitivamente{% else %}Ocultar{% endif %}
+    producto
 {% endblock %}
 
 {% block content %}
@@ -11,248 +13,142 @@
 
 <div class="producto-delete-page">
 
-    <!-- VOLVER -->
-    <a
-        href="{% url cancel_url|default:'producto_lista' %}"
-        class="producto-delete-back"
-    >
+    <a href="{% url cancel_url|default:'producto_lista' %}" class="producto-delete-back">
         <svg viewBox="0 0 24 24">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
-
         Volver a productos
     </a>
 
-
     <div class="producto-delete-card">
 
-        <!-- ENCABEZADO -->
         <div class="producto-delete-header">
 
-            <div class="producto-delete-icon {% if esta_eliminado %}restaurar{% else %}eliminar{% endif %}">
-
-                {% if esta_eliminado %}
-
+            <div class="producto-delete-icon {% if modo == 'mostrar' %}restaurar{% else %}eliminar{% endif %}">
+                {% if modo == 'mostrar' %}
                     <svg viewBox="0 0 24 24">
                         <path d="M3 12a9 9 0 1 0 3-6.7"></path>
                         <polyline points="3 4 3 10 9 10"></polyline>
                     </svg>
-
                 {% else %}
-
                     <svg viewBox="0 0 24 24">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                         <line x1="12" y1="9" x2="12" y2="13"></line>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
-
                 {% endif %}
-
             </div>
 
-
             <div class="producto-delete-header-text">
-
-                <h1 class="{% if esta_eliminado %}restaurar{% else %}eliminar{% endif %}">
-
-                    {% if esta_eliminado %}
-                        Restaurar producto
-                    {% else %}
-                        Eliminar producto
-                    {% endif %}
-
+                <h1 class="{% if modo == 'mostrar' %}restaurar{% else %}eliminar{% endif %}">
+                    {% if modo == 'mostrar' %}Mostrar producto
+                    {% elif modo == 'eliminar' %}Borrar producto definitivamente
+                    {% else %}Ocultar producto{% endif %}
                 </h1>
-
                 <p>
-                    {% if esta_eliminado %}
-                        El producto volverá a estar activo en el menú.
-                    {% else %}
-                        El producto dejará de mostrarse en el menú.
-                    {% endif %}
+                    {% if modo == 'mostrar' %}El producto volverá a mostrarse en el menú.
+                    {% elif modo == 'eliminar' %}Se elimina de la base de datos. No se puede deshacer.
+                    {% else %}El producto dejará de mostrarse en el menú, pero no se borra nada.{% endif %}
                 </p>
-
             </div>
 
         </div>
 
-
         <div class="producto-delete-body">
 
-            <!-- INFORMACIÓN DEL PRODUCTO -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="producto-warning eliminar" style="margin-bottom:12px;">
+                        <div class="producto-warning-text">{{ message }}</div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
             <div class="producto-info">
 
                 {% if producto.imagen %}
-
-                    <img
-                        src="{{ producto.imagen.url }}"
-                        alt="{{ producto.nombre }}"
-                        class="producto-imagen"
-                    >
-
+                    <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="producto-imagen">
                 {% else %}
-
                     <div class="producto-placeholder" aria-hidden="true">
-
                         <svg viewBox="0 0 24 24">
                             <path d="M3 11h18"></path>
                             <path d="M5 11l1 8h12l1-8"></path>
                             <path d="M7 11V9a5 5 0 0 1 10 0v2"></path>
                             <path d="M9 15h6"></path>
                         </svg>
-
                     </div>
-
                 {% endif %}
-
 
                 <div class="producto-info-content">
-
-                    <div class="producto-info-label">
-                        Producto seleccionado
-                    </div>
-
-                    <strong class="producto-nombre">
-                        {{ producto.nombre }}
-                    </strong>
-
+                    <div class="producto-info-label">Producto seleccionado</div>
+                    <strong class="producto-nombre">{{ producto.nombre }}</strong>
                     <div class="producto-meta">
-
-                        <span class="producto-precio">
-                            ${{ producto.precio }}
-                        </span>
-
+                        <span class="producto-precio">${{ producto.precio }}</span>
                         {% if producto.idcategoria %}
-
-                            <span class="producto-categoria">
-                                • {{ producto.idcategoria.nombre }}
-                            </span>
-
+                            <span class="producto-categoria">{{ producto.idcategoria.nombre }}</span>
                         {% endif %}
-
                     </div>
-
                 </div>
 
             </div>
 
-
-            <!-- ADVERTENCIA -->
-            <div class="producto-warning {% if esta_eliminado %}restaurar{% else %}eliminar{% endif %}">
-
-                <div class="producto-warning-icon">
-
-                    {% if esta_eliminado %}
-
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="9"></circle>
-                            <polyline points="12 8 12 12 15 14"></polyline>
-                        </svg>
-
-                    {% else %}
-
-                        <svg viewBox="0 0 24 24">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                            <line x1="12" y1="9" x2="12" y2="13"></line>
-                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                        </svg>
-
-                    {% endif %}
-
-                </div>
-
-
+            <div class="producto-warning {% if modo == 'mostrar' %}restaurar{% else %}eliminar{% endif %}">
                 <div class="producto-warning-text">
-
-                    {% if esta_eliminado %}
-
-                        Al restaurar este producto volverá a estar activo
-                        y podrá aparecer nuevamente en el menú.
-
+                    {% if modo == 'mostrar' %}
+                        Al mostrarlo, el producto vuelve a estar activo y puede aparecer en el menú.
+                    {% elif modo == 'eliminar' %}
+                        Se borrarán el producto, su receta, sus extras, sus grupos de opciones y su
+                        relación con promociones{% if cant_promociones %} ({{ cant_promociones }}){% endif %}.
+                        {% if cant_pedidos %}
+                            Los <strong>{{ cant_pedidos }}</strong> pedido(s) que lo incluyen
+                            <strong>se conservan</strong> en el historial con el nombre del producto.
+                        {% else %}
+                            No tiene pedidos en el historial.
+                        {% endif %}
+                        Si solo querés sacarlo del menú, usá "Ocultar".
                     {% else %}
-
-                        El producto dejará de aparecer en el menú, pero
-                        podrás restaurarlo posteriormente.
-
+                        El producto dejará de aparecer en el menú público. Podrás mostrarlo de nuevo cuando quieras.
                     {% endif %}
-
                 </div>
-
             </div>
 
-
-            <!-- PREGUNTA -->
-            <p class="producto-question">
-
-                {% if esta_eliminado %}
-
-                    ¿Estás seguro de que deseas restaurar
-                    <strong>"{{ producto.nombre }}"</strong>?
-
-                {% else %}
-
-                    ¿Estás seguro de que deseas eliminar
-                    <strong>"{{ producto.nombre }}"</strong>?
-
-                {% endif %}
-
-            </p>
-
-
-            <!-- ACCIONES -->
             <form method="post">
-
                 {% csrf_token %}
 
-                <div class="producto-delete-actions">
-
-                    {% if esta_eliminado %}
-
-                        <button
-                            type="submit"
-                            class="producto-action-btn producto-confirmar restaurar"
-                        >
-
-                            <svg viewBox="0 0 24 24">
-                                <path d="M3 12a9 9 0 1 0 3-6.7"></path>
-                                <polyline points="3 4 3 10 9 10"></polyline>
-                            </svg>
-
-                            Sí, restaurar producto
-
-                        </button>
-
-                    {% else %}
-
-                        <button
-                            type="submit"
-                            class="producto-action-btn producto-confirmar eliminar"
-                        >
-
-                            <svg viewBox="0 0 24 24">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6l-1 14H6L5 6"></path>
-                                <path d="M10 11v6"></path>
-                                <path d="M14 11v6"></path>
-                                <path d="M9 6V4h6v2"></path>
-                            </svg>
-
-                            Sí, eliminar producto
-
-                        </button>
-
-                    {% endif %}
-
-
-                    <a
-                        href="{% url cancel_url|default:'producto_lista' %}"
-                        class="producto-action-btn producto-cancelar"
+                {% if modo == 'eliminar' %}
+                    <p class="producto-question">
+                        Para confirmar, escribí el nombre del producto: <strong>{{ producto.nombre }}</strong>
+                    </p>
+                    <input
+                        type="text"
+                        name="confirmacion"
+                        autocomplete="off"
+                        required
+                        placeholder="Nombre del producto"
+                        style="width:100%;padding:10px 12px;margin:6px 0 16px;border:1px solid #ccc;border-radius:8px;"
                     >
+                {% else %}
+                    <p class="producto-question">
+                        ¿Seguro que querés {% if modo == 'mostrar' %}mostrar{% else %}ocultar{% endif %}
+                        <strong>"{{ producto.nombre }}"</strong>?
+                    </p>
+                {% endif %}
+
+                <div class="producto-delete-actions">
+                    <button
+                        type="submit"
+                        class="producto-action-btn producto-confirmar {% if modo == 'mostrar' %}restaurar{% else %}eliminar{% endif %}"
+                    >
+                        {% if modo == 'mostrar' %}Sí, mostrar producto
+                        {% elif modo == 'eliminar' %}Borrar definitivamente
+                        {% else %}Sí, ocultar producto{% endif %}
+                    </button>
+
+                    <a href="{% url cancel_url|default:'producto_lista' %}" class="producto-action-btn producto-cancelar">
                         Cancelar
                     </a>
-
                 </div>
-
             </form>
 
         </div>

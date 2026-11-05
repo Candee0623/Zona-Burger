@@ -53,7 +53,7 @@
         </article>
         <article class="rep-kpi">
             <span>Más vendido</span>
-            <strong class="rep-kpi-text">{% if productos %}{{ productos.0.idproducto__nombre }}{% else %}—{% endif %}</strong>
+            <strong class="rep-kpi-text">{% if productos %}{{ productos.0.nombre_historico }}{% else %}—{% endif %}</strong>
             <small>{% if productos %}{{ productos.0.unidades }} unidades{% else %}Sin datos{% endif %}</small>
         </article>
         <article class="rep-kpi">
@@ -103,7 +103,7 @@
                     {% for producto in productos %}
                     <tr>
                         <td><span class="rep-rank">{{ forloop.counter }}</span></td>
-                        <td class="rep-strong">{{ producto.idproducto__nombre|default:"Producto sin nombre" }}</td>
+                        <td class="rep-strong">{{ producto.nombre_historico|default:"Producto sin nombre" }}</td>
                         <td class="rep-num">{{ producto.unidades }}</td>
                         <td>
                             <div class="rep-meter">
@@ -132,7 +132,7 @@
     rep.tema();
     const C = rep.colores;
     const filas = rep.leer("rep-productos");
-    const labels = filas.map(p => p.idproducto__nombre || "Sin nombre");
+    const labels = filas.map(p => p.nombre_historico || "Sin nombre");
 
     const unidades = document.getElementById("rep-unidades");
     if (unidades) new Chart(unidades, {

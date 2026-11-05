@@ -5,6 +5,7 @@ import re
 import secrets
 import urllib.parse
 import unicodedata
+from django.db import DatabaseError, IntegrityError, transaction
 from .auth_backend import EmpleadoAuthBackend
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -32,9 +33,10 @@ from django.db.models import (
     Prefetch,
     Q,
     Sum,
+    Value,
 )
 from django.db.models.deletion import ProtectedError
-from django.db.models.functions import TruncDate
+from django.db.models.functions import Coalesce, TruncDate
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -108,7 +110,12 @@ from .stock_service import (
     reintegrar_stock_pedido,
     verificar_stock_disponible,
     StockInsuficienteError,
+    registrar_ingreso_lote,
+    ajustar_stock_insumo,
+    dar_baja_lote,
+    TIPO_CARGA_INICIAL,
 )
+from .unidades import UNIDADES_SUGERIDAS, normalizar_unidad, unidades_compatibles
 
 logger = logging.getLogger(__name__)
 
@@ -728,7 +735,7 @@ def agregar_al_carrito(request, idproducto):
 
             # Mostrar el nombre del ingrediente quitado.
             detalle_opciones.append(
-                f"Sin {insumo.nombre}"
+                f"Sin {insumo.nombreinsumo}"
             )
 
     # --------------------------------------------------
@@ -2268,6 +2275,7 @@ def actualizar_estado_pedido(request, idpedido):
 
 @panel_login_requerido
 @requiere_permiso('pedidos.marcar_pagado')
+@require_POST
 def toggle_pagado(request, idpedido):
     pedido = get_object_or_404(Pedido, pk=idpedido)
     pedido.pagado = not pedido.pagado
@@ -2472,7 +2480,7 @@ def grupo_editar(request, idgrupo):
     insumos = Insumo.objects.all().order_by('nombreinsumo')
 
     print(request.POST)
-    
+
     if request.method == 'POST':
         nombre = request.POST.get('nombre', '').strip()
 
@@ -2791,18 +2799,17 @@ def producto_editar(request, idproducto):
 
 
 @panel_login_requerido
-@requiere_permiso('productos.eliminar')
-def producto_eliminar(request, idproducto):
+@requiere_algun_permiso(['productos.editar', 'productos.eliminar'])
+def producto_ocultar(request, idproducto):
     """
-    Borrado lógico: el producto cambia a estado Eliminado (o vuelve a Activo
-    si ya estaba eliminado). No se borra el registro porque lo referencian
-    recetas y pedidos históricos.
+    Oculta el producto del menú público (o lo vuelve a mostrar). No se borra nada:
+    siguen existiendo su receta, sus extras y el historial de pedidos.
     """
     producto = get_object_or_404(Producto, pk=idproducto)
-    esta_eliminado = producto.idestadoproducto_id == ESTADO_ELIMINADO
+    esta_oculto = producto.idestadoproducto_id in ESTADOS_NO_VISIBLES
 
     if request.method == 'POST':
-        nuevo_estado = ESTADO_ACTIVO if esta_eliminado else ESTADO_ELIMINADO
+        nuevo_estado = ESTADO_ACTIVO if esta_oculto else ESTADO_OCULTO
 
         # update() evita ejecutar el save() del modelo (conversión de imagen).
         Producto.objects.filter(pk=producto.pk).update(
@@ -2812,15 +2819,94 @@ def producto_eliminar(request, idproducto):
         messages.success(
             request,
             f'Producto "{producto.nombre}" '
-            f'{"restaurado" if esta_eliminado else "eliminado"}.'
+            f'{"visible nuevamente en el menú" if esta_oculto else "oculto del menú"}.'
         )
         return redirect('producto_lista')
 
     return render(request, 'panel/menu/productos/eliminarProducto.html', {
         'producto': producto,
-        'esta_eliminado': esta_eliminado,
+        'modo': 'mostrar' if esta_oculto else 'ocultar',
         'cancel_url': 'producto_lista',
     })
+
+
+@panel_login_requerido
+@requiere_permiso('productos.eliminar')
+def producto_eliminar_definitivo(request, idproducto):
+    """
+    Borra el producto de verdad de la base de datos.
+
+    Para no romper el historial: los detalles de pedidos viejos conservan el nombre
+    (DetallePedido.nombreproducto) y pasan a no tener producto asociado; la receta, los
+    extras, los grupos de opciones y las promociones del producto se eliminan con él.
+    """
+    producto = get_object_or_404(Producto, pk=idproducto)
+
+    cant_pedidos = (
+        DetallePedido.objects.filter(idproducto=producto)
+        .values('idpedido').distinct().count()
+    )
+    cant_promociones = ProductoPromocion.objects.filter(idproducto=producto).count()
+
+    contexto = {
+        'producto': producto,
+        'modo': 'eliminar',
+        'cant_pedidos': cant_pedidos,
+        'cant_promociones': cant_promociones,
+        'cancel_url': 'producto_lista',
+    }
+
+    if request.method != 'POST':
+        return render(request, 'panel/menu/productos/eliminarProducto.html', contexto)
+
+    confirmacion = (request.POST.get('confirmacion') or '').strip().lower()
+    if confirmacion != (producto.nombre or '').strip().lower():
+        messages.error(
+            request,
+            'Para borrar definitivamente tenés que escribir el nombre exacto del producto.'
+        )
+        return render(request, 'panel/menu/productos/eliminarProducto.html', contexto)
+
+    nombre = producto.nombre
+    imagen_storage = producto.imagen.storage if producto.imagen else None
+    imagen_nombre = producto.imagen.name if producto.imagen else None
+
+    with transaction.atomic():
+        # 1. El historial conserva el nombre y deja de apuntar al producto.
+        DetallePedido.objects.filter(
+            idproducto=producto, nombreproducto__isnull=True
+        ).update(nombreproducto=(nombre or '')[:100])
+        DetallePedido.objects.filter(idproducto=producto).update(idproducto=None)
+
+        # 2. Todo lo que depende del producto.
+        RecetaInsumo.objects.filter(idreceta__idproducto=producto).delete()
+        Receta.objects.filter(idproducto=producto).delete()
+        ProductoExtras.objects.filter(idproducto=producto).delete()
+        ProductoGrupoOpcion.objects.filter(idproducto=producto).delete()
+        ProductoPromocion.objects.filter(idproducto=producto).delete()
+
+        # 3. El producto.
+        producto.delete()
+
+    # La imagen se borra después de confirmar la transacción (si falla no importa).
+    if imagen_storage and imagen_nombre:
+        try:
+            imagen_storage.delete(imagen_nombre)
+        except Exception:
+            logger.warning('No se pudo borrar la imagen "%s".', imagen_nombre)
+
+    registrar_auditoria(
+        request,
+        'PRODUCTO_ELIMINAR',
+        f'Producto "{nombre}" eliminado definitivamente '
+        f'({cant_pedidos} pedidos históricos conservados).',
+    )
+    messages.success(
+        request,
+        f'Producto "{nombre}" eliminado definitivamente. '
+        f'Los {cant_pedidos} pedidos que lo incluían siguen en el historial.'
+    )
+    return redirect('producto_lista')
 
 
 # ------------------------------------------------------------
@@ -3616,6 +3702,7 @@ def stock_lista(request):
         'compras': compras,
         'lotes_por_vencer': lotes_por_vencer,
         'lotes_vencidos': lotes_vencidos,
+        'insumos_sin_conversion': [i for i in insumos if not i.conversion_valida],
         'hoy': hoy,
         'fecha_limite': fecha_limite,
     }
@@ -3707,65 +3794,135 @@ def imprimir_lotes_codigos(request):
 
 
 
+def _leer_unidades_insumo(post):
+    """Lee y valida unidad de ingreso, unidad de egreso y equivalencia manual."""
+    ingreso = (post.get('unidadmedidaingreso') or '').strip()
+    egreso = (post.get('unidadmedidaegreso') or '').strip()
+    equiv_raw = (post.get('equivalencia_egreso') or '').strip().replace(',', '.')
+    errores = []
+    equivalencia = None
+
+    if not ingreso or not egreso:
+        errores.append('Completá las unidades de medida de ingreso y de egreso.')
+
+    if equiv_raw:
+        try:
+            equivalencia = Decimal(equiv_raw)
+            if (
+                not equivalencia.is_finite()
+                or equivalencia <= 0
+                or equivalencia.as_tuple().exponent < -4
+            ):
+                raise InvalidOperation
+        except (InvalidOperation, ValueError):
+            equivalencia = None
+            errores.append(
+                'La equivalencia debe ser un número mayor que cero, con hasta 4 decimales.'
+            )
+
+    if (
+        ingreso and egreso and not equiv_raw
+        and not unidades_compatibles(ingreso, egreso)
+    ):
+        errores.append(
+            f'Las unidades "{ingreso}" y "{egreso}" no se pueden convertir solas. '
+            f'Indicá cuántas "{egreso}" trae 1 "{ingreso}" en el campo de equivalencia.'
+        )
+
+    return ingreso, egreso, equivalencia, errores
+
+
+def _leer_cantidad_stock(texto, defecto=Decimal('0')):
+    """Cantidad >= 0 con hasta 4 decimales; si es inválida devuelve `defecto`."""
+    try:
+        valor = Decimal(str(texto or '').strip().replace(',', '.') or defecto)
+        if not valor.is_finite() or valor < 0:
+            return defecto
+        return valor
+    except (InvalidOperation, ValueError, TypeError):
+        return defecto
+
+
+def _leer_vencimiento(texto):
+    """Devuelve (fecha | None, error | None). El campo es opcional."""
+    texto = (texto or '').strip()
+    if not texto:
+        return None, None
+
+    fecha = parse_date(texto)
+    if fecha is None:
+        return None, 'La fecha de vencimiento no es válida.'
+
+    if fecha < timezone.localdate():
+        return None, 'La fecha de vencimiento no puede ser anterior a hoy.'
+
+    return fecha, None
+
+
+def _contexto_form_insumo(extra=None):
+    contexto = {'unidades_sugeridas': UNIDADES_SUGERIDAS}
+    if extra:
+        contexto.update(extra)
+    return contexto
+
+
 @panel_login_requerido
 @requiere_permiso('stock.crear')
 def stock_crear(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombreinsumo', '').strip()
-        unidad_ingreso = request.POST.get('unidadmedidaingreso', '').strip()
-        unidad_egreso = request.POST.get('unidadmedidaegreso', '').strip()
         descontar_auto = request.POST.get('descontar_stock_automaticamente') == 'on'
 
-        if not nombre or not unidad_ingreso or not unidad_egreso:
-            messages.error(request, 'Completá el nombre y las unidades de medida.')
-            return render(request, 'panel/stock/stockForm.html')
+        unidad_ingreso, unidad_egreso, equivalencia, errores = _leer_unidades_insumo(request.POST)
 
-        try:
-            stock_inicial = Decimal(str(request.POST.get('stockactual', 0) or 0))
-            if stock_inicial < 0:
-                stock_inicial = Decimal('0.00')
-        except (InvalidOperation, ValueError, TypeError):
-            stock_inicial = Decimal('0.00')
+        if not nombre:
+            errores.insert(0, 'Completá el nombre del insumo.')
 
-        try:
-            stock_minimo = Decimal(str(request.POST.get('stockminimo', 5) or 5))
-            if stock_minimo < 0:
-                stock_minimo = Decimal('5.00')
-        except (InvalidOperation, ValueError, TypeError):
-            stock_minimo = Decimal('5.00')
+        stock_inicial = _leer_cantidad_stock(request.POST.get('stockactual'))
+        stock_minimo = _leer_cantidad_stock(
+            request.POST.get('stockminimo'), Decimal('5')
+        )
+
+        vencimiento, error_vencimiento = _leer_vencimiento(
+            request.POST.get('fechavencimiento')
+        )
+        if error_vencimiento and stock_inicial > 0:
+            errores.append(error_vencimiento)
+
+        if errores:
+            for error in errores:
+                messages.error(request, error)
+            return render(
+                request,
+                'panel/stock/stockForm.html',
+                _contexto_form_insumo({'datos': request.POST}),
+            )
 
         with transaction.atomic():
             insumo = Insumo.objects.create(
                 nombreinsumo=nombre,
                 unidadmedidaingreso=unidad_ingreso,
                 unidadmedidaegreso=unidad_egreso,
-                stockactual=stock_inicial,
+                equivalencia_egreso=equivalencia,
+                stockactual=Decimal('0'),
                 stockminimo=stock_minimo,
                 descontar_stock_automaticamente=descontar_auto,
             )
 
-            # Carga inicial: diferenciarla de una venta real registrando Lote y MovimientoStock específico
+            # Carga inicial: se registra como lote (con vencimiento) y movimiento propio.
             if stock_inicial > 0:
-                Lote.objects.create(
-                    idinsumo=insumo,
-                    fechaingreso=timezone.now(),
-                    cantidadinicial=stock_inicial,
-                    cantidadactual=stock_inicial,
-                )
-                MovimientoStock.objects.create(
-                    idinsumo=insumo,
-                    cantidad=stock_inicial,
-                    idpedido=None,
-                    tipomovimiento='CARGA_INICIAL',
+                registrar_ingreso_lote(
+                    insumo,
+                    stock_inicial,
+                    vencimiento,
+                    tipo_movimiento=TIPO_CARGA_INICIAL,
                     descripcion=f"Carga inicial de stock al crear el insumo '{insumo.nombreinsumo}'",
                 )
 
-        messages.success(
-            request, 'Insumo creado correctamente en el stock.'
-        )
+        messages.success(request, 'Insumo creado correctamente en el stock.')
         return redirect('stock_lista')
 
-    return render(request, 'panel/stock/stockForm.html')
+    return render(request, 'panel/stock/stockForm.html', _contexto_form_insumo())
 
 
 @panel_login_requerido
@@ -3774,38 +3931,54 @@ def stock_editar(request, idinsumo):
     insumo = get_object_or_404(Insumo, pk=idinsumo)
 
     if request.method == 'POST':
-        insumo.nombreinsumo = request.POST.get('nombreinsumo', '').strip()
-        insumo.unidadmedidaingreso = request.POST.get(
-            'unidadmedidaingreso', ''
-        ).strip()
-        insumo.unidadmedidaegreso = request.POST.get(
-            'unidadmedidaegreso', ''
-        ).strip()
-        insumo.stockactual = request.POST.get('stockactual') or 0
-        insumo.stockminimo = request.POST.get('stockminimo') or 5
+        nombre = request.POST.get('nombreinsumo', '').strip()
+        unidad_ingreso, unidad_egreso, equivalencia, errores = _leer_unidades_insumo(request.POST)
+
+        if not nombre:
+            errores.insert(0, 'Completá el nombre del insumo.')
+
+        if errores:
+            for error in errores:
+                messages.error(request, error)
+            return render(
+                request,
+                'panel/stock/editarStock.html',
+                _contexto_form_insumo({'insumo': insumo}),
+            )
+
+        unidad_cambio = normalizar_unidad(unidad_ingreso) != normalizar_unidad(
+            insumo.unidadmedidaingreso
+        )
+
+        insumo.nombreinsumo = nombre
+        insumo.unidadmedidaingreso = unidad_ingreso
+        insumo.unidadmedidaegreso = unidad_egreso
+        insumo.equivalencia_egreso = equivalencia
+        insumo.stockminimo = _leer_cantidad_stock(
+            request.POST.get('stockminimo'), Decimal('5')
+        )
         insumo.descontar_stock_automaticamente = (
             request.POST.get('descontar_stock_automaticamente') == 'on'
         )
 
-        if (
-            not insumo.nombreinsumo
-            or not insumo.unidadmedidaingreso
-            or not insumo.unidadmedidaegreso
-        ):
-            messages.error(
-                request,
-                'Completá el nombre y las unidades de medida del insumo.'
-            )
-            return render(
-                request, 'panel/stock/editarStock.html', {'insumo': insumo}
-            )
-
-        insumo.save()
+        # El stock NO se edita acá: se cambia con "Ajustar stock" para que los lotes cuadren.
+        insumo.save(update_fields=[
+            'nombreinsumo', 'unidadmedidaingreso', 'unidadmedidaegreso',
+            'equivalencia_egreso', 'stockminimo', 'descontar_stock_automaticamente',
+        ])
 
         messages.success(request, 'Insumo actualizado correctamente.')
+        if unidad_cambio:
+            messages.warning(
+                request,
+                'Cambiaste la unidad de ingreso: el stock y los lotes no se convierten '
+                'solos. Revisá las cantidades con "Ajustar stock".'
+            )
         return redirect('stock_lista')
 
-    return render(request, 'panel/stock/editarStock.html', {'insumo': insumo})
+    return render(
+        request, 'panel/stock/editarStock.html', _contexto_form_insumo({'insumo': insumo})
+    )
 
 
 @panel_login_requerido
@@ -3816,13 +3989,13 @@ def registrar_compra_insumo(request):
         insumo_id = request.POST.get('idinsumo')
 
         try:
-            cantidad = Decimal(request.POST.get('cantidad', '0'))
-            precio_total = Decimal(request.POST.get('preciototal', '0'))
+            cantidad = Decimal(request.POST.get('cantidad', '0').replace(',', '.'))
+            precio_total = Decimal(request.POST.get('preciototal', '0').replace(',', '.'))
 
-        except (InvalidOperation, ValueError, TypeError):
+        except (InvalidOperation, ValueError, TypeError, AttributeError):
             messages.error(
                 request,
-                'Ingresa una cantidad y un precio total válidos.'
+                'Ingresá una cantidad y un precio total válidos.'
             )
             return redirect('registrar_compra_insumo')
 
@@ -3839,10 +4012,16 @@ def registrar_compra_insumo(request):
             )
             return redirect('registrar_compra_insumo')
 
+        vencimiento, error_vencimiento = _leer_vencimiento(
+            request.POST.get('fechavencimiento')
+        )
+        if error_vencimiento:
+            messages.error(request, error_vencimiento)
+            return redirect('registrar_compra_insumo')
+
         # Calcular el costo unitario en el servidor.
         costo_unitario = precio_total / cantidad
 
-        # Obtener la fecha actual.
         fecha_compra = timezone.now()
 
         try:
@@ -3853,13 +4032,11 @@ def registrar_compra_insumo(request):
                     pk=insumo_id
                 )
 
-                # Registrar la compra con el importe total.
                 compra = Compras.objects.create(
                     fecha=fecha_compra,
                     preciototal=precio_total,
                 )
 
-                # Guardar el detalle con el costo unitario calculado.
                 DetalleCompra.objects.create(
                     idcompra=compra,
                     idinsumo=insumo,
@@ -3867,17 +4044,14 @@ def registrar_compra_insumo(request):
                     costounitario=costo_unitario,
                 )
 
-                # Crear el lote de ingreso.
-                Lote.objects.create(
-                    idinsumo=insumo,
-                    fechaingreso=fecha_compra,
-                    cantidadinicial=cantidad,
-                    cantidadactual=cantidad,
+                # Crea el lote (con su vencimiento), suma el stock y registra el movimiento.
+                registrar_ingreso_lote(
+                    insumo,
+                    cantidad,
+                    vencimiento,
+                    tipo_movimiento=MovimientoStock.TIPO_COMPRA,
+                    descripcion=f"Compra #{compra.idcompra} de {insumo.nombreinsumo}",
                 )
-
-                # Actualizar el stock.
-                insumo.stockactual = (insumo.stockactual or Decimal('0')) + cantidad
-                insumo.save(update_fields=['stockactual'])
 
         except Insumo.DoesNotExist:
             messages.error(request, 'El insumo seleccionado no existe.')
@@ -3886,13 +4060,13 @@ def registrar_compra_insumo(request):
         messages.success(
             request,
             'Compra registrada correctamente. Se guardaron el precio total, '
-            'el costo unitario, el lote y el stock actualizado.'
+            'el costo unitario, el lote con su vencimiento y el stock actualizado.'
         )
 
         return redirect('stock_lista')
 
     return render(request, 'panel/stock/registrarCompra.html', {
-        'insumos': Insumo.objects.all(),
+        'insumos': Insumo.objects.all().order_by('nombreinsumo'),
     })
 
 
@@ -3902,7 +4076,7 @@ def ajustar_stock(request, idinsumo):
     insumo = get_object_or_404(Insumo, pk=idinsumo)
 
     if request.method == 'POST':
-        cantidad_nueva_texto = request.POST.get('cantidadnueva', '').strip()
+        cantidad_nueva_texto = request.POST.get('cantidadnueva', '').strip().replace(',', '.')
         motivo = request.POST.get('motivo', '').strip()
 
         try:
@@ -3914,12 +4088,12 @@ def ajustar_stock(request, idinsumo):
         except (InvalidOperation, ValueError):
             messages.error(
                 request,
-                'Ingresa una cantidad válida, igual o mayor que cero.'
+                'Ingresá una cantidad válida, igual o mayor que cero.'
             )
             return redirect('ajustar_stock', idinsumo=idinsumo)
 
         if not motivo:
-            messages.error(request, 'Debes indicar el motivo del ajuste.')
+            messages.error(request, 'Debés indicar el motivo del ajuste.')
             return redirect('ajustar_stock', idinsumo=idinsumo)
 
         if len(motivo) > 250:
@@ -3929,19 +4103,15 @@ def ajustar_stock(request, idinsumo):
             )
             return redirect('ajustar_stock', idinsumo=idinsumo)
 
-        with transaction.atomic():
-            insumo = Insumo.objects.select_for_update().get(pk=idinsumo)
-            cantidad_anterior = insumo.stockactual
+        vencimiento, error_vencimiento = _leer_vencimiento(
+            request.POST.get('fechavencimiento')
+        )
+        if error_vencimiento:
+            messages.error(request, error_vencimiento)
+            return redirect('ajustar_stock', idinsumo=idinsumo)
 
-            AjusteStock.objects.create(
-                idinsumo=insumo,
-                cantidadanterior=cantidad_anterior,
-                cantidadnueva=cantidad_nueva,
-                motivo=motivo,
-            )
-
-            insumo.stockactual = cantidad_nueva
-            insumo.save(update_fields=['stockactual'])
+        # Mantiene sincronizados el stock del insumo y sus lotes.
+        ajustar_stock_insumo(idinsumo, cantidad_nueva, motivo, vencimiento)
 
         messages.success(request, 'Stock ajustado correctamente.')
         return redirect('stock_lista')
@@ -3949,6 +4119,36 @@ def ajustar_stock(request, idinsumo):
     return render(request, 'panel/stock/ajustarStock.html', {
         'insumo': insumo,
     })
+
+
+@panel_login_requerido
+@requiere_permiso('stock.ajustar')
+@require_POST
+def lote_baja(request, idlote):
+    """Descarta lo que queda de un lote (vencido o en mal estado) y lo resta del stock."""
+    lote = get_object_or_404(Lote.objects.select_related('idinsumo'), pk=idlote)
+    motivo = (request.POST.get('motivo') or '').strip()[:150] or (
+        'Lote vencido' if lote.esta_vencido else 'Baja de lote'
+    )
+
+    _, cantidad = dar_baja_lote(lote.pk, motivo)
+
+    if cantidad > 0:
+        registrar_auditoria(
+            request,
+            'LOTE_BAJA',
+            f'Baja del lote {lote.codigo} ({lote.idinsumo.nombreinsumo}): {cantidad} '
+            f'{lote.idinsumo.unidadmedidaingreso}. Motivo: {motivo}',
+        )
+        messages.success(
+            request,
+            f'Se dio de baja el lote {lote.codigo}: se descontaron '
+            f'{cantidad.normalize():f} {lote.idinsumo.unidadmedidaingreso} del stock.'
+        )
+    else:
+        messages.info(request, 'Ese lote ya no tenía cantidad disponible.')
+
+    return redirect('stock_lista')
 
 
 # ============================================================
@@ -4034,7 +4234,7 @@ def empleado_lista(request):
                 nombre=nombre,
                 apellido=apellido,
                 correo=correo,
-                id_rol=rol.pk,
+                idrol=rol,
                 contrasena=make_password(contrasena),
             )
 
@@ -4105,7 +4305,7 @@ def empleado_crear(request):
                 nombre=nombre,
                 apellido=apellido,
                 correo=correo,
-                id_rol=rol.pk,
+                idrol=rol,
                 contrasena=make_password(contrasena),
             )
 
@@ -4212,14 +4412,14 @@ def empleado_editar(request, idempleado):
             empleado.nombre = nombre
             empleado.apellido = apellido
             empleado.correo = correo
-            empleado.id_rol = rol.pk
+            empleado.idrol = rol
             empleado.activo = activo_check
 
             campos = [
                 'nombre',
                 'apellido',
                 'correo',
-                'id_rol',
+                'idrol',
                 'activo',
             ]
 
@@ -4740,11 +4940,15 @@ def bi_top_productos(inicio, fin):
     return list(
         DetallePedido.objects.filter(
             idpedido__in=bi_pedidos_periodo(inicio, fin),
-            idproducto__isnull=False,
         )
-        .values("idproducto_id", "idproducto__nombre")
+        .annotate(
+            nombre_historico=Coalesce(
+                "idproducto__nombre", "nombreproducto", Value("Producto eliminado")
+            )
+        )
+        .values("idproducto_id", "nombre_historico")
         .annotate(unidades=Sum("cantidad"), ingresos=Sum(importe_linea))
-        .order_by("-unidades", "-ingresos", "idproducto__nombre")[:10]
+        .order_by("-unidades", "-ingresos", "nombre_historico")[:10]
     )
 
 
@@ -4952,7 +5156,7 @@ def bi_reporte_productos(inicio, fin):
     precio_promedio = (
         ingresos_total / unidades_total if unidades_total else Decimal("0.00")
     )
-    nombres = [p["idproducto__nombre"] or "Sin nombre" for p in productos]
+    nombres = [p["nombre_historico"] or "Sin nombre" for p in productos]
 
     return {
         "titulo": "Productos más vendidos",
@@ -4965,14 +5169,14 @@ def bi_reporte_productos(inicio, fin):
             {"titulo": "Precio promedio", "valor": precio_promedio,
              "formato": "moneda", "detalle": "Ingreso por unidad"},
             {"titulo": "Más vendido",
-             "valor": lider["idproducto__nombre"] if lider else None,
+             "valor": lider["nombre_historico"] if lider else None,
              "formato": None,
              "detalle": f"{lider['unidades']} unidades" if lider else "Sin datos"},
             {"titulo": "Peso del líder",
              "valor": bi_pct(lider["unidades"], unidades_total) if lider else None,
              "formato": "pct", "detalle": "% de unidades del Top 10"},
             {"titulo": "Mayor ingreso",
-             "valor": mayor_ingreso["idproducto__nombre"] if mayor_ingreso else None,
+             "valor": mayor_ingreso["nombre_historico"] if mayor_ingreso else None,
              "formato": None,
              "detalle": bi_moneda(mayor_ingreso["ingresos"]) if mayor_ingreso else "Sin datos"},
         ],
@@ -6259,7 +6463,7 @@ def historial_pedidos(request):
         if estado:
             pedidos = pedidos.filter(idestadopedido__idestado=int(estado))
 
-    pedidos = pedidos.order_by('-fecha_creacion', '-idpedido')
+    pedidos = pedidos.order_by('-idpedido')
     estados = EstadoPedido.objects.all().order_by('descripcion')
 
     pagina = Paginator(pedidos, 15).get_page(
