@@ -162,8 +162,8 @@ JAZZMIN_SETTINGS = {
     "copyright": "", 
     "show_sidebar": True,
     "navigation_expanded": True,
-    "custom_css": "css/admin_custom.css",
-    "custom_js": "java/admin_custom.js",
+    "custom_css": "css/admin/admin_custom.css",
+    "custom_js": "js/admin/admin_custom.js",
 }
 
 JAZZMIN_UI_TWEAKS = {
@@ -193,7 +193,7 @@ LOGIN_URL = '/panel/login/'
 LOGIN_REDIRECT_URL = '/panel/'
 LOGOUT_REDIRECT_URL = '/panel/login/'
 
-CKEDITOR_5_CUSTOM_CSS = 'css/admin_custom.css'
+CKEDITOR_5_CUSTOM_CSS = 'css/admin/admin_custom.css'
 CKEDITOR_5_CONFIGS = {
     'extends': {
         'blockToolbar': [
