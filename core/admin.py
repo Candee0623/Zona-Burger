@@ -450,6 +450,8 @@ class AjusteStockAdmin(AccionesAdminMixin, admin.ModelAdmin):
         "cantidadnueva",
         "motivo",
         "fecha",
+        "idempleado",
+        "idlote",
         "acciones",
     )
     list_display_links = ("idajuste",)
@@ -506,6 +508,7 @@ class ComprasAdmin(AccionesAdminMixin, admin.ModelAdmin):
         "idcompra",
         "fecha",
         "preciototal",
+        "idempleado",
         "acciones",
     )
     list_display_links = ("idcompra",)

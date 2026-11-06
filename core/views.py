@@ -112,6 +112,7 @@ from .stock_service import (
     StockInsuficienteError,
     registrar_ingreso_lote,
     ajustar_stock_insumo,
+    StockCambiadoError,
     dar_baja_lote,
     TIPO_CARGA_INICIAL,
 )
@@ -1029,6 +1030,20 @@ def calcular_descuento_promocion(carrito, promocion):
     descuento = Decimal('0.00')
     mensaje = ''
 
+    if tipo in ('2X1', '2_X_1') and len(unidades) < 2:
+        return (
+            Decimal('0.00'),
+            'La promoción 2 x 1 requiere 2 unidades: agregá 1 unidad más.',
+        )
+
+    if tipo in ('3X2', '3_X_2') and len(unidades) < 3:
+        faltan = 3 - len(unidades)
+        return (
+            Decimal('0.00'),
+            'La promoción 3 x 2 requiere 3 unidades: '
+            f'agregá {faltan} unidad{"es" if faltan > 1 else ""} más.',
+        )
+
     if tipo in ('2X1', '2_X_1'):
         unidades.sort()
         descuento = sum(unidades[:len(unidades) // 2], Decimal('0.00'))
@@ -1853,6 +1868,14 @@ def procesar_checkout(request):
                     if objeto_promocion
                     else None
                 ),
+                nombrepromocion=(
+                    (objeto_promocion.palabraclave or '')[:100] or None
+                    if objeto_promocion
+                    else None
+                ),
+                descuentopromocion=(
+                    descuento_promocion if objeto_promocion else None
+                ),
                 horarioentregadeseado=horario_deseado,
                 total=total_general,
                 justificacioncancelacion=(
@@ -2168,7 +2191,7 @@ def panel_inicio(request):
         pedidos_hoy_base
     )
 
-    return render(request, 'panel/inicioPanel.html', {
+    respuesta = render(request, 'panel/inicioPanel.html', {
         'pedidos_hoy': pedidos_hoy,
         'estados_con_conteo': estados_con_conteo,
         'filtro_estado_actual': filtro_estado,
@@ -2177,6 +2200,14 @@ def panel_inicio(request):
         'total_efectivo': total_efectivo,
         'total_transferencia': total_transferencia,
     })
+
+    # El refresco automático del panel pide esta misma página por AJAX. Eso
+    # no debe "gastar" los avisos (messages) pendientes: se dejan intactos
+    # para que los vea la persona en su próxima carga real.
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        messages.get_messages(request).used = False
+
+    return respuesta
 
 
 
@@ -2209,30 +2240,108 @@ def obtener_ticket_modal(request, idpedido):
     })
 
 
+# Transiciones de estado permitidas (RN02). Las claves y valores se comparan
+# normalizados (sin tildes, en minúsculas). "entregado" y "cancelado" son finales.
+TRANSICIONES_ESTADO_PEDIDO = {
+    'pendiente': {'en preparacion', 'en proceso', 'cancelado'},
+    'en preparacion': {'en proceso', 'enviado', 'entregado', 'cancelado'},
+    'en proceso': {'en preparacion', 'enviado', 'entregado', 'cancelado'},
+    'enviado': {'entregado', 'cancelado'},
+    'entregado': set(),
+    'cancelado': set(),
+}
+MOTIVO_CANCELACION_MAX = 250
+
+
+def _norm_estado(descripcion):
+    return local_normalizar(descripcion or '').strip()
+
+
+def _transicion_estado_valida(actual, nuevo):
+    """Devuelve (ok, mensaje). `actual` y `nuevo` son EstadoPedido (actual puede ser None)."""
+    if actual is None:
+        return True, ''
+
+    desde, hasta = _norm_estado(actual.descripcion), _norm_estado(nuevo.descripcion)
+
+    if desde == hasta:
+        return False, f'El pedido ya se encuentra en estado "{actual.descripcion}".'
+
+    if desde == 'entregado':
+        return False, 'Un pedido Entregado no se puede modificar ni cancelar.'
+
+    if desde == 'cancelado':
+        return False, 'Un pedido Cancelado no se puede reabrir.'
+
+    if hasta not in TRANSICIONES_ESTADO_PEDIDO.get(desde, set()):
+        return False, (
+            f'No se puede pasar un pedido de "{actual.descripcion}" '
+            f'a "{nuevo.descripcion}".'
+        )
+
+    return True, ''
+
+
 @panel_login_requerido
 @requiere_permiso('pedidos.cambiar_estado')
 def actualizar_estado_pedido(request, idpedido):
     if request.method != 'POST':
         return redirect('panel_inicio')
 
-    pedido = get_object_or_404(Pedido, idpedido=idpedido)
     nuevo_estado_id = request.POST.get('nuevo_estado')
 
     if not nuevo_estado_id:
         return redirect('panel_inicio')
 
     nuevo_estado = get_object_or_404(EstadoPedido, pk=nuevo_estado_id)
-    pedido.idestadopedido = nuevo_estado
+    es_cancelado = _norm_estado(nuevo_estado.descripcion) == 'cancelado'
+    motivo = (request.POST.get('justificacioncancelacion') or '').strip()
+    estado_esperado = (request.POST.get('estado_esperado') or '').strip()
 
-    es_cancelado = 'cancelado' in nuevo_estado.descripcion.lower()
-
+    # Validación del motivo antes de tocar la base (evita el error 500 por longitud).
     if es_cancelado:
-        pedido.justificacioncancelacion = request.POST.get(
-            'justificacioncancelacion', ''
-        )
-        reintegrar_stock_pedido(pedido, motivo=pedido.justificacioncancelacion)
+        if not motivo:
+            messages.error(request, 'Ingresá el motivo de la cancelación.')
+            return redirect('panel_inicio')
+        if len(motivo) > MOTIVO_CANCELACION_MAX:
+            messages.error(
+                request,
+                f'El motivo no puede superar los {MOTIVO_CANCELACION_MAX} caracteres '
+                f'(ingresaste {len(motivo)}).',
+            )
+            return redirect('panel_inicio')
 
-    pedido.save()
+    # Se bloquea la fila del pedido: dos cambios simultáneos se atienden en
+    # secuencia y el segundo se valida contra el estado ya modificado.
+    with transaction.atomic():
+        pedido = get_object_or_404(
+            Pedido.objects.select_for_update(), idpedido=idpedido
+        )
+        actual = pedido.idestadopedido
+
+        # Otro empleado cambió el pedido mientras éste tenía el modal abierto.
+        actual_id = str(actual.pk) if actual else ''
+        if estado_esperado and estado_esperado != actual_id:
+            messages.warning(
+                request,
+                f'El pedido #{pedido.idpedido} fue modificado por otro empleado '
+                f'(ahora está en "{actual.descripcion if actual else "sin estado"}"). '
+                'Revisá el estado actual y volvé a intentarlo.',
+            )
+            return redirect('panel_inicio')
+
+        valido, mensaje_error = _transicion_estado_valida(actual, nuevo_estado)
+        if not valido:
+            messages.error(request, mensaje_error)
+            return redirect('panel_inicio')
+
+        pedido.idestadopedido = nuevo_estado
+
+        if es_cancelado:
+            pedido.justificacioncancelacion = motivo
+            reintegrar_stock_pedido(pedido, motivo=motivo)
+
+        pedido.save()
 
     cliente = pedido.idcliente
     nombre_cliente = cliente.nombre if cliente else 'Cliente'
@@ -2350,6 +2459,10 @@ def categoria_crear(request):
 
         if not nombre:
             errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 100:
+            errores.append('El nombre no puede superar los 100 caracteres.')
+        elif CategoriaProducto.objects.filter(nombre__iexact=nombre).exists():
+            errores.append(f'Ya existe una categoría llamada "{nombre}".')
         else:
             CategoriaProducto.objects.create(nombre=nombre)
             messages.success(request, 'Categoría creada correctamente.')
@@ -2371,6 +2484,15 @@ def categoria_editar(request, idcategoria):
 
         if not nombre:
             errores.append('El nombre es obligatorio.')
+        elif len(nombre) > 100:
+            errores.append('El nombre no puede superar los 100 caracteres.')
+        elif (
+            CategoriaProducto.objects
+            .filter(nombre__iexact=nombre)
+            .exclude(pk=categoria.pk)
+            .exists()
+        ):
+            errores.append(f'Ya existe otra categoría llamada "{nombre}".')
         else:
             categoria.nombre = nombre
             categoria.save()
@@ -2388,8 +2510,30 @@ def categoria_editar(request, idcategoria):
 def categoria_eliminar(request, idcategoria):
     categoria = get_object_or_404(CategoriaProducto, pk=idcategoria)
 
+    # No se puede eliminar una categoría que todavía tiene productos
+    # (incluye los ocultos o dados de baja lógica).
+    cantidad_productos = Producto.objects.filter(idcategoria=categoria).count()
+
+    if cantidad_productos:
+        messages.error(
+            request,
+            f'No se puede eliminar la categoría "{categoria.nombre}" mientras '
+            f'tenga productos asociados ({cantidad_productos}). '
+            'Mové o eliminá esos productos primero.',
+        )
+        return redirect('categoria_lista')
+
     if request.method == 'POST':
-        categoria.delete()
+        try:
+            categoria.delete()
+        except (IntegrityError, ProtectedError):
+            messages.error(
+                request,
+                f'No se puede eliminar la categoría "{categoria.nombre}" '
+                'porque está en uso.',
+            )
+            return redirect('categoria_lista')
+
         messages.success(request, 'Categoría eliminada.')
         return redirect('categoria_lista')
 
@@ -2403,6 +2547,65 @@ def categoria_eliminar(request, idcategoria):
 # ------------------------------------------------------------
 # Grupos de opciones
 # ------------------------------------------------------------
+
+def _validar_grupo_opciones(min_raw, max_raw, nombres, precios, ids=None, eliminar=()):
+    """
+    Valida en el servidor los límites de un grupo de opciones y el precio adicional
+    de cada opción. Devuelve (minimo, maximo, errores).
+    - Mínimo: entero >= 0 (vacío = 0). Máximo: entero >= 1 (vacío = 1).
+    - El mínimo no puede ser mayor que el máximo.
+    - El precio adicional no puede ser negativo (0 sí se acepta).
+    """
+    errores = []
+
+    def _entero(texto, defecto):
+        texto = (texto or '').strip()
+        if texto == '':
+            return defecto
+        try:
+            return int(texto)
+        except ValueError:
+            return None
+
+    minimo = _entero(min_raw, 0)
+    maximo = _entero(max_raw, 1)
+
+    if minimo is None:
+        errores.append('El mínimo de selecciones debe ser un número entero.')
+    elif minimo < 0:
+        errores.append('El mínimo de selecciones no puede ser negativo.')
+
+    if maximo is None:
+        errores.append('El máximo de selecciones debe ser un número entero.')
+    elif maximo < 1:
+        errores.append('El máximo de selecciones debe ser al menos 1.')
+
+    if not errores and minimo > maximo:
+        errores.append('El mínimo de selecciones no puede ser mayor que el máximo.')
+
+    for i, nombre in enumerate(nombres):
+        if not (nombre or '').strip():
+            continue
+        if ids is not None and i < len(ids) and (ids[i] or '').strip() in eliminar:
+            continue
+        precio_raw = (precios[i] if i < len(precios) else '') or ''
+        precio_raw = str(precio_raw).strip().replace(',', '.')
+        if precio_raw == '':
+            continue
+        try:
+            precio = Decimal(precio_raw)
+            if not precio.is_finite():
+                raise InvalidOperation
+        except (InvalidOperation, ValueError):
+            errores.append(f'El precio adicional de "{nombre.strip()}" no es válido.')
+            continue
+        if precio < 0:
+            errores.append(
+                f'El precio adicional de "{nombre.strip()}" no puede ser negativo.'
+            )
+
+    return minimo, maximo, errores
+
 
 @panel_login_requerido
 @requiere_permiso('opciones.ver')
@@ -2420,16 +2623,23 @@ def grupo_crear(request):
 
     if request.method == 'POST':
         nombre = request.POST.get('nombre', '').strip()
-        minselecciones = request.POST.get('minselecciones') or 0
-        maxselecciones = request.POST.get('maxselecciones') or 1
         opcion_nombres = request.POST.getlist('opcion_nombre[]')
         opcion_precios = request.POST.getlist('opcion_precio[]')
         opcion_insumos = request.POST.getlist('opcion_insumo[]')
         opcion_cantidades = request.POST.getlist('opcion_cantidad_insumo[]')
 
+        minselecciones, maxselecciones, errores_grupo = _validar_grupo_opciones(
+            request.POST.get('minselecciones'),
+            request.POST.get('maxselecciones'),
+            opcion_nombres,
+            opcion_precios,
+        )
+
         if not nombre:
             errores.append('El nombre del grupo es obligatorio.')
-        else:
+        errores.extend(errores_grupo)
+
+        if not errores:
             grupo = GrupoOpcion.objects.create(
                 nombre=nombre,
                 minselecciones=minselecciones,
@@ -2484,12 +2694,22 @@ def grupo_editar(request, idgrupo):
     if request.method == 'POST':
         nombre = request.POST.get('nombre', '').strip()
 
-        grupo.minselecciones = request.POST.get('minselecciones') or 0
-        grupo.maxselecciones = request.POST.get('maxselecciones') or 1
+        minselecciones, maxselecciones, errores_grupo = _validar_grupo_opciones(
+            request.POST.get('minselecciones'),
+            request.POST.get('maxselecciones'),
+            request.POST.getlist('opcion_nombre[]'),
+            request.POST.getlist('opcion_precio[]'),
+            ids=request.POST.getlist('opcion_id[]'),
+            eliminar=set(request.POST.getlist('opcion_eliminar[]')),
+        )
 
         if not nombre:
             errores.append('El nombre del grupo es obligatorio.')
-        else:
+        errores.extend(errores_grupo)
+
+        if not errores:
+            grupo.minselecciones = minselecciones
+            grupo.maxselecciones = maxselecciones
             grupo.nombre = nombre
             grupo.save()
 
@@ -2619,23 +2839,58 @@ def _ids_enviados(request, campo):
     return [int(v) for v in request.POST.getlist(campo) if v.isdigit()]
 
 
-def _validar_producto(nombre, precio_raw):
+DESCRIPCION_PRODUCTO_MAX = 1000
+PRECIO_PRODUCTO_MAX = Decimal('99999999.99')
+
+
+def _largo_texto_visible(texto):
+    """Largo del texto sin etiquetas HTML (la descripción viene de CKEditor)."""
+    import html as html_lib
+    from django.utils.html import strip_tags
+
+    plano = html_lib.unescape(strip_tags(texto or ''))
+    return len(plano.replace('\xa0', ' ').strip())
+
+
+def _validar_producto(nombre, precio_raw, idcategoria=None, descripcion=''):
     """Devuelve (precio, errores) para los datos básicos del producto."""
     errores = []
 
     if not nombre:
         errores.append('El nombre del producto es obligatorio.')
+    elif len(nombre) > 100:
+        errores.append('El nombre no puede superar los 100 caracteres.')
 
     precio = None
 
     try:
         precio = Decimal(precio_raw)
 
-        if precio < Decimal('0.00'):
-            errores.append('El precio no puede ser negativo.')
+        if not precio.is_finite():
+            raise InvalidOperation
+
+        if precio <= Decimal('0.00'):
+            errores.append('El precio debe ser mayor a 0 (mínimo 0,01).')
+        elif precio.as_tuple().exponent < -2:
+            errores.append('El precio admite como máximo 2 decimales.')
+        elif precio > PRECIO_PRODUCTO_MAX:
+            errores.append('El precio ingresado es demasiado alto.')
 
     except (InvalidOperation, ValueError, TypeError):
+        precio = None
         errores.append('El precio debe ser un número válido.')
+
+    if not idcategoria or not CategoriaProducto.objects.filter(
+        pk=idcategoria
+    ).exists():
+        errores.append('Seleccioná una categoría para el producto.')
+
+    largo = _largo_texto_visible(descripcion)
+    if largo > DESCRIPCION_PRODUCTO_MAX:
+        errores.append(
+            f'La descripción no puede superar los {DESCRIPCION_PRODUCTO_MAX} '
+            f'caracteres (tiene {largo}).'
+        )
 
     return precio, errores
 
@@ -2697,7 +2952,9 @@ def producto_crear(request):
     grupos_ids = _ids_enviados(request, 'grupos')
     extras_ids = _ids_enviados(request, 'extras')
 
-    precio, errores = _validar_producto(nombre, precio_raw)
+    precio, errores = _validar_producto(
+        nombre, precio_raw, idcategoria, request.POST.get('descripcion', '')
+    )
 
     if errores:
         return render(request, 'panel/menu/productos/crearProducto.html', {
@@ -2766,7 +3023,9 @@ def producto_editar(request, idproducto):
     grupos_ids = _ids_enviados(request, 'grupos')
     extras_ids = _ids_enviados(request, 'extras')
 
-    precio, errores = _validar_producto(nombre, precio_raw)
+    precio, errores = _validar_producto(
+        nombre, precio_raw, idcategoria, descripcion
+    )
 
     if errores:
         return render(request, 'panel/menu/productos/editarProducto.html', {
@@ -3173,7 +3432,15 @@ def editar_cantidad_insumo_receta(request, idrecetainsumo):
 
     else:
         detalle.cantidadinsumo = cantidad
-        detalle.save(update_fields=['cantidadinsumo'])
+        update_fields = ['cantidadinsumo']
+
+        # La cantidad se carga en la unidad de egreso del insumo: se deja
+        # guardada para que el descuento de stock convierta bien (g -> kg).
+        if detalle.idinsumo and detalle.unidadmedida != detalle.idinsumo.unidadmedidaegreso:
+            detalle.unidadmedida = detalle.idinsumo.unidadmedidaegreso
+            update_fields.append('unidadmedida')
+
+        detalle.save(update_fields=update_fields)
 
         nombre_insumo = (
             detalle.idinsumo.nombreinsumo if detalle.idinsumo
@@ -3212,9 +3479,11 @@ def _valor_beneficio(tipo_beneficio, valor_raw):
 
 
 def _form_promocion_con_error(request, contexto, mensaje):
+    # Se devuelve lo que la persona había escrito para no perder los datos.
     return render(request, TEMPLATE_FORM_PROMOCION, {
         **contexto,
         'error': mensaje,
+        'datos': request.POST,
     })
 
 
@@ -3312,6 +3581,15 @@ def crear_promocion(request):
             return _form_promocion_con_error(
                 request, contexto,
                 'El valor del beneficio no puede ser negativo.'
+            )
+
+        if (
+            getattr(tipo_beneficio, 'comportamiento', None) == 'PORCENTAJE'
+            and not (Decimal('0') < valor <= Decimal('100'))
+        ):
+            return _form_promocion_con_error(
+                request, contexto,
+                'El porcentaje debe ser mayor a 0 y no puede superar 100.'
             )
 
     promocion = Promocion(
@@ -3436,6 +3714,15 @@ def editar_promocion(request, idpromocion):
                 'El valor del beneficio no puede ser negativo.'
             )
 
+        if (
+            getattr(tipo_beneficio, 'comportamiento', None) == 'PORCENTAJE'
+            and not (Decimal('0') < valor <= Decimal('100'))
+        ):
+            return _form_promocion_con_error(
+                request, contexto,
+                'El porcentaje debe ser mayor a 0 y no puede superar 100.'
+            )
+
     promocion.palabraclave = palabraclave
     promocion.tipobeneficio = tipo_beneficio
     promocion.valor = valor
@@ -3491,43 +3778,55 @@ def lista_tipos_beneficio(request):
     )
 
 
+TEMPLATE_CREAR_TIPO_BENEFICIO = (
+    'panel/promociones/tiposBeneficio/crearTipoBeneficio.html'
+)
+TEMPLATE_EDITAR_TIPO_BENEFICIO = (
+    'panel/promociones/tiposBeneficio/editarTipoBeneficio.html'
+)
+
+
+def _tipo_beneficio_con_error(request, template, mensaje, tipo=None):
+    """Vuelve a mostrar el formulario con el error y lo que se había escrito."""
+    contexto = {'errores': [mensaje], 'datos': request.POST}
+
+    if tipo is not None:
+        contexto['tipo'] = tipo
+
+    return render(request, template, contexto)
+
+
 @panel_login_requerido
 @requiere_permiso('tipos_beneficio.administrar')
 def crear_tipo_beneficio(request):
     if request.method == 'GET':
-        return render(
-            request,
-            'panel/promociones/tiposBeneficio/crearTipoBeneficio.html',
-        )
+        return render(request, TEMPLATE_CREAR_TIPO_BENEFICIO)
 
     codigo = request.POST.get('codigo', '').strip()
     nombre = request.POST.get('nombre', '').strip()
     descripcion = request.POST.get('descripcion', '').strip()
     comportamiento = request.POST.get('comportamiento', '').strip()
 
-    if not nombre:
-        messages.error(request, 'Debes ingresar un nombre para el beneficio.')
-        return redirect('panel_crear_tipo_beneficio')
+    def error(mensaje):
+        return _tipo_beneficio_con_error(
+            request, TEMPLATE_CREAR_TIPO_BENEFICIO, mensaje
+        )
 
-    if not comportamiento:
-        messages.error(request, 'Debes seleccionar un comportamiento.')
-        return redirect('panel_crear_tipo_beneficio')
+    if not nombre:
+        return error('Debes ingresar un nombre para el beneficio.')
+
+    if comportamiento not in dict(TipoBeneficio.OPCIONES_COMPORTAMIENTO):
+        return error('Debes seleccionar un comportamiento.')
 
     # Si no se indica código, se genera a partir del nombre.
     if not codigo:
         codigo = nombre.upper().replace(' ', '_')
 
     if TipoBeneficio.objects.filter(codigo__iexact=codigo).exists():
-        messages.error(
-            request, 'Ya existe un tipo de beneficio con ese código.'
-        )
-        return redirect('panel_crear_tipo_beneficio')
+        return error('Ya existe un tipo de beneficio con ese código.')
 
     if TipoBeneficio.objects.filter(nombre__iexact=nombre).exists():
-        messages.error(
-            request, 'Ya existe un tipo de beneficio con ese nombre.'
-        )
-        return redirect('panel_crear_tipo_beneficio')
+        return error('Ya existe un tipo de beneficio con ese nombre.')
 
     TipoBeneficio.objects.create(
         codigo=codigo,
@@ -3538,6 +3837,7 @@ def crear_tipo_beneficio(request):
 
     messages.success(request, 'Tipo de beneficio creado correctamente.')
     return redirect('panel_lista_tipos_beneficio')
+
 
 @panel_login_requerido
 @requiere_permiso('tipos_beneficio.administrar')
@@ -3550,13 +3850,16 @@ def editar_tipo_beneficio(request, pk):
         descripcion = request.POST.get('descripcion', '').strip()
         comportamiento = request.POST.get('comportamiento', '').strip()
 
-        if not nombre:
-            messages.error(request, 'El nombre no puede estar vacío.')
-            return redirect('panel_editar_tipo_beneficio', pk=pk)
+        def error(mensaje):
+            return _tipo_beneficio_con_error(
+                request, TEMPLATE_EDITAR_TIPO_BENEFICIO, mensaje, tipo
+            )
 
-        if not comportamiento:
-            messages.error(request, 'Debes seleccionar un comportamiento.')
-            return redirect('panel_editar_tipo_beneficio', pk=pk)
+        if not nombre:
+            return error('El nombre no puede estar vacío.')
+
+        if comportamiento not in dict(TipoBeneficio.OPCIONES_COMPORTAMIENTO):
+            return error('Debes seleccionar un comportamiento.')
 
         if not codigo:
             codigo = nombre.upper().replace(' ', '_')
@@ -3568,11 +3871,7 @@ def editar_tipo_beneficio(request, pk):
             .exclude(pk=pk)
             .exists()
         ):
-            messages.error(
-                request,
-                'Ya existe otro beneficio con ese código.'
-            )
-            return redirect('panel_editar_tipo_beneficio', pk=pk)
+            return error('Ya existe otro beneficio con ese código.')
 
         # Evitar nombres duplicados en otros registros.
         if (
@@ -3581,11 +3880,7 @@ def editar_tipo_beneficio(request, pk):
             .exclude(pk=pk)
             .exists()
         ):
-            messages.error(
-                request,
-                'Ya existe otro beneficio con ese nombre.'
-            )
-            return redirect('panel_editar_tipo_beneficio', pk=pk)
+            return error('Ya existe otro beneficio con ese nombre.')
 
         tipo.codigo = codigo
         tipo.nombre = nombre
@@ -3599,11 +3894,7 @@ def editar_tipo_beneficio(request, pk):
         )
         return redirect('panel_lista_tipos_beneficio')
 
-    return render(
-        request,
-        'panel/promociones/tiposBeneficio/editarTipoBeneficio.html',
-        {'tipo': tipo},
-    )
+    return render(request, TEMPLATE_EDITAR_TIPO_BENEFICIO, {'tipo': tipo})
 
 
 @panel_login_requerido
@@ -3804,6 +4095,16 @@ def _leer_unidades_insumo(post):
 
     if not ingreso or not egreso:
         errores.append('Completá las unidades de medida de ingreso y de egreso.')
+
+    for etiqueta, unidad in (('ingreso', ingreso), ('egreso', egreso)):
+        if unidad and (
+            any(caracter.isdigit() for caracter in unidad)
+            or not any(caracter.isalpha() for caracter in unidad)
+        ):
+            errores.append(
+                f'La unidad de {etiqueta} no puede contener números '
+                '(por ejemplo: kg, g, litro, unidad).'
+            )
 
     if equiv_raw:
         try:
@@ -4035,6 +4336,7 @@ def registrar_compra_insumo(request):
                 compra = Compras.objects.create(
                     fecha=fecha_compra,
                     preciototal=precio_total,
+                    idempleado=request.user if isinstance(request.user, Empleado) else None,
                 )
 
                 DetalleCompra.objects.create(
@@ -4110,8 +4412,27 @@ def ajustar_stock(request, idinsumo):
             messages.error(request, error_vencimiento)
             return redirect('ajustar_stock', idinsumo=idinsumo)
 
+        # Stock que veía la persona al abrir el formulario (detecta cambios simultáneos).
+        stock_esperado = None
+        esperado_texto = request.POST.get('stock_esperado', '').strip().replace(',', '.')
+        if esperado_texto:
+            try:
+                stock_esperado = Decimal(esperado_texto)
+                if not stock_esperado.is_finite():
+                    stock_esperado = None
+            except (InvalidOperation, ValueError):
+                stock_esperado = None
+
         # Mantiene sincronizados el stock del insumo y sus lotes.
-        ajustar_stock_insumo(idinsumo, cantidad_nueva, motivo, vencimiento)
+        try:
+            ajustar_stock_insumo(
+                idinsumo, cantidad_nueva, motivo, vencimiento,
+                empleado=request.user if isinstance(request.user, Empleado) else None,
+                stock_esperado=stock_esperado,
+            )
+        except StockCambiadoError as error:
+            messages.error(request, str(error))
+            return redirect('ajustar_stock', idinsumo=idinsumo)
 
         messages.success(request, 'Stock ajustado correctamente.')
         return redirect('stock_lista')
@@ -4859,7 +5180,8 @@ def bi_pedidos_pagados_periodo(inicio, fin):
 # ------------------------------------------------------------
 
 def bi_resumen(inicio, fin):
-    pedidos = bi_pedidos_periodo(inicio, fin)
+    # Las ventas solo suman pedidos pagados (y no cancelados).
+    pedidos = bi_pedidos_pagados_periodo(inicio, fin)
 
     indicadores = pedidos.aggregate(
         total_vendido=Sum("total"),
@@ -4901,7 +5223,7 @@ def bi_metricas_adicionales(inicio, fin, indicadores, ventas_diarias):
     inicio_anterior, fin_anterior, duracion = bi_periodo_anterior(inicio, fin)
 
     total_anterior = bi_cero(
-        bi_pedidos_periodo(inicio_anterior, fin_anterior)
+        bi_pedidos_pagados_periodo(inicio_anterior, fin_anterior)
         .aggregate(total=Sum("total"))["total"]
     )
     total_actual = indicadores["total_vendido"]
@@ -5099,7 +5421,7 @@ def bi_reporte_ventas(inicio, fin):
         "periodo": f"{inicio:%d/%m/%Y} al {fin:%d/%m/%Y}",
         "kpis": [
             {"titulo": "Total vendido", "valor": total, "formato": "moneda",
-             "detalle": "Pedidos no cancelados"},
+             "detalle": "Pedidos pagados"},
             {"titulo": "Pedidos", "valor": indicadores["cantidad_pedidos"],
              "formato": "entero", "detalle": "Operaciones del período"},
             {"titulo": "Ticket promedio", "valor": indicadores["ticket_promedio"],
@@ -5860,32 +6182,38 @@ def dinero_recaudado(request):
 # 10.10 Vistas de exportación
 # ------------------------------------------------------------
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.exportar')
 def exportar_resumen_excel(request):
     return bi_responder_exportacion(request, "ventas", "excel")
 
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.exportar')
 def exportar_resumen_pdf(request):
     return bi_responder_exportacion(request, "ventas", "pdf")
 
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.exportar')
 def exportar_productos_excel(request):
     return bi_responder_exportacion(request, "productos", "excel")
 
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.exportar')
 def exportar_productos_pdf(request):
     return bi_responder_exportacion(request, "productos", "pdf")
 
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.exportar')
 def exportar_dinero_excel(request):
     return bi_responder_exportacion(request, "dinero", "excel")
 
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.exportar')
 def exportar_dinero_pdf(request):
     return bi_responder_exportacion(request, "dinero", "pdf")
 # ------------------------------------------------------------
@@ -6164,6 +6492,45 @@ class HorarioForm(forms.ModelForm):
                         "El horario de atención configurado debe tener una duración mínima de al menos 30 minutos."
                     )
 
+        # No se permiten franjas solapadas ni un día cerrado y abierto a la vez.
+        negocio = cleaned_data.get("idnegocio")
+        dia = cleaned_data.get("diasemana")
+
+        if negocio and dia and estaabierto is not None:
+            otros = Horario.objects.filter(idnegocio=negocio, diasemana=dia)
+            if self.instance and self.instance.pk:
+                otros = otros.exclude(pk=self.instance.pk)
+
+            def _franja(inicio, fin):
+                ini = inicio.hour * 60 + inicio.minute
+                fi = fin.hour * 60 + fin.minute
+                if fi == ini:
+                    return ini, ini + 1440
+                return (ini, fi + 1440) if fi < ini else (ini, fi)
+
+            for otro in otros:
+                otro_abierto = otro.estaabierto == 1
+
+                if (estaabierto == 1) != otro_abierto:
+                    raise forms.ValidationError(
+                        f"El día {dia} ya tiene un horario cargado como "
+                        f"{'abierto' if otro_abierto else 'cerrado'}: "
+                        "no puede estar abierto y cerrado a la vez."
+                    )
+
+                if (
+                    estaabierto == 1 and otro_abierto
+                    and apertura and cierre
+                    and otro.horaapertura and otro.horacierre
+                ):
+                    ini_a, fin_a = _franja(apertura, cierre)
+                    ini_b, fin_b = _franja(otro.horaapertura, otro.horacierre)
+                    if ini_a < fin_b and ini_b < fin_a:
+                        raise forms.ValidationError(
+                            f"La franja se superpone con otra ya cargada para {dia} "
+                            f"({otro.horaapertura:%H:%M} a {otro.horacierre:%H:%M})."
+                        )
+
         return cleaned_data
 
 @panel_login_requerido
@@ -6294,6 +6661,11 @@ def zonas_entrega_crear(request):
             if not negocios.filter(pk=idnegocio).exists():
                 raise ValueError("La sucursal seleccionada no es válida.")
 
+            if ZonasEntrega.objects.filter(
+                nombre__iexact=nombre, idnegocio=idnegocio
+            ).exists():
+                raise ValueError("Ya existe una zona de entrega con ese nombre.")
+
             ZonasEntrega.objects.create(
                 nombre=nombre,
                 costoenvio=costoenvio,
@@ -6335,6 +6707,16 @@ def zonas_entrega_editar(request, idzona):
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
         costo_raw = request.POST.get("costoenvio", "0").strip()
+
+        if nombre and ZonasEntrega.objects.filter(
+            nombre__iexact=nombre, idnegocio=zona.idnegocio
+        ).exclude(pk=zona.pk).exists():
+            messages.error(request, "Ya existe otra zona de entrega con ese nombre.")
+            return render(
+                request,
+                "panel/entrega/zonaEditar.html",
+                {"zona": zona},
+            )
 
         try:
             if not nombre:
@@ -6484,14 +6866,20 @@ def historial_pedidos(request):
 @panel_login_requerido
 def detalle_historial_pedido(request, idpedido):
     """Detalle completo de un pedido del historial."""
-    pedido = get_object_or_404(
-        Pedido.objects.select_related(
-            'idcliente',
-            'idmediopago',
-            'idestadopedido',
-        ),
-        idpedido=idpedido,
-    )
+    pedido = Pedido.objects.select_related(
+        'idcliente',
+        'idmediopago',
+        'idestadopedido',
+    ).filter(idpedido=idpedido).first()
+
+    if pedido is None:
+        # 404 con página amigable (también con DEBUG=True).
+        return render(
+            request,
+            'panel/ventas/pedidoNoEncontrado.html',
+            {'idpedido': idpedido},
+            status=404,
+        )
 
     detalles = DetallePedido.objects.filter(
         idpedido=pedido
@@ -7476,6 +7864,17 @@ def panel_recuperar_contrasena(request):
     return render(request, 'panel/recuperarContrasena.html', {'correo_enviado': correo_enviado})
 
 
+def _error_contrasena_nueva(contrasena):
+    """Devuelve un mensaje de error si la contraseña no cumple las reglas (o None)."""
+    if len(contrasena) < 8:
+        return 'La nueva contraseña debe tener al menos 8 caracteres.'
+    if len(contrasena) > 128:
+        return 'La nueva contraseña no puede superar los 128 caracteres.'
+    if not any(caracter.isdigit() for caracter in contrasena):
+        return 'La nueva contraseña debe incluir al menos un número.'
+    return None
+
+
 def panel_restablecer_contrasena(request, token):
     """
     Permite establecer una nueva contraseña a partir de un token de recuperación válido y vigente.
@@ -7502,8 +7901,9 @@ def panel_restablecer_contrasena(request, token):
             messages.error(request, 'Las contraseñas no coinciden.')
             return render(request, 'panel/restablecerContrasena.html', {'empleado': empleado, 'token': token})
 
-        if len(nueva) < 8:
-            messages.error(request, 'La nueva contraseña debe tener al menos 8 caracteres.')
+        error_contrasena = _error_contrasena_nueva(nueva)
+        if error_contrasena:
+            messages.error(request, error_contrasena)
             return render(request, 'panel/restablecerContrasena.html', {'empleado': empleado, 'token': token})
 
         with transaction.atomic():
@@ -7542,8 +7942,9 @@ def panel_cambiar_contrasena(request):
             messages.error(request, 'La nueva contraseña y su confirmación no coinciden.')
             return render(request, 'panel/cambiarContrasena.html')
 
-        if len(nueva) < 8:
-            messages.error(request, 'La nueva contraseña debe tener al menos 8 caracteres.')
+        error_contrasena = _error_contrasena_nueva(nueva)
+        if error_contrasena:
+            messages.error(request, error_contrasena)
             return render(request, 'panel/cambiarContrasena.html')
 
         if actual == nueva:
@@ -7598,3 +7999,7 @@ def empleado_toggle_activo(request, idempleado):
     messages.success(request, f'La cuenta de {empleado.nombre} {empleado.apellido} fue {accion_texto} correctamente.')
 
     return redirect('empleado_lista')
+
+def pagina_no_encontrada(request, exception=None):
+    """Handler 404 global (aplica con DEBUG=False)."""
+    return render(request, '404.html', status=404)

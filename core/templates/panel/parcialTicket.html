@@ -264,7 +264,7 @@
                 {% if promocion %}
                     {{ promocion.palabraclave|default:promocion.descripcion_amigable }}
                 {% else %}
-                    Promoción #{{ pedido.idpromocion }}
+                    {{ pedido.nombrepromocion|default:'Promoción #' }}{% if not pedido.nombrepromocion %}{{ pedido.idpromocion }}{% endif %}
                 {% endif %}
             </strong>
 

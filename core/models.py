@@ -457,6 +457,12 @@ class AjusteStock(models.Model):
     cantidadnueva = models.DecimalField(db_column='CantidadNueva', max_digits=14, decimal_places=4)
     motivo = models.CharField(db_column='Motivo', max_length=250)
     fecha = models.DateTimeField(db_column='Fecha', auto_now_add=True)
+    idempleado = models.ForeignKey(
+        Empleado, models.SET_NULL, db_column='IdEmpleado', blank=True, null=True, related_name='+'
+    )
+    idlote = models.ForeignKey(
+        'Lote', models.SET_NULL, db_column='IdLote', blank=True, null=True, related_name='+'
+    )
 
     def __str__(self):
         return f'Ajuste en {self.idinsumo.nombreinsumo}. Motivo: {self.motivo[:30]}'
@@ -469,6 +475,9 @@ class Compras(models.Model):
     idcompra = models.AutoField(db_column='IdCompra', primary_key=True)
     fecha = models.DateTimeField(db_column='Fecha')
     preciototal = models.DecimalField(max_digits=12, decimal_places=2)
+    idempleado = models.ForeignKey(
+        Empleado, models.SET_NULL, db_column='IdEmpleado', blank=True, null=True, related_name='+'
+    )
 
     class Meta:
         db_table = 'Compras'
@@ -603,6 +612,9 @@ class Pedido(models.Model):
     fecha_creacion = models.DateTimeField(db_column='FechaCreacion', auto_now_add=True, blank=True, null=True)
     pagado = models.BooleanField(db_column='Pagado', default=False)
     stock_descontado = models.BooleanField(db_column='StockDescontado', default=False)
+    # Copia de la promoción al momento de la venta: sobrevive si la promoción se elimina.
+    nombrepromocion = models.CharField(db_column='NombrePromocion', max_length=100, blank=True, null=True)
+    descuentopromocion = models.DecimalField(db_column='DescuentoPromocion', max_digits=10, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
         return f"Pedido #{self.idpedido}"

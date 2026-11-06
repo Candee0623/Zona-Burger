@@ -38,6 +38,12 @@ def cantidad_a_unidad_stock(insumo, cantidad, unidad_origen=None):
     """
     factor = insumo.factor_a_stock(unidad_origen)
 
+    if factor is None and unidad_origen:
+        # La unidad guardada en la receta no se reconoce (por ejemplo el valor
+        # por defecto 'unidad' en recetas viejas): la cantidad se interpreta en
+        # la unidad de egreso del insumo, que es la que se carga en el panel.
+        factor = insumo.factor_a_stock(None)
+
     if factor is None:
         logger.warning(
             "No se pueden convertir '%s' a '%s' para el insumo '%s' (ID %s). "
@@ -50,6 +56,18 @@ def cantidad_a_unidad_stock(insumo, cantidad, unidad_origen=None):
         factor = Decimal('1')
 
     return Decimal(cantidad) * factor
+
+
+class StockCambiadoError(Exception):
+    """El stock del insumo cambió entre que se abrió el ajuste y se guardó."""
+    def __init__(self, insumo, actual):
+        self.insumo = insumo
+        self.actual = actual
+        super().__init__(
+            f"El stock de {insumo.nombreinsumo} cambió mientras hacías el ajuste "
+            f"(ahora es {_fmt(actual)} {_unidad_stock(insumo)}). "
+            "Revisá la cantidad y volvé a intentar."
+        )
 
 
 class StockInsuficienteError(Exception):
@@ -286,32 +304,44 @@ def registrar_ingreso_lote(insumo, cantidad, fecha_vencimiento=None,
 
 
 @transaction.atomic
-def ajustar_stock_insumo(insumo_id, cantidad_nueva, motivo, fecha_vencimiento=None):
+def ajustar_stock_insumo(insumo_id, cantidad_nueva, motivo, fecha_vencimiento=None,
+                         empleado=None, stock_esperado=None):
     """
     Ajuste manual de inventario manteniendo lotes y stock sincronizados:
     - si sobra stock físico de más, se crea un lote nuevo por la diferencia;
     - si falta, se descuenta de los lotes por orden de vencimiento.
+    Guarda quién hizo el ajuste y el lote afectado.
+    Si se indica `stock_esperado` (el stock que veía la persona al abrir el ajuste)
+    y el stock cambió mientras tanto, no se pisa el cambio: se lanza StockCambiadoError.
     """
     insumo = Insumo.objects.select_for_update().get(pk=insumo_id)
     anterior = insumo.stockactual or Decimal('0')
+
+    if stock_esperado is not None and _a_decimales_stock(stock_esperado) != _a_decimales_stock(anterior):
+        raise StockCambiadoError(insumo, anterior)
+
     nueva = _a_decimales_stock(cantidad_nueva)
     diferencia = nueva - anterior
 
-    AjusteStock.objects.create(
+    ajuste = AjusteStock.objects.create(
         idinsumo=insumo,
         cantidadanterior=anterior,
         cantidadnueva=nueva,
         motivo=motivo,
+        idempleado=empleado,
     )
+    lote_ajuste = None
 
     if diferencia > 0:
-        registrar_ingreso_lote(
+        lote_ajuste = registrar_ingreso_lote(
             insumo, diferencia, fecha_vencimiento,
             tipo_movimiento=MovimientoStock.TIPO_AJUSTE,
-            descripcion=f"Ajuste de inventario (+). Motivo: {motivo}",
+            descripcion=f"Ajuste de inventario (+). Motivo: {motivo}"[:250],
         )
     elif diferencia < 0:
         for lote, cantidad_lote in consumir_lotes(insumo, -diferencia):
+            if lote_ajuste is None and lote is not None:
+                lote_ajuste = lote
             MovimientoStock.objects.create(
                 idinsumo=insumo,
                 idlote=lote,
@@ -322,6 +352,10 @@ def ajustar_stock_insumo(insumo_id, cantidad_nueva, motivo, fecha_vencimiento=No
             )
         insumo.stockactual = nueva
         insumo.save(update_fields=['stockactual'])
+
+    if lote_ajuste is not None:
+        ajuste.idlote = lote_ajuste
+        ajuste.save(update_fields=['idlote'])
 
     return insumo, diferencia
 
@@ -468,7 +502,7 @@ def reintegrar_stock_pedido(pedido, motivo="Cancelación de pedido"):
                 cantidad=mov.cantidad,
                 idpedido=pedido,
                 tipomovimiento=MovimientoStock.TIPO_REINTEGRO,
-                descripcion=f"Reintegro por cancelación de Pedido #{pedido.idpedido}. Motivo: {motivo}".strip(),
+                descripcion=f"Reintegro por cancelación de Pedido #{pedido.idpedido}. Motivo: {motivo}".strip()[:250],
             )
 
         pedido.stock_descontado = False

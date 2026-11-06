@@ -1,4 +1,3 @@
-
 from core import views
 from django.contrib import admin
 from django.urls import include, path
@@ -160,3 +159,5 @@ urlpatterns = [
     path('panel/zonas-entrega/editar/<int:idzona>/', views.zonas_entrega_editar, name='zonas_entrega_editar'),
     path('panel/zonas-entrega/eliminar/<int:idzona>/', views.zonas_entrega_eliminar, name='zonas_entrega_eliminar'),
 ]
+
+handler404 = 'core.views.pagina_no_encontrada'

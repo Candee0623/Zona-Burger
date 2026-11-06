@@ -51,6 +51,7 @@
 
         <form method="post" class="ajuste-form">
             {% csrf_token %}
+            <input type="hidden" name="stock_esperado" value="{{ insumo.stockactual|unlocalize }}">
 
             <div class="ajuste-insumo-card">
 

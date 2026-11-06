@@ -83,6 +83,15 @@
                 </strong>
             </div>
 
+            {% if pedido.idpromocion or pedido.nombrepromocion %}
+            <div class="detalle-historial-dato">
+                <span>Promoción aplicada</span>
+                <strong>
+                    {% if pedido.nombrepromocion %}{{ pedido.nombrepromocion }}{% else %}Promoción #{{ pedido.idpromocion }}{% endif %}{% if pedido.descuentopromocion %} (−${{ pedido.descuentopromocion|floatformat:2 }}){% endif %}
+                </strong>
+            </div>
+            {% endif %}
+
             <div class="detalle-historial-dato">
                 <span>Total del pedido</span>
                 <strong class="detalle-historial-total">

@@ -136,6 +136,9 @@
                                             required
                                         >
                                     </form>
+                                    {% if detalle.idinsumo %}
+                                        <small>en {{ detalle.idinsumo.unidadmedidaegreso }}</small>
+                                    {% endif %}
                                 </td>
 
                                 <td>

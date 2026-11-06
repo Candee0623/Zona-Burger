@@ -419,3 +419,55 @@ class TogglePagadoSeguridadTestCase(TestCase):
         self.pedido.refresh_from_db()
         self.assertFalse(self.pedido.pagado)
 
+    def test_reproducir_def_032(self):
+        EstadoPedido.objects.get_or_create(pk=1, defaults={'descripcion': 'Pendiente'})
+        insumo_1 = Insumo.objects.create(
+            codigo='INS-TEST-1', nombreinsumo='Carne',
+            unidadmedidaingreso='unidades', unidadmedidaegreso='unidades',
+            stockactual=Decimal('10.00'), stockminimo=Decimal('2.00'),
+            descontar_stock_automaticamente=True,
+        )
+        insumo_2 = Insumo.objects.create(
+            codigo='INS-TEST-2', nombreinsumo='Cebolla',
+            unidadmedidaingreso='unidades', unidadmedidaegreso='unidades',
+            stockactual=Decimal('10.00'), stockminimo=Decimal('2.00'),
+            descontar_stock_automaticamente=True,
+        )
+        categoria = CategoriaProducto.objects.create(nombre='Burgers Test')
+        producto = Producto.objects.create(
+            nombre='Burger Test', precio=Decimal('1000.00'), idcategoria=categoria,
+        )
+        receta = Receta.objects.create(idproducto=producto)
+        RecetaInsumo.objects.create(
+            idreceta=receta, idinsumo=insumo_1,
+            cantidadinsumo=Decimal('1.00'), unidadmedida='unidades', es_removible=False,
+        )
+        RecetaInsumo.objects.create(
+            idreceta=receta, idinsumo=insumo_2,
+            cantidadinsumo=Decimal('1.00'), unidadmedida='unidades', es_removible=True,
+        )
+
+        url_agregar = reverse('agregar_al_carrito', kwargs={'idproducto': producto.idproducto})
+        resp_add = self.client.post(url_agregar, {
+            'cantidad': '1',
+            f'sin_insumo_{insumo_2.idinsumo}': str(insumo_2.idinsumo),
+        })
+        self.assertEqual(resp_add.status_code, 302)
+
+        url_checkout = reverse('procesar_checkout')
+        resp_checkout = self.client.post(url_checkout, {
+            'nombre': 'Juan',
+            'apellido': 'Perez',
+            'telefono': '1123456789',
+            'calle': 'Calle Falsa',
+            'numero': '123',
+            'localidad': 'Capital',
+            'medio_pago': self.medio_pago.pk,
+            'comentario': '',
+            'codigo_promocion': '',
+        })
+        if resp_checkout.status_code == 500:
+            print('ERROR 500 CONTENT:', resp_checkout.content.decode('utf-8', errors='ignore')[:1000])
+        self.assertIn(resp_checkout.status_code, [200, 302])
+
+

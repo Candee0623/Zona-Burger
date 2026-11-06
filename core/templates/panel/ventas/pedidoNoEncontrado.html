@@ -1,0 +1,15 @@
+{% extends "panel/base.html" %}
+
+{% block title %}Pedido no encontrado{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;margin:4rem auto;text-align:center;padding:0 1rem;">
+    <h1 style="font-size:1.6rem;margin-bottom:.75rem;">Pedido no encontrado</h1>
+    <p style="color:#888;margin-bottom:1.5rem;">
+        El pedido #{{ idpedido }} no existe o fue eliminado.
+    </p>
+    <a href="{% url 'historial_pedidos' %}" class="btn btn-success btn-sm fw-bold">
+        Volver al historial de pedidos
+    </a>
+</div>
+{% endblock %}

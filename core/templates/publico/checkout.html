@@ -1906,8 +1906,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!telefono) {
             mostrarErrorCampo(telefonoInput, 'Ingresá tu teléfono.');
             errores.push({ campo: telefonoInput, mensaje: 'Teléfono' });
-        } else if (!/^\d{8,15}$/.test(telefono)) {
-            mostrarErrorCampo(telefonoInput, 'Ingresá un teléfono válido de 8 a 15 números.');
+        } else if (!/^\d{8,13}$/.test(telefono)) {
+            mostrarErrorCampo(telefonoInput, 'Ingresá un teléfono válido de 8 a 13 números.');
             errores.push({ campo: telefonoInput, mensaje: 'Teléfono válido' });
         } else {
             telefonoInput.value = telefono;

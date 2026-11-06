@@ -1,5 +1,6 @@
 {% extends 'panel/base.html' %}
 {% load static %}
+{% load l10n %}
 
 {% block title %}
 {{ titulo }} | Zona-Burger
@@ -188,7 +189,7 @@
                 type="text"
                 id="palabraclave"
                 name="palabraclave"
-                value="{% if promocion.palabraclave %}{{ promocion.palabraclave }}{% endif %}"
+                value="{% if datos %}{{ datos.palabraclave }}{% elif promocion.palabraclave %}{{ promocion.palabraclave }}{% endif %}"
                 placeholder="Ej: BURGER10"
                 class="promocion-form-input"
                 required
@@ -228,7 +229,7 @@
                 <option
                     value="{{ tipo.pk }}"
                     data-comportamiento="{{ tipo.comportamiento }}"
-                    {% if tipo.pk|stringformat:"s" == tipo_beneficio_seleccionado|stringformat:"s" or tipo.pk|stringformat:"s" == promocion.tipobeneficio.pk|stringformat:"s" or tipo.pk|stringformat:"s" == promocion.tipobeneficio|stringformat:"s" %}selected{% endif %}
+                    {% if datos %}{% if tipo.pk|stringformat:"s" == datos.tipobeneficio %}selected{% endif %}{% elif tipo.pk|stringformat:"s" == tipo_beneficio_seleccionado|stringformat:"s" or tipo.pk|stringformat:"s" == promocion.tipobeneficio.pk|stringformat:"s" or tipo.pk|stringformat:"s" == promocion.tipobeneficio|stringformat:"s" %}selected{% endif %}
                 >
                     {{ tipo.nombre }}
                 </option>
@@ -258,7 +259,7 @@
                 type="number"
                 id="descuento"
                 name="descuento"
-                value="{% if promocion.valor %}{{ promocion.valor }}{% elif promocion.descuento %}{{ promocion.descuento }}{% endif %}"
+                value="{% if datos %}{{ datos.descuento }}{% elif promocion.valor %}{{ promocion.valor|unlocalize }}{% elif promocion.descuento %}{{ promocion.descuento|unlocalize }}{% endif %}"
                 placeholder="Ej: 10"
                 min="0"
                 step="0.01"
@@ -328,7 +329,7 @@
 
                 <option
                     value="{{ producto.idproducto }}"
-                    {% if producto_seleccionado|stringformat:"s" == producto.idproducto|stringformat:"s" %}selected{% endif %}
+                    {% if datos %}{% if producto.idproducto|stringformat:"s" == datos.producto %}selected{% endif %}{% elif producto_seleccionado|stringformat:"s" == producto.idproducto|stringformat:"s" %}selected{% endif %}
                 >
                     {{ producto.nombre }}
                 </option>
@@ -357,7 +358,7 @@
                     type="date"
                     id="fechainicio"
                     name="fechainicio"
-                    value="{% if promocion.fechainicio %}{{ promocion.fechainicio|date:'Y-m-d' }}{% endif %}"
+                    value="{% if datos %}{{ datos.fechainicio }}{% elif promocion.fechainicio %}{{ promocion.fechainicio|date:'Y-m-d' }}{% endif %}"
                     class="promocion-form-input"
                 >
 
@@ -377,7 +378,7 @@
                     type="date"
                     id="fechafin"
                     name="fechafin"
-                    value="{% if promocion.fechafin %}{{ promocion.fechafin|date:'Y-m-d' }}{% endif %}"
+                    value="{% if datos %}{{ datos.fechafin }}{% elif promocion.fechafin %}{{ promocion.fechafin|date:'Y-m-d' }}{% endif %}"
                     class="promocion-form-input"
                 >
 
@@ -399,7 +400,7 @@
                     type="checkbox"
                     name="activo"
                     id="activo"
-                    {% if promocion.activo %}checked{% endif %}
+                    {% if datos %}{% if datos.activo %}checked{% endif %}{% elif promocion.activo %}checked{% endif %}
                     class="promocion-checkbox"
                 >
 

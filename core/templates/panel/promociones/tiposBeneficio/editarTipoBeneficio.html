@@ -116,7 +116,7 @@ Zona-Burger | Editar tipo de beneficio
                 id="codigo"
                 name="codigo"
                 maxlength="50"
-                value="{{ tipo.codigo }}"
+                value="{% if datos %}{{ datos.codigo }}{% else %}{{ tipo.codigo|default_if_none:'' }}{% endif %}"
                 placeholder="Ej: DESCUENTO_20"
             >
 
@@ -137,7 +137,7 @@ Zona-Burger | Editar tipo de beneficio
                 id="nombre"
                 name="nombre"
                 maxlength="100"
-                value="{{ tipo.nombre }}"
+                value="{% if datos %}{{ datos.nombre }}{% else %}{{ tipo.nombre }}{% endif %}"
                 placeholder="Ej: Descuento 20%"
                 required
             >
@@ -155,15 +155,15 @@ Zona-Burger | Editar tipo de beneficio
                 name="comportamiento"
                 required
             >
-                <option value="SIN_VALOR" {% if tipo.comportamiento == 'SIN_VALOR' %}selected{% endif %}>
+                <option value="SIN_VALOR" {% if datos %}{% if datos.comportamiento == 'SIN_VALOR' %}selected{% endif %}{% elif tipo.comportamiento == 'SIN_VALOR' %}selected{% endif %}>
                     Sin valor (Ej: 2x1, 3x2, Producto de regalo)
                 </option>
 
-                <option value="PORCENTAJE" {% if tipo.comportamiento == 'PORCENTAJE' %}selected{% endif %}>
+                <option value="PORCENTAJE" {% if datos %}{% if datos.comportamiento == 'PORCENTAJE' %}selected{% endif %}{% elif tipo.comportamiento == 'PORCENTAJE' %}selected{% endif %}>
                     Descuento porcentual (%)
                 </option>
 
-                <option value="MONTO_FIJO" {% if tipo.comportamiento == 'MONTO_FIJO' %}selected{% endif %}>
+                <option value="MONTO_FIJO" {% if datos %}{% if datos.comportamiento == 'MONTO_FIJO' %}selected{% endif %}{% elif tipo.comportamiento == 'MONTO_FIJO' %}selected{% endif %}>
                     Descuento en dinero fijo ($)
                 </option>
             </select>
@@ -186,7 +186,7 @@ Zona-Burger | Editar tipo de beneficio
                 maxlength="255"
                 rows="4"
                 placeholder="Describe el tipo de beneficio..."
-            >{{ tipo.descripcion|default:'' }}</textarea>
+            >{% if datos %}{{ datos.descripcion }}{% else %}{{ tipo.descripcion|default:'' }}{% endif %}</textarea>
 
         </div>
 

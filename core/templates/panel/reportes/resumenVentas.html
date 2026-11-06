@@ -39,7 +39,7 @@
         <article class="rep-kpi">
             <span>Total vendido</span>
             <strong>$ {{ total_vendido|floatformat:"2g" }}</strong>
-            <small>Pedidos no cancelados</small>
+            <small>Pedidos pagados</small>
         </article>
         <article class="rep-kpi">
             <span>Pedidos</span>
@@ -92,7 +92,7 @@
     <div class="rep-grid-even">
         <section class="rep-panel">
             <div class="rep-panel-head">
-                <div><h2>Pedidos por día</h2><p>Cantidad de pedidos no cancelados</p></div>
+                <div><h2>Pedidos por día</h2><p>Cantidad de pedidos pagados</p></div>
             </div>
             <div class="rep-chart">
                 {% if ventas_diarias %}<canvas id="rep-barras"></canvas>{% else %}<div class="rep-empty-chart">No hay ventas en este período.</div>{% endif %}

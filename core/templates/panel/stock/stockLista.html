@@ -525,6 +525,7 @@
                             <th>Cantidad</th>
                             <th>Costo unitario</th>
                             <th>Total de compra</th>
+                            <th>Registrada por</th>
                         </tr>
                     </thead>
 
@@ -572,6 +573,10 @@
 
                                 <td class="total-cell">
                                     $ {{ compra.preciototal|floatformat:2 }}
+                                </td>
+
+                                <td>
+                                    {% if compra.idempleado %}{{ compra.idempleado }}{% else %}<span class="muted">—</span>{% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

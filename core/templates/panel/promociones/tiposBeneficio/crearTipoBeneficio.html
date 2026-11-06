@@ -117,6 +117,7 @@ Zona-Burger | Nuevo tipo de beneficio
                 id="codigo"
                 name="codigo"
                 maxlength="50"
+                value="{{ datos.codigo|default:'' }}"
                 placeholder="Ej: DESCUENTO_20"
             >
 
@@ -137,6 +138,7 @@ Zona-Burger | Nuevo tipo de beneficio
                 id="nombre"
                 name="nombre"
                 maxlength="100"
+                value="{{ datos.nombre|default:'' }}"
                 placeholder="Ej: Descuento 20%"
                 required
             >
@@ -154,15 +156,19 @@ Zona-Burger | Nuevo tipo de beneficio
                 name="comportamiento"
                 required
             >
-                <option value="SIN_VALOR">
+                <option value="" {% if not datos.comportamiento %}selected{% endif %} disabled>
+                    Seleccioná un comportamiento
+                </option>
+
+                <option value="SIN_VALOR" {% if datos.comportamiento == 'SIN_VALOR' %}selected{% endif %}>
                     Sin valor (Ej: 2x1, 3x2, Producto de regalo)
                 </option>
 
-                <option value="PORCENTAJE">
+                <option value="PORCENTAJE" {% if datos.comportamiento == 'PORCENTAJE' %}selected{% endif %}>
                     Descuento porcentual (%)
                 </option>
 
-                <option value="MONTO_FIJO">
+                <option value="MONTO_FIJO" {% if datos.comportamiento == 'MONTO_FIJO' %}selected{% endif %}>
                     Descuento en dinero fijo ($)
                 </option>
             </select>
@@ -185,7 +191,7 @@ Zona-Burger | Nuevo tipo de beneficio
                 maxlength="255"
                 rows="4"
                 placeholder="Describe el tipo de beneficio..."
-            ></textarea>
+            >{{ datos.descripcion|default:'' }}</textarea>
 
         </div>
 

@@ -887,6 +887,7 @@
         >
 
             {% csrf_token %}
+            <input type="hidden" name="estado_esperado" id="inputEstadoEsperado" value="">
 
             <div
                 class="custom-modal-body"
@@ -961,6 +962,7 @@
                     <textarea
                         name="justificacioncancelacion"
                         id="inputJustificacion"
+                        maxlength="250"
                         class="filter-control"
                         rows="3"
                         placeholder="Indique el motivo..."
@@ -1203,6 +1205,11 @@ function abrirEstadoModal(
             idPedido +
             '/'
         );
+
+    document.getElementById('inputEstadoEsperado').value =
+        estadoActualId ? String(estadoActualId) : '';
+
+    document.getElementById('inputJustificacion').value = '';
 
     if (estadoActualId) {
 
