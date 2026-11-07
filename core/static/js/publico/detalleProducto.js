@@ -29,9 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let negocioAbierto = form.dataset.abierto !== '0';
     let productoDisponible = true;
 
-    // --------------------------------------------------
     // UTILIDADES
-    // --------------------------------------------------
 
     const obtenerInputs = () => [...form.querySelectorAll(SEL_INPUTS)];
     const obtenerInputsCantidad = () => [...form.querySelectorAll('[data-cantidad]')];
@@ -84,9 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).join('\u0000');
     }
 
-    // --------------------------------------------------
     // GUARDAR / RESTAURAR SELECCIÓN DEL CLIENTE
-    // --------------------------------------------------
 
     function guardarEstadoSeguro() {
         try {
@@ -136,9 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --------------------------------------------------
     // PRECIO, CANTIDADES Y VALIDACIÓN
-    // --------------------------------------------------
 
     function calcularTotal() {
         let total = precioBase();
@@ -234,9 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (guardar) guardarEstadoSeguro();
     }
 
-    // --------------------------------------------------
     // EVENTOS DEL FORMULARIO (delegados: sobreviven al refresco en vivo)
-    // --------------------------------------------------
 
     form.addEventListener('click', function (event) {
         // Botones + / - de cantidad
@@ -296,9 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
         guardarEstadoSeguro();
     });
 
-    // --------------------------------------------------
     // ESTADO DEL NEGOCIO Y BOTÓN
-    // --------------------------------------------------
 
     function actualizarBoton() {
         const habilitado = negocioAbierto && productoDisponible;
@@ -344,10 +334,8 @@ document.addEventListener('DOMContentLoaded', function () {
         actualizarBoton();
     }
 
-    // --------------------------------------------------
     // ACTUALIZACIÓN EN VIVO DEL PRODUCTO
     // (nombre, descripción, imagen, precio, grupos, extras, ingredientes)
-    // --------------------------------------------------
 
     function marcarNoDisponible() {
         if (!productoDisponible) return;
@@ -429,9 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
         aplicarContenido(nuevoInfo, nuevasOpciones, doc.title);
     }
 
-    // --------------------------------------------------
     // SONDEOS (se pausan con la pestaña oculta)
-    // --------------------------------------------------
 
     function crearSondeo(tarea, intervalo) {
         let id = null;
@@ -491,9 +477,7 @@ document.addEventListener('DOMContentLoaded', function () {
         sondeoContenido.detener();
     });
 
-    // --------------------------------------------------
     // INICIALIZACIÓN
-    // --------------------------------------------------
 
     restaurarEstado();
     refrescar(false);

@@ -12,9 +12,7 @@
     --border-subtle:    #29221e !important; 
 }
 
-/* ==========================================
-   1. ESTRUCTURA Y FONDO GLOBAL
-   ================================---------- */
+/* 1. ESTRUCTURA Y FONDO GLOBAL */
 html {
     background: #0a0807 url('https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed !important;
     background-size: cover !important;
@@ -32,9 +30,7 @@ footer, .main-footer {
     display: none !important; 
 }
 
-/* ==========================================
-   2. HEADER, NAVEGACIÓN Y SIDEBAR
-   ================================---------- */
+/* 2. HEADER, NAVEGACIÓN Y SIDEBAR */
 .main-header, .navbar {
     background-color: rgba(23, 19, 18, 0.9) !important;
     backdrop-filter: blur(10px) !important;
@@ -87,9 +83,7 @@ footer, .main-footer {
     font-weight: 700 !important;
 }
 
-/* ==========================================
-   3. TIPOGRAFÍA Y BREADCRUMBS
-   ================================---------- */
+/* 3. TIPOGRAFÍA Y BREADCRUMBS */
 h1, h2, h3, h4, h5, h6, .content-header h1 {
     color: #ffffff !important;
     font-weight: 800 !important;
@@ -113,9 +107,7 @@ h1, h2, h3, h4, h5, h6, .content-header h1 {
     color: var(--gold-accent) !important;
 }
 
-/* ==========================================
-   4. TARJETAS GENERALES Y LOGOTIPO LOGIN
-   ================================---------- */
+/* 4. TARJETAS GENERALES Y LOGOTIPO LOGIN */
 .card, .box, #changelist {
     background-color: var(--bg-card) !important;
     backdrop-filter: blur(12px) !important;
@@ -269,9 +261,7 @@ input:focus, select:focus, textarea:focus, .form-control:focus {
     padding-top: 28px !important;
 }
 
-/* ==========================================
-   5. MENÚS DESPLEGABLES Y BOTONES GENERALES
-   ================================---------- */
+/* 5. MENÚS DESPLEGABLES Y BOTONES GENERALES */
 .dropdown-menu {
     background-color: #171312 !important;
     border: 1px solid var(--border-subtle) !important;
@@ -350,9 +340,7 @@ input[name="_addanother"]:hover, input[name="_continue"]:hover {
     color: #000000 !important;
 }
 
-/* ==========================================
-   6. CKEDITOR 5 (MODO OSCURO)
-   ================================---------- */
+/* 6. CKEDITOR 5 (MODO OSCURO) */
 .ck.ck-editor__editable_inline {
     background-color: #1a1614 !important;
     color: #ffffff !important;
@@ -386,11 +374,8 @@ input[name="_addanother"]:hover, input[name="_continue"]:hover {
     border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
-/* ==========================================
-   7. ZONA DE FILTROS SUPERIOR (BOTÓN "FILTROS" SÓLIDO Y CAMPOS AMPLIOS)
-   ================================---------- */
+/* 7. ZONA DE FILTROS SUPERIOR (BOTÓN "FILTROS" SÓLIDO Y CAMPOS AMPLIOS) */
 
-/* Ocultar la barra de texto larga */
 #changelist-search input#searchbar {
     display: none !important;
 }
@@ -475,9 +460,7 @@ input[name="_addanother"]:hover, input[name="_continue"]:hover {
     box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4) !important;
 }
 
-/* ==========================================
-   8. BLOQUE DE ACCIONES INFERIOR
-   ================================---------- */
+/* 8. BLOQUE DE ACCIONES INFERIOR */
 .actions {
     background: linear-gradient(145deg, rgba(28, 22, 20, 0.95), rgba(18, 14, 13, 0.95)) !important;
     border: 1px solid rgba(217, 119, 6, 0.3) !important;
@@ -527,9 +510,7 @@ input[name="_addanother"]:hover, input[name="_continue"]:hover {
     margin-bottom: 0 !important;
 }
 
-/* ==========================================
-   9. ELIMINAR DEFINITIVAMENTE EL BOTÓN HISTORIA
-   ================================---------- */
+/* 9. ELIMINAR DEFINITIVAMENTE EL BOTÓN HISTORIA */
 a.historylink,
 .historylink,
 .object-tools a.historylink,
@@ -546,9 +527,7 @@ a[href*="history"] {
     pointer-events: none !important;
 }
 
-/* ==========================================
-   10. ELIMINAR GLOBALMENTE EL HISTORIAL (ACCIONES RECIENTES)
-   ================================---------- */
+/* 10. ELIMINAR GLOBALMENTE EL HISTORIAL (ACCIONES RECIENTES) */
 #content-related, 
 .colM #content-related,
 div#content-related,
@@ -563,9 +542,7 @@ div#content-related,
     flex: 0 0 100% !important;
 }
 
-/* ==========================================
-   11. ELIMINAR BOTONES DE RELACIÓN (LÁPIZ, MÁS, CRUZ, ETC.)
-   ================================---------- */
+/* 11. ELIMINAR BOTONES DE RELACIÓN (LÁPIZ, MÁS, CRUZ, ETC.) */
 .related-widget-wrapper-link,
 a.add-related,
 a.change-related,
@@ -584,9 +561,7 @@ a.view-related,
     pointer-events: none !important;
 }
 
-/* ==========================================
-   12. MEJORA VISUAL PARA CALENDARIOS Y RELOJES
-   ================================---------- */
+/* 12. MEJORA VISUAL PARA CALENDARIOS Y RELOJES */
 .calendarbox, .clockbox {
     background-color: #1a1614 !important;
     border: 1px solid var(--gold-accent) !important;
@@ -708,9 +683,7 @@ a.view-related,
     color: #ffffff !important;
 }
 
-/* ==========================================
-   13. SEPARACIÓN Y ESTILIZACIÓN DE BOTONES (PANEL PRINCIPAL)
-   ================================---------- */
+/* 13. SEPARACIÓN Y ESTILIZACIÓN DE BOTONES (PANEL PRINCIPAL) */
 #content-main .app-auth table tr td:nth-child(2), 
 #content-main .app-core table tr td:nth-child(2),
 #content-main .module table tr td:nth-child(2) {
@@ -779,9 +752,7 @@ a.view-related,
     transform: translateY(-2px) !important;
 }
 
-/* ==========================================
-   14. CORRECCIÓN DE TABLAS Y MINI TARJETA CONTADOR
-   ================================---------- */
+/* 14. CORRECCIÓN DE TABLAS Y MINI TARJETA CONTADOR */
 #changelist, .card, .card-body {
     background-color: var(--bg-card) !important;
     width: 100% !important;
@@ -807,9 +778,7 @@ a.view-related,
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
 }
 
-/* ==========================================
-   15. TABLAS Y BOTÓN EDITAR (ESTILO UNIFICADO)
-   ================================---------- */
+/* 15. TABLAS Y BOTÓN EDITAR (ESTILO UNIFICADO) */
 table#result_list {
     background-color: #1a1614 !important;
     border: 1px solid var(--border-subtle) !important;

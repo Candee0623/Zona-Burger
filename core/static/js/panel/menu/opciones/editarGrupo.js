@@ -93,7 +93,6 @@ document.getElementById('btn-agregar-opcion').addEventListener('click', function
     tbody.appendChild(fila);
 });
 
-
 /*
  * Las opciones nuevas todavía no existen en la base de datos.
  * Por eso el botón "Quitar" simplemente elimina la fila.

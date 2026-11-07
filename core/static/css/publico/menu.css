@@ -45,7 +45,7 @@ img {
     max-width: 100%;
 }
 
-/* ================= ENCABEZADO Y CATEGORÍAS ================= */
+/* ENCABEZADO Y CATEGORÍAS */
 
 .menu-sticky-header {
     position: sticky;
@@ -144,7 +144,7 @@ img {
     outline-offset: 3px;
 }
 
-/* ================= CONTENEDOR Y TÍTULO ================= */
+/* CONTENEDOR Y TÍTULO */
 
 .menu-container {
     width: min(1240px, 92%);
@@ -174,7 +174,7 @@ img {
     box-shadow: 0 0 18px rgba(227, 38, 54, 0.24);
 }
 
-/* ================= ÁREA DINÁMICA ================= */
+/* ÁREA DINÁMICA */
 
 #menu-dinamico {
     display: block;
@@ -208,7 +208,7 @@ img {
     background: var(--rojo);
 }
 
-/* ================= GRILLA DE PRODUCTOS ================= */
+/* GRILLA DE PRODUCTOS */
 
 #menu-dinamico .productos-grid,
 #menu-dinamico .menu-productos-grid,
@@ -224,7 +224,7 @@ img {
     margin: 20px 0 42px;
 }
 
-/* ================= TARJETAS ================= */
+/* TARJETAS */
 
 #menu-dinamico .producto-card,
 #menu-dinamico .menu-producto-card,
@@ -258,7 +258,7 @@ img {
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(227, 38, 54, 0.07);
 }
 
-/* ================= IMÁGENES ================= */
+/* IMÁGENES */
 
 #menu-dinamico .producto-card > img,
 #menu-dinamico .menu-producto-card > img,
@@ -294,7 +294,7 @@ img {
     background: #252525;
 }
 
-/* ================= INFORMACIÓN ================= */
+/* INFORMACIÓN */
 
 #menu-dinamico .producto-info,
 #menu-dinamico .producto-contenido,
@@ -339,7 +339,7 @@ img {
     overflow-wrap: anywhere;
 }
 
-/* ================= PRECIOS ================= */
+/* PRECIOS */
 
 #menu-dinamico .producto-precio,
 #menu-dinamico .precio-producto,
@@ -356,7 +356,7 @@ img {
     line-height: 1.3;
 }
 
-/* ================= BOTONES DE PRODUCTO ================= */
+/* BOTONES DE PRODUCTO */
 
 #menu-dinamico .producto-card button,
 #menu-dinamico .menu-producto-card button,
@@ -407,7 +407,7 @@ img {
     transform: scale(.985);
 }
 
-/* ================= CARRITO FLOTANTE ================= */
+/* CARRITO FLOTANTE */
 
 .carrito-flotante-banner {
     position: fixed;
@@ -462,7 +462,7 @@ img {
     font-weight: 900;
 }
 
-/* ================= ACCESIBILIDAD ================= */
+/* ACCESIBILIDAD */
 
 button:focus-visible,
 a:focus-visible {
@@ -470,7 +470,7 @@ a:focus-visible {
     outline-offset: 3px;
 }
 
-/* ================= TABLETS ================= */
+/* TABLETS */
 
 @media (max-width: 950px) {
     .menu-container {
@@ -499,7 +499,7 @@ a:focus-visible {
     }
 }
 
-/* ================= CELULARES ================= */
+/* CELULARES */
 
 @media (max-width: 600px) {
     html {
@@ -650,7 +650,7 @@ a:focus-visible {
     }
 }
 
-/* ================= CELULARES PEQUEÑOS ================= */
+/* CELULARES PEQUEÑOS */
 
 @media (max-width: 360px) {
     .categorias-scroll {
@@ -694,7 +694,7 @@ a:focus-visible {
     }
 }
 
-/* ================= MOVIMIENTO REDUCIDO ================= */
+/* MOVIMIENTO REDUCIDO */
 
 @media (prefers-reduced-motion: reduce) {
     html {

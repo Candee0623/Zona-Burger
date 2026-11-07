@@ -1,7 +1,5 @@
 
-/* =========================================
-   ZONA BURGER - EDITAR ROL
-   ========================================= */
+/* ZONA BURGER - EDITAR ROL */
 
 .rol-editar-page {
     width: 100%;
@@ -18,9 +16,7 @@
     box-sizing: border-box;
 }
 
-/* =========================================
-   ENCABEZADO
-   ========================================= */
+/* ENCABEZADO */
 
 .rol-editar-header {
     display: flex;
@@ -82,9 +78,7 @@
     font-size: 27px;
 }
 
-/* =========================================
-   MENSAJES
-   ========================================= */
+/* MENSAJES */
 
 .rol-editar-mensajes {
     display: flex;
@@ -111,9 +105,7 @@
     color: #f87171;
 }
 
-/* =========================================
-   FORMULARIO
-   ========================================= */
+/* FORMULARIO */
 
 .rol-editar-form {
     display: flex;
@@ -167,9 +159,7 @@
     line-height: 1.6;
 }
 
-/* =========================================
-   CAMPO NOMBRE DEL ROL
-   ========================================= */
+/* CAMPO NOMBRE DEL ROL */
 
 .rol-editar-campo {
     display: flex;
@@ -212,9 +202,7 @@
     font-size: 12px;
 }
 
-/* =========================================
-   LISTA DE PERMISOS
-   ========================================= */
+/* LISTA DE PERMISOS */
 
 .rol-editar-permisos {
     display: flex;
@@ -368,9 +356,7 @@
     overflow-wrap: anywhere;
 }
 
-/* =========================================
-   ESTADO SIN PERMISOS
-   ========================================= */
+/* ESTADO SIN PERMISOS */
 
 .rol-editar-vacio {
     padding: 38px 20px;
@@ -399,9 +385,7 @@
     line-height: 1.6;
 }
 
-/* =========================================
-   BOTONES INFERIORES
-   ========================================= */
+/* BOTONES INFERIORES */
 
 .rol-editar-acciones {
     display: flex;
@@ -459,9 +443,7 @@
     transform: translateY(1px);
 }
 
-/* =========================================
-   RESPONSIVE
-   ========================================= */
+/* RESPONSIVE */
 
 @media (max-width: 760px) {
     .rol-editar-page {

@@ -85,7 +85,6 @@ class ProductoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
-            # Precargar grupos y extras asociados al producto
             self.fields['grupos'].initial = self.instance.productogrupoopcion_set.values_list('idgrupo_id', flat=True)
             self.fields['extras'].initial = self.instance.productoextras_set.values_list('idextra_id', flat=True)
 

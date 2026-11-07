@@ -33,9 +33,7 @@ def registrar_auditoria(request, accion, descripcion):
         logger.exception("Error al registrar evento de auditoría '%s': %s", accion, e)
 
 
-# ============================================================
 # CÓDIGO DE BARRAS CODE 128 (VECTORIAL SVG)
-# ============================================================
 
 PATRONES_CODE128 = [
     '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
@@ -61,7 +59,6 @@ def generar_codigo_barras_svg(codigo, alto=60, ancho_modulo=2):
         codigo = "LOTE"
 
     codigo_limpio = str(codigo).strip()
-    # Filtrar caracteres válidos ASCII para Code 128 Subset B (32 a 126)
     caracteres = [c for c in codigo_limpio if 32 <= ord(c) <= 126]
     if not caracteres:
         caracteres = list("LOTE")
@@ -92,9 +89,7 @@ def generar_codigo_barras_svg(codigo, alto=60, ancho_modulo=2):
     return svg
 
 
-# ============================================================
 # PROTECCIÓN CONTRA ATAQUES DE FUERZA BRUTA EN LOGIN
-# ============================================================
 
 from django.core.cache import cache
 

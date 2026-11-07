@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recuperación de contraseña</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f3f4f6; font-family:Arial, Helvetica, sans-serif;">
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0;">
+        Restablecé tu contraseña del panel de Zona Burger. El enlace vence en {{ horas }} horas.
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6; padding:24px 12px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px; background-color:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e5e7eb;">
+
+                    <tr>
+                        <td align="center" style="background-color:#17171b; padding:26px 20px; border-bottom:4px solid #dc2626;">
+                            <span style="font-size:24px; font-weight:900; letter-spacing:1px; color:#ffffff;">ZONA <span style="color:#dc2626;">BURGER</span></span>
+                            <div style="margin-top:4px; font-size:12px; letter-spacing:2px; color:#9ca3af; text-transform:uppercase;">Panel administrativo</div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:32px 30px 8px; color:#1f2937;">
+                            <h1 style="margin:0 0 14px; font-size:21px; color:#111827;">Hola {{ nombre }},</h1>
+                            <p style="margin:0 0 14px; font-size:15px; line-height:1.6;">
+                                Recibimos una solicitud para restablecer la contraseña de tu cuenta en el panel de Zona Burger.
+                            </p>
+                            <p style="margin:0; font-size:15px; line-height:1.6;">
+                                Hacé clic en el botón para crear una nueva contraseña:
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" style="padding:24px 30px;">
+                            <a href="{{ enlace }}" style="display:inline-block; padding:14px 30px; background-color:#dc2626; color:#ffffff; font-size:15px; font-weight:bold; text-decoration:none; border-radius:8px;">
+                                Restablecer contraseña
+                            </a>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:0 30px 8px;">
+                            <p style="margin:0; padding:12px 14px; background-color:#fef2f2; border-left:4px solid #dc2626; border-radius:4px; font-size:13px; line-height:1.5; color:#7f1d1d;">
+                                Por seguridad, este enlace es válido por <strong>{{ horas }} horas</strong> y solo puede usarse una vez.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:20px 30px 0;">
+                            <p style="margin:0 0 6px; font-size:12px; color:#6b7280;">Si el botón no funciona, copiá y pegá este enlace en tu navegador:</p>
+                            <p style="margin:0; font-size:12px; line-height:1.5; word-break:break-all;">
+                                <a href="{{ enlace }}" style="color:#dc2626;">{{ enlace }}</a>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:24px 30px 30px;">
+                            <p style="margin:0; font-size:13px; line-height:1.6; color:#6b7280;">
+                                Si no solicitaste este cambio, ignorá este mensaje: tu contraseña actual sigue siendo segura.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" style="background-color:#f9fafb; padding:16px 20px; border-top:1px solid #e5e7eb; font-size:12px; color:#9ca3af;">
+                            Equipo de Zona Burger
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

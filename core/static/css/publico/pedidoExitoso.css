@@ -1,6 +1,4 @@
-/* =========================================================
-   ZONA BURGER - PEDIDO EXITOSO
-   ========================================================= */
+/* ZONA BURGER - PEDIDO EXITOSO */
 
 .page-exito {
     margin: 0;
@@ -21,10 +19,7 @@
     overflow-x: hidden;
 }
 
-
-/* =========================================================
-   CONTENEDOR PRINCIPAL
-   ========================================================= */
+/* CONTENEDOR PRINCIPAL */
 
 .exito-container {
     position: relative;
@@ -40,10 +35,7 @@
     overflow: hidden;
 }
 
-
-/* =========================================================
-   CHISPAS / BRASAS
-   ========================================================= */
+/* CHISPAS / BRASAS */
 
 .exito-chispa {
     position: absolute;
@@ -72,30 +64,25 @@
     pointer-events: none;
 }
 
-
 .exito-chispa:nth-of-type(2) {
     width: 4px;
     height: 4px;
 }
-
 
 .exito-chispa:nth-of-type(3) {
     width: 6px;
     height: 6px;
 }
 
-
 .exito-chispa:nth-of-type(4) {
     width: 3px;
     height: 3px;
 }
 
-
 .exito-chispa:nth-of-type(5) {
     width: 5px;
     height: 5px;
 }
-
 
 @keyframes exito-chispa-subir {
 
@@ -125,10 +112,7 @@
     }
 }
 
-
-/* =========================================================
-   TARJETA
-   ========================================================= */
+/* TARJETA */
 
 .exito-card {
     position: relative;
@@ -159,7 +143,6 @@
     overflow: hidden;
 }
 
-
 /* Línea roja superior */
 
 .exito-card::before {
@@ -175,7 +158,6 @@
 
     background: #d82505;
 }
-
 
 /* Brillo decorativo */
 
@@ -200,10 +182,7 @@
     pointer-events: none;
 }
 
-
-/* =========================================================
-   BADGE
-   ========================================================= */
+/* BADGE */
 
 .exito-badge {
     display: inline-flex;
@@ -236,15 +215,11 @@
     text-transform: uppercase;
 }
 
-
 .exito-badge i {
     font-size: 0.82rem;
 }
 
-
-/* =========================================================
-   ICONO DE ÉXITO
-   ========================================================= */
+/* ICONO DE ÉXITO */
 
 .exito-icono-wrapper {
     position: relative;
@@ -259,7 +234,6 @@
     align-items: center;
     justify-content: center;
 }
-
 
 /* Anillo exterior */
 
@@ -280,7 +254,6 @@
         ease-in-out;
 }
 
-
 /* Segundo anillo */
 
 .exito-icono-wrapper::before {
@@ -295,7 +268,6 @@
 
     border-radius: 50%;
 }
-
 
 /* Círculo rojo */
 
@@ -325,14 +297,12 @@
         0 12px 30px rgba(216, 37, 5, 0.25);
 }
 
-
 .exito-icono i {
     animation:
         exito-check
         0.55s
         ease-out;
 }
-
 
 @keyframes exito-pulso {
 
@@ -347,7 +317,6 @@
         opacity: 1;
     }
 }
-
 
 @keyframes exito-check {
 
@@ -374,10 +343,7 @@
     }
 }
 
-
-/* =========================================================
-   TÍTULO
-   ========================================================= */
+/* TÍTULO */
 
 .exito-titulo {
     position: relative;
@@ -402,10 +368,7 @@
     letter-spacing: -1.5px;
 }
 
-
-/* =========================================================
-   TEXTO
-   ========================================================= */
+/* TEXTO */
 
 .exito-texto {
     position: relative;
@@ -425,17 +388,13 @@
     line-height: 1.8;
 }
 
-
 .exito-texto strong {
     color: #ffffff;
 
     font-weight: 800;
 }
 
-
-/* =========================================================
-   ACCIONES
-   ========================================================= */
+/* ACCIONES */
 
 .exito-acciones {
     position: relative;
@@ -455,10 +414,7 @@
     margin: 0 auto;
 }
 
-
-/* =========================================================
-   BOTONES
-   ========================================================= */
+/* BOTONES */
 
 .exito-btn {
     min-height: 54px;
@@ -493,20 +449,15 @@
         box-shadow 0.2s ease;
 }
 
-
 .exito-btn:hover {
     transform: translateY(-2px);
 }
-
 
 .exito-btn i {
     font-size: 1rem;
 }
 
-
-/* =========================================================
-   BOTÓN WHATSAPP
-   ========================================================= */
+/* BOTÓN WHATSAPP */
 
 .exito-btn-whatsapp {
     background: #d82505;
@@ -520,7 +471,6 @@
         0 10px 25px rgba(216, 37, 5, 0.20);
 }
 
-
 .exito-btn-whatsapp:hover {
     background: #ef3210;
 
@@ -530,10 +480,7 @@
         0 14px 30px rgba(216, 37, 5, 0.28);
 }
 
-
-/* =========================================================
-   BOTÓN REINTENTAR WHATSAPP
-   ========================================================= */
+/* BOTÓN REINTENTAR WHATSAPP */
 
 .exito-btn-reintentar {
     background: #171717;
@@ -544,17 +491,13 @@
         1px solid #353535;
 }
 
-
 .exito-btn-reintentar:hover {
     background: #202020;
 
     border-color: #4a4a4a;
 }
 
-
-/* =========================================================
-   BOTÓN VOLVER AL MENÚ
-   ========================================================= */
+/* BOTÓN VOLVER AL MENÚ */
 
 .exito-btn-menu {
     background: #ffffff;
@@ -567,17 +510,13 @@
     margin-top: 4px;
 }
 
-
 .exito-btn-menu:hover {
     background: #eeeeee;
 
     border-color: #eeeeee;
 }
 
-
-/* =========================================================
-   NOTA FINAL
-   ========================================================= */
+/* NOTA FINAL */
 
 .exito-footer-nota {
     position: relative;
@@ -602,17 +541,13 @@
     line-height: 1.5;
 }
 
-
 .exito-footer-nota i {
     color: #d82505;
 
     font-size: 0.78rem;
 }
 
-
-/* =========================================================
-   TABLET / MOBILE
-   ========================================================= */
+/* TABLET / MOBILE */
 
 @media (max-width: 700px) {
 
@@ -625,7 +560,6 @@
             70px;
     }
 
-
     .exito-card {
         padding:
             38px
@@ -635,13 +569,11 @@
         border-radius: 18px;
     }
 
-
     .exito-badge {
         margin-bottom: 22px;
 
         font-size: 0.64rem;
     }
-
 
     .exito-icono-wrapper {
         width: 94px;
@@ -650,7 +582,6 @@
         margin-bottom: 24px;
     }
 
-
     .exito-icono {
         width: 68px;
         height: 68px;
@@ -658,20 +589,17 @@
         font-size: 1.7rem;
     }
 
-
     .exito-titulo {
         font-size: 2rem;
 
         letter-spacing: -1px;
     }
 
-
     .exito-texto {
         font-size: 0.86rem;
 
         line-height: 1.7;
     }
-
 
     .exito-btn {
         min-height: 52px;
@@ -683,7 +611,6 @@
         font-size: 0.70rem;
     }
 
-
     .exito-footer-nota {
         align-items: flex-start;
 
@@ -691,10 +618,7 @@
     }
 }
 
-
-/* =========================================================
-   MOBILE PEQUEÑO
-   ========================================================= */
+/* MOBILE PEQUEÑO */
 
 @media (max-width: 420px) {
 
@@ -703,7 +627,6 @@
         padding-right: 10px;
     }
 
-
     .exito-card {
         padding:
             34px
@@ -711,26 +634,20 @@
             26px;
     }
 
-
     .exito-titulo {
         font-size: 1.75rem;
     }
 
-
     .exito-texto {
         font-size: 0.82rem;
     }
-
 
     .exito-btn {
         font-size: 0.64rem;
     }
 }
 
-
-/* =========================================================
-   ACCESIBILIDAD
-   ========================================================= */
+/* ACCESIBILIDAD */
 
 @media (prefers-reduced-motion: reduce) {
 
@@ -739,7 +656,6 @@
     .exito-icono i {
         animation: none;
     }
-
 
     .exito-btn {
         transition: none;

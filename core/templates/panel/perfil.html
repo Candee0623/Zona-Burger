@@ -72,20 +72,28 @@
     <div class="perfil-card">
         <h2 class="perfil-seccion-titulo">
             <i class="fa-solid fa-lock-open" style="color: #dc2626;"></i>
-            <span>Tus Permisos de Operación</span>
+            <span>Permisos de tu rol{% if usuario.idrol %}: {{ usuario.idrol.nombrerol }}{% endif %}</span>
+            {% if total_permisos %}<span class="perfil-permisos-total">{{ total_permisos }}</span>{% endif %}
         </h2>
 
-        {% if permisos %}
-            <div class="perfil-permisos-grid">
-                {% for permiso in permisos %}
-                    <div class="permiso-tag">
-                        <i class="fa-solid fa-check"></i>
-                        <span>{{ permiso.modulo }}: {{ permiso.accion }}</span>
+        {% if permisos_por_modulo %}
+            <div class="perfil-modulos">
+                {% for modulo, permisos in permisos_por_modulo %}
+                    <div class="perfil-modulo">
+                        <h3 class="perfil-modulo-titulo">{{ modulo }}</h3>
+                        <div class="perfil-modulo-permisos">
+                            {% for permiso in permisos %}
+                                <span class="permiso-tag" title="{{ permiso.descripcion|default:'' }}">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>{{ permiso.accion }}</span>
+                                </span>
+                            {% endfor %}
+                        </div>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p style="color: #9ca3af; font-size: 0.88rem;">No tenés permisos de modificación asignados actualmente.</p>
+            <p style="color: #9ca3af; font-size: 0.88rem;">Tu rol no tiene permisos asignados actualmente.</p>
         {% endif %}
     </div>
 

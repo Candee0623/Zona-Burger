@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Actualizar la información cada 30 segundos.
     const INTERVALO_ACTUALIZACION = 30000;
     let temporizadorActualizacion = null;
 

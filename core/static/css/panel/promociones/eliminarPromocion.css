@@ -1,6 +1,4 @@
-/* =========================================================
-ELIMINAR PROMOCIÓN - ZONA BURGER
-========================================================= */
+/* ELIMINAR PROMOCIÓN - ZONA BURGER */
 
 .promocion-delete-page {
 width: 100%;
@@ -8,15 +6,12 @@ max-width: 650px;
 margin: 0 auto;
 }
 
-/* =========================================================
-VOLVER
-========================================================= */
+/* VOLVER */
 
 .promocion-delete-back {
 display: inline-flex;
 align-items: center;
 gap: 8px;
-
 
 margin-bottom: 20px;
 padding: 7px 11px;
@@ -36,20 +31,17 @@ transition:
     border-color .2s ease,
     transform .2s ease;
 
-
 }
 
 .promocion-delete-back svg {
 width: 16px;
 height: 16px;
 
-
 fill: none;
 stroke: currentColor;
 stroke-width: 1.8;
 stroke-linecap: round;
 stroke-linejoin: round;
-
 
 }
 
@@ -58,15 +50,11 @@ color: #dc2626;
 background: rgba(220, 38, 38, .06);
 border-color: rgba(220, 38, 38, .35);
 
-
 transform: translateX(-2px);
-
 
 }
 
-/* =========================================================
-CARD
-========================================================= */
+/* CARD */
 
 .promocion-delete-card {
 background: #181818;
@@ -74,33 +62,26 @@ border: 1px solid #303030;
 border-radius: 10px;
 overflow: hidden;
 
-
 box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
-
 
 }
 
-/* =========================================================
-HEADER
-========================================================= */
+/* HEADER */
 
 .promocion-delete-header {
 display: flex;
 align-items: center;
 gap: 15px;
 
-
 padding: 23px 27px;
 
 border-bottom: 1px solid #303030;
-
 
 }
 
 .promocion-delete-icon {
 width: 49px;
 height: 49px;
-
 
 display: flex;
 align-items: center;
@@ -110,13 +91,11 @@ flex-shrink: 0;
 
 border-radius: 8px;
 
-
 }
 
 .promocion-delete-icon svg {
 width: 25px;
 height: 25px;
-
 
 fill: none;
 stroke: currentColor;
@@ -124,12 +103,9 @@ stroke-width: 1.8;
 stroke-linecap: round;
 stroke-linejoin: round;
 
-
 }
 
-/* =========================================================
-ELIMINAR
-========================================================= */
+/* ELIMINAR */
 
 .promocion-delete-icon.eliminar {
 background: rgba(220, 38, 38, .10);
@@ -144,11 +120,9 @@ min-width: 0;
 .promocion-delete-header-text h1 {
 margin: 0 0 5px;
 
-
 font-size: 1.35rem;
 font-weight: 600;
 line-height: 1.2;
-
 
 }
 
@@ -159,34 +133,26 @@ color: #dc2626;
 .promocion-delete-header-text p {
 margin: 0;
 
-
 color: #858585;
 font-size: .84rem;
 line-height: 1.4;
 
-
 }
 
-/* =========================================================
-BODY
-========================================================= */
+/* BODY */
 
 .promocion-delete-body {
 padding: 27px;
 }
 
-/* =========================================================
-PREGUNTA
-========================================================= */
+/* PREGUNTA */
 
 .promocion-delete-question {
 margin: 0 0 20px;
 
-
 color: #b8b8b8;
 font-size: .9rem;
 line-height: 1.5;
-
 
 }
 
@@ -195,19 +161,15 @@ color: #f0f0f0;
 font-weight: 600;
 }
 
-/* =========================================================
-INFORMACIÓN
-========================================================= */
+/* INFORMACIÓN */
 
 .promocion-info {
 margin-bottom: 20px;
 padding: 15px;
 
-
 background: #202020;
 border: 1px solid #333;
 border-radius: 8px;
-
 
 }
 
@@ -216,13 +178,11 @@ display: flex;
 align-items: center;
 justify-content: space-between;
 
-
 gap: 20px;
 
 padding: 9px 0;
 
 border-bottom: 1px solid #303030;
-
 
 }
 
@@ -238,26 +198,22 @@ border-bottom: none;
 .promocion-info-label {
 color: #626262;
 
-
 font-size: .67rem;
 font-weight: 700;
 
 text-transform: uppercase;
 letter-spacing: .6px;
 
-
 }
 
 .promocion-info-value {
 color: #ddd;
-
 
 font-size: .86rem;
 font-weight: 600;
 
 text-align: right;
 overflow-wrap: anywhere;
-
 
 }
 
@@ -266,15 +222,12 @@ color: #777;
 font-weight: 500;
 }
 
-/* =========================================================
-ADVERTENCIA
-========================================================= */
+/* ADVERTENCIA */
 
 .promocion-warning {
 display: flex;
 align-items: flex-start;
 gap: 11px;
-
 
 margin-bottom: 22px;
 padding: 14px;
@@ -283,16 +236,13 @@ background: rgba(220, 38, 38, .07);
 border: 1px solid rgba(220, 38, 38, .23);
 border-radius: 7px;
 
-
 }
 
 .promocion-warning-icon {
 flex-shrink: 0;
 margin-top: 1px;
 
-
 color: #dc2626;
-
 
 }
 
@@ -300,35 +250,28 @@ color: #dc2626;
 width: 19px;
 height: 19px;
 
-
 fill: none;
 stroke: currentColor;
 stroke-width: 1.8;
 stroke-linecap: round;
 stroke-linejoin: round;
 
-
 }
 
 .promocion-warning-text {
 color: #aaa;
 
-
 font-size: .84rem;
 line-height: 1.5;
 
-
 }
 
-/* =========================================================
-ACCIONES
-========================================================= */
+/* ACCIONES */
 
 .promocion-delete-actions {
 display: flex;
 justify-content: center;
 gap: 9px;
-
 
 padding-top: 21px;
 
@@ -336,14 +279,12 @@ border-top: 1px solid #303030;
 
 flex-wrap: wrap;
 
-
 }
 
 .promocion-action-btn {
 display: inline-flex;
 align-items: center;
 justify-content: center;
-
 
 gap: 7px;
 
@@ -369,7 +310,6 @@ transition:
     transform .2s ease,
     box-shadow .2s ease;
 
-
 }
 
 .promocion-action-btn:hover {
@@ -380,28 +320,22 @@ transform: translateY(-1px);
 width: 16px;
 height: 16px;
 
-
 fill: none;
 stroke: currentColor;
 stroke-width: 1.8;
 stroke-linecap: round;
 stroke-linejoin: round;
 
-
 }
 
-/* =========================================================
-CONFIRMAR
-========================================================= */
+/* CONFIRMAR */
 
 .promocion-confirmar {
 border: 1px solid #dc2626;
 background: #dc2626;
 color: #fff;
 
-
 box-shadow: 0 5px 14px rgba(220, 38, 38, .10);
-
 
 }
 
@@ -410,15 +344,11 @@ background: #ef3030;
 border-color: #ef3030;
 color: #fff;
 
-
 box-shadow: 0 7px 18px rgba(220, 38, 38, .16);
-
 
 }
 
-/* =========================================================
-CANCELAR
-========================================================= */
+/* CANCELAR */
 
 .promocion-cancelar {
 background: #222;
@@ -432,12 +362,9 @@ border-color: #4a4a4a;
 color: #eee;
 }
 
-/* =========================================================
-RESPONSIVE
-========================================================= */
+/* RESPONSIVE */
 
 @media (max-width: 600px) {
-
 
 .promocion-delete-header,
 .promocion-delete-body {
@@ -487,11 +414,9 @@ RESPONSIVE
     width: 100%;
 }
 
-
 }
 
 @media (max-width: 420px) {
-
 
 .promocion-delete-page {
     max-width: none;
@@ -509,6 +434,5 @@ RESPONSIVE
 .promocion-warning-text {
     font-size: .8rem;
 }
-
 
 }

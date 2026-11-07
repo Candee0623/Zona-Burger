@@ -1,7 +1,4 @@
-/* =========================================================
-LISTA DE TIPOS DE BENEFICIO
-ZONA-BURGER
-========================================================= */
+/* LISTA DE TIPOS DE BENEFICIO */
 
 .beneficios-list-page {
 width: 100%;
@@ -10,15 +7,12 @@ margin: 0 auto;
 color: #fff;
 }
 
-/* =========================================================
-VOLVER
-========================================================= */
+/* VOLVER */
 
 .beneficios-back {
 display: inline-flex;
 align-items: center;
 gap: 8px;
-
 
 margin-bottom: 20px;
 padding: 7px 11px;
@@ -38,18 +32,15 @@ transition:
     border-color .2s ease,
     transform .2s ease;
 
-
 }
 
 .beneficios-back:hover {
 color: #dc2626;
 
-
 background: rgba(220, 38, 38, .06);
 border-color: rgba(220, 38, 38, .35);
 
 transform: translateX(-2px);
-
 
 }
 
@@ -57,30 +48,24 @@ transform: translateX(-2px);
 width: 16px;
 height: 16px;
 
-
 fill: none;
 stroke: currentColor;
 stroke-width: 1.8;
 stroke-linecap: round;
 stroke-linejoin: round;
 
-
 }
 
-/* =========================================================
-HEADER
-========================================================= */
+/* HEADER */
 
 .beneficios-list-header {
 display: flex;
 align-items: center;
 justify-content: space-between;
 
-
 gap: 20px;
 
 margin-bottom: 22px;
-
 
 }
 
@@ -89,16 +74,13 @@ display: flex;
 align-items: center;
 gap: 15px;
 
-
 min-width: 0;
-
 
 }
 
 .beneficios-list-icon {
 width: 49px;
 height: 49px;
-
 
 flex-shrink: 0;
 
@@ -112,20 +94,17 @@ border-radius: 8px;
 
 color: #dc2626;
 
-
 }
 
 .beneficios-list-icon svg {
 width: 25px;
 height: 25px;
 
-
 fill: none;
 stroke: currentColor;
 stroke-width: 1.8;
 stroke-linecap: round;
 stroke-linejoin: round;
-
 
 }
 
@@ -136,37 +115,30 @@ min-width: 0;
 .beneficios-list-title h1 {
 margin: 0 0 5px;
 
-
 color: #f0f0f0;
 
 font-size: 1.35rem;
 font-weight: 600;
 line-height: 1.2;
 
-
 }
 
 .beneficios-list-title p {
 margin: 0;
-
 
 color: #858585;
 
 font-size: .84rem;
 line-height: 1.4;
 
-
 }
 
-/* =========================================================
-BOTÓN NUEVO
-========================================================= */
+/* BOTÓN NUEVO */
 
 .btn-nuevo-beneficio {
 display: inline-flex;
 align-items: center;
 justify-content: center;
-
 
 gap: 7px;
 
@@ -195,13 +167,11 @@ transition:
     transform .2s ease,
     box-shadow .2s ease;
 
-
 }
 
 .btn-nuevo-beneficio:hover {
 background: #ef3030;
 border-color: #ef3030;
-
 
 color: #fff;
 
@@ -209,13 +179,11 @@ transform: translateY(-1px);
 
 box-shadow: 0 7px 18px rgba(220, 38, 38, .16);
 
-
 }
 
 .btn-nuevo-beneficio svg {
 width: 16px;
 height: 16px;
-
 
 fill: none;
 stroke: currentColor;
@@ -223,16 +191,12 @@ stroke-width: 1.8;
 stroke-linecap: round;
 stroke-linejoin: round;
 
-
 }
 
-/* =========================================================
-TABLA
-========================================================= */
+/* TABLA */
 
 .beneficios-table-container {
 width: 100%;
-
 
 background: #181818;
 
@@ -243,23 +207,18 @@ overflow: hidden;
 
 box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
 
-
 }
 
 .beneficios-table {
 width: 100%;
 
-
 border-collapse: collapse;
 
 text-align: left;
 
-
 }
 
-/* =========================================================
-CABECERA
-========================================================= */
+/* CABECERA */
 
 .beneficios-table thead {
 background: #202020;
@@ -267,7 +226,6 @@ background: #202020;
 
 .beneficios-table th {
 padding: 13px 14px;
-
 
 border-bottom: 1px solid #303030;
 
@@ -281,20 +239,16 @@ letter-spacing: .5px;
 
 white-space: nowrap;
 
-
 }
 
 .beneficio-th-acciones {
 text-align: right;
 }
 
-/* =========================================================
-CELDAS
-========================================================= */
+/* CELDAS */
 
 .beneficios-table td {
 padding: 13px 14px;
-
 
 border-bottom: 1px solid #292929;
 
@@ -303,7 +257,6 @@ color: #ccc;
 font-size: .84rem;
 
 vertical-align: middle;
-
 
 }
 
@@ -319,76 +272,60 @@ background: #202020;
 border-bottom: none;
 }
 
-/* =========================================================
-DATOS
-========================================================= */
+/* DATOS */
 
 .beneficio-id {
 color: #666 !important;
 
-
 font-size: .78rem !important;
 
 white-space: nowrap;
-
 
 }
 
 .beneficio-codigo {
 color: #aaa !important;
 
-
 font-weight: 500;
 
 overflow-wrap: anywhere;
-
 
 }
 
 .beneficio-nombre {
 color: #f0f0f0 !important;
 
-
 font-weight: 600;
 
 overflow-wrap: anywhere;
-
 
 }
 
 .beneficio-comportamiento {
 color: #dc2626 !important;
 
-
 font-size: .81rem !important;
 font-weight: 600;
 
 overflow-wrap: anywhere;
-
 
 }
 
 .beneficio-descripcion {
 color: #999 !important;
 
-
 line-height: 1.4;
 
 overflow-wrap: anywhere;
 
-
 }
 
-/* =========================================================
-ACCIONES
-========================================================= */
+/* ACCIONES */
 
 .beneficio-acciones {
 text-align: right;
 
-
 white-space: nowrap;
-
 
 }
 
@@ -396,7 +333,6 @@ white-space: nowrap;
 display: inline-flex;
 align-items: center;
 justify-content: center;
-
 
 gap: 6px;
 
@@ -422,7 +358,6 @@ transition:
     color .2s ease,
     transform .2s ease;
 
-
 }
 
 .btn-beneficio-accion:hover {
@@ -433,43 +368,33 @@ transform: translateY(-1px);
 width: 15px;
 height: 15px;
 
-
 fill: none;
 stroke: currentColor;
 stroke-width: 1.8;
 stroke-linecap: round;
 stroke-linejoin: round;
 
-
 }
 
-/* =========================================================
-EDITAR
-========================================================= */
+/* EDITAR */
 
 .btn-beneficio-editar {
 margin-right: 5px;
 
-
 color: #aaa;
-
 
 }
 
 .btn-beneficio-editar:hover {
 background: rgba(220, 38, 38, .07);
 
-
 border-color: rgba(220, 38, 38, .35);
 
 color: #dc2626;
 
-
 }
 
-/* =========================================================
-ELIMINAR
-========================================================= */
+/* ELIMINAR */
 
 .btn-beneficio-eliminar {
 color: #aaa;
@@ -478,21 +403,16 @@ color: #aaa;
 .btn-beneficio-eliminar:hover {
 background: rgba(220, 38, 38, .07);
 
-
 border-color: rgba(220, 38, 38, .35);
 
 color: #dc2626;
 
-
 }
 
-/* =========================================================
-VACÍO
-========================================================= */
+/* VACÍO */
 
 .beneficios-empty {
 padding: 35px 20px !important;
-
 
 text-align: center;
 
@@ -502,15 +422,11 @@ font-size: .84rem !important;
 
 font-style: italic;
 
-
 }
 
-/* =========================================================
-RESPONSIVE TABLET
-========================================================= */
+/* RESPONSIVE TABLET */
 
 @media (max-width: 900px) {
-
 
 .beneficios-table th,
 .beneficios-table td {
@@ -529,15 +445,11 @@ RESPONSIVE TABLET
     padding: 6px 8px;
 }
 
-
 }
 
-/* =========================================================
-RESPONSIVE MOBILE
-========================================================= */
+/* RESPONSIVE MOBILE */
 
 @media (max-width: 700px) {
-
 
 .beneficios-list-header {
     flex-direction: column;
@@ -560,7 +472,6 @@ RESPONSIVE MOBILE
     width: 100%;
 }
 
-
 /* CONTENEDOR */
 
 .beneficios-table-container {
@@ -572,7 +483,6 @@ RESPONSIVE MOBILE
 
     box-shadow: none;
 }
-
 
 /* TABLA */
 
@@ -591,7 +501,6 @@ RESPONSIVE MOBILE
 
     width: 100%;
 }
-
 
 /* TARJETA */
 
@@ -617,7 +526,6 @@ RESPONSIVE MOBILE
     background: #1b1b1b;
 }
 
-
 /* CELDAS */
 
 .beneficios-table tbody td {
@@ -638,7 +546,6 @@ RESPONSIVE MOBILE
     border-bottom: none;
 }
 
-
 /* ETIQUETA */
 
 .beneficios-table tbody td::before {
@@ -657,13 +564,11 @@ RESPONSIVE MOBILE
     letter-spacing: .45px;
 }
 
-
 /* ID */
 
 .beneficio-id {
     font-size: .76rem !important;
 }
-
 
 /* NOMBRE */
 
@@ -673,20 +578,17 @@ RESPONSIVE MOBILE
     line-height: 1.4;
 }
 
-
 /* COMPORTAMIENTO */
 
 .beneficio-comportamiento {
     line-height: 1.4;
 }
 
-
 /* DESCRIPCIÓN */
 
 .beneficio-descripcion {
     line-height: 1.45;
 }
-
 
 /* ACCIONES */
 
@@ -727,7 +629,6 @@ RESPONSIVE MOBILE
     text-align: center;
 }
 
-
 /* VACÍO */
 
 .beneficios-table tbody tr:has(.beneficios-empty) {
@@ -754,15 +655,11 @@ RESPONSIVE MOBILE
     overflow-wrap: anywhere;
 }
 
-
 }
 
-/* =========================================================
-MOBILE PEQUEÑO
-========================================================= */
+/* MOBILE PEQUEÑO */
 
 @media (max-width: 430px) {
-
 
 .beneficios-list-icon {
     width: 43px;
@@ -797,6 +694,5 @@ MOBILE PEQUEÑO
 .btn-beneficio-accion {
     min-height: 40px;
 }
-
 
 }

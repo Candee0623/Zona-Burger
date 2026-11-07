@@ -113,7 +113,7 @@ body {
     color: #fcd34d;
 }
 
-/* ---------- Contador de bloqueo ---------- */
+/* Contador de bloqueo */
 
 .login-bloqueo {
     display: flex;
@@ -159,7 +159,7 @@ body {
     color: #6ee7b7;
 }
 
-/* ---------- Formulario ---------- */
+/* Formulario */
 
 .form-group {
     margin-bottom: 20px;

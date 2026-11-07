@@ -1,7 +1,5 @@
 
-/* =========================================
-   CONTENEDOR PRINCIPAL
-========================================= */
+/* CONTENEDOR PRINCIPAL */
 
 .rol-form-page {
     width: 100%;
@@ -12,9 +10,7 @@
     background: #111111;
 }
 
-/* =========================================
-   ENCABEZADO
-========================================= */
+/* ENCABEZADO */
 
 .rol-form-header {
     display: flex;
@@ -61,9 +57,7 @@
     border-color: #555555;
 }
 
-/* =========================================
-   TARJETA PRINCIPAL
-========================================= */
+/* TARJETA PRINCIPAL */
 
 .rol-form-card {
     width: 100%;
@@ -112,9 +106,7 @@
     line-height: 1.6;
 }
 
-/* =========================================
-   FORMULARIO Y CAMPO DE NOMBRE
-========================================= */
+/* FORMULARIO Y CAMPO DE NOMBRE */
 
 .rol-form {
     padding: 25px;
@@ -166,9 +158,7 @@
     line-height: 1.5;
 }
 
-/* =========================================
-   SECCIÓN DE PERMISOS
-========================================= */
+/* SECCIÓN DE PERMISOS */
 
 .rol-permisos-section {
     margin-top: 30px;
@@ -354,9 +344,7 @@
     line-height: 1.6;
 }
 
-/* =========================================
-   AVISO INFORMATIVO
-========================================= */
+/* AVISO INFORMATIVO */
 
 .rol-form-notice {
     display: flex;
@@ -382,9 +370,7 @@
     line-height: 1.6;
 }
 
-/* =========================================
-   BOTONES DE ACCIÓN
-========================================= */
+/* BOTONES DE ACCIÓN */
 
 .rol-form-actions {
     display: flex;
@@ -443,9 +429,7 @@
     outline-offset: 3px;
 }
 
-/* =========================================
-   MENSAJES DE DJANGO
-========================================= */
+/* MENSAJES DE DJANGO */
 
 .rol-form-messages {
     width: 100%;
@@ -465,9 +449,7 @@
     line-height: 1.5;
 }
 
-/* =========================================
-   RESPONSIVE: TABLET
-========================================= */
+/* RESPONSIVE: TABLET */
 
 @media (max-width: 768px) {
     .rol-form-page {
@@ -496,9 +478,7 @@
     }
 }
 
-/* =========================================
-   RESPONSIVE: MÓVIL
-========================================= */
+/* RESPONSIVE: MÓVIL */
 
 @media (max-width: 560px) {
     .rol-permisos-grid {

@@ -91,7 +91,6 @@ document.getElementById('btn-agregar-opcion').addEventListener('click', function
 
 });
 
-
 /*
  * Quitar una opción nueva.
  * Como todavía no fue guardada en la base de datos,

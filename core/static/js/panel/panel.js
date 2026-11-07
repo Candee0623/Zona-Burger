@@ -1,8 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* ========================================
-       ELEMENTOS PRINCIPALES
-    ======================================== */
+    /* ELEMENTOS PRINCIPALES */
 
     const menuToggle = document.getElementById("menuToggle");
     const panelContainer = document.getElementById("panelContainer");
@@ -11,18 +9,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const userButton = document.getElementById("userButton");
     const userDropdown = document.getElementById("userDropdown");
 
-
-    /* ========================================
-       CONFIGURACIÓN
-    ======================================== */
+    /* CONFIGURACIÓN */
 
     const MOBILE_BREAKPOINT = 850;
-
 
     function isMobile() {
         return window.innerWidth <= MOBILE_BREAKPOINT;
     }
-
 
     /* ========================================
        ACTUALIZAR BOTÓN HAMBURGUESA
@@ -60,10 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-
-    /* ========================================
-       ABRIR / CERRAR MENÚ LATERAL
-    ======================================== */
+    /* ABRIR / CERRAR MENÚ LATERAL */
 
     if (menuToggle && panelContainer) {
 
@@ -75,19 +65,14 @@ document.addEventListener("DOMContentLoaded", function () {
              */
             event.stopPropagation();
 
-
             if (isMobile()) {
 
-                /*
-                 * En móvil/tablet alternamos el sidebar.
-                 */
+                /* En móvil/tablet alternamos el sidebar. */
                 panelContainer.classList.toggle(
                     "sidebar-mobile-open"
                 );
 
-                /*
-                 * Actualizamos ☰ / ✕.
-                 */
+                /* Actualizamos ☰ / ✕. */
                 actualizarBotonMenu();
 
             } else {
@@ -106,10 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-
-    /* ========================================
-       CERRAR SIDEBAR AL HACER CLICK AFUERA
-    ======================================== */
+    /* CERRAR SIDEBAR AL HACER CLICK AFUERA */
 
     document.addEventListener("click", function (event) {
 
@@ -129,7 +111,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-
         /*
          * Si el click fue dentro del sidebar
          * no hacemos nada.
@@ -140,7 +121,6 @@ document.addEventListener("DOMContentLoaded", function () {
         ) {
             return;
         }
-
 
         /*
          * Si el click fue sobre el botón tampoco
@@ -154,7 +134,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-
         /*
          * Click fuera del menú:
          * cerramos el sidebar.
@@ -167,10 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
-
-    /* ========================================
-       CERRAR AL SELECCIONAR UNA OPCIÓN
-    ======================================== */
+    /* CERRAR AL SELECCIONAR UNA OPCIÓN */
 
     if (sidebar) {
 
@@ -197,17 +173,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-
-    /* ========================================
-       CAMBIO DE TAMAÑO DE PANTALLA
-    ======================================== */
+    /* CAMBIO DE TAMAÑO DE PANTALLA */
 
     window.addEventListener("resize", function () {
 
         if (!panelContainer) {
             return;
         }
-
 
         /*
          * Si volvemos a escritorio,
@@ -221,15 +193,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
 
-
         actualizarBotonMenu();
 
     });
 
-
-    /* ========================================
-       MENÚ DE USUARIO
-    ======================================== */
+    /* MENÚ DE USUARIO */
 
     if (userButton && userDropdown) {
 
@@ -241,16 +209,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         });
 
-
-        /*
-         * Click fuera del menú de usuario.
-         */
+        /* Click fuera del menú de usuario. */
         document.addEventListener("click", function () {
 
             userDropdown.classList.remove("show");
 
         });
-
 
         /*
          * Evita que un click dentro del dropdown
@@ -264,10 +228,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-
-    /* ========================================
-       TECLA ESCAPE
-    ======================================== */
+    /* TECLA ESCAPE */
 
     document.addEventListener("keydown", function (event) {
 
@@ -275,10 +236,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-
-        /*
-         * Cerrar sidebar.
-         */
         if (panelContainer) {
 
             panelContainer.classList.remove(
@@ -287,16 +244,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
 
-
-        /*
-         * Volver el botón a ☰.
-         */
         actualizarBotonMenu();
 
-
-        /*
-         * Cerrar menú de usuario.
-         */
         if (userDropdown) {
 
             userDropdown.classList.remove("show");
@@ -304,7 +253,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
     });
-
 
     /* ========================================
        CAMPOS NUMÉRICOS
@@ -654,11 +602,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-
-    /* ========================================
-       PREVENCIÓN DE DOBLE ENVÍO EN FORMULARIOS
-       (Evita ventas y movimientos duplicados)
-    ======================================== */
+    /* PREVENCIÓN DE DOBLE ENVÍO EN FORMULARIOS */
     document.addEventListener("submit", function (event) {
         const form = event.target;
         if (!form || form.tagName !== "FORM") return;
@@ -691,10 +635,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 8000);
     });
 
-
-    /* ========================================
-       ESTADO INICIAL DEL BOTÓN
-    ======================================== */
+    /* ESTADO INICIAL DEL BOTÓN */
 
     actualizarBotonMenu();
 

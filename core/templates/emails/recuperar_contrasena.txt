@@ -1,0 +1,10 @@
+Hola {{ nombre }},
+
+Recibimos una solicitud para restablecer la contraseña de tu cuenta en el panel administrativo de Zona Burger.
+
+Podés crear una nueva contraseña ingresando al siguiente enlace seguro (válido por {{ horas }} horas):
+{{ enlace }}
+
+Si no solicitaste este cambio, ignorá este mensaje: tu contraseña actual sigue siendo segura.
+
+Equipo de Zona Burger

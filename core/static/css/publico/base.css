@@ -1,19 +1,16 @@
-/* ==========================================================================
-   ZONA BURGER — DESIGN SYSTEM & PUBLIC BASE STYLES
-   Master Stylesheet for Public Storefront
-   ========================================================================== */
+/* ZONA BURGER — DESIGN SYSTEM & PUBLIC BASE STYLES */
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-    /* --- Brand Color Palette --- */
+    /* Brand Color Palette */
     --zb-black: #08080a;
     --zb-black-surface: #101014;
     --zb-card: #15151b;
     --zb-card-elevated: #1c1c24;
     --zb-card-hover: #22222d;
 
-    /* --- Brand Primary & Accents --- */
+    /* Brand Primary & Accents */
     --zb-red: #d82505;
     --zb-red-bright: #f03816;
     --zb-red-light: #ff5436;
@@ -29,38 +26,36 @@
     --zb-green-soft: rgba(16, 185, 129, 0.15);
     --zb-green-glow: rgba(16, 185, 129, 0.35);
 
-    /* --- Typography Colors --- */
+    /* Typography Colors */
     --zb-text: #ffffff;
     --zb-text-secondary: #c8c8d2;
     --zb-text-muted: #8a8a98;
     --zb-text-dark: #121214;
 
-    /* --- Borders & Dividers --- */
+    /* Borders & Dividers */
     --zb-border: rgba(255, 255, 255, 0.08);
     --zb-border-subtle: rgba(255, 255, 255, 0.04);
     --zb-border-hover: rgba(255, 255, 255, 0.18);
     --zb-border-red: rgba(216, 37, 5, 0.4);
     --zb-border-red-active: #d82505;
 
-    /* --- Geometry & Radii --- */
+    /* Geometry & Radii */
     --zb-radius-sm: 8px;
     --zb-radius-md: 14px;
     --zb-radius-lg: 20px;
     --zb-radius-full: 9999px;
 
-    /* --- Shadows --- */
+    /* Shadows */
     --zb-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.4);
     --zb-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.55);
     --zb-shadow-lg: 0 18px 45px rgba(0, 0, 0, 0.7);
     --zb-shadow-red: 0 10px 30px var(--zb-red-glow);
 
-    /* --- Transitions --- */
+    /* Transitions */
     --zb-transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ==========================================================================
-   RESET & GLOBAL BASE
-   ========================================================================== */
+/* RESET & GLOBAL BASE */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -110,9 +105,7 @@ button {
     background: none;
 }
 
-/* ==========================================================================
-   SHARED UI COMPONENTS & BUTTONS
-   ========================================================================== */
+/* SHARED UI COMPONENTS & BUTTONS */
 .btn-primary,
 .hero-button-primary,
 .btn-confirmar-pedido {

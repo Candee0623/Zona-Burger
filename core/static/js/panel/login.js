@@ -1,4 +1,3 @@
-/* ---------- Mostrar / ocultar contraseña ---------- */
 
 const toggleBtn = document.getElementById('togglePassword');
 const passwordInput = document.getElementById('password');
@@ -13,8 +12,7 @@ if (toggleBtn && passwordInput && toggleIcon) {
     });
 }
 
-
-/* ---------- Contador de bloqueo (solo HTML/JS) ---------- */
+/* Contador de bloqueo (solo HTML/JS) */
 
 (function () {
 

@@ -7,10 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-
-    /* ========================================================
-       ABRIR / CERRAR MENÚ
-    ======================================================== */
+    /* ABRIR / CERRAR MENÚ */
 
     menuToggle.addEventListener("click", function (event) {
 
@@ -32,10 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
-
-    /* ========================================================
-       CERRAR AL SELECCIONAR UNA OPCIÓN
-    ======================================================== */
+    /* CERRAR AL SELECCIONAR UNA OPCIÓN */
 
     navMenu.querySelectorAll("a").forEach(function (link) {
 
@@ -59,10 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
-
-    /* ========================================================
-       CERRAR AL HACER CLICK AFUERA
-    ======================================================== */
+    /* CERRAR AL HACER CLICK AFUERA */
 
     document.addEventListener("click", function (event) {
 

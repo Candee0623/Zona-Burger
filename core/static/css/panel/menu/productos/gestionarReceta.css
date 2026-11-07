@@ -1,7 +1,5 @@
 
-/* ==================================================
-   ZONA BURGER - GESTIÓN DE RECETAS
-   ================================================== */
+/* ZONA BURGER - GESTIÓN DE RECETAS */
 
 .receta-page {
     width: 100%;
@@ -356,8 +354,6 @@
     background: rgba(163, 163, 163, 0.08);
     border-color: rgba(163, 163, 163, 0.18);
 }
-
-/* Quitar ingrediente */
 
 .form-quitar-insumo {
     width: 100%;

@@ -120,11 +120,9 @@ def normalizar_texto(texto):
     """
     if not texto:
         return ''
-    # Convertir a cadena y normalizar unicode
     s = str(texto).strip().lower()
     s_nfd = unicodedata.normalize('NFD', s)
     s_sin_tildes = ''.join(c for c in s_nfd if unicodedata.category(c) != 'Mn')
-    # Reemplazar caracteres especiales y consolidar espacios
     s_limpia = re.sub(r'[\s\-_,./]+', ' ', s_sin_tildes).strip()
     return s_limpia
 
@@ -238,7 +236,6 @@ def detectar_zona_por_coordenadas(lat, lon, zonas_db=None):
     except (ValueError, TypeError):
         return None
 
-    # Evaluar contra cada zona geográfica configurada
     for clave_zona, cfg in ZONAS_GEOGRAFICAS_CONFIG.items():
         bbox = cfg.get('bbox')
         centro = cfg.get('centro')
@@ -291,7 +288,6 @@ def detectar_zona_por_texto(calle='', numero='', localidad='', detalles_geocodin
 
     # 1. Comprobar calles emblemáticas y alias de cada configuración geográfica
     for clave_zona, cfg in ZONAS_GEOGRAFICAS_CONFIG.items():
-        # Revisar calles emblemáticas
         for calle_emb in cfg.get('calles', []):
             c_norm = normalizar_texto(calle_emb)
             c_sinesp = texto_sin_espacios(calle_emb)
@@ -300,7 +296,6 @@ def detectar_zona_por_texto(calle='', numero='', localidad='', detalles_geocodin
                 if z:
                     return z
 
-        # Revisar alias
         for alias in cfg.get('aliases', []):
             a_norm = normalizar_texto(alias)
             a_sinesp = texto_sin_espacios(alias)
@@ -348,7 +343,6 @@ def detectar_zona_entrega(calle='', numero='', localidad='', lat=None, lon=None,
             if zona_encontrada:
                 metodo_deteccion = 'coordenadas'
             else:
-                # Verificar distancia a la base del negocio
                 dist_base = calcular_distancia_km(lat_f, lon_f, NEGOCIO_BASE_LAT, NEGOCIO_BASE_LON)
                 if dist_base is not None and dist_base > RADIO_MAXIMO_COBERTURA_KM:
                     # Dirección claramente lejana -> Forzar fuera de cobertura / A coordinar
@@ -393,7 +387,6 @@ def detectar_zona_entrega(calle='', numero='', localidad='', lat=None, lon=None,
         except (ValueError, TypeError):
             pass
 
-    # Construir resultado
     if zona_encontrada:
         costo = Decimal(str(zona_encontrada.costoenvio or 0.00))
         es_gratis = (costo == 0)

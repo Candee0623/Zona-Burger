@@ -43,18 +43,14 @@ from .models import (
 )
 
 
-# ==========================================================
 # CONFIGURACIÓN GENERAL DEL ADMINISTRADOR
-# ==========================================================
 
 admin.site.site_header = "Zona Burger - Administración"
 admin.site.site_title = "Zona Burger"
 admin.site.index_title = "Panel de administración"
 
 
-# ==========================================================
 # MIXIN DE ACCIONES
-# ==========================================================
 
 class AccionesAdminMixin:
     """Agrega un botón para editar cada registro."""
@@ -71,9 +67,7 @@ class AccionesAdminMixin:
         )
 
 
-# ==========================================================
 # ROLES, EMPLEADOS Y PERMISOS
-# ==========================================================
 
 @admin.register(Rol)
 class RolAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -142,9 +136,7 @@ class RolPermisoAdmin(AccionesAdminMixin, admin.ModelAdmin):
     autocomplete_fields = ("idrol", "idpermiso")
 
 
-# ==========================================================
 # ESTADOS Y AUDITORÍA
-# ==========================================================
 
 @admin.register(EstadoNegocio)
 class EstadoNegocioAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -202,9 +194,7 @@ class RegistroAuditoriaAdmin(admin.ModelAdmin):
     )
 
 
-# ==========================================================
 # NEGOCIO, HORARIOS Y ENTREGA
-# ==========================================================
 
 @admin.register(Negocio)
 class NegocioAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -266,9 +256,7 @@ class RedesSocialesAdmin(AccionesAdminMixin, admin.ModelAdmin):
     search_fields = ("plataforma", "enlace")
 
 
-# ==========================================================
 # CATEGORÍAS, PRODUCTOS Y OPCIONES
-# ==========================================================
 
 @admin.register(CategoriaProducto)
 class CategoriaAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -394,9 +382,7 @@ class ProductoGrupoOpcionAdmin(AccionesAdminMixin, admin.ModelAdmin):
     autocomplete_fields = ("idproducto", "idgrupo")
 
 
-# ==========================================================
 # INVENTARIO, INSUMOS Y MOVIMIENTOS DE STOCK
-# ==========================================================
 
 @admin.register(EstadoStock)
 class EstadoStockAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -498,9 +484,7 @@ class MovimientoStockAdmin(AccionesAdminMixin, admin.ModelAdmin):
     readonly_fields = ("fecha",)
 
 
-# ==========================================================
 # COMPRAS Y RECETAS
-# ==========================================================
 
 @admin.register(Compras)
 class ComprasAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -560,9 +544,7 @@ class RecetaInsumoAdmin(AccionesAdminMixin, admin.ModelAdmin):
     search_fields = ("idinsumo__nombreinsumo",)
 
 
-# ==========================================================
 # MEDIOS DE PAGO Y CLIENTES
-# ==========================================================
 
 @admin.register(MedioPago)
 class MedioPagoAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -607,9 +589,7 @@ class DireccionAdmin(AccionesAdminMixin, admin.ModelAdmin):
     )
 
 
-# ==========================================================
 # PEDIDOS Y ESTADOS
-# ==========================================================
 
 @admin.register(EstadoPedido)
 class EstadoPedidoAdmin(AccionesAdminMixin, admin.ModelAdmin):
@@ -666,9 +646,7 @@ class DetallePedidoAdmin(AccionesAdminMixin, admin.ModelAdmin):
     )
 
 
-# ==========================================================
 # PROMOCIONES
-# ==========================================================
 
 @admin.register(TipoBeneficio)
 class TipoBeneficioAdmin(admin.ModelAdmin):

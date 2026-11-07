@@ -3,7 +3,6 @@
     margin: 0 auto;
 }
 
-/* Volver */
 .producto-create-back {
     display: inline-flex;
     align-items: center;
@@ -333,7 +332,6 @@ input[type="file"].producto-form-control::file-selector-button:hover {
         transform 0.2s;
 }
 
-/* Guardar */
 .producto-save-btn {
     background: #dc2626;
     border: 1px solid #dc2626;
@@ -345,7 +343,6 @@ input[type="file"].producto-form-control::file-selector-button:hover {
     border-color: #b91c1c;
 }
 
-/* Cancelar */
 .producto-cancel-btn {
     background: #333;
     border: 1px solid #444;

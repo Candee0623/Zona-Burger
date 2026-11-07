@@ -1,6 +1,4 @@
-/* =========================================================
-   EDITAR PRODUCTO - ZONA BURGER
-   ========================================================= */
+/* EDITAR PRODUCTO - ZONA BURGER */
 
 .producto-edit-page {
     width: 100%;
@@ -8,10 +6,7 @@
     margin: 0 auto;
 }
 
-
-/* =========================================================
-   VOLVER
-   ========================================================= */
+/* VOLVER */
 
 .producto-edit-back {
     display: inline-flex;
@@ -49,10 +44,7 @@
     transform: translateX(-2px);
 }
 
-
-/* =========================================================
-   CARD
-   ========================================================= */
+/* CARD */
 
 .producto-edit-card {
     background: #181818;
@@ -62,10 +54,7 @@
     box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
 }
 
-
-/* =========================================================
-   HEADER
-   ========================================================= */
+/* HEADER */
 
 .producto-edit-header {
     display: flex;
@@ -122,19 +111,13 @@
     font-weight: 600;
 }
 
-
-/* =========================================================
-   BODY
-   ========================================================= */
+/* BODY */
 
 .producto-edit-body {
     padding: 27px;
 }
 
-
-/* =========================================================
-   ERRORES
-   ========================================================= */
+/* ERRORES */
 
 .producto-errors {
     margin-bottom: 22px;
@@ -179,10 +162,7 @@
     margin-bottom: 0;
 }
 
-
-/* =========================================================
-   FORMULARIOS
-   ========================================================= */
+/* FORMULARIOS */
 
 .producto-form-grid {
     display: grid;
@@ -270,19 +250,13 @@ input[type="file"].producto-form-control::file-selector-button {
     cursor: pointer;
 }
 
-
-/* =========================================================
-   DESCRIPCIÓN
-   ========================================================= */
+/* DESCRIPCIÓN */
 
 .producto-description-group {
     margin-bottom: 25px;
 }
 
-
-/* =========================================================
-   IMAGEN ACTUAL
-   ========================================================= */
+/* IMAGEN ACTUAL */
 
 .producto-current-image {
     display: flex;
@@ -322,10 +296,7 @@ input[type="file"].producto-form-control::file-selector-button {
     font-size: .7rem;
 }
 
-
-/* =========================================================
-   SECCIONES DE OPCIONES / EXTRAS
-   ========================================================= */
+/* SECCIONES DE OPCIONES / EXTRAS */
 
 .producto-section {
     margin-bottom: 22px;
@@ -397,10 +368,7 @@ input[type="file"].producto-form-control::file-selector-button {
     line-height: 1.5;
 }
 
-
-/* =========================================================
-   OPCIONES
-   ========================================================= */
+/* OPCIONES */
 
 .producto-options-grid {
     display: grid;
@@ -488,10 +456,7 @@ input[type="file"].producto-form-control::file-selector-button {
     font-style: italic;
 }
 
-
-/* =========================================================
-   ACCIONES
-   ========================================================= */
+/* ACCIONES */
 
 .producto-actions {
     display: flex;
@@ -537,7 +502,6 @@ input[type="file"].producto-form-control::file-selector-button {
     stroke-linejoin: round;
 }
 
-
 /* GUARDAR */
 
 .producto-save-btn {
@@ -554,7 +518,6 @@ input[type="file"].producto-form-control::file-selector-button {
     box-shadow: 0 7px 19px rgba(220, 38, 38, .16);
 }
 
-
 /* CANCELAR */
 
 .producto-cancel-btn {
@@ -569,10 +532,7 @@ input[type="file"].producto-form-control::file-selector-button {
     color: #eee;
 }
 
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
+/* RESPONSIVE */
 
 @media (max-width: 700px) {
 
@@ -593,7 +553,6 @@ input[type="file"].producto-form-control::file-selector-button {
     }
 
 }
-
 
 @media (max-width: 600px) {
 
@@ -641,7 +600,6 @@ input[type="file"].producto-form-control::file-selector-button {
     }
 
 }
-
 
 @media (max-width: 420px) {
 

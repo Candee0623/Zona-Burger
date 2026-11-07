@@ -1,6 +1,4 @@
-/* ===========================
-   ELIMINAR HORARIO
-=========================== */
+/* ELIMINAR HORARIO */
 
 .eliminar-container {
     width: 100%;
@@ -10,8 +8,6 @@
     padding: 25px 0 40px;
     box-sizing: border-box;
 }
-
-/* Volver */
 
 .eliminar-volver {
     display: inline-flex;

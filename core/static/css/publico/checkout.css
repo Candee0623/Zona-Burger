@@ -779,9 +779,7 @@ textarea {
 
 }
 
-/* =========================================================
-   ZONAS DE ENTREGA Y COSTO DE ENVÍO DINÁMICO
-   ========================================================= */
+/* ZONAS DE ENTREGA Y COSTO DE ENVÍO DINÁMICO */
 
 .zona-selector-group {
     grid-column: 1 / -1;

@@ -16,7 +16,6 @@
     color: #fff;
 }
 
-
 /* CONTENIDO */
 
 .footer-content {
@@ -30,7 +29,6 @@
 
     gap: 35px;
 }
-
 
 /* TEXTO */
 
@@ -68,7 +66,6 @@
     font-size: .75rem;
     line-height: 1.5;
 }
-
 
 /* ENLACES */
 
@@ -130,7 +127,6 @@
     border-color: #e1306c;
 }
 
-
 /* COPYRIGHT */
 
 .footer-bottom {
@@ -151,7 +147,6 @@
 
     font-size: .7rem;
 }
-
 
 /* MÓVIL */
 
@@ -181,7 +176,6 @@
         width: 100%;
     }
 }
-
 
 @media (max-width: 400px) {
 

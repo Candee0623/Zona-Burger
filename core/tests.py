@@ -233,7 +233,6 @@ class StockOpcionesTestCase(TestCase):
             total=Decimal('5000.00'),
         )
 
-        # Primer descuento
         ok1, _ = descontar_stock_pedido(pedido, consumo)
         self.assertTrue(ok1)
         self.insumo_sprite.refresh_from_db()

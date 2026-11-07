@@ -25,11 +25,7 @@
 .zb-alert-close { background: none; border: none; color: inherit; font-size: 1.2rem; cursor: pointer; opacity: 0.7; margin-left: auto; }
 .zb-alert-close:hover { opacity: 1; }
 
-
-/* ============================================================
-   ZONA BURGER — HEADER
-   Todo queda encapsulado con prefijo zb-
-============================================================ */
+/* ZONA BURGER — HEADER */
 
 .zb-header-wrapper {
     position: relative !important;
@@ -46,10 +42,7 @@
     box-sizing: border-box;
 }
 
-
-/* ============================================================
-   HEADER
-============================================================ */
+/* HEADER */
 
 .zb-site-header {
     position: relative !important;
@@ -76,10 +69,7 @@
     font-family: 'Montserrat', sans-serif;
 }
 
-
-/* ============================================================
-   NAVBAR
-============================================================ */
+/* NAVBAR */
 
 .zb-navbar {
     position: relative !important;
@@ -100,10 +90,7 @@
     border: 0 !important;
 }
 
-
-/* ============================================================
-   MARCA
-============================================================ */
+/* MARCA */
 
 .zb-brand {
     display: flex !important;
@@ -136,10 +123,7 @@
     text-decoration: none !important;
 }
 
-
-/* ============================================================
-   LOGO
-============================================================ */
+/* LOGO */
 
 .zb-logo-wrapper {
     width: 46px !important;
@@ -190,10 +174,7 @@
         0 0 0 4px rgba(216, 37, 5, 0.15) !important;
 }
 
-
-/* ============================================================
-   TEXTO DE MARCA
-============================================================ */
+/* TEXTO DE MARCA */
 
 .zb-brand-info {
     display: flex !important;
@@ -247,10 +228,7 @@
     text-transform: none !important;
 }
 
-
-/* ============================================================
-   NAVEGACIÓN
-============================================================ */
+/* NAVEGACIÓN */
 
 .zb-nav-links {
     display: flex !important;
@@ -317,10 +295,7 @@
     text-decoration: none !important;
 }
 
-
-/* ============================================================
-   LÍNEA ROJA INFERIOR
-============================================================ */
+/* LÍNEA ROJA INFERIOR */
 
 .zb-nav-link::after {
     content: "";
@@ -359,7 +334,6 @@
     transform: scaleX(1) !important;
 }
 
-
 /* ============================================================
    MENÚ
    Sin fondo rojo.
@@ -382,10 +356,7 @@
     transform: scaleX(1) !important;
 }
 
-
-/* ============================================================
-   BOTÓN HAMBURGUESA
-============================================================ */
+/* BOTÓN HAMBURGUESA */
 
 .zb-menu-toggle {
     display: none;
@@ -441,10 +412,7 @@
     background: #d82505 !important;
 }
 
-
-/* ============================================================
-   ANIMACIÓN HAMBURGUESA
-============================================================ */
+/* ANIMACIÓN HAMBURGUESA */
 
 .zb-menu-toggle.active span:nth-child(1) {
     transform: translateY(8px) rotate(45deg);
@@ -458,10 +426,7 @@
     transform: translateY(-8px) rotate(-45deg);
 }
 
-
-/* ============================================================
-   TABLET / MÓVIL
-============================================================ */
+/* TABLET / MÓVIL */
 
 @media (max-width: 700px) {
 
@@ -494,19 +459,13 @@
         letter-spacing: 1.4px !important;
     }
 
-
-    /* -----------------------------------------
-       HAMBURGUESA
-    ----------------------------------------- */
+    /* HAMBURGUESA */
 
     .zb-menu-toggle {
         display: flex !important;
     }
 
-
-    /* -----------------------------------------
-       MENÚ DESPLEGABLE
-    ----------------------------------------- */
+    /* MENÚ DESPLEGABLE */
 
     .zb-nav-links {
         position: absolute !important;
@@ -578,10 +537,7 @@
     }
 }
 
-
-/* ============================================================
-   MÓVIL PEQUEÑO
-============================================================ */
+/* MÓVIL PEQUEÑO */
 
 @media (max-width: 420px) {
 

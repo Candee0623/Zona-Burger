@@ -19,7 +19,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
@@ -38,6 +38,7 @@ from django.db.models import (
 from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce, TruncDate
 from django.http import HttpResponse, JsonResponse
+from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -51,6 +52,8 @@ try:
     from openpyxl.chart.marker import DataPoint, Marker
     from openpyxl.chart.shapes import GraphicalProperties
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+    from openpyxl.cell.rich_text import CellRichText, TextBlock
+    from openpyxl.cell.text import InlineFont
     from openpyxl.utils import get_column_letter
     from openpyxl.worksheet.properties import PageSetupProperties
 
@@ -93,6 +96,7 @@ from .models import (
 )
 from .decorators import (
     panel_login_requerido,
+    registrar_permiso,
     requiere_permiso,
     requiere_algun_permiso,
 )
@@ -132,9 +136,7 @@ ESTADOS_NO_VISIBLES = [ESTADO_OCULTO, ESTADO_ELIMINADO]
 PATRON_WHATSAPP_AR = re.compile(r'^549\d{9,10}$')
 
 
-# ============================================================
 # UTILIDADES
-# ============================================================
 
 def limpiar_numero_telefono(numero):
     return re.sub(r'\D', '', numero or '')
@@ -178,9 +180,7 @@ def calcular_ingresos_del_dia(pedidos):
     return efectivo, transferencia
 
 
-# ============================================================
 # 1. TIENDA PÚBLICA
-# ============================================================
 
 def index(request):
     negocio = Negocio.objects.first()
@@ -452,9 +452,7 @@ def detalleProducto(request, idproducto):
     })
 
 
-# ============================================================
 # 2. CARRITO
-# ============================================================
 
 def agregar_al_carrito(request, idproducto):
     if request.method != "POST":
@@ -462,7 +460,6 @@ def agregar_al_carrito(request, idproducto):
 
     producto = get_object_or_404(Producto, pk=idproducto)
 
-    # Volver a comprobar el estado del negocio en el servidor.
     estado = local_estado()
 
     if not estado.get("abierto", True):
@@ -530,9 +527,7 @@ def agregar_al_carrito(request, idproducto):
             )
             return redirect("ver_carrito")
 
-    # --------------------------------------------------
     # 1. Cargar los grupos y sus opciones válidas
-    # --------------------------------------------------
 
     relaciones_grupos = list(
         ProductoGrupoOpcion.objects
@@ -562,9 +557,7 @@ def agregar_al_carrito(request, idproducto):
 
     precio_unitario = _decimal_seguro(producto.precio)
 
-    # --------------------------------------------------
     # 2. Validar opciones y guardar sus nombres
-    # --------------------------------------------------
 
     for grupo_id, grupo in grupos_por_id.items():
         clave = f"grupo_{grupo_id}"
@@ -611,22 +604,17 @@ def agregar_al_carrito(request, idproducto):
                     f'al grupo "{grupo.nombre}".'
                 )
 
-            # Conservar los IDs para identificar la configuración.
             opciones_seleccionadas.append(str(opcion.pk))
 
-            # Guardar un texto legible para mostrar en el carrito.
             detalle_opciones.append(
                 f"{grupo.nombre}: {opcion.nombre}"
             )
 
-            # Calcular el precio usando el dato de la base de datos.
             precio_unitario += _decimal_seguro(
                 opcion.precioadicional
             )
 
-    # --------------------------------------------------
     # 3. Validar extras, cantidades y precios
-    # --------------------------------------------------
 
     relaciones_extras = (
         producto.productoextras_set
@@ -686,14 +674,11 @@ def agregar_al_carrito(request, idproducto):
             _decimal_seguro(extra.precio) * cantidad_extra
         )
 
-        # Mostrar el nombre del extra y su cantidad.
         detalle_opciones.append(
             f"Extra: {extra.nombre} (x{cantidad_extra})"
         )
 
-    # --------------------------------------------------
     # 4. Validar ingredientes removibles
-    # --------------------------------------------------
 
     relaciones_insumos = (
         RecetaInsumo.objects
@@ -734,14 +719,11 @@ def agregar_al_carrito(request, idproducto):
         if insumo_id not in insumos_quitados_ids:
             insumos_quitados_ids.append(insumo_id)
 
-            # Mostrar el nombre del ingrediente quitado.
             detalle_opciones.append(
                 f"Sin {insumo.nombreinsumo}"
             )
 
-    # --------------------------------------------------
     # 5. Construir una identidad estable de configuración
-    # --------------------------------------------------
 
     opciones_seleccionadas.sort()
     insumos_quitados_ids.sort()
@@ -763,7 +745,6 @@ def agregar_al_carrito(request, idproducto):
 
     item_id = f"{producto.idproducto}_{firma}"
 
-    # Mantener la cantidad original al editar.
     cantidad_item = (
         int(carrito[edit_id].get("cantidad", 1))
         if edit_id
@@ -797,7 +778,6 @@ def agregar_al_carrito(request, idproducto):
         carrito.pop(edit_id, None)
 
     if item_id in carrito:
-        # Acumular cantidades si la configuración ya existe.
         carrito[item_id]["cantidad"] = (
             int(carrito[item_id].get("cantidad", 1))
             + cantidad_item
@@ -938,9 +918,7 @@ def eliminar_del_carrito(request, item_id):
     return redirect('ver_carrito')
 
 
-# ============================================================
 # 3. LÓGICA DE PROMOCIONES
-# ============================================================
 
 def promocion_es_valida(promocion):
     if not promocion:
@@ -1171,9 +1149,7 @@ def aplicar_promocion(request):
     })
 
 
-# ============================================================
 # 4. CHECKOUT Y PEDIDOS
-# ============================================================
 
 def _items_checkout(carrito):
     """Convierte los importes a Decimal y calcula el precio unitario real."""
@@ -1226,7 +1202,6 @@ def _depurar_carrito(request, carrito):
 
     antes = json.dumps(carrito, sort_keys=True, default=str)
 
-    # Normalizar extras (carritos viejos guardaban una lista).
     for item in carrito.values():
         extras = item.get('extras_ids') or {}
         if isinstance(extras, list):
@@ -1450,9 +1425,7 @@ def procesar_checkout(request):
         ),
     }
 
-    # ------------------------------------------------------------
     # Consulta AJAX: devuelve el estado actual sin redirigir.
-    # ------------------------------------------------------------
     if es_consulta_json:
         estado_checkout = {
             'mensaje_negocio': contexto['mensaje_negocio'],
@@ -1485,9 +1458,7 @@ def procesar_checkout(request):
             **estado_checkout,
         })
 
-    # ------------------------------------------------------------
     # GET: mostrar el formulario.
-    # ------------------------------------------------------------
     if request.method != 'POST':
         return render(
             request,
@@ -1509,11 +1480,8 @@ def procesar_checkout(request):
             },
         )
 
-    # ------------------------------------------------------------
     # POST: confirmar el pedido.
-    # ------------------------------------------------------------
 
-    # Bloquear solicitudes repetidas / doble clic.
     if _checkout_en_proceso(request):
         if request.session.get('whatsapp_url'):
             return redirect('pedido_exitoso')
@@ -1833,7 +1801,6 @@ def procesar_checkout(request):
                     'Podés volver a intentarlo cuando abra.'
                 )
 
-            # Revalidar también el horario de entrega contra la hora actual.
             if horario_deseado is not None:
                 error_horario_final = error_horario_entrega(horario_deseado)
 
@@ -1917,7 +1884,6 @@ def procesar_checkout(request):
                     observaciones=detalles_txt,
                 )
 
-            # Descontar stock y registrar movimientos.
             descontar_stock_pedido(
                 pedido,
                 consumo_insumos,
@@ -1999,11 +1965,9 @@ def procesar_checkout(request):
         messages.error(request, str(e))
         return redirect('ver_carrito')
 
-    # ------------------------------------------------------------
     # Pedido creado: preparar mensaje para WhatsApp.
     # Los emojis van como escapes Unicode para no depender de la
     # codificación del archivo.
-    # ------------------------------------------------------------
     E_BURGER = '\U0001F354'
     E_CLIENTE = '\U0001F464'
     E_TEL = '\U0001F4DE'
@@ -2131,9 +2095,7 @@ def pedido_exitoso(request):
     })
 
 
-# ============================================================
 # 5. PANEL - INICIO Y PEDIDOS
-# ============================================================
 
 @panel_login_requerido
 
@@ -2428,18 +2390,14 @@ def cambiar_estado_pedido(request, idpedido):
     return redirect('panel_inicio')
 
 
-# ============================================================
 # 6. PANEL - MENÚ
-# ============================================================
 
 @panel_login_requerido
 def menu_panel(request):
     return render(request, 'panel/menu/inicioMenu.html')
 
 
-# ------------------------------------------------------------
 # Categorías
-# ------------------------------------------------------------
 
 @panel_login_requerido
 @requiere_permiso('categorias.ver')
@@ -2544,9 +2502,7 @@ def categoria_eliminar(request, idcategoria):
     })
 
 
-# ------------------------------------------------------------
 # Grupos de opciones
-# ------------------------------------------------------------
 
 def _validar_grupo_opciones(min_raw, max_raw, nombres, precios, ids=None, eliminar=()):
     """
@@ -2799,7 +2755,6 @@ def grupo_eliminar(request, idgrupo):
                 # Desvincular de productos antes de eliminar para no violar integridad referencial
                 ProductoGrupoOpcion.objects.filter(idgrupo=grupo).delete()
 
-                # Eliminar primero las opciones pertenecientes al grupo.
                 grupo.opcion_set.all().delete()
 
                 # Eliminar el grupo cuando ya no tenga opciones.
@@ -2831,9 +2786,7 @@ def grupo_eliminar(request, idgrupo):
     )
 
 
-# ------------------------------------------------------------
 # Productos
-# ------------------------------------------------------------
 
 def _ids_enviados(request, campo):
     return [int(v) for v in request.POST.getlist(campo) if v.isdigit()]
@@ -3168,9 +3121,7 @@ def producto_eliminar_definitivo(request, idproducto):
     return redirect('producto_lista')
 
 
-# ------------------------------------------------------------
 # Extras
-# ------------------------------------------------------------
 
 @panel_login_requerido
 @requiere_permiso('extras.ver')
@@ -3258,9 +3209,7 @@ def extra_eliminar(request, idextra):
     })
 
 
-# ------------------------------------------------------------
 # Recetas
-# ------------------------------------------------------------
 
 @panel_login_requerido
 @requiere_permiso('recetas.administrar')
@@ -3463,9 +3412,7 @@ def editar_cantidad_insumo_receta(request, idrecetainsumo):
     return redirect(url)
 
 
-# ============================================================
 # 7. PANEL - PROMOCIONES
-# ============================================================
 
 TEMPLATE_FORM_PROMOCION = 'panel/promociones/formPromocion.html'
 
@@ -3536,7 +3483,6 @@ def crear_promocion(request):
             request, contexto, 'Seleccioná un producto.'
         )
 
-    # Validar palabra clave duplicada
     if Promocion.objects.filter(palabraclave__iexact=palabraclave).exists():
         return _form_promocion_con_error(
             request, contexto, f'Ya existe una promoción registrada con la palabra clave "{palabraclave}".'
@@ -3667,7 +3613,6 @@ def editar_promocion(request, idpromocion):
             request, contexto, 'Seleccioná un producto.'
         )
 
-    # Validar palabra clave duplicada en otras promociones
     if Promocion.objects.filter(palabraclave__iexact=palabraclave).exclude(pk=promocion.pk).exists():
         return _form_promocion_con_error(
             request, contexto, f'Ya existe otra promoción registrada con la palabra clave "{palabraclave}".'
@@ -3764,9 +3709,7 @@ def eliminar_promocion(request, idpromocion):
     })
 
 
-# ------------------------------------------------------------
 # Tipos de beneficio
-# ------------------------------------------------------------
 
 @panel_login_requerido
 @requiere_permiso('tipos_beneficio.administrar')
@@ -3923,9 +3866,7 @@ def eliminar_tipo_beneficio(request, pk):
     return redirect('panel_lista_tipos_beneficio')
 
 
-# ============================================================
 # 8. PANEL - STOCK
-# ============================================================
 
 
 @panel_login_requerido
@@ -4320,7 +4261,6 @@ def registrar_compra_insumo(request):
             messages.error(request, error_vencimiento)
             return redirect('registrar_compra_insumo')
 
-        # Calcular el costo unitario en el servidor.
         costo_unitario = precio_total / cantidad
 
         fecha_compra = timezone.now()
@@ -4472,9 +4412,7 @@ def lote_baja(request, idlote):
     return redirect('stock_lista')
 
 
-# ============================================================
 # 9. PANEL - USUARIOS
-# ============================================================
 
 def _error_correo(correo, idempleado=None):
     """Devuelve un mensaje de error o None si el correo es válido."""
@@ -4500,7 +4438,12 @@ def _error_correo(correo, idempleado=None):
     return None
 
 
+registrar_permiso('usuarios.crear')
+registrar_permiso('roles.asignar_permisos')
+
+
 @panel_login_requerido
+@requiere_permiso('usuarios.ver')
 def empleado_lista(request):
     if request.method == 'POST':
         if hasattr(request.user, 'tiene_permiso') and not request.user.tiene_permiso('usuarios.crear'):
@@ -4575,6 +4518,7 @@ def empleado_lista(request):
 
 
 @panel_login_requerido
+@requiere_permiso('usuarios.crear')
 def empleado_crear(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre', '').strip()
@@ -4640,6 +4584,7 @@ def empleado_crear(request):
     )
 
 @panel_login_requerido
+@requiere_permiso('usuarios.editar')
 def empleado_editar(request, idempleado):
     empleado = get_object_or_404(Empleado, pk=idempleado)
 
@@ -4767,6 +4712,7 @@ def empleado_editar(request, idempleado):
     )
 
 @panel_login_requerido
+@requiere_permiso('usuarios.eliminar')
 def empleado_eliminar(request, idempleado):
     empleado = get_object_or_404(Empleado, pk=idempleado)
 
@@ -4798,11 +4744,10 @@ def empleado_eliminar(request, idempleado):
     )
 
 
-# ============================================================
 # 10. PANEL - ROLES
-# ============================================================
 
 @panel_login_requerido
+@requiere_permiso('roles.ver')
 def rol_lista(request):
     roles = Rol.objects.all().order_by('nombrerol')
 
@@ -4814,6 +4759,7 @@ def rol_lista(request):
 
 
 @panel_login_requerido
+@requiere_permiso('roles.crear')
 def rol_crear(request):
     permisos = Permiso.objects.all().order_by('modulo', 'accion')
     permisos_seleccionados = []
@@ -4826,6 +4772,9 @@ def rol_crear(request):
                 permisos_seleccionados.append(int(valor))
             except (ValueError, TypeError):
                 continue
+
+        if not request.user.tiene_permiso('roles.asignar_permisos'):
+            permisos_seleccionados = []
 
         if not nombre:
             messages.error(request, 'El nombre del rol es obligatorio.')
@@ -4885,13 +4834,12 @@ def rol_crear(request):
 
 
 @panel_login_requerido
+@requiere_permiso('roles.editar')
 def rol_editar(request, idrol):
     rol = get_object_or_404(Rol, pk=idrol)
 
-    # Obtener todos los permisos disponibles
     permisos = Permiso.objects.all().order_by('modulo', 'accion')
 
-    # Obtener los permisos que ya tiene asignados el rol
     permisos_seleccionados = list(
         RolPermiso.objects.filter(
             idrol=rol
@@ -4901,7 +4849,6 @@ def rol_editar(request, idrol):
     if request.method == 'POST':
         nombre = request.POST.get('nombrerol', '').strip()
 
-        # Obtener las casillas seleccionadas
         ids_permisos = []
 
         for valor in request.POST.getlist('permisos'):
@@ -4910,7 +4857,9 @@ def rol_editar(request, idrol):
             except (ValueError, TypeError):
                 continue
 
-        # Validar el nombre
+        if not request.user.tiene_permiso('roles.asignar_permisos'):
+            ids_permisos = list(permisos_seleccionados)
+
         if not nombre:
             messages.error(request, 'El nombre del rol es obligatorio.')
 
@@ -4928,19 +4877,15 @@ def rol_editar(request, idrol):
         else:
             try:
                 with transaction.atomic():
-                    # Actualizar el nombre
                     rol.nombrerol = nombre
                     rol.save(update_fields=['nombrerol'])
 
-                    # Guardar los permisos seleccionados
                     permisos_validos = Permiso.objects.filter(
                         pk__in=ids_permisos
                     )
 
-                    # Quitar las asignaciones anteriores
                     RolPermiso.objects.filter(idrol=rol).delete()
 
-                    # Crear las nuevas asignaciones
                     RolPermiso.objects.bulk_create([
                         RolPermiso(
                             idrol=rol,
@@ -4978,6 +4923,7 @@ def rol_editar(request, idrol):
     )
 
 @panel_login_requerido
+@requiere_permiso('roles.eliminar')
 @require_POST
 def rol_eliminar(request, idrol):
     rol = get_object_or_404(Rol, pk=idrol)
@@ -5004,34 +4950,14 @@ def rol_eliminar(request, idrol):
     return redirect('rol_lista')
 
 @panel_login_requerido
+@requiere_permiso('roles.ver')
 def rol_permisos(request, idrol):
-    rol = get_object_or_404(Rol, pk=idrol)
-
-    permisos = Permiso.objects.all().order_by('modulo', 'accion')
-
-    permisos_asignados = RolPermiso.objects.filter(
-        idrol=rol
-    ).values_list('idpermiso_id', flat=True)
-
-    return render(
-        request,
-        'panel/administracion/roles/rolPermisos.html',
-        {
-            'rol': rol,
-            'permisos': permisos,
-            'permisos_asignados': list(permisos_asignados),
-        },
-    )
+    return redirect('rol_editar', idrol=idrol)
 
 
- 
-# ============================================================
 # 10. PANEL - REPORTES
-# ============================================================
 
-# ------------------------------------------------------------
 # 10.1 Constantes de diseño
-# ------------------------------------------------------------
 
 BI_OSCURO = "17181D"
 BI_ROJO = "D93632"
@@ -5040,6 +4966,15 @@ BI_PALETA = [
     "D93632", "3B82F6", "10B981", "F59E0B",
     "8B5CF6", "F97316", "06B6D4", "EC4899",
 ]
+
+# Colores del panel para el Excel
+BI_XL_FONDO = "181818"
+BI_XL_TARJETA = "202020"
+BI_XL_CABECERA = "292929"
+BI_XL_BORDE = "333333"
+BI_XL_TEXTO = "F3F4F6"
+BI_XL_APAGADO = "9CA3AF"
+BI_XL_ROJO = "DC2626"
 
 BI_FORMATO_XLSX = {
     "moneda": '"$" #,##0.00',
@@ -5056,9 +4991,7 @@ BI_DIAS_SEMANA = [
 ]
 
 
-# ------------------------------------------------------------
 # 10.2 Utilidades de fechas y formato
-# ------------------------------------------------------------
 
 def bi_fechas(request):
     """Lee y valida el rango de fechas enviado por el usuario."""
@@ -5139,9 +5072,7 @@ def bi_valor_excel(valor):
     return valor
 
 
-# ------------------------------------------------------------
 # 10.3 Consultas base
-# ------------------------------------------------------------
 
 def bi_pedidos_validos():
     """Pedidos no cancelados (base de las ventas)."""
@@ -5175,9 +5106,7 @@ def bi_pedidos_pagados_periodo(inicio, fin):
     )
 
 
-# ------------------------------------------------------------
 # 10.4 Cálculos de cada reporte
-# ------------------------------------------------------------
 
 def bi_resumen(inicio, fin):
     # Las ventas solo suman pedidos pagados (y no cancelados).
@@ -5398,10 +5327,8 @@ def bi_datos_dinero(inicio, fin):
     }
 
 
-# ------------------------------------------------------------
 # 10.5 Definición de los reportes exportables
 #      (misma estructura para Excel y PDF)
-# ------------------------------------------------------------
 
 def bi_reporte_ventas(inicio, fin):
     indicadores, ventas = bi_resumen(inicio, fin)
@@ -5609,9 +5536,7 @@ def bi_reporte_dinero(inicio, fin):
     }
 
 
-# ------------------------------------------------------------
 # 10.6 Exportación a Excel
-# ------------------------------------------------------------
 
 def bi_celda(hoja, rango, valor, fuente, relleno=None,
              alineacion=None, formato=None):
@@ -5627,6 +5552,46 @@ def bi_celda(hoja, rango, valor, fuente, relleno=None,
     if formato:
         celda.number_format = formato
     return celda
+
+
+def bi_estilo_grafico_excel(objeto):
+    """Gráfico oscuro, con los mismos colores que el panel."""
+    from openpyxl.chart.shapes import GraphicalProperties as GP
+    from openpyxl.chart.text import RichText
+    from openpyxl.drawing.line import LineProperties
+    from openpyxl.drawing.text import CharacterProperties, Paragraph, ParagraphProperties
+
+    def texto(tamano=900, negrita=False, color=BI_XL_TEXTO):
+        propiedades = CharacterProperties(sz=tamano, b=negrita, solidFill=color)
+        return RichText(p=[Paragraph(
+            pPr=ParagraphProperties(defRPr=propiedades), endParaRPr=propiedades
+        )])
+
+    objeto.graphical_properties = GP(
+        solidFill=BI_XL_TARJETA, ln=LineProperties(solidFill=BI_XL_BORDE)
+    )
+    objeto.plot_area.graphicalProperties = GP(noFill=True)
+
+    if objeto.title is not None and objeto.title.tx is not None and objeto.title.tx.rich:
+        propiedades = CharacterProperties(sz=1200, b=True, solidFill=BI_XL_TEXTO)
+        for parrafo in objeto.title.tx.rich.p:
+            parrafo.pPr = ParagraphProperties(defRPr=propiedades)
+            for tramo in parrafo.r or []:
+                tramo.rPr = propiedades
+
+    if objeto.legend is not None:
+        objeto.legend.txPr = texto()
+
+    for eje in (getattr(objeto, "x_axis", None), getattr(objeto, "y_axis", None)):
+        if eje is None:
+            continue
+        eje.txPr = texto()
+        eje.graphicalProperties = GP(ln=LineProperties(solidFill=BI_XL_BORDE))
+        if eje.majorGridlines is not None:
+            eje.majorGridlines.spPr = GP(ln=LineProperties(solidFill=BI_XL_CABECERA))
+
+    if getattr(objeto, "dataLabels", None) is not None:
+        objeto.dataLabels.txPr = texto(900, True, "FFFFFF")
 
 
 def bi_grafico_excel(grafico, datos, indice):
@@ -5681,14 +5646,14 @@ def bi_grafico_excel(grafico, datos, indice):
         s = objeto.series[0]
         if tipo == "linea":
             s.smooth = True
-            s.graphicalProperties.line.solidFill = BI_ROJO
+            s.graphicalProperties.line.solidFill = BI_XL_ROJO
             s.graphicalProperties.line.width = 28575
             s.marker = Marker(
                 symbol="circle", size=6,
-                spPr=GraphicalProperties(solidFill=BI_ROJO),
+                spPr=GraphicalProperties(solidFill=BI_XL_ROJO),
             )
         else:
-            s.graphicalProperties.solidFill = BI_ROJO
+            s.graphicalProperties.solidFill = BI_XL_ROJO
 
         if tipo == "barras_h":
             objeto.x_axis.scaling.orientation = "maxMin"  # el #1 arriba
@@ -5697,6 +5662,7 @@ def bi_grafico_excel(grafico, datos, indice):
     objeto.title = grafico["titulo"]
     objeto.width = 16
     objeto.height = 7.5
+    bi_estilo_grafico_excel(objeto)
     return objeto
 
 
@@ -5705,7 +5671,8 @@ def bi_exportar_excel(reporte, nombre_archivo):
     hoja = libro.active
     hoja.title = "Reporte"
     hoja.sheet_view.showGridLines = False
-    hoja.sheet_properties.tabColor = BI_ROJO
+    hoja.sheet_view.zoomScale = 90
+    hoja.sheet_properties.tabColor = BI_XL_ROJO
     datos = libro.create_sheet("Datos")
 
     COLUMNAS = 12
@@ -5713,27 +5680,46 @@ def bi_exportar_excel(reporte, nombre_archivo):
     for numero in range(1, COLUMNAS + 1):
         hoja.column_dimensions[get_column_letter(numero)].width = 14
 
+    graficos = reporte.get("graficos", [])
+    filas_graficos = ((len(graficos) + 1) // 2) * 17
+    filas_tablas = sum(len(t["filas"]) + 4 for t in reporte.get("tablas", []))
+    total_filas = 9 + filas_graficos + filas_tablas + 4
+
+    # ---------- Fondo oscuro, igual que el panel ----------
+    fondo = PatternFill("solid", fgColor=BI_XL_FONDO)
+    for fila_fondo in range(1, total_filas + 1):
+        for numero in range(1, COLUMNAS + 1):
+            hoja.cell(row=fila_fondo, column=numero).fill = fondo
+
     # ---------- Encabezado ----------
+    banda = PatternFill("solid", fgColor=BI_XL_TARJETA)
     for fila in (1, 2, 3):
         for numero in range(1, COLUMNAS + 1):
-            hoja.cell(row=fila, column=numero).fill = PatternFill(
-                "solid", fgColor=BI_OSCURO
-            )
-    bi_celda(hoja, f"A1:{ultima}1", "ZONA BURGER",
-             Font(bold=True, size=20, color="FFFFFF"))
+            celda = hoja.cell(row=fila, column=numero)
+            celda.fill = banda
+            if fila == 3:
+                celda.border = Border(bottom=Side(style="thick", color=BI_XL_ROJO))
+    logo = hoja[f"A1"]
+    hoja.merge_cells(f"A1:{ultima}1")
+    logo.value = CellRichText(
+        TextBlock(InlineFont(b=True, sz=20, color="FFFFFF"), "ZONA "),
+        TextBlock(InlineFont(b=True, sz=20, color=BI_XL_ROJO), "BURGER"),
+    )
+    logo.alignment = Alignment(horizontal="left", vertical="center", indent=1)
     bi_celda(hoja, f"A2:{ultima}2", reporte["titulo"],
-             Font(bold=True, size=13, color="FF6B66"))
+             Font(bold=True, size=13, color="FFFFFF"), BI_XL_TARJETA)
     bi_celda(
         hoja, f"A3:{ultima}3",
         f"Período: {reporte['periodo']}   |   "
         f"Generado el {timezone.localdate():%d/%m/%Y}",
-        Font(size=10, color="9CA3AF"),
+        Font(size=10, color=BI_XL_APAGADO), BI_XL_TARJETA,
     )
     hoja.row_dimensions[1].height = 34
     hoja.row_dimensions[2].height = 22
     hoja.row_dimensions[3].height = 20
 
     # ---------- Tarjetas de KPI ----------
+    lado = Side(style="thin", color=BI_XL_BORDE)
     for indice, kpi in enumerate(reporte["kpis"][:6]):
         c1 = get_column_letter(indice * 2 + 1)
         c2 = get_column_letter(indice * 2 + 2)
@@ -5742,38 +5728,38 @@ def bi_exportar_excel(reporte, nombre_archivo):
 
         titulo_kpi = bi_celda(
             hoja, f"{c1}5:{c2}5", kpi["titulo"].upper(),
-            Font(bold=True, size=8, color="9CA3AF"), BI_OSCURO,
+            Font(bold=True, size=8, color=BI_XL_APAGADO), BI_XL_TARJETA,
         )
         numero_kpi = bi_celda(
             hoja, f"{c1}6:{c2}6", valor,
-            Font(bold=True, size=18, color="FFFFFF"), BI_OSCURO,
+            Font(bold=True, size=18, color="FFFFFF"), BI_XL_TARJETA,
             formato=BI_FORMATO_XLSX.get(formato),
         )
         detalle_kpi = bi_celda(
             hoja, f"{c1}7:{c2}7", kpi.get("detalle", ""),
-            Font(size=8, color="9CA3AF"), BI_OSCURO,
+            Font(size=8, color=BI_XL_APAGADO), BI_XL_TARJETA,
         )
-        titulo_kpi.border = Border(
-            left=Side(style="thick", color="FFFFFF"),
-            top=Side(style="thick", color=BI_ROJO),
-        )
-        numero_kpi.border = Border(left=Side(style="thick", color="FFFFFF"))
-        detalle_kpi.border = Border(left=Side(style="thick", color="FFFFFF"))
-        hoja[f"{c2}5"].border = Border(top=Side(style="thick", color=BI_ROJO))
+        # Marco de la tarjeta con borde superior rojo; el espacio entre tarjetas es el fondo
+        for fila_k, superior in ((5, Side(style="thick", color=BI_XL_ROJO)), (6, None), (7, lado)):
+            for columna_k, izq, der in ((c1, lado, None), (c2, None, lado)):
+                hoja[f"{columna_k}{fila_k}"].border = Border(
+                    left=izq, right=der,
+                    top=superior if superior else None,
+                    bottom=lado if fila_k == 7 else None,
+                )
     hoja.row_dimensions[5].height = 20
     hoja.row_dimensions[6].height = 36
     hoja.row_dimensions[7].height = 18
 
     # ---------- Gráficos (2 por fila) ----------
     fila = 9
-    graficos = reporte.get("graficos", [])
     for indice, grafico in enumerate(graficos):
         objeto = bi_grafico_excel(grafico, datos, indice)
         if objeto is None:
             continue
         columna = "A" if indice % 2 == 0 else "G"
         hoja.add_chart(objeto, f"{columna}{fila + (indice // 2) * 17}")
-    fila += ((len(graficos) + 1) // 2) * 17 + 1
+    fila += filas_graficos + 1
 
     # ---------- Tablas ----------
     for tabla in reporte.get("tablas", []):
@@ -5781,40 +5767,50 @@ def bi_exportar_excel(reporte, nombre_archivo):
         formatos = tabla.get("formatos") or [None] * len(encabezados)
         ancho = max(len(encabezados), 2)
 
-        bi_celda(
+        titulo_tabla = bi_celda(
             hoja, f"A{fila}:{get_column_letter(ancho)}{fila}",
             tabla["titulo"].upper(),
-            Font(bold=True, size=11, color="FFFFFF"), BI_OSCURO,
+            Font(bold=True, size=11, color="FFFFFF"), BI_XL_TARJETA,
+        )
+        for numero in range(1, ancho + 1):
+            hoja.cell(row=fila, column=numero).fill = banda
+        hoja.cell(row=fila, column=1).border = Border(
+            left=Side(style="thick", color=BI_XL_ROJO)
         )
         hoja.row_dimensions[fila].height = 22
         fila += 1
 
         for numero, encabezado in enumerate(encabezados, start=1):
             celda = hoja.cell(row=fila, column=numero, value=encabezado)
-            celda.font = Font(bold=True, color="FFFFFF")
-            celda.fill = PatternFill("solid", fgColor=BI_ROJO)
+            celda.font = Font(bold=True, size=10, color="FFFFFF")
+            celda.fill = PatternFill("solid", fgColor=BI_XL_CABECERA)
+            celda.border = Border(bottom=Side(style="medium", color=BI_XL_ROJO))
             celda.alignment = Alignment(
                 horizontal="right" if formatos[numero - 1] in BI_NUMERICOS else "left",
                 vertical="center",
                 wrap_text=True,
+                indent=1,
             )
         hoja.row_dimensions[fila].height = 22
         fila += 1
 
-        borde = Border(bottom=Side(style="thin", color="E5E7EB"))
+        borde = Border(bottom=Side(style="thin", color=BI_XL_BORDE))
         for posicion, datos_fila in enumerate(tabla["filas"]):
             for numero, valor in enumerate(datos_fila, start=1):
                 formato = formatos[numero - 1]
                 celda = hoja.cell(row=fila, column=numero, value=bi_valor_excel(valor))
                 if formato in BI_FORMATO_XLSX:
                     celda.number_format = BI_FORMATO_XLSX[formato]
+                celda.font = Font(size=10, color=BI_XL_TEXTO)
                 celda.alignment = Alignment(
                     horizontal="right" if formato in BI_NUMERICOS else "left",
                     vertical="center",
+                    indent=1,
                 )
                 celda.border = borde
-                if posicion % 2:
-                    celda.fill = PatternFill("solid", fgColor="F3F4F6")
+                celda.fill = PatternFill(
+                    "solid", fgColor=BI_XL_TARJETA if posicion % 2 == 0 else BI_XL_FONDO
+                )
             fila += 1
         fila += 2
 
@@ -5838,9 +5834,7 @@ def bi_exportar_excel(reporte, nombre_archivo):
     return respuesta
 
 
-# ------------------------------------------------------------
 # 10.7 Exportación a PDF
-# ------------------------------------------------------------
 
 def bi_dibujo_grafico(grafico, ancho, alto):
     dibujo = Drawing(ancho, alto)
@@ -6089,9 +6083,7 @@ def bi_exportar_pdf(reporte, nombre_archivo):
     return respuesta
 
 
-# ------------------------------------------------------------
 # 10.8 Despachador de exportaciones
-# ------------------------------------------------------------
 
 def bi_responder_exportacion(request, tipo, formato):
     reportes = {
@@ -6123,11 +6115,10 @@ def bi_responder_exportacion(request, tipo, formato):
     return bi_exportar_pdf(reporte, f"{archivo}.pdf")
 
 
-# ------------------------------------------------------------
 # 10.9 Vistas web de reportes
-# ------------------------------------------------------------
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.ver')
 def centro_reportes(request):
     inicio, fin = bi_fechas(request)
     indicadores, _ = bi_resumen(inicio, fin)
@@ -6140,7 +6131,8 @@ def centro_reportes(request):
     return render(request, "panel/reportes/centroReportes.html", contexto)
 
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.ver')
 def resumen_ventas(request):
     inicio, fin = bi_fechas(request)
     indicadores, ventas_diarias = bi_resumen(inicio, fin)
@@ -6156,7 +6148,8 @@ def resumen_ventas(request):
     return render(request, "panel/reportes/resumenVentas.html", contexto)
 
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.ver')
 def productos_mas_vendidos(request):
     inicio, fin = bi_fechas(request)
     productos = bi_top_productos(inicio, fin)
@@ -6171,16 +6164,15 @@ def productos_mas_vendidos(request):
     return render(request, "panel/reportes/productosMasVendidos.html", contexto)
 
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('reportes.ver')
 def dinero_recaudado(request):
     inicio, fin = bi_fechas(request)
     contexto = {**bi_contexto(inicio, fin), **bi_datos_dinero(inicio, fin)}
     return render(request, "panel/reportes/dineroRecaudado.html", contexto)
 
 
-# ------------------------------------------------------------
 # 10.10 Vistas de exportación
-# ------------------------------------------------------------
 
 @panel_login_requerido
 @requiere_permiso('reportes.exportar')
@@ -6216,9 +6208,7 @@ def exportar_dinero_excel(request):
 @requiere_permiso('reportes.exportar')
 def exportar_dinero_pdf(request):
     return bi_responder_exportacion(request, "dinero", "pdf")
-# ------------------------------------------------------------
 # VENTAS
-# ------------------------------------------------------------
  
 @panel_login_requerido
 def reportes(request):
@@ -6400,9 +6390,7 @@ def reporte_historial_ventas(request):
         'numero_pedido': numero_pedido,
         'url_exportar': _url_exportar(request),
     })
-# ------------------------------------------------------------
 # HORARIOS
-# ------------------------------------------------------------
 class HorarioForm(forms.ModelForm):
     DIAS_SEMANA = [
         ("Lunes", "Lunes"),
@@ -6481,7 +6469,6 @@ class HorarioForm(forms.ModelForm):
                     "Si el día está configurado como abierto, debés indicar la hora de apertura y de cierre."
                 )
 
-            # Validar margen mínimo de aproximadamente 30 minutos entre apertura y cierre
             if apertura != cierre:  # Misma hora significa 24 horas continuas
                 ap_min = apertura.hour * 60 + apertura.minute
                 ci_min = cierre.hour * 60 + cierre.minute
@@ -6534,6 +6521,7 @@ class HorarioForm(forms.ModelForm):
         return cleaned_data
 
 @panel_login_requerido
+@requiere_permiso('horarios.ver')
 def horarios_lista(request):
     horarios = Horario.objects.select_related("idnegocio").order_by(
         "idnegocio__nombre", "idhorario"
@@ -6546,6 +6534,7 @@ def horarios_lista(request):
 
 
 @panel_login_requerido
+@requiere_permiso('horarios.crear')
 def horarios_crear(request):
     if request.method == "POST":
         form = HorarioForm(request.POST)
@@ -6564,6 +6553,7 @@ def horarios_crear(request):
 
 
 @panel_login_requerido
+@requiere_permiso('horarios.editar')
 def horarios_editar(request, idhorario):
     horario = get_object_or_404(Horario, pk=idhorario)
 
@@ -6584,6 +6574,7 @@ def horarios_editar(request, idhorario):
 
 
 @panel_login_requerido
+@requiere_permiso('horarios.eliminar')
 def horarios_eliminar(request, idhorario):
     horario = get_object_or_404(Horario, pk=idhorario)
 
@@ -6597,10 +6588,9 @@ def horarios_eliminar(request, idhorario):
         "panel/horarios/horarioEliminar.html",
         {"horario": horario},
     )
-# ------------------------------------------------------------
 # ZONAS ENTREGA
-# ------------------------------------------------------------
 @panel_login_requerido
+@requiere_permiso('zonas.ver')
 def zonas_entrega_lista(request):
     zonas = ZonasEntrega.objects.all().order_by("nombre", "idzona")
 
@@ -6612,6 +6602,7 @@ def zonas_entrega_lista(request):
 
 
 @panel_login_requerido
+@requiere_permiso('zonas.crear')
 def zonas_entrega_crear(request):
     negocios = Negocio.objects.all().order_by("idnegocio")
 
@@ -6701,6 +6692,7 @@ def zonas_entrega_crear(request):
 
 
 @panel_login_requerido
+@requiere_permiso('zonas.editar')
 def zonas_entrega_editar(request, idzona):
     zona = get_object_or_404(ZonasEntrega, pk=idzona)
 
@@ -6754,6 +6746,7 @@ def zonas_entrega_editar(request, idzona):
 
 
 @panel_login_requerido
+@requiere_permiso('zonas.eliminar')
 def zonas_entrega_eliminar(request, idzona):
     zona = get_object_or_404(ZonasEntrega, pk=idzona)
 
@@ -6767,9 +6760,7 @@ def zonas_entrega_eliminar(request, idzona):
         "panel/entrega/zonaEliminar.html",
         {"zona": zona},
     )
-# ------------------------------------------------------------
 # historial de pedidos
-# ------------------------------------------------------------
 def _fecha_o_none(texto):
     """Devuelve la fecha o None si el texto no es una fecha válida."""
     try:
@@ -6778,6 +6769,7 @@ def _fecha_o_none(texto):
         return None
     
 @panel_login_requerido
+@requiere_permiso('historial.ver')
 def historial_pedidos(request):
     """Historial general de pedidos, independientemente de su estado."""
     pedidos = Pedido.objects.select_related(
@@ -6864,6 +6856,7 @@ def historial_pedidos(request):
 
 
 @panel_login_requerido
+@requiere_permiso('historial.ver')
 def detalle_historial_pedido(request, idpedido):
     """Detalle completo de un pedido del historial."""
     pedido = Pedido.objects.select_related(
@@ -6892,13 +6885,9 @@ def detalle_historial_pedido(request, idpedido):
         'pedido': pedido,
         'detalles': detalles,
     })
-# ============================================================
 # 11. PANEL - ABRIR / CERRAR EL NEGOCIO
-# ============================================================
 
-# ------------------------------------------------------------
 # 11.1 Constantes
-# ------------------------------------------------------------
 
 # Estados fijos de EstadoNegocio (se crean solos la primera vez que se usan)
 LOCAL_AUTOMATICO = "Automático"
@@ -6928,9 +6917,7 @@ LOCAL_TEXTO_LOG = {
 }
 
 
-# ------------------------------------------------------------
 # 11.2 Utilidades
-# ------------------------------------------------------------
 
 def local_normalizar(texto):
     texto = unicodedata.normalize("NFD", texto or "")
@@ -6960,9 +6947,7 @@ def local_nombre_empleado(empleado):
     return f"{empleado.nombre} {getattr(empleado, 'apellido', '')}".strip()
 
 
-# ------------------------------------------------------------
 # 11.3 Horarios automáticos
-# ------------------------------------------------------------
 
 def local_franjas(horarios):
     """[(día 0-6, apertura, cierre)] solo de los días marcados como abiertos."""
@@ -7016,9 +7001,7 @@ def local_texto_apertura(momento, ahora):
     return f"{cuando} a las {momento:%H:%M}"
 
 
-# ------------------------------------------------------------
 # 11.4 Estado actual del local
-# ------------------------------------------------------------
 
 def local_estado_por_defecto():
     return {
@@ -7051,7 +7034,6 @@ def local_calcular_estado():
     if negocio is None:
         return local_estado_por_defecto()
 
-    # Obtener el último cambio manual registrado.
     registro = (
         UltimaModificacion.objects
         .select_related("idempleado")
@@ -7063,7 +7045,6 @@ def local_calcular_estado():
         .first()
     )
 
-    # Determinar el modo guardado actualmente en el negocio.
     descripcion = (
         negocio.idestado.descripcion
         if negocio.idestado_id
@@ -7082,13 +7063,11 @@ def local_calcular_estado():
         and local_a_local(registro.fecha).date() == ahora.date()
     )
 
-    # Obtener los horarios configurados del negocio.
     franjas = local_franjas(
         Horario.objects.filter(idnegocio=negocio)
     )
 
     if manual_vigente:
-        # Respetar la apertura o el cierre manual de hoy.
         abierto = modo == LOCAL_ABIERTO_MANUAL
 
     elif franjas:
@@ -7255,9 +7234,7 @@ def error_horario_entrega(hora, info=None):
         'Dejá el horario vacío para coordinarlo con el local.'
     )
 
-# ------------------------------------------------------------
 # 11.5 Cambio de modo (abrir / cerrar / automático)
-# ------------------------------------------------------------
 
 def local_estado_fijo(descripcion):
     return EstadoNegocio.objects.filter(descripcion=descripcion).first()
@@ -7289,11 +7266,10 @@ def local_aplicar_modo(modo, empleado=None):
     return negocio
 
 
-# ------------------------------------------------------------
 # 11.6 Vistas del panel
-# ------------------------------------------------------------
 
-@login_required
+@panel_login_requerido
+@requiere_permiso('negocio.ver')
 def estado_negocio_panel(request):
     estado = local_estado()
     negocio = Negocio.objects.first()
@@ -7354,7 +7330,16 @@ def estado_negocio_panel(request):
     return render(request, "panel/negocio/interruptorNegocio.html", contexto)
 
 
-@login_required
+LOCAL_PERMISO_POR_ACCION = {
+    'abrir': 'negocio.abrir',
+    'cerrar': 'negocio.cerrar',
+    'automatico': 'negocio.automatico',
+}
+for _permiso in LOCAL_PERMISO_POR_ACCION.values():
+    registrar_permiso(_permiso)
+
+
+@panel_login_requerido
 @require_POST
 def cambiar_estado_local(request):
     destino = request.POST.get("next", "")
@@ -7385,12 +7370,7 @@ def cambiar_estado_local(request):
         messages.error(request, "Acción no válida.")
         return redirect(destino)
 
-    permiso_por_accion = {
-        'abrir': 'negocio.abrir',
-        'cerrar': 'negocio.cerrar',
-        'automatico': 'negocio.automatico',
-    }
-    permiso_req = permiso_por_accion.get(accion)
+    permiso_req = LOCAL_PERMISO_POR_ACCION.get(accion)
     if permiso_req and hasattr(request.user, 'tiene_permiso') and not request.user.tiene_permiso(permiso_req):
         messages.error(request, 'No tenés permiso para modificar el estado del local.')
         return redirect(destino)
@@ -7408,9 +7388,7 @@ def cambiar_estado_local(request):
     return redirect(destino)
 
 
-# ============================================================
 # 12. API DE ESTADO EN TIEMPO REAL
-# ============================================================
 
 def _payload_carrito(request):
     carrito = request.session.get('carrito', {})
@@ -7639,9 +7617,7 @@ def api_detectar_zona(request):
     })
 
 
-# ============================================================
 # 13. PANEL - AUTENTICACIÓN, PERFIL Y SEGURIDAD
-# ============================================================
 
 def panel_login(request):
 
@@ -7696,7 +7672,6 @@ def panel_login(request):
             )
             return render(request, 'panel/login.html')
 
-        # Buscar al empleado por correo o nombre.
         empleado = (
             Empleado.objects.filter(correo__iexact=username).first()
             or Empleado.objects.filter(nombre__iexact=username).first()
@@ -7719,7 +7694,6 @@ def panel_login(request):
         if user is not None:
             user.backend = 'core.auth_backend.EmpleadoAuthBackend'
 
-            # Verificar tanto el estado del empleado como el de Django.
             empleado_autenticado = Empleado.objects.filter(
                 pk=user.pk
             ).first()
@@ -7771,7 +7745,6 @@ def panel_login(request):
 
             return redirect(next_url)
 
-        # Registrar intento fallido para protección contra fuerza bruta
         intentos = registrar_intento_fallido_login(username, ip_cliente)
         registrar_auditoria(
             request,
@@ -7832,24 +7805,20 @@ def panel_recuperar_contrasena(request):
                     reverse('panel_restablecer_contrasena', kwargs={'token': token})
                 )
 
-                asunto = "Zona Burger - Recuperación de Contraseña"
-                cuerpo = (
-                    f"Hola {empleado.nombre},\n\n"
-                    f"Recibimos una solicitud para restablecer la contraseña de tu cuenta en el panel administrativo de Zona Burger.\n\n"
-                    f"Podés generar una nueva contraseña ingresando al siguiente enlace seguro (válido por 2 horas):\n"
-                    f"{enlace}\n\n"
-                    f"Si no solicitaste este cambio, podés ignorar este mensaje; tu contraseña actual continuará siendo segura.\n\n"
-                    f"Equipo de Zona Burger"
-                )
+                contexto = {'nombre': empleado.nombre, 'enlace': enlace, 'horas': 2}
 
                 try:
-                    send_mail(
-                        subject=asunto,
-                        message=cuerpo,
+                    mensaje = EmailMultiAlternatives(
+                        subject="Zona Burger - Recuperación de Contraseña",
+                        body=render_to_string('emails/recuperar_contrasena.txt', contexto),
                         from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'Zona Burger <no-reply@zonaburger.com>'),
-                        recipient_list=[empleado.correo],
-                        fail_silently=False,
+                        to=[empleado.correo],
                     )
+                    mensaje.attach_alternative(
+                        render_to_string('emails/recuperar_contrasena.html', contexto),
+                        'text/html',
+                    )
+                    mensaje.send(fail_silently=False)
                     registrar_auditoria(request, 'RECUPERACION_SOLICITADA', f'Correo de recuperación enviado a {correo}')
                 except Exception as e:
                     logger.exception("Error al enviar correo de recuperación a %s: %s", correo, e)
@@ -7965,16 +7934,19 @@ def panel_cambiar_contrasena(request):
 
 @panel_login_requerido
 def panel_perfil(request):
-    """
-    Vista de perfil del usuario autenticado en el panel.
-    Muestra datos del empleado, rol, permisos asignados y fecha de último login.
-    """
-    permisos_codigos = request.user.obtener_permisos() if hasattr(request.user, 'obtener_permisos') else set()
-    permisos_detallados = Permiso.objects.filter(codigo__in=permisos_codigos).order_by('modulo', 'accion')
+    """Perfil del usuario: sus datos, su rol y los permisos que ese rol le da, agrupados por módulo."""
+    permisos = Permiso.objects.filter(
+        codigo__in=request.user.obtener_permisos()
+    ).order_by('modulo', 'accion')
+
+    por_modulo = {}
+    for permiso in permisos:
+        por_modulo.setdefault(permiso.modulo, []).append(permiso)
 
     return render(request, 'panel/perfil.html', {
-        'empleado': request.user,
-        'permisos_detallados': permisos_detallados,
+        'usuario': request.user,
+        'permisos_por_modulo': list(por_modulo.items()),
+        'total_permisos': len(permisos),
     })
 
 

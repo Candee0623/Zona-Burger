@@ -24,13 +24,11 @@ from core.geo_zonas import (
 
 class GeoZonasTestCase(TestCase):
     def setUp(self):
-        # Configurar Negocio
         self.negocio = Negocio.objects.create(
             nombre="Zona Burger",
             telefono="1152617656"
         )
 
-        # Configurar Zonas de Entrega
         self.zona_piedrabuena = ZonasEntrega.objects.create(
             nombre="PiedraBuena",
             costoenvio=Decimal("100.00"),

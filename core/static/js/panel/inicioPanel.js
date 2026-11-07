@@ -1,111 +1,172 @@
-/* =========================================================
-   MODAL TICKET
-========================================================= */
+/* MODAL TICKET */
+
+const TICKET_TIMEOUT_MS = 20000;
+
+let ticketSolicitudActual = 0;
+let ticketControlador = null;
+let ticketCargado = false;
+
+function ticketModalAbierto() {
+    const overlay = document.getElementById('modalTicketOverlay');
+    return !!(overlay && overlay.classList.contains('active'));
+}
+
+function mostrarMensajeTicket(contenido, texto, url, conReintento) {
+    contenido.innerHTML = '';
+
+    const caja = document.createElement('div');
+    caja.style.cssText = 'text-align:center;color:#dc3545;padding:25px;';
+
+    const parrafo = document.createElement('div');
+    parrafo.textContent = texto;
+    caja.appendChild(parrafo);
+
+    if (conReintento) {
+        const boton = document.createElement('button');
+        boton.type = 'button';
+        boton.className = 'btn btn-secondary btn-sm';
+        boton.style.marginTop = '12px';
+        boton.textContent = 'Reintentar';
+        boton.addEventListener('click', function () {
+            abrirTicketModal(url);
+        });
+        caja.appendChild(boton);
+    }
+
+    contenido.appendChild(caja);
+}
 
 function abrirTicketModal(url) {
 
-    const overlay =
-        document.getElementById(
-            'modalTicketOverlay'
-        );
-
-    const contenido =
-        document.getElementById(
-            'contenido-ticket-modal'
-        );
+    const overlay = document.getElementById('modalTicketOverlay');
+    const contenido = document.getElementById('contenido-ticket-modal');
 
     overlay.classList.add('active');
+
+    // Si había una carga anterior en curso, se cancela.
+    if (ticketControlador) {
+        ticketControlador.abortadoPorNuevaSolicitud = true;
+        ticketControlador.abort();
+    }
+
+    const solicitud = ++ticketSolicitudActual;
+    const controlador = new AbortController();
+    ticketControlador = controlador;
+    ticketCargado = false;
 
     contenido.innerHTML =
         '<div style="text-align:center;padding:30px;color:#666;">' +
         '<div style="margin-bottom:8px;">Cargando ticket...</div>' +
         '</div>';
 
-    fetch(
-        url,
-        {
-            method: 'GET',
+    // Si el servidor no responde, no se queda cargando para siempre.
+    let vencio = false;
+    const temporizador = setTimeout(function () {
+        vencio = true;
+        controlador.abort();
+    }, TICKET_TIMEOUT_MS);
 
-            headers: {
-                'X-Requested-With':
-                    'XMLHttpRequest'
-            },
+    fetch(url, {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        cache: 'no-store',
+        credentials: 'same-origin',
+        signal: controlador.signal
+    })
+    .then(function (response) {
 
-            cache: 'no-store'
+        if (response.status === 401) {
+            throw new Error('SESION');
         }
-    )
-    .then(
-        response => {
 
-            if (!response.ok) {
-
-                throw new Error(
-                    'HTTP ' +
-                    response.status
-                );
-
-            }
-
-            return response.text();
-
+        if (response.status === 403) {
+            throw new Error('PERMISO');
         }
-    )
-    .then(
-        html => {
 
-            contenido.innerHTML =
-                html;
-
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
         }
-    )
-    .catch(
-        error => {
 
-            console.error(
-                'Error cargando ticket:',
-                error
-            );
+        return response.text();
+    })
+    .then(function (html) {
 
-            contenido.innerHTML =
-                '<div style="text-align:center;color:#dc3545;padding:25px;">' +
-                'No se pudo cargar el ticket.' +
-                '</div>';
-
+        // Llegó una respuesta vieja: se ignora.
+        if (solicitud !== ticketSolicitudActual) {
+            return;
         }
-    );
 
+        contenido.innerHTML = html;
+        ticketCargado = true;
+    })
+    .catch(function (error) {
+
+        if (solicitud !== ticketSolicitudActual) {
+            return;
+        }
+
+        if (error.name === 'AbortError' && !vencio) {
+            return;
+        }
+
+        console.error('Error cargando ticket:', error);
+
+        let texto = 'No se pudo cargar el ticket.';
+
+        if (vencio) {
+            texto = 'El ticket tardó demasiado en cargar.';
+        } else if (error.message === 'SESION') {
+            texto = 'Tu sesión expiró. Volvé a iniciar sesión.';
+        } else if (error.message === 'PERMISO') {
+            texto = 'No tenés permiso para ver este ticket.';
+        }
+
+        mostrarMensajeTicket(contenido, texto, url, !(error.message === 'SESION' || error.message === 'PERMISO'));
+    })
+    .finally(function () {
+        clearTimeout(temporizador);
+    });
 }
-
 
 function cerrarTicketModal() {
 
-    document
-        .getElementById(
-            'modalTicketOverlay'
-        )
-        .classList.remove(
-            'active'
-        );
+    if (ticketControlador) {
+        ticketControlador.abortadoPorNuevaSolicitud = true;
+        ticketControlador.abort();
+        ticketControlador = null;
+    }
 
+    ticketSolicitudActual++;
+
+    const overlay = document.getElementById('modalTicketOverlay');
+
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
 }
-
 
 function imprimirModal() {
 
-    const contenido =
-        document.getElementById(
-            'contenido-ticket-modal'
-        ).innerHTML;
+    const contenido = document.getElementById('contenido-ticket-modal');
+    const ticket = contenido.querySelector('.ticket-cocina');
 
-    const ventana =
-        window.open(
-            '',
-            '_blank',
-            'height=700,width=450'
-        );
+    // Solo se imprime si el ticket ya cargó de verdad.
+    if (!ticketCargado || !ticket) {
+        ZB.avisar({
+            titulo: 'El ticket todavía no está listo',
+            mensaje: 'Esperá a que termine de cargar para imprimirlo.',
+            tipo: 'info'
+        });
+        return;
+    }
+
+    // Ruta absoluta de la hoja de estilos del ticket (la ventana nueva está vacía).
+    const enlaceCss = contenido.querySelector('link[rel="stylesheet"]');
+    const urlCss = enlaceCss ? enlaceCss.href : '';
+
+    const ventana = window.open('', '_blank', 'height=700,width=450');
 
     if (!ventana) {
-
         ZB.avisar({
             titulo: 'No se pudo imprimir',
             mensaje:
@@ -113,54 +174,53 @@ function imprimirModal() {
                 'Permití las ventanas emergentes para este sitio e intentá de nuevo.',
             tipo: 'info'
         });
-
         return;
-
     }
 
     ventana.document.write(
-        '<html>' +
-        '<head>' +
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
         '<title>Ticket</title>' +
+        (urlCss ? '<link rel="stylesheet" href="' + urlCss + '">' : '') +
         '<style>' +
-        'body{' +
-        'margin:0;' +
-        'padding:5px;' +
-        'font-family:"Courier New",Courier,monospace;' +
-        '}' +
-        '</style>' +
-        '</head>' +
-        '<body>' +
-        contenido +
-        '</body>' +
-        '</html>'
+        '@page{size:58mm auto;margin:0;}' +
+        'body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;}' +
+        '</style></head><body>' +
+        ticket.outerHTML +
+        '</body></html>'
     );
 
     ventana.document.close();
-
     ventana.focus();
 
-    setTimeout(
-        function () {
+    let impreso = false;
 
-            ventana.print();
-
+    function imprimir() {
+        if (impreso) {
+            return;
+        }
+        impreso = true;
+        ventana.onafterprint = function () {
             ventana.close();
+        };
+        ventana.print();
+    }
 
-        },
-        300
-    );
+    // Se imprime cuando la hoja de estilos terminó de cargar
+    // (si por algún motivo no avisa, se imprime igual a los 1,5 s).
+    const enlaceNuevo = ventana.document.querySelector('link[rel="stylesheet"]');
 
+    if (enlaceNuevo) {
+        enlaceNuevo.onload = imprimir;
+        enlaceNuevo.onerror = imprimir;
+    }
+
+    setTimeout(imprimir, enlaceNuevo ? 1500 : 100);
 }
 
-
-/* =========================================================
-   MODAL CAMBIAR ESTADO
-========================================================= */
+/* MODAL CAMBIAR ESTADO */
 
 const URL_CAMBIAR_ESTADO_TEMPLATE =
     window.ZB_PANEL_INICIO.urlCambiarEstado;
-
 
 function abrirEstadoModal(
     idPedido,
@@ -214,7 +274,6 @@ function abrirEstadoModal(
 
 }
 
-
 function cerrarEstadoModal() {
 
     document
@@ -226,7 +285,6 @@ function cerrarEstadoModal() {
         );
 
 }
-
 
 function verificarEstadoCancelado(
     selectElement
@@ -282,10 +340,7 @@ function verificarEstadoCancelado(
 
 }
 
-
-/* =========================================================
-   CERRAR MODALES
-========================================================= */
+/* CERRAR MODALES */
 
 document.addEventListener(
     'click',
@@ -322,7 +377,6 @@ document.addEventListener(
     }
 );
 
-
 document.addEventListener(
     'keydown',
     function (event) {
@@ -341,10 +395,7 @@ document.addEventListener(
     }
 );
 
-
-/* =========================================================
-   WHATSAPP
-========================================================= */
+/* WHATSAPP */
 
 (function abrirWhatsAppSiCorresponde() {
 
@@ -389,10 +440,7 @@ document.addEventListener(
 
 })();
 
-
-/* =========================================================
-   ACTUALIZACIÓN AUTOMÁTICA
-========================================================= */
+/* ACTUALIZACIÓN AUTOMÁTICA */
 
 document.addEventListener(
     'DOMContentLoaded',
@@ -405,7 +453,6 @@ document.addEventListener(
 
         let sincronizando = false;
 
-
         async function sincronizarPanel() {
 
             if (sincronizando) {
@@ -416,8 +463,12 @@ document.addEventListener(
                 return;
             }
 
-            sincronizando = true;
+            // Con el ticket abierto no se compite por el servidor.
+            if (ticketModalAbierto()) {
+                return;
+            }
 
+            sincronizando = true;
 
             const posiciones = [];
             let el = document.getElementById('pedidos-panel');
@@ -434,7 +485,6 @@ document.addEventListener(
                 });
             };
 
-
             try {
 
                 indicador.innerHTML =
@@ -444,7 +494,6 @@ document.addEventListener(
                 indicador.classList.add(
                     'actualizando'
                 );
-
 
                 const response =
                     await fetch(
@@ -464,7 +513,6 @@ document.addEventListener(
                         }
                     );
 
-
                 if (!response.ok) {
 
                     throw new Error(
@@ -474,21 +522,17 @@ document.addEventListener(
 
                 }
 
-
                 const html =
                     await response.text();
 
-
                 const parser =
                     new DOMParser();
-
 
                 const documento =
                     parser.parseFromString(
                         html,
                         'text/html'
                     );
-
 
                 const nuevasMetricas =
                     documento.getElementById(
@@ -505,7 +549,6 @@ document.addEventListener(
                         'pedidos-panel'
                     );
 
-
                 if (
                     !nuevasMetricas ||
                     !nuevosEstados ||
@@ -519,7 +562,6 @@ document.addEventListener(
                     return;
 
                 }
-
 
                 const metricasActuales =
                     document.getElementById(
@@ -536,7 +578,6 @@ document.addEventListener(
                         'pedidos-panel'
                     );
 
-
                 if (
                     metricasActuales.innerHTML !==
                     nuevasMetricas.innerHTML
@@ -546,7 +587,6 @@ document.addEventListener(
                         nuevasMetricas.innerHTML;
 
                 }
-
 
                 if (
                     estadosActuales.innerHTML !==
@@ -558,7 +598,6 @@ document.addEventListener(
 
                 }
 
-
                 if (
                     pedidosActuales.innerHTML !==
                     nuevosPedidos.innerHTML
@@ -569,18 +608,15 @@ document.addEventListener(
 
                 }
 
-
                 window.scrollTo({
                     left: scrollX,
                     top: scrollY,
                     behavior: 'instant'
                 });
 
-
                 indicador.innerHTML =
                     '<span class="panel-sync-dot"></span>' +
                     '<span>Sincronizado</span>';
-
 
             } catch (error) {
 
@@ -588,7 +624,6 @@ document.addEventListener(
                     'Error actualizando panel:',
                     error
                 );
-
 
                 indicador.innerHTML =
                     '<span class="panel-sync-dot"></span>' +
@@ -606,21 +641,15 @@ document.addEventListener(
 
         }
 
-
-        /*
-         * Primera sincronización.
-         */
+        /* Primera sincronización. */
 
         sincronizarPanel();
 
-
-        /*
-         * Actualización automática cada 2 segundos.
-         */
+        /* Actualización automática cada 5 segundos. */
 
         setInterval(
             sincronizarPanel,
-            2000
+            5000
         );
 
     }

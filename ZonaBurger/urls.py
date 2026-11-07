@@ -1,9 +1,14 @@
 from core import views
 from django.contrib import admin
 from django.urls import include, path
+from django.templatetags.static import static
+from django.views.generic import RedirectView
 from core.views import panel_inicio
 
 urlpatterns = [
+    # Los navegadores piden /favicon.ico por defecto: se redirige al logo.
+    path('favicon.ico', RedirectView.as_view(url=static('img/favicon.ico'), permanent=False)),
+
     # Administración y Librerías de Terceros
     path('admin/', admin.site.urls),
     path('ckeditor5/', include('django_ckeditor_5.urls')),

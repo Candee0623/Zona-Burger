@@ -1,7 +1,5 @@
 
-/* =========================================================
-ELIMINAR USUARIO - ZONA BURGER
-========================================================= */
+/* ELIMINAR USUARIO - ZONA BURGER */
 
 .eliminar-page {
     width: 100%;
@@ -10,9 +8,7 @@ ELIMINAR USUARIO - ZONA BURGER
     padding-bottom: 35px;
 }
 
-/* =========================================================
-VOLVER
-========================================================= */
+/* VOLVER */
 
 .eliminar-page .empleado-back {
     display: inline-flex;
@@ -45,9 +41,7 @@ VOLVER
     transform: translateX(-2px);
 }
 
-/* =========================================================
-CARD
-========================================================= */
+/* CARD */
 
 .eliminar-contenedor {
     box-sizing: border-box;
@@ -61,9 +55,7 @@ CARD
     box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
 }
 
-/* =========================================================
-ICONO PRINCIPAL
-========================================================= */
+/* ICONO PRINCIPAL */
 
 .eliminar-icono {
     width: 54px;
@@ -84,9 +76,7 @@ ICONO PRINCIPAL
     font-size: 23px;
 }
 
-/* =========================================================
-ENCABEZADO
-========================================================= */
+/* ENCABEZADO */
 
 .eliminar-etiqueta {
     display: block;
@@ -120,9 +110,7 @@ ENCABEZADO
     text-align: center;
 }
 
-/* =========================================================
-MENSAJES DE DJANGO
-========================================================= */
+/* MENSAJES DE DJANGO */
 
 .eliminar-contenedor .empleado-mensajes {
     margin: 0 27px 20px;
@@ -171,9 +159,7 @@ MENSAJES DE DJANGO
     color: #93c5fd;
 }
 
-/* =========================================================
-INFORMACIÓN DEL USUARIO
-========================================================= */
+/* INFORMACIÓN DEL USUARIO */
 
 .eliminar-datos {
     display: flex;
@@ -196,8 +182,6 @@ INFORMACIÓN DEL USUARIO
     background: #222;
     border-color: #414141;
 }
-
-/* Avatar */
 
 .eliminar-avatar {
     width: 48px;
@@ -255,9 +239,7 @@ INFORMACIÓN DEL USUARIO
     overflow-wrap: anywhere;
 }
 
-/* =========================================================
-DETALLES DE LA ACCIÓN
-========================================================= */
+/* DETALLES DE LA ACCIÓN */
 
 .eliminar-detalles {
     margin: 0 27px 20px;
@@ -310,9 +292,7 @@ DETALLES DE LA ACCIÓN
     color: #dc2626;
 }
 
-/* =========================================================
-ADVERTENCIA
-========================================================= */
+/* ADVERTENCIA */
 
 .eliminar-aviso {
     display: flex;
@@ -352,9 +332,7 @@ ADVERTENCIA
     font-weight: 600;
 }
 
-/* =========================================================
-FORMULARIO Y ACCIONES
-========================================================= */
+/* FORMULARIO Y ACCIONES */
 
 .eliminar-form {
     margin: 0;
@@ -400,9 +378,7 @@ FORMULARIO Y ACCIONES
     transform: translateY(-1px);
 }
 
-/* =========================================================
-BOTÓN CONFIRMAR
-========================================================= */
+/* BOTÓN CONFIRMAR */
 
 .eliminar-form .eliminar-btn-confirmar {
     border: 1px solid #dc2626;
@@ -424,9 +400,7 @@ BOTÓN CONFIRMAR
     transform: translateY(0);
 }
 
-/* =========================================================
-BOTÓN CANCELAR
-========================================================= */
+/* BOTÓN CANCELAR */
 
 .eliminar-form .eliminar-btn-cancelar {
     border: 1px solid #3a3a3a;
@@ -440,9 +414,7 @@ BOTÓN CANCELAR
     color: #eee;
 }
 
-/* =========================================================
-PIE DE TARJETA
-========================================================= */
+/* PIE DE TARJETA */
 
 .eliminar-pie {
     display: flex;
@@ -462,9 +434,7 @@ PIE DE TARJETA
     font-size: .8rem;
 }
 
-/* =========================================================
-FOCO DE TECLADO
-========================================================= */
+/* FOCO DE TECLADO */
 
 .eliminar-form .eliminar-btn-confirmar:focus-visible,
 .eliminar-form .eliminar-btn-cancelar:focus-visible,
@@ -473,9 +443,7 @@ FOCO DE TECLADO
     outline-offset: 3px;
 }
 
-/* =========================================================
-RESPONSIVE
-========================================================= */
+/* RESPONSIVE */
 
 @media (max-width: 600px) {
 
@@ -555,9 +523,7 @@ RESPONSIVE
     }
 }
 
-/* =========================================================
-PANTALLAS MUY PEQUEÑAS
-========================================================= */
+/* PANTALLAS MUY PEQUEÑAS */
 
 @media (max-width: 420px) {
 
@@ -597,9 +563,7 @@ PANTALLAS MUY PEQUEÑAS
     }
 }
 
-/* =========================================================
-REDUCIR ANIMACIONES
-========================================================= */
+/* REDUCIR ANIMACIONES */
 
 @media (prefers-reduced-motion: reduce) {
 

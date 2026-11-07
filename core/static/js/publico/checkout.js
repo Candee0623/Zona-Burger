@@ -3,10 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('checkout-form');
     if (!form) return;
 
-
-    /* ================================================================
-     * 1. ELEMENTOS DEL DOM
-     * ================================================================ */
+    /* 1. ELEMENTOS DEL DOM */
 
     const $ = function (id) { return document.getElementById(id); };
 
@@ -50,9 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const horarioInput = $('horario_entrega');
     const horarioAyudaTexto = $('horario-ayuda-texto');
 
-    /* ================================================================
-     * 2. ESTADO Y CONSTANTES
-     * ================================================================ */
+    /* 2. ESTADO Y CONSTANTES */
 
     let subtotal = parseFloat(window.ZB_CHECKOUT.totalCarrito) || 0;
     let descuento = parseFloat(window.ZB_CHECKOUT.descuentoPromocion) || 0;
@@ -138,10 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('No se pudieron cargar los productos.', error);
     }
 
-
-    /* ================================================================
-     * 3. UTILIDADES
-     * ================================================================ */
+    /* 3. UTILIDADES */
 
     function normalizarTexto(texto) {
         return String(texto || '')
@@ -224,10 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return parseFloat(s) || 0;
     }
 
-
-    /* ================================================================
-     * 4. TOTALES Y ENVÍO (resumen del pedido)
-     * ================================================================ */
+    /* 4. TOTALES Y ENVÍO (resumen del pedido) */
 
     function actualizarTotal() {
 
@@ -264,10 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-
-    /* ================================================================
-     * 5. BANNER DE ESTADO DE ZONA
-     * ================================================================ */
+    /* 5. BANNER DE ESTADO DE ZONA */
 
     /* tipo: 'free' | 'paid' | 'unmatched' | 'error'. Los textos ya deben venir seguros. */
     function mostrarBannerZona(tipo, icono, titulo, mensajeHtml) {
@@ -293,10 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
         );
     }
 
-
-    /* ================================================================
-     * 6. DETECCIÓN DE ZONA DE ENTREGA
-     * ================================================================ */
+    /* 6. DETECCIÓN DE ZONA DE ENTREGA */
 
     /* Busca en las zonas de la base de datos por nombre, inclusión o alias. */
     function buscarZonaEnColeccion(claveONombre) {
@@ -524,10 +507,7 @@ document.addEventListener('DOMContentLoaded', function () {
         actualizarTotal();
     }
 
-
-    /* ================================================================
-     * 7. MAPA
-     * ================================================================ */
+    /* 7. MAPA */
 
     const CENTRO_INICIAL = [-34.6037, -58.3816];
 
@@ -548,10 +528,7 @@ document.addEventListener('DOMContentLoaded', function () {
         marcador.setLatLng([lat, lon]);
     }
 
-
-    /* ================================================================
-     * 8. VALIDACIÓN DE DIRECCIÓN Y GEOCODIFICACIÓN (Nominatim)
-     * ================================================================ */
+    /* 8. VALIDACIÓN DE DIRECCIÓN Y GEOCODIFICACIÓN (Nominatim) */
 
     function consultaDireccion() {
         return calleInput.value.trim() + ' ' + numeroInput.value.trim() +
@@ -774,10 +751,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-
-    /* ================================================================
-     * 9. EVENTOS DE DIRECCIÓN Y MAPA
-     * ================================================================ */
+    /* 9. EVENTOS DE DIRECCIÓN Y MAPA */
 
     let temporizadorBusqueda = null;
 
@@ -830,13 +804,11 @@ document.addEventListener('DOMContentLoaded', function () {
         actualizarDireccionDesdeMapa(evento.latlng.lat, evento.latlng.lng, true);
     });
 
-    // Arrastrar el marcador: la dirección del mapa manda
     marcador.on('dragend', function () {
         const posicion = marcador.getLatLng();
         actualizarDireccionDesdeMapa(posicion.lat, posicion.lng, true);
     });
 
-    // Usar mi ubicación
     if (btnUbicacion) {
         btnUbicacion.addEventListener('click', function () {
 
@@ -907,10 +879,7 @@ document.addEventListener('DOMContentLoaded', function () {
     localidadInput.addEventListener('input', alCambiarLocalidad);
     localidadInput.addEventListener('change', alCambiarLocalidad);
 
-
-    /* ================================================================
-     * 10. PROMOCIÓN
-     * ================================================================ */
+    /* 10. PROMOCIÓN */
 
         async function aplicarPromocion() {
 
@@ -972,10 +941,7 @@ document.addEventListener('DOMContentLoaded', function () {
         promoButton.addEventListener('click', aplicarPromocion);
     }
 
-
-    /* ================================================================
-     * 11. GUARDADO Y RECUPERACIÓN (localStorage)
-     * ================================================================ */
+    /* 11. GUARDADO Y RECUPERACIÓN (localStorage) */
 
     const camposGuardar = [
         'nombre', 'apellido', 'telefono',
@@ -1096,10 +1062,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-
-    /* ================================================================
-     * 12. ERRORES DE VALIDACIÓN
-     * ================================================================ */
+    /* 12. ERRORES DE VALIDACIÓN */
 
     function limpiarErrorCampo(campo) {
         if (!campo) return;
@@ -1164,10 +1127,7 @@ document.addEventListener('DOMContentLoaded', function () {
         campo.addEventListener('change', function () { limpiarErrorCampo(campo); });
     });
 
-
-    /* ================================================================
-     * 12b. COMENTARIO: CONTADOR Y AVISO AUTOMÁTICO AL PASARSE
-     * ================================================================ */
+    /* 12b. COMENTARIO: CONTADOR Y AVISO AUTOMÁTICO AL PASARSE */
 
     /* Cuenta caracteres reales (un emoji cuenta 1) y los saltos de línea como 1. */
     function contarCaracteres(texto) {
@@ -1214,10 +1174,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-
-    /* ================================================================
-     * 13. VALIDACIÓN DEL CHECKOUT
-     * ================================================================ */
+    /* 13. VALIDACIÓN DEL CHECKOUT */
 
     function validarCheckout() {
 
@@ -1450,10 +1407,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }, { passive: true });
 
-
-    /* ================================================================
-     * 14. INICIALIZACIÓN
-     * ================================================================ */
+    /* 14. INICIALIZACIÓN */
 
     recuperarCheckout();
     actualizarContadorComentario();
@@ -1515,10 +1469,7 @@ document.addEventListener('DOMContentLoaded', function () {
         limpiarErrorPago();
     }
 
-
-    /* ================================================================
-     * 15. ACTUALIZACIÓN AUTOMÁTICA (estado del negocio y productos)
-     * ================================================================ */
+    /* 15. ACTUALIZACIÓN AUTOMÁTICA (estado del negocio y productos) */
 
     const URL_CHECKOUT = window.ZB_CHECKOUT.urlProcesarCheckout;
     const URL_CARRITO = window.ZB_CHECKOUT.urlVerCarrito;
@@ -1528,16 +1479,110 @@ document.addEventListener('DOMContentLoaded', function () {
     let carritoVacio = false;
     let temporizadorAvisoAbierto = null;
 
+    let firmaZonas = JSON.stringify(zonas);
+    let firmaEntrega = JSON.stringify(entrega);
+
+    /*
+     * Ejecuta un cambio en la página sin que lo que está mirando la persona
+     * se desplace: si el cambio empuja el contenido, se compensa el scroll.
+     */
+    function sinSaltos(cambiar) {
+        const referencia = form;
+        const antes = referencia.getBoundingClientRect().top;
+        cambiar();
+        const despues = referencia.getBoundingClientRect().top;
+        if (window.scrollY > 0 && despues !== antes) {
+            window.scrollBy(0, despues - antes);
+        }
+    }
+
+    /* Actualiza zonas y costos de envío sin recargar ni perder lo que se eligió. */
+    function actualizarZonas(nuevas) {
+        if (!Array.isArray(nuevas) || !selectZona) return;
+
+        const firma = JSON.stringify(nuevas);
+        if (firma === firmaZonas) return;
+
+        const anteriores = zonas;
+        const elegida = selectZona.value;
+        firmaZonas = firma;
+        zonas = nuevas;
+
+        sinSaltos(function () {
+            const opcionOtro = selectZona.querySelector('option[value="otro"]');
+
+            selectZona.querySelectorAll('option[data-costo]').forEach(function (opcion) {
+                if (opcion.value !== 'otro') opcion.remove();
+            });
+
+            nuevas.forEach(function (zona) {
+                const costo = parsearMonto(zona.costoenvio);
+                const opcion = document.createElement('option');
+                opcion.value = String(zona.idzona);
+                opcion.dataset.costo = zona.costoenvio;
+                opcion.dataset.nombre = zona.nombre;
+                opcion.textContent = zona.nombre + ' — ' +
+                    (costo === 0 ? '¡Envío Gratis! ($0.00)' : '$' + costo.toFixed(2));
+                selectZona.insertBefore(opcion, opcionOtro);
+            });
+        });
+
+        if (!elegida || elegida === 'otro') {
+            selectZona.value = elegida;
+            return;
+        }
+
+        const antes = anteriores.find(function (z) { return String(z.idzona) === elegida; });
+        const ahora = nuevas.find(function (z) { return String(z.idzona) === elegida; });
+
+        selectZona.value = ahora ? elegida : '';
+
+        const cambioElCosto = ahora && antes &&
+            parsearMonto(ahora.costoenvio) !== parsearMonto(antes.costoenvio);
+
+        if (!ahora || cambioElCosto) {
+            selectZona.dispatchEvent(new Event('change'));
+        }
+    }
+
+    /* Actualiza los horarios de entrega disponibles. */
+    function actualizarHorarios(nueva) {
+        if (!nueva || typeof nueva !== 'object') return;
+
+        const firma = JSON.stringify(nueva);
+        if (firma === firmaEntrega) return;
+
+        firmaEntrega = firma;
+        entrega = nueva;
+
+        if (horarioAyudaTexto) {
+            horarioAyudaTexto.textContent = entrega.restringido && entrega.texto
+                ? 'Horarios de entrega disponibles: ' + entrega.texto + ' hs. Dejalo vacío si querés recibirlo lo antes posible.'
+                : 'Dejalo vacío si querés recibirlo lo antes posible.';
+        }
+
+        if (horarioInput && horarioInput.value) {
+            const error = errorHorarioEntrega(horarioInput.value);
+            if (error) {
+                mostrarErrorCampo(horarioInput, error);
+            } else {
+                limpiarErrorCampo(horarioInput);
+            }
+        }
+    }
+
     function mostrarAvisoNegocio(tipo, icono, titulo, texto) {
         if (!avisoNegocio) return;
 
         clearTimeout(temporizadorAvisoAbierto);
 
-        avisoNegocio.classList.toggle('checkout-aviso-ok', tipo === 'ok');
-        avisoNegocio.innerHTML =
-            '<i class="fa-solid ' + icono + '"></i>' +
-            '<div><strong>' + titulo + '</strong> <span>' + escaparHtml(texto) + '</span></div>';
-        avisoNegocio.hidden = false;
+        sinSaltos(function () {
+            avisoNegocio.classList.toggle('checkout-aviso-ok', tipo === 'ok');
+            avisoNegocio.innerHTML =
+                '<i class="fa-solid ' + icono + '"></i>' +
+                '<div><strong>' + titulo + '</strong> <span>' + escaparHtml(texto) + '</span></div>';
+            avisoNegocio.hidden = false;
+        });
     }
 
     function ocultarAvisoNegocio() {
@@ -1575,8 +1620,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!avisoProductos || !avisoProductosTexto) return;
 
         avisoProductosTexto.innerHTML = '<p>' + escaparHtml(texto) + '</p>';
-        avisoProductos.hidden = false;
-        avisoProductos.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        sinSaltos(function () { avisoProductos.hidden = false; });
     }
 
     if (cerrarAvisoProductos && avisoProductos) {
@@ -1663,6 +1707,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!datos) return;
 
             aplicarEstadoNegocio(datos.cerrado !== true, datos.mensaje_negocio || datos.mensaje);
+
+            actualizarZonas(datos.zonas_entrega);
+            actualizarHorarios(datos.entrega);
 
             if (Array.isArray(datos.quitados) && datos.quitados.length) {
                 aplicarCambioDeProductos(datos);

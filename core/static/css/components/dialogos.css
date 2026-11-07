@@ -11,7 +11,7 @@ html.zb-bloqueado {
     overflow: hidden;
 }
 
-/* ---------- Fondo oscuro ---------- */
+/* Fondo oscuro */
 
 .zb-overlay {
     position: fixed;
@@ -37,7 +37,7 @@ html.zb-bloqueado {
     opacity: 1;
 }
 
-/* ---------- Caja del diálogo ---------- */
+/* Caja del diálogo */
 
 .zb-dialogo {
     width: 100%;
@@ -67,7 +67,7 @@ html.zb-bloqueado {
     box-sizing: border-box;
 }
 
-/* ---------- Ícono ---------- */
+/* Ícono */
 
 .zb-dialogo__icono {
     width: 62px;
@@ -110,7 +110,7 @@ html.zb-bloqueado {
     height: 30px;
 }
 
-/* ---------- Textos ---------- */
+/* Textos */
 
 .zb-dialogo__titulo {
     margin: 0 0 10px;
@@ -129,7 +129,7 @@ html.zb-bloqueado {
     white-space: pre-line;
 }
 
-/* ---------- Botones ---------- */
+/* Botones */
 
 .zb-dialogo__acciones {
     display: flex;
@@ -208,7 +208,7 @@ html.zb-bloqueado {
     order: -1;
 }
 
-/* ---------- Burbuja de validación de formularios ---------- */
+/* Burbuja de validación de formularios */
 
 .zb-burbuja {
     position: fixed;
@@ -298,7 +298,7 @@ html.zb-bloqueado {
     box-shadow: 0 0 0 3px rgba(216, 37, 5, 0.25) !important;
 }
 
-/* ---------- Celulares ---------- */
+/* Celulares */
 
 @media (max-width: 480px) {
 

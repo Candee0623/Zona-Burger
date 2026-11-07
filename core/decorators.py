@@ -7,6 +7,15 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from urllib.parse import quote
 
 
+PERMISOS_EN_VISTAS = {}
+
+
+def registrar_permiso(codigo, descripcion=None):
+    """Anota un permiso que una vista exige, para sincronizarlo luego con la base."""
+    if descripcion or codigo not in PERMISOS_EN_VISTAS:
+        PERMISOS_EN_VISTAS[codigo] = descripcion
+
+
 def es_ajax_o_json(request):
     return (
         request.headers.get('x-requested-with') == 'XMLHttpRequest'
@@ -34,12 +43,15 @@ def panel_login_requerido(view_func):
     return _wrapped
 
 
-def requiere_permiso(codigo):
+def requiere_permiso(codigo, descripcion=None):
     """
     Controla que el usuario tenga un permiso específico asignado a través de su rol
     para ejecutar la acción solicitada.
     Si no tiene permiso, la solicitud es rechazada en el servidor.
+    Además registra el permiso para que se cree solo en la base.
     """
+    registrar_permiso(codigo, descripcion)
+
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped(request, *args, **kwargs):
@@ -80,6 +92,9 @@ def requiere_algun_permiso(codigos):
     """
     Controla que el usuario tenga al menos uno de los permisos dados.
     """
+    for codigo in codigos:
+        registrar_permiso(codigo)
+
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped(request, *args, **kwargs):

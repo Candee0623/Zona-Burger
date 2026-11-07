@@ -131,7 +131,6 @@
         if (!confirmado) return;
 
         if (await guardarCambios()) {
-            // Recargar desde el servidor para mostrar los valores guardados.
             window.recetaGuardandoCambios = true;
             window.location.reload();
         }
@@ -191,7 +190,6 @@
         window.location.assign(destino.href);
     });
 
-    // Confirmar únicamente la eliminación de un ingrediente.
     document.querySelectorAll('.form-quitar-insumo').forEach(function (formulario) {
         // La confirmación la muestra dialogos.js (data-confirmar).
         formulario.setAttribute('data-confirmar', '¿Querés quitar este ingrediente de la receta?');

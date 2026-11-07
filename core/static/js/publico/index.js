@@ -24,9 +24,7 @@
     let consultaEnCurso = false;
     let erroresConsecutivos = 0;
 
-    /*
-     * CREACIÓN SEGURA DE ELEMENTOS
-     */
+    /* CREACIÓN SEGURA DE ELEMENTOS */
 
     function crearElemento(tag, texto, clase = '') {
         const elemento = document.createElement(tag);
@@ -46,9 +44,7 @@
         return icono;
     }
 
-    /*
-     * ESTADO DEL LOCAL
-     */
+    /* ESTADO DEL LOCAL */
 
     function aplicarEstado(data) {
         if (!data || typeof data.abierto !== 'boolean') {
@@ -93,9 +89,7 @@
         }
     }
 
-    /*
-     * PROMOCIONES
-     */
+    /* PROMOCIONES */
 
     function actualizarPromociones(promociones) {
         const contenedor = elementos.listaPromociones;
@@ -241,9 +235,7 @@
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    /*
-     * HORARIOS
-     */
+    /* HORARIOS */
 
     function actualizarHorarios(horarios) {
         const contenedor = elementos.listaHorarios;
@@ -291,9 +283,7 @@
         contenedor.replaceChildren(fragmento);
     }
 
-    /*
-     * ZONAS DE ENTREGA
-     */
+    /* ZONAS DE ENTREGA */
 
     function actualizarZonas(zonas) {
         const contenedor = elementos.listaZonas;
@@ -344,9 +334,7 @@
         contenedor.replaceChildren(fragmento);
     }
 
-    /*
-     * CONSULTA A DJANGO
-     */
+    /* CONSULTA A DJANGO */
 
     async function sincronizarEstado() {
         if (consultaEnCurso || document.hidden) {
@@ -405,9 +393,7 @@
         }
     }
 
-    /*
-     * ACTUALIZACIÓN PERIÓDICA
-     */
+    /* ACTUALIZACIÓN PERIÓDICA */
 
     function iniciarActualizacion() {
         detenerActualizacion();
@@ -431,9 +417,7 @@
         }
     }
 
-    /*
-     * GUARDAR Y RECUPERAR SCROLL
-     */
+    /* GUARDAR Y RECUPERAR SCROLL */
 
     function guardarScroll() {
         try {
@@ -482,9 +466,7 @@
         }
     }
 
-    /*
-     * CICLO DE VIDA DE LA PESTAÑA
-     */
+    /* CICLO DE VIDA DE LA PESTAÑA */
 
     document.addEventListener(
         'visibilitychange',
@@ -505,9 +487,7 @@
         }
     });
 
-    /*
-     * INICIALIZACIÓN
-     */
+    /* INICIALIZACIÓN */
 
     recuperarScroll();
     iniciarActualizacion();

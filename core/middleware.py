@@ -37,7 +37,6 @@ class PanelSecurityMiddleware:
     def __call__(self, request):
         path = request.path
 
-        # Verificar si la ruta es administrativa
         es_ruta_panel = (
             path.startswith('/panel/')
             or path.startswith('/reportes/')
@@ -45,7 +44,6 @@ class PanelSecurityMiddleware:
         )
 
         if es_ruta_panel:
-            # Comprobar si es una ruta exenta de autenticación
             esta_exenta = any(r.match(path) for r in self._regex_exentas)
 
             es_ajax = (

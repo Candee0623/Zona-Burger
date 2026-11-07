@@ -4,10 +4,7 @@
     margin: 0 auto;
 }
 
-
-/* =========================================
-   VOLVER
-   ========================================= */
+/* VOLVER */
 
 .categoria-edit-back {
     display: inline-flex;
@@ -34,10 +31,7 @@
     flex-shrink: 0;
 }
 
-
-/* =========================================
-   TARJETA PRINCIPAL
-   ========================================= */
+/* TARJETA PRINCIPAL */
 
 .categoria-edit-card {
     overflow: hidden;
@@ -47,10 +41,7 @@
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.16);
 }
 
-
-/* =========================================
-   ENCABEZADO
-   ========================================= */
+/* ENCABEZADO */
 
 .categoria-edit-header {
     display: flex;
@@ -108,19 +99,13 @@
     line-height: 1.45;
 }
 
-
-/* =========================================
-   CUERPO
-   ========================================= */
+/* CUERPO */
 
 .categoria-edit-body {
     padding: 25px 24px;
 }
 
-
-/* =========================================
-   CATEGORÍA ACTUAL
-   ========================================= */
+/* CATEGORÍA ACTUAL */
 
 .categoria-current {
     margin-bottom: 22px;
@@ -147,10 +132,7 @@
     overflow-wrap: anywhere;
 }
 
-
-/* =========================================
-   FORMULARIO
-   ========================================= */
+/* FORMULARIO */
 
 .categoria-form-group {
     margin-bottom: 22px;
@@ -200,10 +182,7 @@
     border-color: #7f1d1d;
 }
 
-
-/* =========================================
-   ERRORES
-   ========================================= */
+/* ERRORES */
 
 .categoria-errors {
     display: flex;
@@ -238,10 +217,7 @@
     margin-bottom: 0;
 }
 
-
-/* =========================================
-   ACCIONES
-   ========================================= */
+/* ACCIONES */
 
 .categoria-actions {
     display: flex;
@@ -274,10 +250,7 @@
     flex-shrink: 0;
 }
 
-
-/* =========================================
-   BOTÓN GUARDAR
-   ========================================= */
+/* BOTÓN GUARDAR */
 
 .categoria-save-btn {
     border: 1px solid #dc2626;
@@ -297,10 +270,7 @@
     transform: translateY(0);
 }
 
-
-/* =========================================
-   BOTÓN CANCELAR
-   ========================================= */
+/* BOTÓN CANCELAR */
 
 .categoria-cancel-btn {
     border: 1px solid #383838;
@@ -319,10 +289,7 @@
     transform: translateY(0);
 }
 
-
-/* =========================================
-   RESPONSIVE
-   ========================================= */
+/* RESPONSIVE */
 
 @media (max-width: 600px) {
 
@@ -359,7 +326,6 @@
         order: 1;
     }
 }
-
 
 @media (max-width: 430px) {
 

@@ -145,3 +145,41 @@
     border-color: #555;
     transform: translateY(-1px);
 }
+
+.perfil-permisos-total {
+    margin-left: auto;
+    padding: 2px 10px;
+    background: rgba(220, 38, 38, 0.15);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    color: #fca5a5;
+}
+
+.perfil-modulos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+}
+
+.perfil-modulo {
+    padding: 12px 14px;
+    background: #17171b;
+    border: 1px solid #2d2d35;
+    border-radius: 8px;
+}
+
+.perfil-modulo-titulo {
+    margin: 0 0 10px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.perfil-modulo-permisos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}

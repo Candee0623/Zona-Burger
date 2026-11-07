@@ -2,55 +2,38 @@ document.addEventListener(
     'DOMContentLoaded',
     function () {
 
-
-        // ============================================================
         // ELEMENTOS DEL MENÚ
-        // ============================================================
 
         const menuDinamico =
             document.getElementById(
                 'menu-dinamico'
             );
 
-
         const categoriasDinamicas =
             document.getElementById(
                 'categorias-dinamicas'
             );
 
-
         const menuActualizacionesUrl =
             window.MENU_ACTUALIZACIONES_URL;
 
-
-
-        // ============================================================
         // OBSERVER DE CATEGORÍAS
-        // ============================================================
 
         let observerCategorias = null;
 
-
-
         function inicializarNavegacionCategorias() {
-
 
             const chips =
                 document.querySelectorAll(
                     '.categoria-chip'
                 );
 
-
             const secciones =
                 document.querySelectorAll(
                     '.categoria-seccion'
                 );
 
-
-
-            // --------------------------------------------------------
             // CLICK EN UNA CATEGORÍA
-            // --------------------------------------------------------
 
             chips.forEach(
                 function (chip) {
@@ -61,7 +44,6 @@ document.addEventListener(
 
                             event.preventDefault();
 
-
                             const targetId =
                                 this.getAttribute(
                                     'href'
@@ -70,12 +52,10 @@ document.addEventListener(
                                     'data-target'
                                 )}`;
 
-
                             const targetSection =
                                 document.querySelector(
                                     targetId
                                 );
-
 
                             if (targetSection) {
 
@@ -88,11 +68,7 @@ document.addEventListener(
 
                             }
 
-
-
-                            // ------------------------------------------------
                             // ACTUALIZAR CATEGORÍA ACTIVA
-                            // ------------------------------------------------
 
                             chips.forEach(
                                 function (categoria) {
@@ -104,34 +80,25 @@ document.addEventListener(
                                 }
                             );
 
-
                             this.classList.add(
                                 'active'
                             );
 
-
-
-                            // ------------------------------------------------
                             // CENTRAR CATEGORÍA
-                            // ------------------------------------------------
 
                             const contenedor =
                                 categoriasDinamicas;
-
 
                             if (contenedor) {
 
                                 const chipLeft =
                                     this.offsetLeft;
 
-
                                 const chipWidth =
                                     this.offsetWidth;
 
-
                                 const contenedorWidth =
                                     contenedor.clientWidth;
-
 
                                 const posicion =
                                     chipLeft -
@@ -141,7 +108,6 @@ document.addEventListener(
                                     (
                                         chipWidth / 2
                                     );
-
 
                                 contenedor.scrollTo(
                                     {
@@ -164,11 +130,7 @@ document.addEventListener(
                 }
             );
 
-
-
-            // --------------------------------------------------------
             // REINICIAR OBSERVER
-            // --------------------------------------------------------
 
             if (observerCategorias) {
 
@@ -176,11 +138,7 @@ document.addEventListener(
 
             }
 
-
-
-            // --------------------------------------------------------
             // INTERSECTION OBSERVER
-            // --------------------------------------------------------
 
             const observerOptions = {
 
@@ -192,8 +150,6 @@ document.addEventListener(
                 threshold: 0
 
             };
-
-
 
             observerCategorias =
                 new IntersectionObserver(
@@ -210,12 +166,10 @@ document.addEventListener(
 
                                 }
 
-
                                 const id =
                                     entry.target.getAttribute(
                                         'id'
                                     );
-
 
                                 chips.forEach(
                                     function (chip) {
@@ -225,17 +179,14 @@ document.addEventListener(
                                                 'href'
                                             );
 
-
                                         const dataTarget =
                                             chip.getAttribute(
                                                 'data-target'
                                             );
 
-
                                         const chipTarget =
                                             href === `#${id}` ||
                                             dataTarget === id;
-
 
                                         if (chipTarget) {
 
@@ -261,11 +212,7 @@ document.addEventListener(
                     observerOptions
                 );
 
-
-
-            // --------------------------------------------------------
             // OBSERVAR SECCIONES
-            // --------------------------------------------------------
 
             secciones.forEach(
                 function (section) {
@@ -279,32 +226,19 @@ document.addEventListener(
 
         }
 
-
-
-        // ============================================================
         // INICIALIZAR CATEGORÍAS
-        // ============================================================
 
         inicializarNavegacionCategorias();
 
-
-
-        // ============================================================
         // ACTUALIZACIÓN AUTOMÁTICA
-        // ============================================================
 
         let menuVersion = null;
 
         let sincronizandoMenu = false;
 
-
-
         async function sincronizarMenu() {
 
-
-            // --------------------------------------------------------
             // EVITAR CONSULTAS SIMULTÁNEAS
-            // --------------------------------------------------------
 
             if (sincronizandoMenu) {
 
@@ -312,11 +246,7 @@ document.addEventListener(
 
             }
 
-
-
-            // --------------------------------------------------------
             // NO CONSULTAR SI LA PESTAÑA ESTÁ OCULTA
-            // --------------------------------------------------------
 
             if (document.hidden) {
 
@@ -324,11 +254,7 @@ document.addEventListener(
 
             }
 
-
-
-            // --------------------------------------------------------
             // VERIFICAR ELEMENTOS
-            // --------------------------------------------------------
 
             if (
                 document.hidden ||
@@ -339,18 +265,11 @@ document.addEventListener(
                 return;
             }
 
-
-
             sincronizandoMenu = true;
-
-
 
             try {
 
-
-                // ----------------------------------------------------
                 // CABECERAS
-                // ----------------------------------------------------
 
                 const headers = {
 
@@ -358,7 +277,6 @@ document.addEventListener(
                         'XMLHttpRequest'
 
                 };
-
 
                 if (menuVersion) {
 
@@ -368,11 +286,7 @@ document.addEventListener(
 
                 }
 
-
-
-                // ----------------------------------------------------
                 // CONSULTAR DJANGO
-                // ----------------------------------------------------
 
                 const response =
                     await fetch(
@@ -386,8 +300,6 @@ document.addEventListener(
                         }
                     );
 
-
-
                 if (!response.ok) {
 
                     console.warn(
@@ -399,38 +311,26 @@ document.addEventListener(
 
                 }
 
-
-
                 const data =
                     await response.json();
 
-
-
-                // ----------------------------------------------------
                 // PRIMERA CONSULTA
-                // ----------------------------------------------------
 
                 if (!menuVersion) {
 
                     menuVersion =
                         data.version;
 
-
                     console.log(
                         'Versión inicial del menú:',
                         menuVersion
                     );
 
-
                     return;
 
                 }
 
-
-
-                // ----------------------------------------------------
                 // NO HUBO CAMBIOS
-                // ----------------------------------------------------
 
                 if (!data.cambios) {
 
@@ -438,57 +338,38 @@ document.addEventListener(
 
                 }
 
-
-
-                // ----------------------------------------------------
                 // CAMBIO DETECTADO
-                // ----------------------------------------------------
 
                 console.log(
                     'Cambio detectado en el menú.'
                 );
-
 
                 console.log(
                     'Versión anterior:',
                     menuVersion
                 );
 
-
                 console.log(
                     'Versión nueva:',
                     data.version
                 );
 
-
-
-                // ----------------------------------------------------
                 // GUARDAR SCROLL VERTICAL
-                // ----------------------------------------------------
 
                 const scrollActual =
                     window.scrollY;
 
-
-
-                // ----------------------------------------------------
                 // GUARDAR SCROLL HORIZONTAL
-                // ----------------------------------------------------
 
                 const scrollCategorias =
                     categoriasDinamicas.scrollLeft;
 
-
-
-                // ----------------------------------------------------
                 // GUARDAR SECCIÓN VISIBLE
-                // ----------------------------------------------------
 
                 const seccionVisible =
                     document.querySelector(
                         '.categoria-seccion'
                     );
-
 
                 /*
                  * Se conserva la referencia para no
@@ -497,20 +378,12 @@ document.addEventListener(
 
                 void seccionVisible;
 
-
-
-                // ----------------------------------------------------
                 // GUARDAR NUEVA VERSIÓN
-                // ----------------------------------------------------
 
                 menuVersion =
                     data.version;
 
-
-
-                // ----------------------------------------------------
                 // ACTUALIZAR PRODUCTOS
-                // ----------------------------------------------------
 
                 if (
                     typeof data.menu ===
@@ -522,11 +395,7 @@ document.addEventListener(
 
                 }
 
-
-
-                // ----------------------------------------------------
                 // ACTUALIZAR CATEGORÍAS
-                // ----------------------------------------------------
 
                 if (
                     typeof data.categorias ===
@@ -538,28 +407,16 @@ document.addEventListener(
 
                 }
 
-
-
-                // ----------------------------------------------------
                 // RECONSTRUIR EVENTOS
-                // ----------------------------------------------------
 
                 inicializarNavegacionCategorias();
 
-
-
-                // ----------------------------------------------------
                 // RESTAURAR SCROLL HORIZONTAL
-                // ----------------------------------------------------
 
                 categoriasDinamicas.scrollLeft =
                     scrollCategorias;
 
-
-
-                // ----------------------------------------------------
                 // RESTAURAR SCROLL VERTICAL
-                // ----------------------------------------------------
 
                 requestAnimationFrame(
                     function () {
@@ -579,12 +436,9 @@ document.addEventListener(
                     }
                 );
 
-
-
                 console.log(
                     'Menú actualizado correctamente.'
                 );
-
 
             } catch (error) {
 
@@ -592,7 +446,6 @@ document.addEventListener(
                     'Error actualizando el menú:',
                     error
                 );
-
 
             } finally {
 
@@ -602,19 +455,11 @@ document.addEventListener(
 
         }
 
-
-
-        // ============================================================
         // INICIO
-        // ============================================================
 
         sincronizarMenu();
 
-
-
-        // ============================================================
         // ACTUALIZACIÓN PERIÓDICA (OPTIMIZADA)
-        // ============================================================
 
         document.addEventListener('visibilitychange', function () {
             if (!document.hidden) {

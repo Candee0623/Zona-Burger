@@ -44,9 +44,7 @@
     let cola = Promise.resolve();
     let contador = 0;
 
-    /* ---------------------------------------------------------
-       DIÁLOGO BASE
-    --------------------------------------------------------- */
+    /* DIÁLOGO BASE */
 
     function crearElemento(etiqueta, clase, texto) {
         const el = document.createElement(etiqueta);
@@ -223,14 +221,11 @@
         avisar: avisar
     };
 
-    // Cualquier alert() que quede en el código se muestra con estilo.
     window.alert = function (mensaje) {
         avisar({ mensaje: String(mensaje === undefined ? '' : mensaje) });
     };
 
-    /* ---------------------------------------------------------
-       CONFIRMACIONES DECLARATIVAS (data-confirmar="...")
-    --------------------------------------------------------- */
+    /* CONFIRMACIONES DECLARATIVAS (data-confirmar="...") */
 
     function opcionesDesde(elemento) {
         return {
@@ -311,9 +306,7 @@
         });
     }, true);
 
-    /* ---------------------------------------------------------
-       BURBUJA DE VALIDACIÓN (reemplaza la del navegador)
-    --------------------------------------------------------- */
+    /* BURBUJA DE VALIDACIÓN (reemplaza la del navegador) */
 
     let burbuja = null;
     let campoActual = null;

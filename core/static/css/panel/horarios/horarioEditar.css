@@ -1,7 +1,5 @@
 
-/* ===========================
-   EDITAR HORARIO
-=========================== */
+/* EDITAR HORARIO */
 
 .horario-form-container {
     width: 100%;
@@ -11,8 +9,6 @@
     padding: 10px 0 40px;
     box-sizing: border-box;
 }
-
-/* Volver */
 
 .form-volver {
     display: inline-flex;

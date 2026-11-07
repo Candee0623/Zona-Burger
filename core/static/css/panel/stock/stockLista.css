@@ -1,6 +1,4 @@
-/* =========================================
-   ZONA BURGER - STOCK | TEMA OSCURO
-   ========================================= */
+/* ZONA BURGER - STOCK | TEMA OSCURO */
 
 :root {
     --stock-bg: #141414;
@@ -163,9 +161,7 @@ body {
     font-size: 12px;
 }
 
-/* =========================================
-   ALERTAS DE STOCK Y VENCIMIENTOS
-   ========================================= */
+/* ALERTAS DE STOCK Y VENCIMIENTOS */
 
 .stock-alerts {
     display: grid;

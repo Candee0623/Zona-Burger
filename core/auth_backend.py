@@ -20,7 +20,6 @@ class EmpleadoAuthBackend(BaseBackend):
 
         identificador = username.strip().lower()
 
-        # Permitir login por correo electrónico o por nombre
         empleado = (
             Empleado.objects.filter(correo__iexact=identificador).first()
             or Empleado.objects.filter(nombre__iexact=username.strip()).first()
@@ -30,12 +29,10 @@ class EmpleadoAuthBackend(BaseBackend):
             logger.warning("Intento de login fallido: usuario/correo no encontrado '%s'", identificador)
             return None
 
-        # Verificar si la cuenta está activa
         if not getattr(empleado, 'activo', True):
             logger.warning("Intento de login con cuenta inactiva: '%s'", identificador)
             return None
 
-        # Validar contraseña almacenada con hash seguro
         if check_password(password, empleado.contrasena):
             return empleado
 

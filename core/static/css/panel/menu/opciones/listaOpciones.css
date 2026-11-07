@@ -3,7 +3,6 @@
     min-width: 0;
 }
 
-/* Volver */
 .opciones-back {
     display: inline-flex;
     align-items: center;
@@ -97,9 +96,7 @@
     stroke-linecap: round;
 }
 
-/* =========================================================
-   GRUPOS
-   ========================================================= */
+/* GRUPOS */
 
 .grupos-lista {
     display: flex;
@@ -230,7 +227,6 @@
     stroke-linejoin: round;
 }
 
-/* Editar */
 .btn-grupo-edit {
     color: #f87171;
 }
@@ -239,7 +235,6 @@
     color: #dc2626;
 }
 
-/* Eliminar */
 .btn-grupo-delete {
     color: #ff6b6b;
 }
@@ -248,9 +243,7 @@
     color: #ef4444;
 }
 
-/* =========================================================
-   OPCIONES
-   ========================================================= */
+/* OPCIONES */
 
 .grupo-opciones {
     padding: 8px 14px 14px;
@@ -315,9 +308,7 @@
     font-style: italic;
 }
 
-/* =========================================================
-   VACÍO
-   ========================================================= */
+/* VACÍO */
 
 .grupos-empty {
     padding: 65px 25px;
@@ -362,9 +353,7 @@
     font-size: 0.82rem;
 }
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
+/* RESPONSIVE */
 
 @media (max-width: 800px) {
 

@@ -1,3 +1,8 @@
+import importlib
+
+from django.conf import settings
+
+from core.decorators import PERMISOS_EN_VISTAS
 from core.models import Permiso, Rol, RolPermiso
 
 
@@ -26,6 +31,12 @@ PERMISOS_SISTEMA = [
         "modulo": "Pedidos",
         "accion": "Imprimir ticket",
         "descripcion": "Generar e imprimir tickets de pedidos",
+    },
+    {
+        "codigo": "historial.ver",
+        "modulo": "Pedidos",
+        "accion": "Ver historial",
+        "descripcion": "Consultar el historial de pedidos",
     },
 
     # Menú y Productos
@@ -250,10 +261,22 @@ PERMISOS_SISTEMA = [
         "descripcion": "Consultar los horarios de atención cargados",
     },
     {
-        "codigo": "horarios.administrar",
+        "codigo": "horarios.crear",
         "modulo": "Horarios",
-        "accion": "Administrar",
-        "descripcion": "Crear, modificar y eliminar horarios de atención",
+        "accion": "Crear",
+        "descripcion": "Crear horarios de atención",
+    },
+    {
+        "codigo": "horarios.editar",
+        "modulo": "Horarios",
+        "accion": "Editar",
+        "descripcion": "Modificar horarios de atención",
+    },
+    {
+        "codigo": "horarios.eliminar",
+        "modulo": "Horarios",
+        "accion": "Eliminar",
+        "descripcion": "Eliminar horarios de atención",
     },
 
     # Zonas de Entrega
@@ -264,10 +287,22 @@ PERMISOS_SISTEMA = [
         "descripcion": "Consultar zonas y costos de envío",
     },
     {
-        "codigo": "zonas.administrar",
+        "codigo": "zonas.crear",
         "modulo": "Zonas de entrega",
-        "accion": "Administrar",
-        "descripcion": "Crear, modificar y eliminar zonas de entrega y tarifas",
+        "accion": "Crear",
+        "descripcion": "Crear zonas de entrega y tarifas",
+    },
+    {
+        "codigo": "zonas.editar",
+        "modulo": "Zonas de entrega",
+        "accion": "Editar",
+        "descripcion": "Modificar zonas de entrega y tarifas",
+    },
+    {
+        "codigo": "zonas.eliminar",
+        "modulo": "Zonas de entrega",
+        "accion": "Eliminar",
+        "descripcion": "Eliminar zonas de entrega",
     },
 
     # Usuarios
@@ -336,25 +371,61 @@ PERMISOS_SISTEMA = [
 ]
 
 
+CATALOGO = {datos["codigo"]: datos for datos in PERMISOS_SISTEMA}
+
+
+def _datos_permiso(codigo, descripcion=None):
+    """Datos de un permiso: los del catálogo o, si no está, unos generados desde el código."""
+    if codigo in CATALOGO:
+        return CATALOGO[codigo]
+    modulo, _, accion = codigo.partition(".")
+    modulo = modulo.replace("_", " ").capitalize()
+    accion = accion.replace("_", " ").capitalize()
+    return {
+        "codigo": codigo,
+        "modulo": modulo,
+        "accion": accion,
+        "descripcion": descripcion or f"{modulo}: {accion}",
+    }
+
+
+def permisos_en_vistas():
+    """Importa las URLs (y con ellas las vistas) y devuelve los permisos que las vistas exigen."""
+    importlib.import_module(settings.ROOT_URLCONF)
+    return dict(PERMISOS_EN_VISTAS)
+
+
 def sincronizar_permisos():
     """
-    Sincroniza todos los permisos del catálogo en la base de datos
-    y asegura que el rol 'Administrador' tenga todos los permisos asignados.
+    Crea o actualiza en la base todos los permisos que exigen las vistas
+    (@requiere_permiso) más los del catálogo, y se los asigna al rol Administrador.
+    No borra nada: los permisos que ya no se usan solo se informan.
     """
-    permisos_instancias = []
-    for datos in PERMISOS_SISTEMA:
+    en_vistas = permisos_en_vistas()
+    codigos = list(dict.fromkeys([*en_vistas, *CATALOGO]))
+
+    existentes = set(Permiso.objects.values_list("codigo", flat=True))
+    instancias = []
+    for codigo in codigos:
+        datos = _datos_permiso(codigo, en_vistas.get(codigo))
         permiso, _ = Permiso.objects.update_or_create(
-            codigo=datos["codigo"],
+            codigo=codigo,
             defaults={
                 "modulo": datos["modulo"],
                 "accion": datos["accion"],
                 "descripcion": datos["descripcion"],
             },
         )
-        permisos_instancias.append(permiso)
+        instancias.append(permiso)
 
-    # Rol Administrador: asegurar asignación de todos los permisos
     admin_rol = Rol.objects.filter(nombrerol__iexact="Administrador").first()
     if admin_rol:
-        for permiso in permisos_instancias:
+        for permiso in instancias:
             RolPermiso.objects.get_or_create(idrol=admin_rol, idpermiso=permiso)
+
+    return {
+        "total": len(codigos),
+        "nuevos": [c for c in codigos if c not in existentes],
+        "sin_vista": [c for c in CATALOGO if c not in en_vistas],
+        "sin_uso": sorted(existentes - set(codigos)),
+    }

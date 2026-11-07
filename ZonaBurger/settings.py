@@ -227,12 +227,10 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'same-origin'
 
 
-# ---------------------------------------------------------------
 # SEGURIDAD EN PRODUCCIÓN (Render)
 # Render termina el HTTPS en su proxy y le avisa a Django con el
 # header X-Forwarded-Proto. Solo se activa con DEBUG=False, así
 # en tu computadora (http://localhost) todo sigue funcionando.
-# ---------------------------------------------------------------
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True

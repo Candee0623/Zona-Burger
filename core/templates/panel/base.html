@@ -5,6 +5,7 @@
 <html lang="es">
 
 <head>
+    {% include 'components/favicon.html' %}
 
 <meta charset="UTF-8">
 
@@ -73,11 +74,7 @@ content="width=device-width, initial-scale=1.0"
     id="panelContainer"
 >
 
-<!-- ================================================== -->
-
 <!-- SIDEBAR -->
-
-<!-- ================================================== -->
 
 <aside
     class="sidebar"
@@ -129,9 +126,7 @@ content="width=device-width, initial-scale=1.0"
 </div>
 
 
-<!-- ================================================== -->
 <!-- MENÚ PRINCIPAL -->
-<!-- ================================================== -->
 
 <nav class="sidebar-menu">
 
@@ -156,6 +151,7 @@ content="width=device-width, initial-scale=1.0"
 
     <!-- PEDIDOS -->
 
+    {% if 'historial.ver' in permisos_usuario %}
     <a
         href="{% url 'historial_pedidos' %}"
         class="menu-item {% if request.resolver_match.url_name == 'lista_pedidos' %}active{% endif %}"
@@ -170,10 +166,12 @@ content="width=device-width, initial-scale=1.0"
         </span>
 
     </a>
+    {% endif %}
 
 
     <!-- MENÚ -->
 
+    {% if 'productos.ver' in permisos_usuario or 'categorias.ver' in permisos_usuario or 'opciones.ver' in permisos_usuario or 'extras.ver' in permisos_usuario %}
     <a
         href="{% url 'menu_panel' %}"
         class="menu-item {% if 'menu' in request.resolver_match.url_name or 'categoria' in request.resolver_match.url_name or 'grupo' in request.resolver_match.url_name or 'producto' in request.resolver_match.url_name or 'extra' in request.resolver_match.url_name %}active{% endif %}"
@@ -188,10 +186,12 @@ content="width=device-width, initial-scale=1.0"
         </span>
 
     </a>
+    {% endif %}
 
 
     <!-- STOCK -->
 
+    {% if 'stock.ver' in permisos_usuario %}
     <a
         href="{% url 'stock_lista' %}"
         class="menu-item {% if 'stock' in request.resolver_match.url_name %}active{% endif %}"
@@ -206,10 +206,12 @@ content="width=device-width, initial-scale=1.0"
         </span>
 
     </a>
+    {% endif %}
 
 
     <!-- REPORTES -->
 
+    {% if 'reportes.ver' in permisos_usuario %}
     <a href="{% url 'centro_reportes' %}"
     class="menu-item {% if request.resolver_match.url_name == 'centro_reportes' or request.resolver_match.url_name == 'resumen_ventas' or request.resolver_match.url_name == 'productos_mas_vendidos' or request.resolver_match.url_name == 'dinero_recaudado' %}active{% endif %}">
         <span class="menu-icon">
@@ -217,15 +219,15 @@ content="width=device-width, initial-scale=1.0"
         </span>
         <span class="menu-text">Reportes</span>
     </a>
+    {% endif %}
 
 
-    <!-- ================================================== -->
     <!-- ADMINISTRACIÓN -->
-    <!-- ================================================== -->
 
 
     <!-- USUARIOS -->
 
+    {% if 'usuarios.ver' in permisos_usuario %}
     <a
         href="{% url 'empleado_lista' %}"
         class="menu-item {% if 'empleado' in request.resolver_match.url_name %}active{% endif %}"
@@ -240,9 +242,11 @@ content="width=device-width, initial-scale=1.0"
         </span>
 
     </a>
+    {% endif %}
 
 
     <!-- ROLES -->
+    {% if 'roles.ver' in permisos_usuario %}
     <a
         href="{% url 'rol_lista' %}"
         class="menu-item {% if request.resolver_match.url_name == 'rol_lista' %}active{% endif %}"
@@ -253,15 +257,15 @@ content="width=device-width, initial-scale=1.0"
 
         <span class="menu-text">Roles</span>
     </a>
+    {% endif %}
 
 
-    <!-- ================================================== -->
     <!-- CONFIGURACIÓN -->
-    <!-- ================================================== -->
 
 
     <!-- PROMOCIONES -->
 
+    {% if 'promociones.ver' in permisos_usuario %}
     <a
         href="{% url 'promociones_panel' %}"
         class="menu-item {% if 'promociones' in request.resolver_match.url_name %}active{% endif %}"
@@ -276,9 +280,11 @@ content="width=device-width, initial-scale=1.0"
         </span>
 
     </a>
+    {% endif %}
 
     <!-- ABRIR / CERRAR -->
 
+    {% if 'negocio.ver' in permisos_usuario %}
     <a
         href="{% url 'estado_negocio' %}"
         class="menu-item {% if request.resolver_match.url_name == 'estado_negocio' %}active{% endif %}"
@@ -293,10 +299,12 @@ content="width=device-width, initial-scale=1.0"
         </span>
 
     </a>
+    {% endif %}
 
 
     <!-- HORARIOS -->
 
+    {% if 'horarios.ver' in permisos_usuario %}
     <a
         href="{% url 'horarios_lista' %}"
         class="menu-item {% if 'horarios' in request.resolver_match.url_name %}active{% endif %}"
@@ -311,10 +319,12 @@ content="width=device-width, initial-scale=1.0"
         </span>
 
     </a>
+    {% endif %}
 
 
     <!-- ENTREGA -->
 
+    {% if 'zonas.ver' in permisos_usuario %}
     <a
         href="{% url 'zonas_entrega_lista' %}"
         class="menu-item {% if 'zonas_entrega' in request.resolver_match.url_name or 'entrega' in request.resolver_match.url_name %}active{% endif %}"
@@ -329,24 +339,19 @@ content="width=device-width, initial-scale=1.0"
         </span>
 
     </a>
+    {% endif %}
 
 </nav>
 
 
 </aside>
 
-<!-- ================================================== -->
-
 <!-- CONTENIDO PRINCIPAL -->
-
-<!-- ================================================== -->
 
 <main class="main-content">
 
 
-<!-- ================================================== -->
 <!-- TOPBAR -->
-<!-- ================================================== -->
 
 <header class="topbar">
 
@@ -378,9 +383,7 @@ content="width=device-width, initial-scale=1.0"
     </div>
 
 
-    <!-- ================================================== -->
     <!-- USUARIO -->
-    <!-- ================================================== -->
 
     <div class="topbar-user">
 
@@ -474,9 +477,7 @@ content="width=device-width, initial-scale=1.0"
 </header>
 
 
-<!-- ================================================== -->
 <!-- CONTENIDO DE LA PÁGINA -->
-<!-- ================================================== -->
 
 <section class="page-content">
 
@@ -517,11 +518,7 @@ content="width=device-width, initial-scale=1.0"
 
 </div>
 
-<!-- ================================================== -->
-
 <!-- JAVASCRIPT -->
-
-<!-- ================================================== -->
 
 <script src="{% static 'js/components/dialogos.js' %}"></script>
 <script src="{% static 'js/panel/panel.js' %}"></script>

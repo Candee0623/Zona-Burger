@@ -428,7 +428,6 @@ def descontar_stock_pedido(pedido, consumo_insumos=None):
                 )
             insumos_bloqueados[insumo_id] = insumo
 
-        # Descontar stock (y lotes por orden de vencimiento) y registrar movimientos
         for insumo_id, dato in consumo_insumos.items():
             insumo = insumos_bloqueados[insumo_id]
             cantidad = dato['cantidad']

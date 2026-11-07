@@ -1,7 +1,4 @@
-/* =========================================================
-   ZONA BURGER — DETALLE DE PRODUCTO
-   Tema oscuro · Rojo de marca · Responsive
-========================================================= */
+/* ZONA BURGER — DETALLE DE PRODUCTO */
 
 :root {
     --zb-rojo: #d82505;
@@ -83,10 +80,7 @@ input {
     background: rgba(216, 37, 5, .7);
 }
 
-
-/* =========================================================
-   CONTENEDOR PRINCIPAL
-========================================================= */
+/* CONTENEDOR PRINCIPAL */
 
 .menu-container {
     width: min(760px, calc(100% - 30px));
@@ -94,10 +88,7 @@ input {
     padding: 34px 0 70px;
 }
 
-
-/* =========================================================
-   CABECERA Y NAVEGACIÓN
-========================================================= */
+/* CABECERA Y NAVEGACIÓN */
 
 .detalle-header-links {
     display: flex;
@@ -184,10 +175,7 @@ input {
     outline-offset: 4px;
 }
 
-
-/* =========================================================
-   TARJETA DEL PRODUCTO
-========================================================= */
+/* TARJETA DEL PRODUCTO */
 
 .producto-card {
     position: relative;
@@ -231,10 +219,7 @@ input {
     min-width: 0;
 }
 
-
-/* =========================================================
-   IMAGEN Y PLACEHOLDER
-========================================================= */
+/* IMAGEN Y PLACEHOLDER */
 
 #contenedor-imagen-producto {
     width: 100%;
@@ -278,10 +263,7 @@ input {
     font-size: 5rem;
 }
 
-
-/* =========================================================
-   INFORMACIÓN Y PRECIO BASE
-========================================================= */
+/* INFORMACIÓN Y PRECIO BASE */
 
 .producto-card > .detalle-titulo {
     margin: 0 0 9px;
@@ -335,10 +317,7 @@ input {
     );
 }
 
-
-/* =========================================================
-   MENSAJES DEL SERVIDOR
-========================================================= */
+/* MENSAJES DEL SERVIDOR */
 
 #mensajes-django {
     display: grid;
@@ -350,11 +329,7 @@ input {
     overflow-wrap: anywhere;
 }
 
-
-/* =========================================================
-   AVISO DE NEGOCIO CERRADO
-   Compatible con #aviso-negocio-cerrado del HTML
-========================================================= */
+/* AVISO DE NEGOCIO CERRADO */
 
 #aviso-negocio-cerrado {
     align-items: flex-start;
@@ -401,7 +376,6 @@ input {
     font-size: .78rem;
     line-height: 1.65;
 }
-
 
 /* Compatibilidad con el componente alternativo .aviso-cerrado */
 
@@ -507,10 +481,7 @@ input {
     }
 }
 
-
-/* =========================================================
-   GRUPOS DE OPCIONES
-========================================================= */
+/* GRUPOS DE OPCIONES */
 
 .grupo-opcion-seccion {
     position: relative;
@@ -565,10 +536,7 @@ input {
     margin-right: 4px;
 }
 
-
-/* =========================================================
-   CONTADORES DE SELECCIÓN
-========================================================= */
+/* CONTADORES DE SELECCIÓN */
 
 .grupo-contador {
     display: inline-flex;
@@ -590,10 +558,7 @@ input {
     vertical-align: middle;
 }
 
-
-/* =========================================================
-   LISTA DE OPCIONES
-========================================================= */
+/* LISTA DE OPCIONES */
 
 .opciones-lista {
     display: flex;
@@ -676,10 +641,7 @@ input {
     transform: none;
 }
 
-
-/* =========================================================
-   CHECKBOX Y RADIO
-========================================================= */
+/* CHECKBOX Y RADIO */
 
 .opcion-input {
     flex: 0 0 18px;
@@ -697,7 +659,6 @@ input {
     outline-offset: 3px;
 }
 
-/* Resaltar visualmente la opción seleccionada */
 .opcion-item:has(.opcion-input:checked) {
     background: rgba(216, 37, 5, .075);
     border-color: rgba(216, 37, 5, .38);
@@ -719,10 +680,7 @@ input {
     cursor: not-allowed;
 }
 
-
-/* =========================================================
-   PRECIO ADICIONAL
-========================================================= */
+/* PRECIO ADICIONAL */
 
 .opcion-precio-extra {
     flex: 0 0 auto;
@@ -736,10 +694,7 @@ input {
     font-variant-numeric: tabular-nums;
 }
 
-
-/* =========================================================
-   CANTIDAD DE EXTRAS
-========================================================= */
+/* CANTIDAD DE EXTRAS */
 
 .cantidad-container {
     display: flex;
@@ -790,11 +745,7 @@ input {
     box-shadow: 0 0 0 3px rgba(216, 37, 5, .14);
 }
 
-
-/* =========================================================
-   STEPPER OPCIONAL DE EXTRAS
-   Compatible con .zx-* si tu JavaScript lo utiliza
-========================================================= */
+/* STEPPER OPCIONAL DE EXTRAS */
 
 .opcion-item.zx-fila {
     display: flex;
@@ -915,10 +866,7 @@ input {
     user-select: none;
 }
 
-
-/* =========================================================
-   VALIDACIÓN DE GRUPOS
-========================================================= */
+/* VALIDACIÓN DE GRUPOS */
 
 .grupo-incompleto {
     background:
@@ -993,10 +941,7 @@ input {
     box-shadow: 0 0 18px rgba(255, 71, 87, .32) !important;
 }
 
-
-/* =========================================================
-   RESUMEN DEL TOTAL
-========================================================= */
+/* RESUMEN DEL TOTAL */
 
 .resumen-total-box {
     display: flex;
@@ -1036,10 +981,7 @@ input {
     font-variant-numeric: tabular-nums;
 }
 
-
-/* =========================================================
-   BOTÓN DE CONFIRMACIÓN
-========================================================= */
+/* BOTÓN DE CONFIRMACIÓN */
 
 .btn-confirmar-pedido {
     display: flex;
@@ -1113,10 +1055,7 @@ input {
     transform: none;
 }
 
-
-/* =========================================================
-   AVISO FLOTANTE DE VALIDACIÓN
-========================================================= */
+/* AVISO FLOTANTE DE VALIDACIÓN */
 
 .aviso-obligatorio {
     position: fixed;
@@ -1167,10 +1106,7 @@ input {
     transform: translate(-50%, 0);
 }
 
-
-/* =========================================================
-   RESPONSIVE — TABLET
-========================================================= */
+/* RESPONSIVE — TABLET */
 
 @media (max-width: 700px) {
     .menu-container {
@@ -1265,10 +1201,7 @@ input {
     }
 }
 
-
-/* =========================================================
-   RESPONSIVE — MÓVILES PEQUEÑOS
-========================================================= */
+/* RESPONSIVE — MÓVILES PEQUEÑOS */
 
 @media (max-width: 430px) {
     .menu-container {
@@ -1366,10 +1299,7 @@ input {
     }
 }
 
-
-/* =========================================================
-   ACCESIBILIDAD Y MOVIMIENTO REDUCIDO
-========================================================= */
+/* ACCESIBILIDAD Y MOVIMIENTO REDUCIDO */
 
 @media (prefers-reduced-motion: reduce) {
     *,
