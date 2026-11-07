@@ -458,7 +458,11 @@
                                     </a>
 
                                     {% if lote.cantidadactual > 0 and lote.esta_vencido and 'stock.ajustar' in permisos_usuario %}
-                                        <form method="post" action="{% url 'lote_baja' lote.idlote %}" style="display:inline" onsubmit="return confirm('¿Dar de baja este lote vencido? La cantidad restante se descuenta del stock.');">
+                                        <form method="post" action="{% url 'lote_baja' lote.idlote %}" style="display:inline"
+                                              data-confirmar="¿Dar de baja este lote vencido? La cantidad restante se descuenta del stock."
+                                              data-confirmar-titulo="Dar de baja lote"
+                                              data-confirmar-boton="Dar de baja"
+                                              data-confirmar-tipo="peligro">
                                             {% csrf_token %}
                                             <button type="submit" class="action-link" style="background:none;border:0;cursor:pointer;font-weight:600;margin-left:10px;">
                                                 <i class="fa-solid fa-trash"></i>

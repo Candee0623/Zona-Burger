@@ -106,9 +106,13 @@ function imprimirModal() {
 
     if (!ventana) {
 
-        alert(
-            'El navegador bloqueó la ventana de impresión.'
-        );
+        ZB.avisar({
+            titulo: 'No se pudo imprimir',
+            mensaje:
+                'El navegador bloqueó la ventana de impresión. ' +
+                'Permití las ventanas emergentes para este sitio e intentá de nuevo.',
+            tipo: 'info'
+        });
 
         return;
 

@@ -80,7 +80,9 @@ DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv('DATABASE_URL'),
         conn_max_age=600,
-        ssl_require=True
+        # En producción (DEBUG=False) la conexión a la base exige SSL;
+        # en tu computadora un PostgreSQL local normalmente no lo tiene.
+        ssl_require=not DEBUG
     )
 }
 
@@ -223,3 +225,19 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'same-origin'
+
+
+# ---------------------------------------------------------------
+# SEGURIDAD EN PRODUCCIÓN (Render)
+# Render termina el HTTPS en su proxy y le avisa a Django con el
+# header X-Forwarded-Proto. Solo se activa con DEBUG=False, así
+# en tu computadora (http://localhost) todo sigue funcionando.
+# ---------------------------------------------------------------
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Empezá en 1 hora. Cuando confirmes que todo anda bien con HTTPS,
+    # subilo a 31536000 (1 año).
+    SECURE_HSTS_SECONDS = 3600

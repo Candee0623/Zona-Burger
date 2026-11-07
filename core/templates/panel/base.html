@@ -52,6 +52,13 @@ content="width=device-width, initial-scale=1.0"
     href="{% static 'css/panel/base.css' %}"
 >
 
+<!-- DIÁLOGOS Y AVISOS PROPIOS -->
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/components/dialogos.css' %}"
+>
+
 <!-- CSS ESPECÍFICO DE CADA PÁGINA -->
 
 {% block extra_css %}
@@ -447,7 +454,9 @@ content="width=device-width, initial-scale=1.0"
             <a
                 href="{% url 'panel_logout' %}"
                 class="logout"
-                onclick="return confirm('¿Querés cerrar sesión?');"
+                data-confirmar="¿Querés cerrar sesión?"
+                data-confirmar-titulo="Cerrar sesión"
+                data-confirmar-boton="Cerrar sesión"
             >
 
                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -514,6 +523,7 @@ content="width=device-width, initial-scale=1.0"
 
 <!-- ================================================== -->
 
+<script src="{% static 'js/components/dialogos.js' %}"></script>
 <script src="{% static 'js/panel/panel.js' %}"></script>
 <script src="{% static 'js/panel/baseAlertas.js' %}"></script>
 

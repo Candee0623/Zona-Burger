@@ -53,7 +53,10 @@
 
             {% if estado_local.abierto %}
             <button type="submit" name="accion" value="cerrar" class="local-btn local-btn-rojo"
-                    onclick="return confirm('¿Cerrar el local por hoy? No se podrán hacer pedidos hasta mañana.');">
+                    data-confirmar="¿Cerrar el local por hoy? No se podrán hacer pedidos hasta mañana."
+                    data-confirmar-titulo="Cerrar el local"
+                    data-confirmar-boton="Cerrar por hoy"
+                    data-confirmar-tipo="peligro">
                 Cerrar por hoy
             </button>
             {% else %}

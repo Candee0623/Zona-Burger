@@ -1,0 +1,331 @@
+/* =========================================================
+   ZONA-BURGER
+   DIÁLOGOS Y AVISOS PROPIOS (reemplazan los del navegador)
+   - Confirmaciones (cerrar sesión, eliminar, etc.)
+   - Avisos
+   - Burbuja de validación de formularios
+   Autocontenido: no depende de las variables de otros CSS.
+   ========================================================= */
+
+html.zb-bloqueado {
+    overflow: hidden;
+}
+
+/* ---------- Fondo oscuro ---------- */
+
+.zb-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+
+    font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
+
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+.zb-overlay.zb-visible {
+    opacity: 1;
+}
+
+/* ---------- Caja del diálogo ---------- */
+
+.zb-dialogo {
+    width: 100%;
+    max-width: 440px;
+    box-sizing: border-box;
+    padding: 30px 28px 24px;
+
+    background: #191919;
+    color: #ffffff;
+    border: 1px solid #303030;
+    border-radius: 18px;
+    box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(216, 37, 5, 0.08);
+
+    text-align: center;
+
+    transform: translateY(12px) scale(0.96);
+    transition: transform 0.2s ease;
+}
+
+.zb-overlay.zb-visible .zb-dialogo {
+    transform: translateY(0) scale(1);
+}
+
+.zb-dialogo * {
+    box-sizing: border-box;
+}
+
+/* ---------- Ícono ---------- */
+
+.zb-dialogo__icono {
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    font-size: 26px;
+
+    background: rgba(216, 37, 5, 0.12);
+    color: #ff5635;
+    border: 1px solid #542019;
+}
+
+.zb-dialogo--peligro .zb-dialogo__icono {
+    background: #d82505;
+    color: #ffffff;
+    border-color: #f03816;
+    box-shadow: 0 0 0 6px rgba(216, 37, 5, 0.15);
+}
+
+.zb-dialogo--exito .zb-dialogo__icono {
+    background: rgba(46, 204, 113, 0.12);
+    color: #2ecc71;
+    border-color: rgba(46, 204, 113, 0.35);
+}
+
+.zb-dialogo--info .zb-dialogo__icono {
+    background: rgba(255, 204, 0, 0.12);
+    color: #ffcc00;
+    border-color: rgba(255, 204, 0, 0.35);
+}
+
+.zb-dialogo__icono svg {
+    width: 30px;
+    height: 30px;
+}
+
+/* ---------- Textos ---------- */
+
+.zb-dialogo__titulo {
+    margin: 0 0 10px;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.25;
+    color: #ffffff;
+}
+
+.zb-dialogo__mensaje {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 500;
+    line-height: 1.55;
+    color: #b5b5b5;
+    white-space: pre-line;
+}
+
+/* ---------- Botones ---------- */
+
+.zb-dialogo__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 26px;
+}
+
+.zb-btn {
+    flex: 1 1 0;
+    min-width: 120px;
+
+    padding: 13px 18px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+
+    border-radius: 12px;
+    border: 1px solid transparent;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.1s ease,
+        box-shadow 0.15s ease;
+}
+
+.zb-btn:active {
+    transform: scale(0.97);
+}
+
+.zb-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 86, 53, 0.45);
+}
+
+.zb-btn--primario {
+    background: #d82505;
+    color: #ffffff;
+    border-color: #f03816;
+}
+
+.zb-btn--primario:hover {
+    background: #f03816;
+}
+
+.zb-btn--secundario {
+    background: #202020;
+    color: #ffffff;
+    border-color: #303030;
+}
+
+.zb-btn--secundario:hover {
+    background: #2a2a2a;
+    border-color: #444444;
+}
+
+.zb-btn--sutil {
+    background: transparent;
+    color: #b5b5b5;
+    border-color: transparent;
+}
+
+.zb-btn--sutil:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Con 3 botones, el principal ocupa toda la fila */
+
+.zb-dialogo__acciones--tres .zb-btn--primario {
+    flex-basis: 100%;
+    order: -1;
+}
+
+/* ---------- Burbuja de validación de formularios ---------- */
+
+.zb-burbuja {
+    position: fixed;
+    z-index: 10001;
+
+    max-width: min(320px, calc(100vw - 16px));
+    padding: 10px 14px 10px 12px;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    background: #191919;
+    color: #ffffff;
+    border: 1px solid #d82505;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+
+    font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.zb-burbuja.zb-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.zb-burbuja__icono {
+    flex: 0 0 auto;
+    display: flex;
+    margin-top: 1px;
+    color: #ff5635;
+}
+
+.zb-burbuja__icono svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Flechita que apunta al campo */
+
+.zb-burbuja::before {
+    content: "";
+    position: absolute;
+    left: var(--zb-flecha-x, 20px);
+    width: 10px;
+    height: 10px;
+    background: #191919;
+    transform: rotate(45deg);
+}
+
+.zb-burbuja--abajo::before {
+    top: -6px;
+    border-left: 1px solid #d82505;
+    border-top: 1px solid #d82505;
+}
+
+.zb-burbuja--arriba::before {
+    bottom: -6px;
+    border-right: 1px solid #d82505;
+    border-bottom: 1px solid #d82505;
+}
+
+/* Cuando el campo no se ve (oculto), se muestra centrada arriba */
+
+.zb-burbuja--aviso {
+    left: 50%;
+    top: 20px;
+    transform: translateX(-50%);
+}
+
+.zb-burbuja--aviso::before {
+    display: none;
+}
+
+/* Campo marcado en rojo */
+
+.zb-campo-invalido {
+    border-color: #d82505 !important;
+    box-shadow: 0 0 0 3px rgba(216, 37, 5, 0.25) !important;
+}
+
+/* ---------- Celulares ---------- */
+
+@media (max-width: 480px) {
+
+    .zb-dialogo {
+        padding: 26px 20px 20px;
+    }
+
+    .zb-dialogo__acciones {
+        flex-direction: column-reverse;
+    }
+
+    .zb-btn {
+        width: 100%;
+        flex: 0 0 auto;
+    }
+
+    .zb-dialogo__acciones--tres .zb-btn--primario {
+        order: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .zb-overlay,
+    .zb-dialogo,
+    .zb-burbuja,
+    .zb-btn {
+        transition: none;
+    }
+}

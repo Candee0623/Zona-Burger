@@ -64,7 +64,10 @@
 
                                     <form method="post"
                                           action="{% url 'rol_eliminar' rol.pk %}"
-                                          onsubmit="return confirm('¿Seguro que deseas eliminar este rol?');">
+                                          data-confirmar="¿Seguro que deseas eliminar este rol?"
+                                          data-confirmar-titulo="Eliminar rol"
+                                          data-confirmar-boton="Eliminar"
+                                          data-confirmar-tipo="peligro">
                                         {% csrf_token %}
                                         <button type="submit"
                                                 class="btn-rol btn-rol-eliminar">

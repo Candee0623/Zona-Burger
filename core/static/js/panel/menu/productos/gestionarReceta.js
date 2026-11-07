@@ -122,9 +122,11 @@
             return;
         }
 
-        const confirmado = window.confirm(
-            '¿Querés guardar los cambios en las cantidades?'
-        );
+        const confirmado = await ZB.confirmar({
+            titulo: 'Guardar cambios',
+            mensaje: '¿Querés guardar los cambios en las cantidades?',
+            textoConfirmar: 'Guardar'
+        });
 
         if (!confirmado) return;
 
@@ -136,8 +138,9 @@
     });
 
     // Al ir a otra página con cantidades sin guardar:
-    //  - Aceptar: guarda y después te lleva a donde querías ir.
-    //  - Cancelar: no guarda y te lleva igual.
+    //  - Guardar y salir: guarda y después te lleva a donde querías ir.
+    //  - Salir sin guardar: te lleva igual, sin guardar.
+    //  - Seguir editando: te quedás en la receta.
     document.addEventListener('click', async function (evento) {
         const enlace = evento.target.closest('a[href]');
 
@@ -161,13 +164,23 @@
 
         if (guardando) return;
 
-        const guardar = window.confirm(
-            '¿Querés guardar los cambios antes de salir?\n\n' +
-            'Aceptar: guardar y salir.\n' +
-            'Cancelar: salir sin guardar.'
-        );
+        const decision = await ZB.dialogo({
+            titulo: 'Cambios sin guardar',
+            mensaje:
+                'Modificaste cantidades de la receta que todavía no guardaste. ' +
+                '¿Querés guardarlas antes de salir?',
+            tipo: 'info',
+            valorCancelar: 'quedarme',
+            botones: [
+                { texto: 'Seguir editando', valor: 'quedarme', estilo: 'sutil' },
+                { texto: 'Salir sin guardar', valor: 'salir', estilo: 'secundario' },
+                { texto: 'Guardar y salir', valor: 'guardar', estilo: 'primario', porDefecto: true }
+            ]
+        });
 
-        if (guardar) {
+        if (decision === 'quedarme') return;
+
+        if (decision === 'guardar') {
             const guardado = await guardarCambios();
 
             // Si falló, se queda en la receta para no perder los cambios.
@@ -180,12 +193,13 @@
 
     // Confirmar únicamente la eliminación de un ingrediente.
     document.querySelectorAll('.form-quitar-insumo').forEach(function (formulario) {
-        formulario.addEventListener('submit', function (evento) {
-            if (!window.confirm('¿Querés quitar este ingrediente de la receta?')) {
-                evento.preventDefault();
-                return;
-            }
+        // La confirmación la muestra dialogos.js (data-confirmar).
+        formulario.setAttribute('data-confirmar', '¿Querés quitar este ingrediente de la receta?');
+        formulario.setAttribute('data-confirmar-titulo', 'Quitar ingrediente');
+        formulario.setAttribute('data-confirmar-boton', 'Quitar');
+        formulario.setAttribute('data-confirmar-tipo', 'peligro');
 
+        formulario.addEventListener('submit', function () {
             window.recetaGuardandoCambios = true;
         });
     });
