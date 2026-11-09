@@ -4102,6 +4102,25 @@ def _leer_vencimiento(texto):
     return fecha, None
 
 
+def _buscar_insumo_duplicado(nombre, excluir_pk=None):
+    """
+    Devuelve el insumo existente con el mismo nombre (sin importar mayúsculas,
+    tildes ni espacios sobrantes), o None si el nombre está libre.
+    """
+    clave = local_normalizar(' '.join((nombre or '').split()))
+    if not clave:
+        return None
+
+    candidatos = Insumo.objects.all()
+    if excluir_pk is not None:
+        candidatos = candidatos.exclude(pk=excluir_pk)
+
+    for existente in candidatos.only('idinsumo', 'nombreinsumo'):
+        if local_normalizar(' '.join(existente.nombreinsumo.split())) == clave:
+            return existente
+    return None
+
+
 def _contexto_form_insumo(extra=None):
     contexto = {'unidades_sugeridas': UNIDADES_SUGERIDAS}
     if extra:
@@ -4120,6 +4139,12 @@ def stock_crear(request):
 
         if not nombre:
             errores.insert(0, 'Completá el nombre del insumo.')
+        elif _buscar_insumo_duplicado(nombre):
+            errores.insert(
+                0,
+                f'El insumo "{nombre}" ya existe en el stock. No se puede crear de nuevo: '
+                'para sumar mercadería usá "Registrar compra".'
+            )
 
         stock_inicial = _leer_cantidad_stock(request.POST.get('stockactual'))
         stock_minimo = _leer_cantidad_stock(
@@ -4179,6 +4204,11 @@ def stock_editar(request, idinsumo):
 
         if not nombre:
             errores.insert(0, 'Completá el nombre del insumo.')
+        elif _buscar_insumo_duplicado(nombre, excluir_pk=insumo.pk):
+            errores.insert(
+                0,
+                f'Ya existe otro insumo llamado "{nombre}". Elegí un nombre distinto.'
+            )
 
         if errores:
             for error in errores:
