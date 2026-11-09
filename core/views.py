@@ -19,6 +19,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.password_validation import CommonPasswordValidator, NumericPasswordValidator
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
@@ -4517,11 +4518,9 @@ def empleado_lista(request):
             messages.error(request, 'Las contraseñas no coinciden.')
             return redirect('empleado_lista')
 
-        if len(contrasena) < 8:
-            messages.error(
-                request,
-                'La contraseña debe tener al menos 8 caracteres.'
-            )
+        error_contrasena = _error_contrasena_nueva(contrasena)
+        if error_contrasena:
+            messages.error(request, error_contrasena)
             return redirect('empleado_lista')
 
         with transaction.atomic():
@@ -4589,11 +4588,9 @@ def empleado_crear(request):
             messages.error(request, 'Las contraseñas no coinciden.')
             return redirect('empleado_crear')
 
-        if len(contrasena) < 8:
-            messages.error(
-                request,
-                'La contraseña debe tener al menos 8 caracteres.'
-            )
+        error_contrasena = _error_contrasena_nueva(contrasena)
+        if error_contrasena:
+            messages.error(request, error_contrasena)
             return redirect('empleado_crear')
 
         with transaction.atomic():
@@ -4676,11 +4673,9 @@ def empleado_editar(request, idempleado):
                     idempleado=empleado.pk
                 )
 
-            if len(contrasena) < 8:
-                messages.error(
-                    request,
-                    'La contraseña debe tener al menos 8 caracteres.'
-                )
+            error_contrasena = _error_contrasena_nueva(contrasena)
+            if error_contrasena:
+                messages.error(request, error_contrasena)
                 return redirect(
                     'empleado_editar',
                     idempleado=empleado.pk
@@ -6520,7 +6515,7 @@ class HorarioForm(forms.ModelForm):
             if apertura != cierre:  # Misma hora significa 24 horas continuas
                 ap_min = apertura.hour * 60 + apertura.minute
                 ci_min = cierre.hour * 60 + cierre.minute
-                duracion = (ci_min + 1440 - ap_min) if ci_min < ap_min else (ci_min - ap_min)
+                duracion = ci_min - ap_min
 
                 if duracion < 30:
                     raise forms.ValidationError(
@@ -7894,14 +7889,44 @@ def panel_recuperar_contrasena(request):
     return render(request, 'panel/recuperarContrasena.html', {'correo_enviado': correo_enviado})
 
 
-def _error_contrasena_nueva(contrasena):
-    """Devuelve un mensaje de error si la contraseña no cumple las reglas (o None)."""
+_SECUENCIAS_DEBILES = ('0123456789', 'abcdefghijklmnopqrstuvwxyz', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm')
+
+
+def _error_contrasena_nueva(contrasena, *datos_usuario):
+    """Devuelve un mensaje de error si la contraseña no cumple las reglas (o None).
+
+    datos_usuario (opcional): nombre, usuario o correo que la contraseña no debe contener.
+    """
     if len(contrasena) < 8:
         return 'La nueva contraseña debe tener al menos 8 caracteres.'
     if len(contrasena) > 128:
         return 'La nueva contraseña no puede superar los 128 caracteres.'
-    if not any(caracter.isdigit() for caracter in contrasena):
+    if not any(c.isdigit() for c in contrasena):
         return 'La nueva contraseña debe incluir al menos un número.'
+    if not any(c.islower() for c in contrasena):
+        return 'La nueva contraseña debe incluir al menos una letra minúscula.'
+    if not any(c.isupper() for c in contrasena):
+        return 'La nueva contraseña debe incluir al menos una letra mayúscula.'
+    if not any(not c.isalnum() for c in contrasena):
+        return 'La nueva contraseña debe incluir al menos un símbolo (por ejemplo ! # $ % & *).'
+
+    minus = contrasena.lower()
+    if len(set(minus)) < 5:
+        return 'La contraseña repite demasiado los mismos caracteres. Elegí una más variada.'
+    for secuencia in _SECUENCIAS_DEBILES:
+        for tramo in (secuencia, secuencia[::-1]):
+            if any(tramo[i:i + 4] in minus for i in range(len(tramo) - 3)):
+                return 'La contraseña contiene una secuencia fácil de adivinar (1234, abcd, qwer...).'
+    for dato in datos_usuario:
+        dato = (dato or '').strip().lower()
+        if len(dato) >= 3 and dato in minus:
+            return 'La contraseña no puede contener tu nombre, usuario o correo.'
+    try:
+        # Rechaza contraseñas débiles: demasiado comunes (password1, 12345678...) o solo números.
+        CommonPasswordValidator().validate(contrasena)
+        NumericPasswordValidator().validate(contrasena)
+    except ValidationError:
+        return 'La contraseña es demasiado débil o común. Elegí una más difícil de adivinar.'
     return None
 
 

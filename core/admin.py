@@ -1,5 +1,5 @@
 from django.contrib.auth.hashers import make_password, identify_hasher
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.html import format_html
 
 from .models import (
@@ -101,6 +101,11 @@ class EmpleadoAdmin(AccionesAdminMixin, admin.ModelAdmin):
         try:
             identify_hasher(obj.contrasena)
         except ValueError:
+            from .views import _error_contrasena_nueva
+            error = _error_contrasena_nueva(obj.contrasena, obj.nombre, obj.correo)
+            if error:
+                self.message_user(request, error, level=messages.ERROR)
+                return
             obj.contrasena = make_password(obj.contrasena)
         super().save_model(request, obj, form, change)
 

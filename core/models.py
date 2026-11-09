@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from PIL import Image
 import os
@@ -260,6 +261,14 @@ class Horario(models.Model):
     horaapertura = models.TimeField(db_column='HoraApertura', blank=True, null=True)
     horacierre = models.TimeField(db_column='HoraCierre', blank=True, null=True)
     estaabierto = models.IntegerField(db_column='EstaAbierto', blank=True, null=True)
+
+    def clean(self):
+        super().clean()
+        if self.estaabierto == 1 and self.horaapertura and self.horacierre:
+            if self.horacierre < self.horaapertura:
+                raise ValidationError(
+                    'La hora de cierre no puede ser anterior a la hora de apertura.'
+                )
 
     class Meta:
         db_table = 'Horario'
