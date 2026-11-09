@@ -245,6 +245,21 @@ content="width=device-width, initial-scale=1.0"
     {% endif %}
 
 
+    <!-- AUDITORÍA -->
+    {% if 'auditoria.ver' in permisos_usuario %}
+    <a
+        href="{% url 'auditoria_lista' %}"
+        class="menu-item {% if request.resolver_match.url_name == 'auditoria_lista' %}active{% endif %}"
+    >
+        <span class="menu-icon">
+            <i class="fa-solid fa-clipboard-list"></i>
+        </span>
+
+        <span class="menu-text">Auditoría</span>
+    </a>
+    {% endif %}
+
+
     <!-- ROLES -->
     {% if 'roles.ver' in permisos_usuario %}
     <a

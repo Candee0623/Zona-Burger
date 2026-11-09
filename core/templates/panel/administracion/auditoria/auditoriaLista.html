@@ -1,0 +1,90 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Registro de auditoría | Zona Burger{% endblock %}
+
+{% block content %}
+<style>
+    .aud-page { padding: 24px; color: #fff; }
+    .aud-page h1 { margin: 0 0 4px; }
+    .aud-filtros { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; align-items: end; }
+    .aud-filtros label { display: flex; flex-direction: column; font-size: .8rem; gap: 4px; }
+    .aud-filtros input, .aud-filtros select { padding: 8px 10px; border-radius: 8px; border: 1px solid #444; background: #1c1c1c; color: #fff; }
+    .aud-btn { padding: 9px 16px; border-radius: 8px; border: 0; background: #dc2626; color: #fff; cursor: pointer; text-decoration: none; }
+    .aud-tabla-wrap { overflow-x: auto; }
+    .aud-tabla { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .aud-tabla th, .aud-tabla td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #333; vertical-align: top; }
+    .aud-pag { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+</style>
+
+<main class="aud-page">
+    <header>
+        <h1>Registro de auditoría</h1>
+        <p>Acciones críticas realizadas en el sistema: usuario, fecha, IP y descripción.</p>
+    </header>
+
+    <form method="get" class="aud-filtros">
+        <label>Acción
+            <select name="accion">
+                <option value="">Todas las acciones</option>
+                {% for codigo, etiqueta in acciones %}
+                    <option value="{{ codigo }}" {% if filtros.accion == codigo %}selected{% endif %}>{{ etiqueta }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Usuario
+            <input type="text" name="usuario" value="{{ filtros.usuario }}" placeholder="Nombre o correo">
+        </label>
+        <label>Desde
+            <input type="date" name="desde" value="{{ filtros.desde }}">
+        </label>
+        <label>Hasta
+            <input type="date" name="hasta" value="{{ filtros.hasta }}">
+        </label>
+        <button type="submit" class="aud-btn">Filtrar</button>
+        <a href="{% url 'auditoria_lista' %}" class="aud-btn" style="background:#444;">Limpiar</a>
+    </form>
+
+    {% if pagina.object_list %}
+        <div class="aud-tabla-wrap">
+            <table class="aud-tabla">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Usuario</th>
+                        <th>Acción</th>
+                        <th>Descripción</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in pagina.object_list %}
+                        <tr>
+                            <td>{{ r.fecha|date:"d/m/Y H:i:s" }}</td>
+                            <td>
+                                {% if r.idempleado %}{{ r.idempleado.nombre }} {{ r.idempleado.apellido }}<br><small>{{ r.idempleado.correo }}</small>
+                                {% else %}—{% endif %}
+                            </td>
+                            <td>{{ r.get_etiqueta }}<br><small>{{ r.accion }}</small></td>
+                            <td>{{ r.descripcion }}</td>
+                            <td>{{ r.ip|default:"—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="aud-pag">
+            {% if pagina.has_previous %}
+                <a class="aud-btn" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pagina.previous_page_number }}">← Anterior</a>
+            {% endif %}
+            <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+            {% if pagina.has_next %}
+                <a class="aud-btn" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pagina.next_page_number }}">Siguiente →</a>
+            {% endif %}
+        </div>
+    {% else %}
+        <p>No hay registros para los filtros indicados.</p>
+    {% endif %}
+</main>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+
+{% block title %}Zona Burger | Eliminar insumo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/administracion/usuarios/empleadoEliminar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="empleado-page eliminar-page">
+
+    <a href="{% url 'stock_lista' %}" class="empleado-back">
+        <i class="fas fa-arrow-left"></i>
+        <span>Volver a stock</span>
+    </a>
+
+    <section class="eliminar-contenedor">
+
+        <div class="eliminar-icono"><i class="fas fa-box-open"></i></div>
+
+        <span class="eliminar-etiqueta">CONFIRMACIÓN DE SEGURIDAD</span>
+        <h1>¿Eliminar insumo?</h1>
+
+        {% if messages %}
+            <div class="empleado-mensajes">
+                {% for mensaje in messages %}
+                    <p class="empleado-mensaje empleado-mensaje-{{ mensaje.tags }}">{{ mensaje }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="eliminar-datos">
+            <div class="eliminar-identidad">
+                <span class="eliminar-campo">INSUMO</span>
+                <h2>{{ insumo.nombreinsumo }}</h2>
+                <p>Stock actual: {{ insumo.stockactual|floatformat:"-3" }} {{ insumo.unidadmedidaingreso }}</p>
+            </div>
+        </div>
+
+        {% if motivos %}
+            <div class="eliminar-aviso">
+                <i class="fas fa-ban"></i>
+                <p>
+                    <strong>No se puede eliminar este insumo</strong> porque
+                    {{ motivos|join:" y " }}.
+                </p>
+            </div>
+
+            <div class="eliminar-form">
+                <a href="{% url 'stock_lista' %}" class="eliminar-btn-cancelar">
+                    <i class="fas fa-times"></i> Volver
+                </a>
+            </div>
+        {% else %}
+            <div class="eliminar-aviso">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>
+                    <strong>Esta acción no se puede deshacer.</strong>
+                    Se eliminarán también sus lotes y movimientos de stock.
+                </p>
+            </div>
+
+            <form method="POST" action="{% url 'stock_eliminar' idinsumo=insumo.idinsumo %}" class="eliminar-form">
+                {% csrf_token %}
+                <button type="submit" class="eliminar-btn-confirmar">
+                    <i class="fas fa-trash-alt"></i> Sí, eliminar insumo
+                </button>
+                <a href="{% url 'stock_lista' %}" class="eliminar-btn-cancelar">
+                    <i class="fas fa-times"></i> Cancelar y volver
+                </a>
+            </form>
+        {% endif %}
+
+    </section>
+</div>
+{% endblock %}

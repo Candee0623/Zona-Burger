@@ -148,6 +148,23 @@
     font-size: .7rem;
 }
 
+.footer-panel-link {
+    display: inline-block;
+    margin-top: 8px;
+
+    color: #3f3f3f;
+    font-size: .65rem;
+    text-decoration: none;
+
+    transition: color .2s ease;
+}
+
+.footer-panel-link:hover,
+.footer-panel-link:focus-visible {
+    color: #888;
+    text-decoration: underline;
+}
+
 /* MÓVIL */
 
 @media (max-width: 700px) {

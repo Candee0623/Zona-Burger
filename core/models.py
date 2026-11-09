@@ -173,7 +173,13 @@ class Empleado(models.Model):
         if not self.activo or not self.idrol:
             return set()
         if (self.idrol.nombrerol or '').strip().lower() == 'administrador':
-            return set(Permiso.objects.values_list('codigo', flat=True))
+            from core.decorators import PERMISOS_EN_VISTAS
+            from core.permisos_config import CATALOGO
+            return (
+                set(Permiso.objects.values_list('codigo', flat=True))
+                | set(PERMISOS_EN_VISTAS)
+                | set(CATALOGO)
+            )
         return set(
             RolPermiso.objects.filter(idrol=self.idrol).values_list('idpermiso__codigo', flat=True)
         )
@@ -860,6 +866,10 @@ class RegistroAuditoria(models.Model):
     accion = models.CharField(max_length=100, db_column='Accion')
     descripcion = models.CharField(max_length=500, db_column='Descripcion')
     ip = models.CharField(max_length=50, null=True, blank=True, db_column='IP')
+
+    def get_etiqueta(self):
+        from core.views import ETIQUETAS_AUDITORIA
+        return ETIQUETAS_AUDITORIA.get(self.accion, self.accion)
 
     def __str__(self):
         return f"[{self.fecha:%Y-%m-%d %H:%M}] {self.accion} - {self.descripcion}"

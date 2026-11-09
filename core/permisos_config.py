@@ -180,6 +180,20 @@ PERMISOS_SISTEMA = [
         "accion": "Registrar compras",
         "descripcion": "Cargar ingresos de insumos por compras",
     },
+    {
+        "codigo": "stock.eliminar",
+        "modulo": "Stock",
+        "accion": "Eliminar insumo",
+        "descripcion": "Eliminar insumos sin recetas ni compras asociadas",
+    },
+
+    # Auditoría
+    {
+        "codigo": "auditoria.ver",
+        "modulo": "Auditoría",
+        "accion": "Ver auditoría",
+        "descripcion": "Consultar el registro de auditoría de acciones críticas",
+    },
 
     # Reportes
     {

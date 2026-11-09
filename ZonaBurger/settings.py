@@ -133,6 +133,7 @@ if EMAIL_BACKEND_ELEGIDO.endswith('smtp.EmailBackend'):
         'use_tls': os.getenv('EMAIL_USE_TLS', 'True') == 'True',
         'username': os.getenv('EMAIL_HOST_USER', ''),
         'password': os.getenv('EMAIL_HOST_PASSWORD', ''),
+        'timeout': int(os.getenv('EMAIL_TIMEOUT', 10)),
     }
 
 MAILERS = {

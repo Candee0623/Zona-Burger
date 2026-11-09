@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import secrets
+import threading
 import urllib.parse
 import unicodedata
 from django.db import DatabaseError, IntegrityError, transaction
@@ -4758,9 +4759,19 @@ def rol_lista(request):
     )
 
 
+def _asegurar_permisos_sincronizados():
+    """Crea en la base los permisos nuevos antes de mostrarlos en los roles."""
+    try:
+        from core.permisos_config import sincronizar_permisos
+        sincronizar_permisos()
+    except Exception:
+        logger.exception('No se pudieron sincronizar los permisos')
+
+
 @panel_login_requerido
 @requiere_permiso('roles.crear')
 def rol_crear(request):
+    _asegurar_permisos_sincronizados()
     permisos = Permiso.objects.all().order_by('modulo', 'accion')
     permisos_seleccionados = []
 
@@ -4838,6 +4849,7 @@ def rol_crear(request):
 def rol_editar(request, idrol):
     rol = get_object_or_404(Rol, pk=idrol)
 
+    _asegurar_permisos_sincronizados()
     permisos = Permiso.objects.all().order_by('modulo', 'accion')
 
     permisos_seleccionados = list(
@@ -6175,36 +6187,42 @@ def dinero_recaudado(request):
 # 10.10 Vistas de exportación
 
 @panel_login_requerido
+@requiere_permiso('reportes.ver')
 @requiere_permiso('reportes.exportar')
 def exportar_resumen_excel(request):
     return bi_responder_exportacion(request, "ventas", "excel")
 
 
 @panel_login_requerido
+@requiere_permiso('reportes.ver')
 @requiere_permiso('reportes.exportar')
 def exportar_resumen_pdf(request):
     return bi_responder_exportacion(request, "ventas", "pdf")
 
 
 @panel_login_requerido
+@requiere_permiso('reportes.ver')
 @requiere_permiso('reportes.exportar')
 def exportar_productos_excel(request):
     return bi_responder_exportacion(request, "productos", "excel")
 
 
 @panel_login_requerido
+@requiere_permiso('reportes.ver')
 @requiere_permiso('reportes.exportar')
 def exportar_productos_pdf(request):
     return bi_responder_exportacion(request, "productos", "pdf")
 
 
 @panel_login_requerido
+@requiere_permiso('reportes.ver')
 @requiere_permiso('reportes.exportar')
 def exportar_dinero_excel(request):
     return bi_responder_exportacion(request, "dinero", "excel")
 
 
 @panel_login_requerido
+@requiere_permiso('reportes.ver')
 @requiere_permiso('reportes.exportar')
 def exportar_dinero_pdf(request):
     return bi_responder_exportacion(request, "dinero", "pdf")
@@ -7779,6 +7797,14 @@ def panel_logout(request):
     return redirect('panel_login')
 
 
+def _enviar_correo_seguro(mensaje, correo):
+    """Envía un correo capturando cualquier error (se usa en un hilo aparte)."""
+    try:
+        mensaje.send(fail_silently=False)
+    except Exception as e:
+        logger.exception("No se pudo enviar el correo a %s: %s", correo, e)
+
+
 def panel_recuperar_contrasena(request):
     """
     Solicitud de restablecimiento de contraseña vía correo electrónico con token seguro,
@@ -7807,6 +7833,8 @@ def panel_recuperar_contrasena(request):
 
                 contexto = {'nombre': empleado.nombre, 'enlace': enlace, 'horas': 2}
 
+                registrar_auditoria(request, 'RECUPERACION_SOLICITADA', f'Solicitud de recuperación de contraseña para {correo}')
+
                 try:
                     mensaje = EmailMultiAlternatives(
                         subject="Zona Burger - Recuperación de Contraseña",
@@ -7818,10 +7846,13 @@ def panel_recuperar_contrasena(request):
                         render_to_string('emails/recuperar_contrasena.html', contexto),
                         'text/html',
                     )
-                    mensaje.send(fail_silently=False)
-                    registrar_auditoria(request, 'RECUPERACION_SOLICITADA', f'Correo de recuperación enviado a {correo}')
+                    # El envío va en segundo plano: si el servidor de correo no responde
+                    # (p. ej. SMTP bloqueado en el hosting) la petición no se cuelga ni da Error 500.
+                    threading.Thread(
+                        target=_enviar_correo_seguro, args=(mensaje, correo), daemon=True
+                    ).start()
                 except Exception as e:
-                    logger.exception("Error al enviar correo de recuperación a %s: %s", correo, e)
+                    logger.exception("Error al preparar correo de recuperación a %s: %s", correo, e)
 
             correo_enviado = True
             messages.success(
@@ -7975,3 +8006,126 @@ def empleado_toggle_activo(request, idempleado):
 def pagina_no_encontrada(request, exception=None):
     """Handler 404 global (aplica con DEBUG=False)."""
     return render(request, '404.html', status=404)
+
+
+# 8b. PANEL - ELIMINAR INSUMO
+
+def _motivos_bloqueo_insumo(insumo):
+    """Lista de razones por las que un insumo no puede eliminarse (vacía si se puede)."""
+    motivos = []
+    if RecetaInsumo.objects.filter(idinsumo=insumo).exists():
+        motivos.append('está siendo usado en una o más recetas')
+    if DetalleCompra.objects.filter(idinsumo=insumo).exists():
+        motivos.append('tiene compras registradas')
+    if Opcion.objects.filter(idinsumo=insumo).exists():
+        motivos.append('está vinculado a opciones de productos')
+    if MovimientoStock.objects.filter(idinsumo=insumo, idpedido__isnull=False).exists():
+        motivos.append('tiene movimientos de stock por pedidos')
+    return motivos
+
+
+@panel_login_requerido
+@requiere_permiso('stock.eliminar', 'Eliminar insumos sin recetas ni compras asociadas')
+def stock_eliminar(request, idinsumo):
+    insumo = get_object_or_404(Insumo, pk=idinsumo)
+    motivos = _motivos_bloqueo_insumo(insumo)
+
+    if request.method == 'POST':
+        if motivos:
+            messages.error(
+                request,
+                f'No se puede eliminar "{insumo.nombreinsumo}" porque '
+                + ' y '.join(motivos) + '.'
+            )
+            return redirect('stock_lista')
+
+        nombre = insumo.nombreinsumo
+        try:
+            with transaction.atomic():
+                MovimientoStock.objects.filter(idinsumo=insumo).delete()
+                AjusteStock.objects.filter(idinsumo=insumo).delete()
+                Lote.objects.filter(idinsumo=insumo).delete()
+                insumo.delete()
+                registrar_auditoria(request, 'INSUMO_ELIMINAR', f'Insumo "{nombre}" eliminado')
+        except (IntegrityError, DatabaseError):
+            logger.exception('No se pudo eliminar el insumo %s', idinsumo)
+            messages.error(
+                request,
+                f'No se puede eliminar "{nombre}" porque tiene registros relacionados.'
+            )
+            return redirect('stock_lista')
+
+        messages.success(request, f'El insumo "{nombre}" fue eliminado correctamente.')
+        return redirect('stock_lista')
+
+    return render(
+        request,
+        'panel/stock/stockEliminar.html',
+        {'insumo': insumo, 'motivos': motivos},
+    )
+
+
+# 11. PANEL - REGISTRO DE AUDITORÍA
+
+ETIQUETAS_AUDITORIA = {
+    'LOGIN': 'Inicio de sesión',
+    'LOGIN_FALLIDO': 'Intento de inicio de sesión fallido',
+    'LOGOUT': 'Cierre de sesión',
+    'CAMBIAR_CONTRASENA': 'Cambio de contraseña propio',
+    'RECUPERACION_SOLICITADA': 'Recuperación de contraseña solicitada',
+    'RESTABLECER_CONTRASENA': 'Contraseña restablecida',
+    'USUARIO_EDITAR': 'Usuario modificado',
+    'USUARIO_TOGGLE_ACTIVO': 'Usuario activado / desactivado',
+    'INSUMO_ELIMINAR': 'Insumo eliminado',
+    'LOTE_BAJA': 'Lote dado de baja',
+    'PRODUCTO_ELIMINAR': 'Producto eliminado',
+    'NEGOCIO_ABRIR': 'Negocio abierto',
+    'NEGOCIO_CERRAR': 'Negocio cerrado',
+}
+
+
+def _acciones_auditoria():
+    """Acciones para el desplegable: las conocidas más las que ya hay registradas."""
+    codigos = set(ETIQUETAS_AUDITORIA) | set(
+        RegistroAuditoria.objects.values_list('accion', flat=True).distinct()
+    )
+    return sorted(
+        ((c, ETIQUETAS_AUDITORIA.get(c, c.replace('_', ' ').capitalize())) for c in codigos),
+        key=lambda par: par[1].lower(),
+    )
+
+
+@panel_login_requerido
+@requiere_permiso('auditoria.ver', 'Consultar el registro de auditoría de acciones críticas')
+def auditoria_lista(request):
+    registros = RegistroAuditoria.objects.select_related('idempleado').order_by('-fecha', '-idauditoria')
+
+    accion = request.GET.get('accion', '').strip()
+    usuario = request.GET.get('usuario', '').strip()
+    desde = parse_date(request.GET.get('desde', '').strip() or '')
+    hasta = parse_date(request.GET.get('hasta', '').strip() or '')
+
+    if accion:
+        registros = registros.filter(accion__iexact=accion)
+    if usuario:
+        registros = registros.filter(
+            Q(idempleado__correo__icontains=usuario)
+            | Q(idempleado__nombre__icontains=usuario)
+            | Q(idempleado__apellido__icontains=usuario)
+        )
+    if desde:
+        registros = registros.filter(fecha__date__gte=desde)
+    if hasta:
+        registros = registros.filter(fecha__date__lte=hasta)
+
+    pagina = Paginator(registros, 50).get_page(request.GET.get('page'))
+    params = request.GET.copy()
+    params.pop('page', None)
+
+    return render(request, 'panel/administracion/auditoria/auditoriaLista.html', {
+        'pagina': pagina,
+        'filtros': {'accion': accion, 'usuario': usuario,
+                    'desde': request.GET.get('desde', ''), 'hasta': request.GET.get('hasta', '')},
+        'querystring': params.urlencode(),
+        'acciones': _acciones_auditoria(),
+    })

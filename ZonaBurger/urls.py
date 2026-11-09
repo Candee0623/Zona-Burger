@@ -102,6 +102,7 @@ urlpatterns = [
     path('panel/stock/compras/registrar/', views.registrar_compra_insumo, name='registrar_compra_insumo'),
     path('panel/stock/<int:idinsumo>/ajustar/', views.ajustar_stock, name='ajustar_stock'),
     path('panel/stock/editar/<int:idinsumo>/', views.stock_editar, name='stock_editar'),
+    path('panel/stock/eliminar/<int:idinsumo>/', views.stock_eliminar, name='stock_eliminar'),
     path('panel/stock/lote/<int:idlote>/imprimir/', views.imprimir_lote_codigo, name='imprimir_lote_codigo'),
     path('panel/stock/lotes/imprimir/', views.imprimir_lotes_codigos, name='imprimir_lotes_codigos'),
     path('panel/stock/lote/<int:idlote>/baja/', views.lote_baja, name='lote_baja'),
@@ -133,6 +134,7 @@ urlpatterns = [
     path('panel/empleados/<int:idempleado>/toggle-activo/', views.empleado_toggle_activo, name='empleado_toggle_activo'),
 
     # Roles y permisos
+    path('panel/auditoria/', views.auditoria_lista, name='auditoria_lista'),
     path('panel/roles/', views.rol_lista, name='rol_lista'),
     path('panel/roles/crear/', views.rol_crear, name='rol_crear'),
     path('panel/roles/<int:idrol>/editar/', views.rol_editar, name='rol_editar'),

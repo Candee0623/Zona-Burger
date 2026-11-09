@@ -136,6 +136,15 @@
             </article>
         {% endif %}
 
+        {% if not lotes_vencidos and not lotes_por_vencer %}
+            <article class="stock-alert stock-alert--ok" id="sin-alertas-vencimiento">
+                <div class="stock-alert__content">
+                    <h2>Vencimientos</h2>
+                    <p>No hay alertas de vencimiento: ningún lote vence en los próximos 7 días ni está vencido.</p>
+                </div>
+            </article>
+        {% endif %}
+
         {% if insumos_criticos %}
             <article class="stock-alert stock-alert--low">
                 <div class="stock-alert__icon" aria-hidden="true">!</div>
@@ -336,6 +345,13 @@
                                     >
                                         Editar insumo
                                     </a>
+
+                                    {% if 'stock.eliminar' in permisos_usuario %}<a
+                                        class="action-link"
+                                        href="{% url 'stock_eliminar' insumo.idinsumo %}"
+                                    >
+                                        Eliminar
+                                    </a>{% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

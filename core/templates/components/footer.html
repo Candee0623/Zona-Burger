@@ -53,6 +53,12 @@
             Todos los derechos reservados.
         </p>
 
+        {% if mostrar_acceso_panel %}
+            <a href="{% url 'panel_inicio' %}" class="footer-panel-link" rel="nofollow">
+                Acceso del personal
+            </a>
+        {% endif %}
+
     </div>
 
 </footer>
