@@ -3731,6 +3731,18 @@ TEMPLATE_EDITAR_TIPO_BENEFICIO = (
 )
 
 
+def _codigo_desde_nombre(nombre):
+    """Código de un tipo de beneficio: siempre se deriva del nombre.
+
+    'Descuento 20%' -> 'DESCUENTO_20', 'Producto gratis' -> 'PRODUCTO_GRATIS'.
+    Debe coincidir con generarCodigo() de los templates crear/editarTipoBeneficio.
+    """
+    texto = unicodedata.normalize('NFD', nombre or '')
+    texto = ''.join(c for c in texto if not unicodedata.combining(c))
+    texto = re.sub(r'[^A-Z0-9]+', '_', texto.upper())
+    return texto.strip('_')[:50].rstrip('_')
+
+
 def _tipo_beneficio_con_error(request, template, mensaje, tipo=None):
     """Vuelve a mostrar el formulario con el error y lo que se había escrito."""
     contexto = {'errores': [mensaje], 'datos': request.POST}
@@ -3747,7 +3759,6 @@ def crear_tipo_beneficio(request):
     if request.method == 'GET':
         return render(request, TEMPLATE_CREAR_TIPO_BENEFICIO)
 
-    codigo = request.POST.get('codigo', '').strip()
     nombre = request.POST.get('nombre', '').strip()
     descripcion = request.POST.get('descripcion', '').strip()
     comportamiento = request.POST.get('comportamiento', '').strip()
@@ -3763,12 +3774,14 @@ def crear_tipo_beneficio(request):
     if comportamiento not in dict(TipoBeneficio.OPCIONES_COMPORTAMIENTO):
         return error('Debes seleccionar un comportamiento.')
 
-    # Si no se indica código, se genera a partir del nombre.
+    # El código siempre se genera a partir del nombre (se ignora lo que llegue del formulario).
+    codigo = _codigo_desde_nombre(nombre)
+
     if not codigo:
-        codigo = nombre.upper().replace(' ', '_')
+        return error('El nombre debe incluir al menos una letra o un número.')
 
     if TipoBeneficio.objects.filter(codigo__iexact=codigo).exists():
-        return error('Ya existe un tipo de beneficio con ese código.')
+        return error('Ya existe un tipo de beneficio con un nombre equivalente (mismo código).')
 
     if TipoBeneficio.objects.filter(nombre__iexact=nombre).exists():
         return error('Ya existe un tipo de beneficio con ese nombre.')
@@ -3790,7 +3803,6 @@ def editar_tipo_beneficio(request, pk):
     tipo = get_object_or_404(TipoBeneficio, pk=pk)
 
     if request.method == 'POST':
-        codigo = request.POST.get('codigo', '').strip()
         nombre = request.POST.get('nombre', '').strip()
         descripcion = request.POST.get('descripcion', '').strip()
         comportamiento = request.POST.get('comportamiento', '').strip()
@@ -3806,8 +3818,11 @@ def editar_tipo_beneficio(request, pk):
         if comportamiento not in dict(TipoBeneficio.OPCIONES_COMPORTAMIENTO):
             return error('Debes seleccionar un comportamiento.')
 
+        # El código siempre se regenera a partir del nombre (se ignora lo que llegue del formulario).
+        codigo = _codigo_desde_nombre(nombre)
+
         if not codigo:
-            codigo = nombre.upper().replace(' ', '_')
+            return error('El nombre debe incluir al menos una letra o un número.')
 
         # Evitar códigos duplicados en otros registros.
         if (
@@ -3816,7 +3831,7 @@ def editar_tipo_beneficio(request, pk):
             .exclude(pk=pk)
             .exists()
         ):
-            return error('Ya existe otro beneficio con ese código.')
+            return error('Ya existe otro beneficio con un nombre equivalente (mismo código).')
 
         # Evitar nombres duplicados en otros registros.
         if (
@@ -7901,6 +7916,8 @@ def _error_contrasena_nueva(contrasena, *datos_usuario):
         return 'La nueva contraseña debe tener al menos 8 caracteres.'
     if len(contrasena) > 128:
         return 'La nueva contraseña no puede superar los 128 caracteres.'
+    if any(c.isspace() for c in contrasena):
+        return 'La contraseña no puede contener espacios.'
     if not any(c.isdigit() for c in contrasena):
         return 'La nueva contraseña debe incluir al menos un número.'
     if not any(c.islower() for c in contrasena):

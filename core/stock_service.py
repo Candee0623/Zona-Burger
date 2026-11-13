@@ -6,8 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import (
-    AjusteStock, Insumo, Lote, Opcion, RecetaInsumo, Pedido, DetallePedido,
-    MovimientoStock,
+    AjusteStock, Insumo, Lote, Opcion, RecetaInsumo, MovimientoStock,
 )
 
 logger = logging.getLogger(__name__)

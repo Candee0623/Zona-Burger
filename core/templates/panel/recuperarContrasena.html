@@ -1,80 +1,95 @@
+{% extends 'panel/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    {% include 'components/favicon.html' %}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recuperar Contraseña | Zona Burger</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% block title %}
+    Zona Burger | Cambiar Contraseña
+{% endblock %}
 
-    <link rel="stylesheet" href="{% static 'css/panel/recuperarContrasena.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components/dialogos.css' %}">
-</head>
-<body>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/panel/cambiarContrasena.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/validarContrasena.css' %}">
+{% endblock %}
 
-<div class="login-wrapper">
-    <div class="login-card">
-        <div class="login-header">
-            <img src="{% static 'img/logo.png' %}" alt="Zona Burger" class="login-logo">
-            <h1 class="login-title">Recuperar Contraseña</h1>
-            <p class="login-subtitle">
-                Ingresá tu correo electrónico registrado y te enviaremos un enlace seguro para restablecerla.
-            </p>
-        </div>
+{% block content %}
+<div class="cambiar-pass-container">
 
-        {% if messages %}
-            <div class="login-messages">
-                {% for message in messages %}
-                    <div class="login-alert login-alert-{{ message.tags|default:'success' }}">
-                        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
-                        <span>{{ message }}</span>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        {% if not correo_enviado %}
-            <form method="POST" action="{% url 'panel_recuperar_contrasena' %}">
-                {% csrf_token %}
-
-                <div class="form-group">
-                    <label for="correo" class="form-label">Correo Electrónico</label>
-                    <div class="input-group">
-                        <input
-                            type="email"
-                            id="correo"
-                            name="correo"
-                            class="form-input"
-                            placeholder="tu-correo@zonaburger.com"
-                            required
-                            autofocus
-                        >
-                        <i class="fa-solid fa-envelope input-icon"></i>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    <span>Enviar instrucciones</span>
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
-            </form>
-        {% endif %}
-
-        <div class="login-footer">
-            <a href="{% url 'panel_login' %}" class="back-to-login">
-                <i class="fa-solid fa-arrow-left"></i>
-                <span>Volver a iniciar sesión</span>
-            </a>
-        </div>
+    <div class="pass-header">
+        <h1>Cambiar Contraseña</h1>
+        <p>Actualizá la clave de acceso a tu cuenta personal.</p>
     </div>
+
+    {% if messages %}
+        <div class="pass-messages">
+            {% for message in messages %}
+                <div class="pass-alert pass-alert-{{ message.tags|default:'error' }}">
+                    <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="pass-card">
+        <form method="POST" action="{% url 'panel_cambiar_contrasena' %}" data-validar-contrasena>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="contrasena_actual" class="form-label">Contraseña Actual</label>
+                <input
+                    type="password"
+                    id="contrasena_actual"
+                    name="contrasena_actual"
+                    class="form-input"
+                    autocomplete="current-password"
+                    data-pw-actual
+                    placeholder="••••••••"
+                    required
+                    autofocus
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="nueva_contrasena" class="form-label">Nueva Contraseña</label>
+                <input
+                    type="password"
+                    id="nueva_contrasena"
+                    name="nueva_contrasena"
+                    class="form-input"
+                    autocomplete="new-password"
+                    data-pw-nueva
+                    placeholder="••••••••"
+                    required
+                >
+            </div>
+
+            <div data-pw-reglas></div>
+
+            <div class="form-group">
+                <label for="confirmar_contrasena" class="form-label">Confirmar Nueva Contraseña</label>
+                <input
+                    type="password"
+                    id="confirmar_contrasena"
+                    name="confirmar_contrasena"
+                    class="form-input"
+                    autocomplete="new-password"
+                    data-pw-confirmar
+                    placeholder="••••••••"
+                    required
+                >
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'panel_inicio' %}" class="btn-cancelar">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn-guardar">
+                    Actualizar Contraseña
+                </button>
+            </div>
+        </form>
+    </div>
+
 </div>
 
-<script src="{% static 'js/components/dialogos.js' %}"></script>
-
-</body>
-</html>
+<script src="{% static 'js/components/validarContrasena.js' %}"></script>
+{% endblock %}

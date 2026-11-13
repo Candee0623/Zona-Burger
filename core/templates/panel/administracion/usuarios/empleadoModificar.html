@@ -7,6 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/panel/administracion/usuarios/empleadoModificar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/validarContrasena.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -36,7 +37,9 @@
     <section class="empleado-card">
         <form method="POST"
               action="{% url 'empleado_editar' idempleado=empleado.id_empleado %}"
-              novalidate>
+              novalidate
+              data-validar-contrasena
+              data-pw-opcional>
 
             {% csrf_token %}
 
@@ -93,7 +96,8 @@
                     <input type="password"
                            id="contrasena"
                            name="contrasena"
-                           autocomplete="new-password">
+                           autocomplete="new-password"
+                           data-pw-nueva>
 
                     <p class="empleado-ayuda">
                         Dejala vacía para mantener la contraseña actual.
@@ -105,8 +109,11 @@
                     <input type="password"
                            id="confirmar_contrasena"
                            name="confirmar_contrasena"
-                           autocomplete="new-password">
+                           autocomplete="new-password"
+                           data-pw-confirmar>
                 </div>
+
+                <div data-pw-reglas style="grid-column: 1 / -1;"></div>
 
                 <div class="empleado-form-group" style="grid-column: 1 / -1; margin-top: 8px;">
                     <label for="activo" style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff; font-size: 0.88rem;">
@@ -138,4 +145,6 @@
     </section>
 
 </div>
+
+<script src="{% static 'js/components/validarContrasena.js' %}"></script>
 {% endblock %}

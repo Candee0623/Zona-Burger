@@ -108,27 +108,6 @@ Zona-Burger | Nuevo tipo de beneficio
 
         <div class="tipo-beneficio-field">
 
-            <label for="codigo">
-                Código
-            </label>
-
-            <input
-                type="text"
-                id="codigo"
-                name="codigo"
-                maxlength="50"
-                value="{{ datos.codigo|default:'' }}"
-                placeholder="Ej: DESCUENTO_20"
-            >
-
-            <small class="tipo-beneficio-help">
-                Si lo dejas vacío, se generará automáticamente a partir del nombre.
-            </small>
-
-        </div>
-
-        <div class="tipo-beneficio-field">
-
             <label for="nombre">
                 Nombre
             </label>
@@ -142,6 +121,30 @@ Zona-Burger | Nuevo tipo de beneficio
                 placeholder="Ej: Descuento 20%"
                 required
             >
+
+        </div>
+
+        <div class="tipo-beneficio-field">
+
+            <label for="codigo">
+                Código (automático)
+            </label>
+
+            <input
+                type="text"
+                id="codigo"
+                name="codigo"
+                maxlength="50"
+                value="{{ datos.codigo|default:'' }}"
+                placeholder="Se genera a partir del nombre"
+                readonly
+                tabindex="-1"
+                style="opacity: 0.75; cursor: default;"
+            >
+
+            <small class="tipo-beneficio-help">
+                Se genera solo a partir del nombre (en mayúsculas y con guiones bajos) y se actualiza si cambiás el nombre.
+            </small>
 
         </div>
 
@@ -235,5 +238,35 @@ Zona-Burger | Nuevo tipo de beneficio
 
 
 </div>
+
+<script>
+(function () {
+    var nombre = document.getElementById('nombre');
+    var codigo = document.getElementById('codigo');
+
+    if (!nombre || !codigo) {
+        return;
+    }
+
+    /* Misma regla que _codigo_desde_nombre() en views.py */
+    function generarCodigo(texto) {
+        return texto
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toUpperCase()
+            .replace(/[^A-Z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .slice(0, 50)
+            .replace(/_+$/, '');
+    }
+
+    function actualizarCodigo() {
+        codigo.value = generarCodigo(nombre.value);
+    }
+
+    nombre.addEventListener('input', actualizarCodigo);
+    actualizarCodigo();
+})();
+</script>
 
 {% endblock %}

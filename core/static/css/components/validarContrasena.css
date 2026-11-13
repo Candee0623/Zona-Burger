@@ -1,0 +1,120 @@
+/* Validación de contraseñas en tiempo real */
+
+.pw-reglas-caja {
+    grid-column: 1 / -1;
+    margin: 4px 0 18px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+}
+
+.pw-reglas-titulo {
+    margin: 0 0 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.pw-reglas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 6px 16px;
+}
+
+.pw-regla {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    transition: color 0.15s ease;
+}
+
+.pw-regla-icono {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+    line-height: 1;
+    border: 1.5px solid #4b5563;
+    color: transparent;
+}
+
+.pw-regla[data-estado="ok"] {
+    color: #6ee7b7;
+}
+
+.pw-regla[data-estado="ok"] .pw-regla-icono {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #6ee7b7;
+}
+
+.pw-regla[data-estado="ok"] .pw-regla-icono::before {
+    content: "\2713";
+}
+
+.pw-regla[data-estado="error"] {
+    color: #fca5a5;
+}
+
+.pw-regla[data-estado="error"] .pw-regla-icono {
+    background: rgba(220, 38, 38, 0.18);
+    border-color: #dc2626;
+    color: #fca5a5;
+}
+
+.pw-regla[data-estado="error"] .pw-regla-icono::before {
+    content: "\2715";
+}
+
+.pw-mensaje {
+    margin: 6px 0 0;
+    min-height: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.pw-mensaje-ok {
+    color: #6ee7b7;
+}
+
+.pw-mensaje-error {
+    color: #fca5a5;
+}
+
+.pw-resumen {
+    margin: 10px 0 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fca5a5;
+}
+
+.pw-resumen:empty {
+    display: none;
+}
+
+input.pw-campo-ok {
+    border-color: #10b981 !important;
+}
+
+input.pw-campo-error {
+    border-color: #dc2626 !important;
+}
+
+button[type="submit"]:disabled,
+input[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

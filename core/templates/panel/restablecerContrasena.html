@@ -14,6 +14,7 @@
 
     <link rel="stylesheet" href="{% static 'css/panel/restablecerContrasena.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/dialogos.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/validarContrasena.css' %}">
 </head>
 <body>
 
@@ -38,7 +39,7 @@
             </div>
         {% endif %}
 
-        <form method="POST">
+        <form method="POST" data-validar-contrasena>
             {% csrf_token %}
 
             <div class="form-group">
@@ -49,14 +50,17 @@
                         id="nueva_contrasena"
                         name="nueva_contrasena"
                         class="form-input"
-                        placeholder="Mínimo 8 caracteres"
+                        placeholder="Nueva contraseña"
+                        autocomplete="new-password"
+                        data-pw-nueva
                         required
                         autofocus
                     >
                     <i class="fa-solid fa-lock input-icon"></i>
                 </div>
-                <p class="form-help">Debe tener al menos 8 caracteres.</p>
             </div>
+
+            <div data-pw-reglas></div>
 
             <div class="form-group">
                 <label for="confirmar_contrasena" class="form-label">Confirmar Nueva Contraseña</label>
@@ -67,6 +71,8 @@
                         name="confirmar_contrasena"
                         class="form-input"
                         placeholder="Repetí tu nueva contraseña"
+                        autocomplete="new-password"
+                        data-pw-confirmar
                         required
                     >
                     <i class="fa-solid fa-shield-halved input-icon"></i>
@@ -89,6 +95,7 @@
 </div>
 
 <script src="{% static 'js/components/dialogos.js' %}"></script>
+<script src="{% static 'js/components/validarContrasena.js' %}"></script>
 
 </body>
 </html>

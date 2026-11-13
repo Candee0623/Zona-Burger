@@ -763,16 +763,16 @@ class Promocion(models.Model):
 
     @property
     def descripcion_amigable(self):
-        tipo = self.tipobeneficio.codigo if self.tipobeneficio else None
-        if tipo == 'DESCUENTO_PORCENTAJE':
+        tipo = (self.tipobeneficio.codigo or '').upper().replace('_', '') if self.tipobeneficio else ''
+        if tipo == 'DESCUENTOPORCENTAJE':
             return f"Descuento del {int(self.valor)}%" if self.valor else "Descuento porcentual"
-        elif tipo == 'DESCUENTO_FIJO':
+        elif tipo == 'DESCUENTOFIJO':
             return f"Descuento de ${self.valor}" if self.valor else "Descuento fijo"
-        elif tipo == 'PRODUCTO_GRATIS':
+        elif tipo == 'PRODUCTOGRATIS':
             return "¡Llevá un Producto Gratis!"
-        elif tipo == '2x1':
+        elif tipo == '2X1':
             return "Promoción 2 x 1"
-        elif tipo == '3x2':
+        elif tipo == '3X2':
             return "Promoción 3 x 2"
         return str(self.tipobeneficio)
 

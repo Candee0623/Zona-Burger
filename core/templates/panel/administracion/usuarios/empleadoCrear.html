@@ -7,6 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/panel/administracion/usuarios/empleadoCrear.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/validarContrasena.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -43,7 +44,8 @@
 
         <form method="POST"
               action="{% url 'empleado_crear' %}"
-              class="crear-empleado-form">
+              class="crear-empleado-form"
+              data-validar-contrasena>
             {% csrf_token %}
 
             <div class="crear-empleado-grid">
@@ -103,9 +105,9 @@
                         type="password"
                         id="contrasena"
                         name="contrasena"
-                        minlength="8"
                         autocomplete="new-password"
-                        placeholder="Mínimo 8 caracteres"
+                        placeholder="Ingresá la contraseña"
+                        data-pw-nueva
                         required
                     >
                 </div>
@@ -118,12 +120,14 @@
                         type="password"
                         id="confirmar_contrasena"
                         name="confirmar_contrasena"
-                        minlength="8"
                         autocomplete="new-password"
                         placeholder="Repetí la contraseña"
+                        data-pw-confirmar
                         required
                     >
                 </div>
+
+                <div data-pw-reglas style="grid-column: 1 / -1;"></div>
 
             </div>
 
@@ -159,4 +163,6 @@
     </section>
 
 </div>
+
+<script src="{% static 'js/components/validarContrasena.js' %}"></script>
 {% endblock %}

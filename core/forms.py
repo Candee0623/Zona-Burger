@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from .models import Extras, Producto, CategoriaProducto, GrupoOpcion
+from .models import Extras, Producto, GrupoOpcion
 
 
 class ExtraForm(forms.ModelForm):

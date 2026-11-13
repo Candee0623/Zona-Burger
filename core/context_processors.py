@@ -1,6 +1,3 @@
-from core.models import Negocio
-
-
 def panel_auth_context(request):
     """
     Context processor para poner a disposición del panel y vistas públicas:
