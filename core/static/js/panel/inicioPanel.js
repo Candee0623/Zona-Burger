@@ -720,3 +720,106 @@ document.addEventListener(
 
     }
 );
+
+/* MANTENER LA POSICIÓN AL ACTUALIZAR PAGO O ESTADO */
+
+/* "Pagado / Debe" y "Cambiar estado" envían un formulario y el servidor
+   redirige al panel, lo que recarga la página y la deja arriba de todo.
+   Antes de enviar se guarda dónde estaba la pantalla y, al volver, se
+   restaura esa posición. */
+
+(function mantenerPosicionDelPanel() {
+
+    const CLAVE = 'zb:panelInicio:scroll';
+    const VIGENCIA_MS = 30000;
+
+    function contenedorPrincipal() {
+        return document.querySelector('.main-content');
+    }
+
+    document.addEventListener(
+        'submit',
+        function (event) {
+
+            const form = event.target;
+
+            if (
+                !form ||
+                !form.matches ||
+                !form.matches(
+                    'form[action*="toggle-pagado"], #formCambiarEstado'
+                )
+            ) {
+                return;
+            }
+
+            const contenedor = contenedorPrincipal();
+
+            try {
+                sessionStorage.setItem(
+                    CLAVE,
+                    JSON.stringify({
+                        t: Date.now(),
+                        x: window.scrollX,
+                        y: window.scrollY,
+                        cx: contenedor ? contenedor.scrollLeft : 0,
+                        cy: contenedor ? contenedor.scrollTop : 0
+                    })
+                );
+            } catch (error) {
+                /* Sin almacenamiento disponible: se sigue sin guardar. */
+            }
+
+        }
+    );
+
+    function restaurar() {
+
+        let datos = null;
+
+        try {
+            const crudo = sessionStorage.getItem(CLAVE);
+
+            if (!crudo) {
+                return;
+            }
+
+            sessionStorage.removeItem(CLAVE);
+            datos = JSON.parse(crudo);
+        } catch (error) {
+            return;
+        }
+
+        // Una posición vieja (de otra visita) no se aplica.
+        if (!datos || Date.now() - datos.t > VIGENCIA_MS) {
+            return;
+        }
+
+        function aplicar() {
+
+            const contenedor = contenedorPrincipal();
+
+            if (contenedor) {
+                contenedor.scrollLeft = datos.cx;
+                contenedor.scrollTop = datos.cy;
+            }
+
+            window.scrollTo({
+                left: datos.x,
+                top: datos.y,
+                behavior: 'instant'
+            });
+
+        }
+
+        aplicar();
+
+        // Se repite cuando termina de cargar todo, por si el alto de la
+        // página cambia al aplicar los estilos o las imágenes.
+        window.addEventListener('load', aplicar, { once: true });
+
+    }
+
+    restaurar();
+
+})();

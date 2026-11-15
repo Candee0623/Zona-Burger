@@ -136,6 +136,15 @@ if EMAIL_BACKEND_ELEGIDO.endswith('smtp.EmailBackend'):
         'timeout': int(os.getenv('EMAIL_TIMEOUT', 10)),
     }
 
+# Envío por API HTTPS (Brevo / Resend). Sirve en hostings que bloquean SMTP,
+# como el plan gratuito de Render (puertos 25, 465 y 587).
+if EMAIL_BACKEND_ELEGIDO.endswith('ApiEmailBackend'):
+    _opciones_correo = {
+        'provider': os.getenv('EMAIL_API_PROVIDER', 'brevo'),
+        'api_key': os.getenv('EMAIL_API_KEY', ''),
+        'timeout': int(os.getenv('EMAIL_TIMEOUT', 10)),
+    }
+
 MAILERS = {
     'default': {
         'BACKEND': EMAIL_BACKEND_ELEGIDO,

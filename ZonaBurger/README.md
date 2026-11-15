@@ -174,7 +174,8 @@ En Render: **New → Web Service**, conectado al repositorio de GitHub.
 | `ALLOWED_HOSTS` | `tu-app.onrender.com,zonaburger.com.ar,www.zonaburger.com.ar` |
 | `DATABASE_URL` | La **Internal Database URL** de la base |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Datos de la cuenta de Cloudinary |
-| `EMAIL_BACKEND`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Solo si se quieren enviar correos reales |
+| `EMAIL_BACKEND`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Solo si se quieren enviar correos reales con Gmail (SMTP). **No funciona en el plan gratuito de Render**, que bloquea los puertos SMTP: usar la opción siguiente |
+| `EMAIL_BACKEND=core.email_backends.ApiEmailBackend`, `EMAIL_API_PROVIDER` (`brevo` o `resend`), `EMAIL_API_KEY`, `DEFAULT_FROM_EMAIL` | Envío de correos por API (HTTPS). Funciona en el plan gratuito de Render |
 
 Para generar una `SECRET_KEY`:
 
