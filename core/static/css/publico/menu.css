@@ -27,7 +27,7 @@
 
 html {
     scroll-behavior: smooth;
-    scroll-padding-top: 150px;
+    scroll-padding-top: calc(150px + var(--zb-barra-panel, 0px));
 }
 
 body {
@@ -193,7 +193,7 @@ img {
     font-size: clamp(21px, 2.4vw, 28px);
     font-weight: 900;
     line-height: 1.25;
-    scroll-margin-top: 150px;
+    scroll-margin-top: calc(150px + var(--zb-barra-panel, 0px));
 }
 
 #menu-dinamico h2::after,
@@ -503,7 +503,7 @@ a:focus-visible {
 
 @media (max-width: 600px) {
     html {
-        scroll-padding-top: 130px;
+        scroll-padding-top: calc(130px + var(--zb-barra-panel, 0px));
     }
 
     .menu-sticky-header {
@@ -552,7 +552,7 @@ a:focus-visible {
     #menu-dinamico .categoria-header {
         margin: 28px 0 16px;
         font-size: 21px;
-        scroll-margin-top: 130px;
+        scroll-margin-top: calc(130px + var(--zb-barra-panel, 0px));
     }
 
     #menu-dinamico .productos-grid,

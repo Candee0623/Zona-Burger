@@ -965,7 +965,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return datos;
     }
 
+    // Un empleado cargando pedidos de distintos clientes no debe ver ni guardar
+    // los datos del cliente anterior (se guardan en este navegador).
+    const modoPanel = !!(window.ZB_CHECKOUT && window.ZB_CHECKOUT.modoPanel === 'true');
+
     function guardarCheckout() {
+        if (modoPanel) return;
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(obtenerDatosCheckout()));
         } catch (error) {
@@ -983,6 +988,15 @@ document.addEventListener('DOMContentLoaded', function () {
     function recuperarCheckout() {
 
         // Si el servidor ya devolvió datos (por ejemplo, tras un error), tienen prioridad
+        if (modoPanel) {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+                /* sin almacenamiento: no hay nada que limpiar */
+            }
+            return;
+        }
+
         if (tieneDatosPrevios) return;
 
         try {

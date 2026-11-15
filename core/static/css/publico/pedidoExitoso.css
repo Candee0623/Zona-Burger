@@ -516,6 +516,20 @@
     border-color: #eeeeee;
 }
 
+/* VOLVER AL PANEL (pedido cargado por un empleado) */
+
+.exito-btn-panel {
+    background: linear-gradient(135deg, #f03816, #9e1c06);
+    color: #ffffff;
+    border: 1px solid #f03816;
+    box-shadow: 0 8px 22px rgba(216, 37, 5, 0.3);
+}
+
+.exito-btn-panel:hover {
+    background: linear-gradient(135deg, #ff5635, #b52008);
+    border-color: #ff5635;
+}
+
 /* NOTA FINAL */
 
 .exito-footer-nota {

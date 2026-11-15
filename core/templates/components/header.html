@@ -1,6 +1,25 @@
 {% load static %}
 
 <div class="zb-header-wrapper">
+    {% if modo_panel %}
+        <style>:root { --zb-barra-panel: 40px; }</style>
+
+        <div class="zb-barra-panel" role="region" aria-label="Carga de pedido desde el panel">
+            <span class="zb-barra-panel-texto">
+                <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+                <span>
+                    <strong>Modo panel</strong>
+                    <span class="zb-barra-panel-detalle">· estás cargando un pedido</span>
+                </span>
+            </span>
+
+            <a href="{% url 'panel_inicio' %}" class="zb-barra-panel-volver">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                Volver al panel
+            </a>
+        </div>
+    {% endif %}
+
     <header class="zb-site-header">
         <nav class="zb-navbar">
 

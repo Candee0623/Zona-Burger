@@ -2067,6 +2067,13 @@ def procesar_checkout(request):
         request.session.pop(clave_promo, None)
     _checkout_liberar(request)
 
+    # Pedido cargado por un empleado desde el panel: no hay mensaje de
+    # WhatsApp que enviar al negocio, se va directo a la confirmación.
+    if _en_modo_panel(request):
+        request.session['pedido_panel_exitoso'] = pedido.pk
+        request.session.modified = True
+        return redirect('pedido_exitoso')
+
     if not numero_whatsapp:
         logger.warning(
             'El negocio no tiene un número de WhatsApp configurado.'
@@ -2085,6 +2092,19 @@ def procesar_checkout(request):
 
 def pedido_exitoso(request):
     # Solo se llega acá después de confirmar un pedido en el checkout.
+    pedido_panel = (
+        request.session.get('pedido_panel_exitoso')
+        if _en_modo_panel(request) else None
+    )
+
+    if pedido_panel:
+        return render(request, 'publico/pedidoExitoso.html', {
+            'negocio': Negocio.objects.first(),
+            'whatsapp_url': None,
+            'limpiar_checkout': False,
+            'pedido_panel': pedido_panel,
+        })
+
     if not request.session.get('whatsapp_url'):
         return redirect('menu')
 
@@ -2097,11 +2117,38 @@ def pedido_exitoso(request):
     })
 
 
+def _en_modo_panel(request):
+    """True si un empleado con sesión activa está cargando un pedido desde el panel."""
+    usuario = getattr(request, 'user', None)
+    return bool(
+        getattr(usuario, 'is_authenticated', False)
+        and getattr(usuario, 'is_active', False)
+        and request.session.get('modo_panel')
+    )
+
+
+@panel_login_requerido
+def cargar_pedido_panel(request):
+    """
+    Entrada desde el panel para cargar un pedido a mano (por teléfono,
+    mostrador, etc.). Marca la sesión en "modo panel" y lleva al menú público,
+    donde una barra permite volver al panel en cualquier momento.
+    """
+    request.session['modo_panel'] = True
+    return redirect('menu')
+
+
 # 5. PANEL - INICIO Y PEDIDOS
 
 @panel_login_requerido
 
 def panel_inicio(request):
+    # Al volver al panel termina la carga manual de pedido. Los refrescos
+    # automáticos (AJAX) no deben cortar un pedido que sigue en curso.
+    if not es_peticion_ajax(request):
+        request.session.pop('modo_panel', None)
+        request.session.pop('pedido_panel_exitoso', None)
+
     hoy = timezone.localdate()
 
     pedidos_hoy_base = Pedido.objects.filter(
@@ -2337,13 +2384,38 @@ def _transicion_estado_valida(actual, nuevo):
 @panel_login_requerido
 @requiere_permiso('pedidos.cambiar_estado')
 def actualizar_estado_pedido(request, idpedido):
+    quiere_json = es_peticion_ajax(request)
+
+    def responder(nivel, texto, url_whatsapp=''):
+        """
+        Por AJAX devuelve JSON (la pantalla se actualiza sin recargarse);
+        sin AJAX deja el aviso en `messages` y redirige como siempre.
+        """
+        if quiere_json:
+            return JsonResponse({
+                'success': nivel == 'success',
+                'level': nivel,
+                'message': texto,
+                'wa_url': url_whatsapp,
+            })
+
+        getattr(messages, nivel)(request, texto)
+
+        if url_whatsapp:
+            return redirect(
+                f"{reverse('panel_inicio')}"
+                f"?wa_url={urllib.parse.quote(url_whatsapp)}"
+            )
+
+        return redirect('panel_inicio')
+
     if request.method != 'POST':
         return redirect('panel_inicio')
 
     nuevo_estado_id = request.POST.get('nuevo_estado')
 
     if not nuevo_estado_id:
-        return redirect('panel_inicio')
+        return responder('error', 'Elegí el nuevo estado del pedido.')
 
     nuevo_estado = get_object_or_404(EstadoPedido, pk=nuevo_estado_id)
     es_cancelado = _norm_estado(nuevo_estado.descripcion) == 'cancelado'
@@ -2353,15 +2425,13 @@ def actualizar_estado_pedido(request, idpedido):
     # Validación del motivo antes de tocar la base (evita el error 500 por longitud).
     if es_cancelado:
         if not motivo:
-            messages.error(request, 'Ingresá el motivo de la cancelación.')
-            return redirect('panel_inicio')
+            return responder('error', 'Ingresá el motivo de la cancelación.')
         if len(motivo) > MOTIVO_CANCELACION_MAX:
-            messages.error(
-                request,
+            return responder(
+                'error',
                 f'El motivo no puede superar los {MOTIVO_CANCELACION_MAX} caracteres '
                 f'(ingresaste {len(motivo)}).',
             )
-            return redirect('panel_inicio')
 
     # Se bloquea la fila del pedido: dos cambios simultáneos se atienden en
     # secuencia y el segundo se valida contra el estado ya modificado.
@@ -2374,18 +2444,16 @@ def actualizar_estado_pedido(request, idpedido):
         # Otro empleado cambió el pedido mientras éste tenía el modal abierto.
         actual_id = str(actual.pk) if actual else ''
         if estado_esperado and estado_esperado != actual_id:
-            messages.warning(
-                request,
+            return responder(
+                'warning',
                 f'El pedido #{pedido.idpedido} fue modificado por otro empleado '
                 f'(ahora está en "{actual.descripcion if actual else "sin estado"}"). '
                 'Revisá el estado actual y volvé a intentarlo.',
             )
-            return redirect('panel_inicio')
 
         valido, mensaje_error = _transicion_estado_valida(actual, nuevo_estado)
         if not valido:
-            messages.error(request, mensaje_error)
-            return redirect('panel_inicio')
+            return responder('error', mensaje_error)
 
         pedido.idestadopedido = nuevo_estado
 
@@ -2413,25 +2481,22 @@ def actualizar_estado_pedido(request, idpedido):
             f'*{nuevo_estado.descripcion}*.'
         )
 
-    messages.success(
-        request,
-        f'Estado actualizado correctamente. '
-        f'Mensaje preparado para {nombre_cliente}.',
-    )
+    url_whatsapp = ''
 
-    # El panel abre el enlace de WhatsApp a partir del parámetro wa_url.
+    # El panel abre el enlace de WhatsApp (por el parámetro wa_url o, con
+    # AJAX, por el campo wa_url de la respuesta).
     if telefono_cliente:
         url_whatsapp = (
             f'https://wa.me/{telefono_cliente}'
             f'?text={urllib.parse.quote(mensaje_texto)}'
         )
 
-        return redirect(
-            f"{reverse('panel_inicio')}"
-            f"?wa_url={urllib.parse.quote(url_whatsapp)}"
-        )
-
-    return redirect('panel_inicio')
+    return responder(
+        'success',
+        f'Estado actualizado correctamente. '
+        f'Mensaje preparado para {nombre_cliente}.',
+        url_whatsapp,
+    )
 
 
 @panel_login_requerido

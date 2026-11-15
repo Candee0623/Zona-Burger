@@ -124,13 +124,20 @@
 
             <h1 class="exito-titulo">
 
-                ¡Gracias por tu pedido!
+                {% if pedido_panel %}¡Pedido cargado!{% else %}¡Gracias por tu pedido!{% endif %}
 
             </h1>
 
 
             <!-- DESCRIPCIÓN -->
 
+            {% if pedido_panel %}
+            <p class="exito-texto">
+                El pedido <strong>#{{ pedido_panel }}</strong> quedó
+                <strong>registrado</strong> y ya aparece en el panel
+                con estado Pendiente.
+            </p>
+            {% else %}
             <p class="exito-texto">
 
                 Tu orden ya quedó
@@ -144,6 +151,7 @@
                 que lo empecemos a preparar en la parrilla.
 
             </p>
+            {% endif %}
 
 
             <!-- ACCIONES -->
@@ -151,6 +159,16 @@
             <div class="exito-acciones">
 
 
+                {% if pedido_panel %}
+                    <a href="{% url 'panel_inicio' %}" class="exito-btn exito-btn-panel">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Volver al panel
+                    </a>
+                    <a href="{% url 'menu' %}" class="exito-btn exito-btn-menu">
+                        <i class="fa-solid fa-burger"></i>
+                        Cargar otro pedido
+                    </a>
+                {% else %}
                 {% if whatsapp_url %}
 
 
@@ -198,6 +216,7 @@
                     Volver al Menú
 
                 </a>
+                {% endif %}
 
 
             </div>
@@ -205,6 +224,7 @@
 
             <!-- NOTA -->
 
+            {% if not pedido_panel %}
             <p class="exito-footer-nota">
 
                 <i class="fa-solid fa-circle-info"></i>
@@ -213,6 +233,7 @@
                 el envío por WhatsApp.
 
             </p>
+            {% endif %}
 
 
         </div>

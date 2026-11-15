@@ -19,8 +19,19 @@ def panel_auth_context(request):
             from core.models import Permiso
             permisos = set(Permiso.objects.values_list('codigo', flat=True))
 
+    autenticado = bool(
+        user
+        and getattr(user, 'is_authenticated', False)
+        and getattr(user, 'is_active', False)
+    )
+
+    session = getattr(request, 'session', None)
+
     return {
         'usuario_actual': user if (user and getattr(user, 'is_authenticated', False)) else None,
         'permisos_usuario': permisos,
         'es_administrador': es_admin,
+        # True mientras un empleado carga un pedido desde el panel: las
+        # pantallas públicas muestran la barra "Volver al panel".
+        'modo_panel': bool(autenticado and session is not None and session.get('modo_panel')),
     }

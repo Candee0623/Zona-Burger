@@ -48,7 +48,34 @@
             Resumen de operaciones y pedidos del día.
         </p>
 
-        <div
+        <div class="dashboard-header-actions">
+
+            <a
+                href="{% url 'cargar_pedido_panel' %}"
+                class="btn-cargar-pedido"
+                title="Abrir el menú para cargar un pedido a mano (teléfono, mostrador, etc.)"
+            >
+
+                <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+
+                <span>Cargar pedido</span>
+
+            </a>
+
+            <div
             id="panel-sync-indicator"
             class="panel-sync-indicator"
         >
@@ -58,6 +85,8 @@
             <span>
                 Sincronizado
             </span>
+
+        </div>
 
         </div>
 

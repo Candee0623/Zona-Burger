@@ -485,341 +485,493 @@ document.addEventListener(
 
 })();
 
-/* ACTUALIZACIÓN AUTOMÁTICA */
+/* AVISOS (toast y diálogo) */
 
-document.addEventListener(
-    'DOMContentLoaded',
-    function () {
+function zbToastPanel(texto, enlace) {
 
-        const indicador =
-            document.getElementById(
-                'panel-sync-indicator'
-            );
+    let cont = document.getElementById('zb-toasts-panel');
 
-        let sincronizando = false;
+    if (!cont) {
+        cont = document.createElement('div');
+        cont.id = 'zb-toasts-panel';
+        cont.className = 'zb-toasts-panel';
+        cont.setAttribute('aria-live', 'polite');
+        document.body.appendChild(cont);
+    }
 
-        async function sincronizarPanel() {
+    const toast = document.createElement('div');
+    toast.className = 'zb-toast-panel';
 
-            if (sincronizando) {
-                return;
+    const span = document.createElement('span');
+    span.textContent = texto;
+    toast.appendChild(span);
+
+    if (enlace && enlace.href) {
+        const a = document.createElement('a');
+        a.href = enlace.href;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = enlace.texto || 'Abrir';
+        toast.appendChild(a);
+    }
+
+    cont.appendChild(toast);
+
+    setTimeout(function () {
+        toast.classList.add('saliendo');
+        setTimeout(function () {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
             }
+        }, 300);
+    }, enlace ? 12000 : 4000);
+}
 
-            if (document.hidden) {
-                return;
-            }
+function zbAvisoPanel(nivel, texto) {
 
-            // Con el ticket abierto no se compite por el servidor.
-            if (ticketModalAbierto()) {
-                return;
-            }
+    // Un aviso en el borde superior no se ve si la persona está más abajo en
+    // la lista: lo exitoso va en un cartel pequeño y lo que requiere
+    // atención en un diálogo.
+    if (nivel === 'success') {
+        zbToastPanel(texto);
+        return;
+    }
 
-            sincronizando = true;
+    if (window.ZB && typeof ZB.avisar === 'function') {
+        ZB.avisar({
+            titulo: nivel === 'warning' ? 'Atención' : 'No se pudo completar',
+            mensaje: texto,
+            tipo: nivel === 'warning' ? 'info' : 'peligro'
+        });
+    } else {
+        zbToastPanel(texto);
+    }
+}
 
-            const posiciones = [];
-            let el = document.getElementById('pedidos-panel');
+/* ACTUALIZACIÓN AUTOMÁTICA SIN MOVER LA PANTALLA */
 
-            while (el) {
-                posiciones.push([el, el.scrollLeft, el.scrollTop]);
-                el = el.parentElement;
-            }
+(function actualizacionDelPanel() {
 
-            const restaurarScroll = () => {
-                posiciones.forEach(([nodo, left, top]) => {
-                    nodo.scrollLeft = left;
-                    nodo.scrollTop = top;
-                });
-            };
+    const BLOQUES = ['metricas-panel', 'estados-panel', 'pedidos-panel'];
+    const INTERVALO_MS = 5000;
 
-            try {
+    let sincronizando = false;
+    let repetir = false;
 
-                indicador.innerHTML =
-                    '<span class="panel-sync-dot"></span>' +
-                    '<span>Actualizando...</span>';
+    // Sube cada vez que la persona cambia algo (pago o estado): una
+    // respuesta de refresco pedida ANTES del cambio ya está vieja y no
+    // debe pisar lo nuevo.
+    let generacion = 0;
 
-                indicador.classList.add(
-                    'actualizando'
-                );
+    function indicador() {
+        return document.getElementById('panel-sync-indicator');
+    }
 
-                const response =
-                    await fetch(
-                        window.location.href,
-                        {
-                            method: 'GET',
+    function ponerIndicador(texto, actualizando) {
 
-                            headers: {
-                                'X-Requested-With':
-                                    'XMLHttpRequest',
+        const el = indicador();
 
-                                'Cache-Control':
-                                    'no-cache'
-                            },
-
-                            cache: 'no-store'
-                        }
-                    );
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        'HTTP ' +
-                        response.status
-                    );
-
-                }
-
-                const html =
-                    await response.text();
-
-                const parser =
-                    new DOMParser();
-
-                const documento =
-                    parser.parseFromString(
-                        html,
-                        'text/html'
-                    );
-
-                const nuevasMetricas =
-                    documento.getElementById(
-                        'metricas-panel'
-                    );
-
-                const nuevosEstados =
-                    documento.getElementById(
-                        'estados-panel'
-                    );
-
-                const nuevosPedidos =
-                    documento.getElementById(
-                        'pedidos-panel'
-                    );
-
-                if (
-                    !nuevasMetricas ||
-                    !nuevosEstados ||
-                    !nuevosPedidos
-                ) {
-
-                    console.warn(
-                        'La respuesta no contiene los bloques esperados.'
-                    );
-
-                    return;
-
-                }
-
-                const metricasActuales =
-                    document.getElementById(
-                        'metricas-panel'
-                    );
-
-                const estadosActuales =
-                    document.getElementById(
-                        'estados-panel'
-                    );
-
-                const pedidosActuales =
-                    document.getElementById(
-                        'pedidos-panel'
-                    );
-
-                if (
-                    metricasActuales.innerHTML !==
-                    nuevasMetricas.innerHTML
-                ) {
-
-                    metricasActuales.innerHTML =
-                        nuevasMetricas.innerHTML;
-
-                }
-
-                if (
-                    estadosActuales.innerHTML !==
-                    nuevosEstados.innerHTML
-                ) {
-
-                    estadosActuales.innerHTML =
-                        nuevosEstados.innerHTML;
-
-                }
-
-                if (
-                    pedidosActuales.innerHTML !==
-                    nuevosPedidos.innerHTML
-                ) {
-
-                    pedidosActuales.innerHTML =
-                        nuevosPedidos.innerHTML;
-
-                }
-
-                window.scrollTo({
-                    left: scrollX,
-                    top: scrollY,
-                    behavior: 'instant'
-                });
-
-                indicador.innerHTML =
-                    '<span class="panel-sync-dot"></span>' +
-                    '<span>Sincronizado</span>';
-
-            } catch (error) {
-
-                console.error(
-                    'Error actualizando panel:',
-                    error
-                );
-
-                indicador.innerHTML =
-                    '<span class="panel-sync-dot"></span>' +
-                    '<span>Sin conexión</span>';
-
-            } finally {
-
-                indicador.classList.remove(
-                    'actualizando'
-                );
-
-                sincronizando = false;
-
-            }
-
+        if (!el) {
+            return;
         }
+
+        el.innerHTML =
+            '<span class="panel-sync-dot"></span>' +
+            '<span>' + texto + '</span>';
+
+        el.classList.toggle('actualizando', !!actualizando);
+    }
+
+    /* Cada fila lleva un token CSRF que cambia en CADA respuesta del
+       servidor. Si se compara tal cual, el panel siempre "parece"
+       distinto y se redibuja entero cada 5 segundos (y la tabla pierde su
+       posición). Se compara sin esos valores. */
+
+    function firma(html) {
+        return html.replace(
+            /(name="csrfmiddlewaretoken"\s+value=")[^"]*"/g,
+            '$1"'
+        );
+    }
+
+    function contenedorPrincipal() {
+        return document.querySelector('.main-content');
+    }
+
+    /* El que se desplaza en este diseño es .main-content (no la ventana) y,
+       además, la tabla tiene su propio scroll horizontal. Todo eso se
+       guarda antes de redibujar y se devuelve en el mismo instante, antes
+       de que el navegador pinte, así no se ve ningún salto. */
+
+    function capturarPosiciones() {
+
+        const posiciones = {
+            ventana: [window.scrollX, window.scrollY],
+            ancestros: [],
+            internos: []
+        };
+
+        let el = document.getElementById('pedidos-panel');
+
+        while (el && el !== document.documentElement) {
+            posiciones.ancestros.push([el, el.scrollLeft, el.scrollTop]);
+            el = el.parentElement;
+        }
+
+        BLOQUES.forEach(function (id) {
+
+            const bloque = document.getElementById(id);
+
+            if (!bloque) {
+                return;
+            }
+
+            // El propio bloque puede tener scroll (p. ej. los filtros en
+            // pantallas chicas).
+            posiciones.ancestros.push([bloque, bloque.scrollLeft, bloque.scrollTop]);
+
+            const nodos = bloque.getElementsByTagName('*');
+
+            for (let i = 0; i < nodos.length; i++) {
+                if (nodos[i].scrollLeft || nodos[i].scrollTop) {
+                    posiciones.internos.push(
+                        [id, i, nodos[i].scrollLeft, nodos[i].scrollTop]
+                    );
+                }
+            }
+        });
+
+        return posiciones;
+    }
+
+    function restaurarPosiciones(posiciones) {
+
+        posiciones.internos.forEach(function (dato) {
+
+            const bloque = document.getElementById(dato[0]);
+            const nodo = bloque
+                ? bloque.getElementsByTagName('*')[dato[1]]
+                : null;
+
+            if (nodo) {
+                nodo.scrollLeft = dato[2];
+                nodo.scrollTop = dato[3];
+            }
+        });
+
+        posiciones.ancestros.forEach(function (dato) {
+            dato[0].scrollLeft = dato[1];
+            dato[0].scrollTop = dato[2];
+        });
+
+        window.scrollTo({
+            left: posiciones.ventana[0],
+            top: posiciones.ventana[1],
+            behavior: 'instant'
+        });
+    }
+
+    function aplicarBloques(documento) {
+
+        const nuevos = [];
+
+        for (let i = 0; i < BLOQUES.length; i++) {
+
+            const actual = document.getElementById(BLOQUES[i]);
+            const nuevo = documento.getElementById(BLOQUES[i]);
+
+            if (!actual || !nuevo) {
+                console.warn('La respuesta no contiene los bloques esperados.');
+                return;
+            }
+
+            if (firma(actual.innerHTML) !== firma(nuevo.innerHTML)) {
+                nuevos.push([actual, nuevo]);
+            }
+        }
+
+        // Nada cambió: no se toca el DOM (ni se mueve nada).
+        if (!nuevos.length) {
+            return;
+        }
+
+        const posiciones = capturarPosiciones();
+
+        nuevos.forEach(function (par) {
+            par[0].innerHTML = par[1].innerHTML;
+        });
+
+        restaurarPosiciones(posiciones);
+    }
+
+    async function sincronizarPanel() {
+
+        if (sincronizando) {
+            repetir = true;
+            return;
+        }
+
+        if (document.hidden) {
+            return;
+        }
+
+        // Con el ticket abierto no se compite por el servidor.
+        if (ticketModalAbierto()) {
+            return;
+        }
+
+        sincronizando = true;
+        repetir = false;
+
+        const miGeneracion = generacion;
+
+        try {
+
+            ponerIndicador('Actualizando...', true);
+
+            const response = await fetch(window.location.href, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache'
+                },
+                cache: 'no-store',
+                credentials: 'same-origin'
+            });
+
+            if (response.status === 401) {
+                ponerIndicador('Sesión vencida', false);
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+
+            const html = await response.text();
+
+            // La persona cambió algo mientras llegaba esta respuesta: se
+            // descarta y se pide una nueva.
+            if (miGeneracion !== generacion) {
+                repetir = true;
+                return;
+            }
+
+            const documento = new DOMParser().parseFromString(html, 'text/html');
+
+            aplicarBloques(documento);
+
+            ponerIndicador('Sincronizado', false);
+
+        } catch (error) {
+
+            console.error('Error actualizando panel:', error);
+
+            ponerIndicador('Sin conexión', false);
+
+        } finally {
+
+            sincronizando = false;
+
+            const el = indicador();
+
+            if (el) {
+                el.classList.remove('actualizando');
+            }
+
+            if (repetir) {
+                repetir = false;
+                sincronizarPanel();
+            }
+        }
+    }
+
+    window.ZBPanelSync = {
+        sincronizar: sincronizarPanel,
+        cambioLocal: function () {
+            generacion++;
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
 
         /* Primera sincronización. */
 
         sincronizarPanel();
 
         /* Si entra un pedido nuevo, se actualiza la lista enseguida
-           (el aviso con sonido lo da notificacionPedidos.js). */
+           (el aviso con sonido lo da NotificacionPedidos.js). */
 
-        document.addEventListener(
-            'zb:pedido-nuevo',
-            function () {
-                sincronizarPanel();
-            }
-        );
+        document.addEventListener('zb:pedido-nuevo', function () {
+            sincronizarPanel();
+        });
 
         /* Al volver a esta pestaña se actualiza sin esperar. */
 
-        document.addEventListener(
-            'visibilitychange',
-            function () {
-                if (!document.hidden) {
-                    sincronizarPanel();
-                }
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+                sincronizarPanel();
             }
-        );
+        });
 
         /* Actualización automática cada 5 segundos. */
 
-        setInterval(
-            sincronizarPanel,
-            5000
-        );
+        setInterval(sincronizarPanel, INTERVALO_MS);
+    });
 
-    }
-);
+})();
 
-/* MANTENER LA POSICIÓN AL ACTUALIZAR PAGO O ESTADO */
+/* PAGADO / CAMBIAR ESTADO SIN RECARGAR LA PÁGINA */
 
-/* "Pagado / Debe" y "Cambiar estado" envían un formulario y el servidor
-   redirige al panel, lo que recarga la página y la deja arriba de todo.
-   Antes de enviar se guarda dónde estaba la pantalla y, al volver, se
-   restaura esa posición. */
+/* Antes estos formularios recargaban todo el panel y lo dejaban arriba.
+   Ahora se envían en segundo plano y solo se actualiza lo que cambió, así
+   la pantalla queda exactamente donde estaba. */
 
-(function mantenerPosicionDelPanel() {
+(function accionesSinRecargar() {
 
-    const CLAVE = 'zb:panelInicio:scroll';
-    const VIGENCIA_MS = 30000;
+    async function enviar(form) {
 
-    function contenedorPrincipal() {
-        return document.querySelector('.main-content');
-    }
-
-    document.addEventListener(
-        'submit',
-        function (event) {
-
-            const form = event.target;
-
-            if (
-                !form ||
-                !form.matches ||
-                !form.matches(
-                    'form[action*="toggle-pagado"], #formCambiarEstado'
-                )
-            ) {
-                return;
-            }
-
-            const contenedor = contenedorPrincipal();
-
-            try {
-                sessionStorage.setItem(
-                    CLAVE,
-                    JSON.stringify({
-                        t: Date.now(),
-                        x: window.scrollX,
-                        y: window.scrollY,
-                        cx: contenedor ? contenedor.scrollLeft : 0,
-                        cy: contenedor ? contenedor.scrollTop : 0
-                    })
-                );
-            } catch (error) {
-                /* Sin almacenamiento disponible: se sigue sin guardar. */
-            }
-
-        }
-    );
-
-    function restaurar() {
+        const respuesta = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
 
         let datos = null;
 
         try {
-            const crudo = sessionStorage.getItem(CLAVE);
+            datos = await respuesta.json();
+        } catch (error) {
+            datos = null;
+        }
 
-            if (!crudo) {
+        if (respuesta.status === 401) {
+            return {
+                ok: false,
+                nivel: 'error',
+                mensaje: 'Tu sesión expiró. Volvé a iniciar sesión.'
+            };
+        }
+
+        if (!respuesta.ok || !datos) {
+            return {
+                ok: false,
+                nivel: 'error',
+                mensaje: (datos && datos.message) ||
+                    'No se pudo completar la acción. Intentá de nuevo.'
+            };
+        }
+
+        return { ok: true, datos: datos };
+    }
+
+    function bloquear(form, bloqueado) {
+
+        const botones = form.querySelectorAll('button[type="submit"]');
+
+        botones.forEach(function (boton) {
+            boton.disabled = bloqueado;
+        });
+    }
+
+    function refrescar() {
+        window.ZBPanelSync.cambioLocal();
+        window.ZBPanelSync.sincronizar();
+    }
+
+    document.addEventListener('submit', async function (event) {
+
+        const form = event.target;
+
+        if (!form || !form.matches) {
+            return;
+        }
+
+        const esPago = form.matches('form[action*="toggle-pagado"]');
+        const esEstado = form.id === 'formCambiarEstado';
+
+        if (!esPago && !esEstado) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (form.dataset.enviando === '1') {
+            return;
+        }
+
+        form.dataset.enviando = '1';
+        bloquear(form, true);
+
+        try {
+
+            const resultado = await enviar(form);
+
+            if (!resultado.ok) {
+                zbAvisoPanel(resultado.nivel, resultado.mensaje);
                 return;
             }
 
-            sessionStorage.removeItem(CLAVE);
-            datos = JSON.parse(crudo);
-        } catch (error) {
-            return;
-        }
+            const datos = resultado.datos;
 
-        // Una posición vieja (de otra visita) no se aplica.
-        if (!datos || Date.now() - datos.t > VIGENCIA_MS) {
-            return;
-        }
+            if (esPago) {
 
-        function aplicar() {
+                if (datos.success === false) {
+                    zbAvisoPanel('error', datos.message || 'No se pudo actualizar el pago.');
+                    return;
+                }
 
-            const contenedor = contenedorPrincipal();
-
-            if (contenedor) {
-                contenedor.scrollLeft = datos.cx;
-                contenedor.scrollTop = datos.cy;
+                refrescar();
+                return;
             }
 
-            window.scrollTo({
-                left: datos.x,
-                top: datos.y,
-                behavior: 'instant'
-            });
+            /* Cambio de estado. */
 
+            if (!datos.success) {
+                // El servidor explica por qué no se pudo (otro empleado
+                // ya lo cambió, transición no permitida, falta motivo...).
+                zbAvisoPanel(datos.level || 'error', datos.message);
+                refrescar();
+                return;
+            }
+
+            cerrarEstadoModal();
+            refrescar();
+
+            if (datos.wa_url) {
+
+                const ventana = window.open(datos.wa_url, '_blank');
+
+                if (!ventana) {
+                    // El navegador bloqueó la ventana emergente.
+                    zbToastPanel(
+                        datos.message,
+                        { href: datos.wa_url, texto: 'Abrir WhatsApp' }
+                    );
+                    return;
+                }
+            }
+
+            zbAvisoPanel('success', datos.message);
+
+        } catch (error) {
+
+            console.error('Error enviando la acción del panel:', error);
+
+            zbAvisoPanel(
+                'error',
+                'No se pudo conectar con el servidor. Revisá tu conexión e intentá de nuevo.'
+            );
+
+        } finally {
+
+            delete form.dataset.enviando;
+            bloquear(form, false);
         }
-
-        aplicar();
-
-        // Se repite cuando termina de cargar todo, por si el alto de la
-        // página cambia al aplicar los estilos o las imágenes.
-        window.addEventListener('load', aplicar, { once: true });
-
-    }
-
-    restaurar();
+    });
 
 })();

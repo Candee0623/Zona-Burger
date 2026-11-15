@@ -654,6 +654,7 @@
         totalCarrito: '{{ total_carrito|unlocalize }}',
         descuentoPromocion: '{{ descuento_promocion|default:"0.00"|unlocalize }}',
         hayDatosPrevios: '{{ hay_datos_previos|yesno:"true,false" }}',
+        modoPanel: '{{ modo_panel|yesno:"true,false" }}',
         negocioAbierto: '{{ negocio_abierto|yesno:"true,false" }}',
         comentarioMax: '{{ comentario_max|default:500|unlocalize }}',
         urlAplicarPromocion: "{% url 'aplicar_promocion' %}",

@@ -1816,3 +1816,132 @@
         transition-duration: 0.01ms !important;
     }
 }
+
+
+/* BOTÓN "CARGAR PEDIDO" (lleva al menú público para cargar un pedido a mano) */
+
+.dashboard-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    flex-shrink: 0;
+    max-width: 100%;
+}
+
+.btn-cargar-pedido {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    padding: 11px 18px;
+
+    background: linear-gradient(135deg, var(--zb-red-bright), var(--zb-red-dark));
+    border: 1px solid var(--zb-red-bright);
+    border-radius: 999px;
+
+    box-shadow: 0 8px 20px rgba(216, 37, 5, 0.28);
+
+    color: var(--zb-white);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-cargar-pedido:hover,
+.btn-cargar-pedido:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(216, 37, 5, 0.4);
+    color: var(--zb-white);
+}
+
+/* CARTELES PEQUEÑOS (confirmaciones sin recargar la página) */
+
+.zb-toasts-panel {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    z-index: 4000;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    width: max-content;
+    max-width: calc(100vw - 24px);
+
+    pointer-events: none;
+}
+
+.zb-toast-panel {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 12px 18px;
+
+    background: #12281e;
+    border: 1px solid #166534;
+    border-radius: 10px;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+
+    color: #4ade80;
+    font-family: 'Montserrat', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+
+    pointer-events: auto;
+
+    animation: toastPanelEntrar 0.25s ease-out;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.zb-toast-panel.saliendo {
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.zb-toast-panel a {
+    color: #ffffff;
+    font-weight: 800;
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+@keyframes toastPanelEntrar {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 700px) {
+    .dashboard-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .btn-cargar-pedido {
+        flex: 1 1 100%;
+        padding: 13px 18px;
+    }
+
+    .zb-toasts-panel {
+        bottom: 16px;
+    }
+}
