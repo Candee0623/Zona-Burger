@@ -145,6 +145,32 @@ function cerrarTicketModal() {
     }
 }
 
+function textoCssTicket(contenido) {
+
+    // Copia las reglas de la hoja del ticket que ya cargó la página, para que
+    // la impresión no dependa de volver a descargarla.
+    const enlace = contenido.querySelector('link[rel="stylesheet"]');
+    let css = '';
+
+    try {
+        if (enlace && enlace.sheet) {
+            Array.prototype.forEach.call(
+                enlace.sheet.cssRules,
+                function (regla) {
+                    css += regla.cssText + '\n';
+                }
+            );
+        }
+    } catch (error) {
+        css = '';
+    }
+
+    return {
+        css: css,
+        urlCss: enlace ? enlace.href : ''
+    };
+}
+
 function imprimirModal() {
 
     const contenido = document.getElementById('contenido-ticket-modal');
@@ -160,61 +186,80 @@ function imprimirModal() {
         return;
     }
 
-    // Ruta absoluta de la hoja de estilos del ticket (la ventana nueva está vacía).
-    const enlaceCss = contenido.querySelector('link[rel="stylesheet"]');
-    const urlCss = enlaceCss ? enlaceCss.href : '';
+    const estilos = textoCssTicket(contenido);
 
-    const ventana = window.open('', '_blank', 'height=700,width=450');
-
-    if (!ventana) {
-        ZB.avisar({
-            titulo: 'No se pudo imprimir',
-            mensaje:
-                'El navegador bloqueó la ventana de impresión. ' +
-                'Permití las ventanas emergentes para este sitio e intentá de nuevo.',
-            tipo: 'info'
-        });
-        return;
+    // Se imprime desde un marco oculto de esta misma página: no depende de
+    // ventanas emergentes (que el navegador suele bloquear) ni de que otra
+    // ventana termine de cargar.
+    const anterior = document.getElementById('zb-marco-impresion');
+    if (anterior) {
+        anterior.remove();
     }
 
-    ventana.document.write(
-        '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-        '<title>Ticket</title>' +
-        (urlCss ? '<link rel="stylesheet" href="' + urlCss + '">' : '') +
-        '<style>' +
-        '@page{size:58mm auto;margin:0;}' +
-        'body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;}' +
-        '</style></head><body>' +
-        ticket.outerHTML +
-        '</body></html>'
-    );
-
-    ventana.document.close();
-    ventana.focus();
+    const marco = document.createElement('iframe');
+    marco.id = 'zb-marco-impresion';
+    marco.setAttribute('aria-hidden', 'true');
+    marco.title = 'Impresión del ticket';
+    marco.style.cssText =
+        'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
 
     let impreso = false;
 
-    function imprimir() {
+    function limpiar() {
+        if (marco.parentNode) {
+            marco.parentNode.removeChild(marco);
+        }
+    }
+
+    marco.onload = function () {
+
         if (impreso) {
             return;
         }
         impreso = true;
-        ventana.onafterprint = function () {
-            ventana.close();
-        };
-        ventana.print();
-    }
 
-    // Se imprime cuando la hoja de estilos terminó de cargar
-    // (si por algún motivo no avisa, se imprime igual a los 1,5 s).
-    const enlaceNuevo = ventana.document.querySelector('link[rel="stylesheet"]');
+        // Pequeña espera para que el marco termine de pintar el contenido.
+        setTimeout(function () {
+            try {
+                const ventana = marco.contentWindow;
+                ventana.onafterprint = function () {
+                    setTimeout(limpiar, 500);
+                };
+                ventana.focus();
+                ventana.print();
+            } catch (error) {
+                console.error('Error al imprimir el ticket:', error);
+                limpiar();
+                ZB.avisar({
+                    titulo: 'No se pudo imprimir',
+                    mensaje: 'Ocurrió un problema al abrir la impresión. Intentá de nuevo.',
+                    tipo: 'info'
+                });
+                return;
+            }
 
-    if (enlaceNuevo) {
-        enlaceNuevo.onload = imprimir;
-        enlaceNuevo.onerror = imprimir;
-    }
+            // Respaldo por si el navegador nunca avisa que terminó de imprimir.
+            setTimeout(limpiar, 120000);
+        }, 150);
+    };
 
-    setTimeout(imprimir, enlaceNuevo ? 1500 : 100);
+    marco.srcdoc =
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+        '<title>Ticket</title>' +
+        (estilos.css
+            ? '<style>' + estilos.css + '</style>'
+            : (estilos.urlCss
+                ? '<link rel="stylesheet" href="' + estilos.urlCss + '">'
+                : '')) +
+        '<style>' +
+        '@page{size:58mm auto;margin:0;}' +
+        'html,body{margin:0;padding:0;background:#fff;}' +
+        'body{font-family:Arial,Helvetica,sans-serif;}' +
+        '</style></head><body>' +
+        ticket.outerHTML +
+        '</body></html>';
+
+    document.body.appendChild(marco);
 }
 
 /* MODAL CAMBIAR ESTADO */
@@ -644,6 +689,27 @@ document.addEventListener(
         /* Primera sincronización. */
 
         sincronizarPanel();
+
+        /* Si entra un pedido nuevo, se actualiza la lista enseguida
+           (el aviso con sonido lo da notificacionPedidos.js). */
+
+        document.addEventListener(
+            'zb:pedido-nuevo',
+            function () {
+                sincronizarPanel();
+            }
+        );
+
+        /* Al volver a esta pestaña se actualiza sin esperar. */
+
+        document.addEventListener(
+            'visibilitychange',
+            function () {
+                if (!document.hidden) {
+                    sincronizarPanel();
+                }
+            }
+        );
 
         /* Actualización automática cada 5 segundos. */
 

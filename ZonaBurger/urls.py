@@ -61,6 +61,7 @@ urlpatterns = [
     # Panel de Administración - Inicio
     path('panel/', panel_inicio, name='panel_inicio'),
     path('pedido/<int:idpedido>/ticket-modal/', views.obtener_ticket_modal, name='obtener_ticket_modal'),
+    path('panel/pedidos/nuevos/', views.pedidos_nuevos_api, name='pedidos_nuevos_api'),
     path('pedido/<int:idpedido>/toggle-pagado/', views.toggle_pagado, name='toggle_pagado'),
     path('pedido/<int:idpedido>/cambiar-estado/', views.actualizar_estado_pedido, name='cambiar_estado'),
 

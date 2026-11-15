@@ -9,7 +9,7 @@ import unicodedata
 from django.db import DatabaseError, IntegrityError, transaction
 from .auth_backend import EmpleadoAuthBackend
 from datetime import datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from io import BytesIO
 from urllib.parse import quote
 from xml.sax.saxutils import escape
@@ -2178,30 +2178,118 @@ def panel_inicio(request):
 @panel_login_requerido
 @requiere_permiso('pedidos.ver')
 def obtener_ticket_modal(request, idpedido):
-    pedido = get_object_or_404(Pedido, idpedido=idpedido)
-
-    direccion_cliente = (
-        Direccion.objects.filter(idcliente=pedido.idcliente).first()
-        if pedido.idcliente else None
+    pedido = get_object_or_404(
+        Pedido.objects.select_related('idcliente', 'idmediopago'),
+        idpedido=idpedido,
     )
 
-    detalles = DetallePedido.objects.filter(idpedido=pedido)
+    direccion_cliente = (
+        Direccion.objects.filter(idcliente=pedido.idcliente_id)
+        .order_by('-iddireccion')
+        .first()
+        if pedido.idcliente_id else None
+    )
+
+    detalles = list(
+        DetallePedido.objects.filter(idpedido=pedido)
+        .select_related('idproducto')
+        .order_by('iddetallepedido')
+    )
 
     # El subtotal de cada producto se calcula solo para mostrarlo en el ticket.
     for detalle in detalles:
-        detalle.subtotal_item = detalle.preciounitario * detalle.cantidad
+        detalle.subtotal_item = (
+            (detalle.preciounitario or Decimal('0')) * (detalle.cantidad or 0)
+        )
 
-    # DEF-012: Obtener información amigable de la promoción para el ticket
-    promocion = None
-    if getattr(pedido, 'idpromocion', None):
-        promocion = Promocion.objects.filter(pk=pedido.idpromocion).first()
+    # DEF-012: texto amigable de la promoción para el ticket. Se arma acá (y no
+    # en la plantilla) para que un dato raro de la promoción nunca impida
+    # mostrar el ticket.
+    promocion_texto = ''
+    if pedido.idpromocion:
+        try:
+            promocion = (
+                Promocion.objects.select_related('tipobeneficio')
+                .filter(pk=pedido.idpromocion)
+                .first()
+            )
+            if promocion:
+                promocion_texto = (
+                    promocion.palabraclave or promocion.descripcion_amigable or ''
+                )
+        except Exception:
+            logger.exception(
+                'No se pudo leer la promoción %s para el ticket del pedido %s',
+                pedido.idpromocion, pedido.pk,
+            )
 
-    return render(request, 'panel/parcialTicket.html', {
+        if not promocion_texto:
+            promocion_texto = (
+                pedido.nombrepromocion or f'Promoción #{pedido.idpromocion}'
+            )
+
+    respuesta = render(request, 'panel/parcialTicket.html', {
         'pedido': pedido,
         'detalles': detalles,
         'direccion_cliente': direccion_cliente,
-        'promocion': promocion,
+        'promocion_texto': promocion_texto,
     })
+    respuesta['Cache-Control'] = 'no-store'
+    return respuesta
+
+
+@panel_login_requerido
+@requiere_permiso('pedidos.ver')
+def pedidos_nuevos_api(request):
+    """
+    Aviso liviano de pedidos nuevos para el panel (se consulta cada pocos segundos
+    desde cualquier pantalla del panel).
+
+    - Sin ?desde=: solo informa el id del último pedido (punto de partida).
+    - Con ?desde=<id>: devuelve los pedidos creados DESPUÉS de ese id.
+    Solo detecta pedidos que ingresan; un cambio de estado no genera aviso.
+    """
+    ultimo_id = (
+        Pedido.objects.order_by('-idpedido')
+        .values_list('idpedido', flat=True)
+        .first()
+    ) or 0
+
+    nuevos = []
+    cantidad = 0
+
+    try:
+        desde = int(request.GET.get('desde', ''))
+    except (TypeError, ValueError):
+        desde = None
+
+    if desde is not None and ultimo_id > desde:
+        base = Pedido.objects.filter(idpedido__gt=desde)
+        cantidad = base.count()
+
+        for pedido in base.select_related('idcliente').order_by('idpedido')[:10]:
+            cliente = pedido.idcliente
+            nombre = (
+                f'{cliente.nombre} {cliente.apellido}'.strip() if cliente else ''
+            ) or 'Cliente'
+            hora = (
+                timezone.localtime(pedido.fecha_creacion).strftime('%H:%M')
+                if pedido.fecha_creacion else ''
+            )
+            nuevos.append({
+                'id': pedido.idpedido,
+                'cliente': nombre,
+                'total': float(pedido.total) if pedido.total is not None else None,
+                'hora': hora,
+            })
+
+    respuesta = JsonResponse({
+        'ultimo_id': ultimo_id,
+        'cantidad': cantidad,
+        'nuevos': nuevos,
+    })
+    respuesta['Cache-Control'] = 'no-store'
+    return respuesta
 
 
 # Transiciones de estado permitidas (RN02). Las claves y valores se comparan
@@ -4275,11 +4363,19 @@ def stock_editar(request, idinsumo):
 def registrar_compra_insumo(request):
 
     if request.method == 'POST':
-        insumo_id = request.POST.get('idinsumo')
+        try:
+            insumo_id = int(str(request.POST.get('idinsumo', '')).strip())
+        except (TypeError, ValueError):
+            messages.error(request, 'Seleccioná un insumo válido.')
+            return redirect('registrar_compra_insumo')
 
         try:
-            cantidad = Decimal(request.POST.get('cantidad', '0').replace(',', '.'))
-            precio_total = Decimal(request.POST.get('preciototal', '0').replace(',', '.'))
+            cantidad = Decimal(
+                str(request.POST.get('cantidad', '')).strip().replace(',', '.')
+            )
+            precio_total = Decimal(
+                str(request.POST.get('preciototal', '')).strip().replace(',', '.')
+            )
 
         except (InvalidOperation, ValueError, TypeError, AttributeError):
             messages.error(
@@ -4288,16 +4384,29 @@ def registrar_compra_insumo(request):
             )
             return redirect('registrar_compra_insumo')
 
-        if (
-            not cantidad.is_finite()
-            or not precio_total.is_finite()
-            or cantidad <= 0
-            or precio_total < 0
-        ):
+        if not cantidad.is_finite() or not precio_total.is_finite():
+            messages.error(request, 'Ingresá una cantidad y un precio total válidos.')
+            return redirect('registrar_compra_insumo')
+
+        # Se redondea a lo que guarda la base (4 decimales de stock, 2 de dinero)
+        # ANTES de guardar: un valor con demasiados decimales o dígitos hacía
+        # fallar el guardado con un error 500.
+        cantidad = cantidad.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
+        precio_total = precio_total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        if cantidad <= 0 or precio_total < 0:
             messages.error(
                 request,
                 'La cantidad debe ser mayor que cero y el precio total '
                 'no puede ser negativo.'
+            )
+            return redirect('registrar_compra_insumo')
+
+        if cantidad > Decimal('99999999.99') or precio_total > Decimal('9999999999.99'):
+            messages.error(
+                request,
+                'La cantidad o el precio total superan el máximo permitido. '
+                'Revisá que no tengan ceros de más.'
             )
             return redirect('registrar_compra_insumo')
 
@@ -4308,17 +4417,33 @@ def registrar_compra_insumo(request):
             messages.error(request, error_vencimiento)
             return redirect('registrar_compra_insumo')
 
-        costo_unitario = precio_total / cantidad
+        costo_unitario = (precio_total / cantidad).quantize(
+            Decimal('0.0001'), rounding=ROUND_HALF_UP
+        )
+        if costo_unitario >= Decimal('100000000'):
+            messages.error(
+                request,
+                'El costo por unidad resulta demasiado alto. '
+                'Revisá la cantidad y el precio total ingresados.'
+            )
+            return redirect('registrar_compra_insumo')
+
+        # DetalleCompra guarda la cantidad con 2 decimales.
+        cantidad_detalle = cantidad.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
         fecha_compra = timezone.now()
 
         try:
             with transaction.atomic():
 
-                insumo = get_object_or_404(
-                    Insumo.objects.select_for_update(),
-                    pk=insumo_id
+                insumo = (
+                    Insumo.objects.select_for_update()
+                    .filter(pk=insumo_id)
+                    .first()
                 )
+                if insumo is None:
+                    messages.error(request, 'El insumo seleccionado no existe.')
+                    return redirect('registrar_compra_insumo')
 
                 compra = Compras.objects.create(
                     fecha=fecha_compra,
@@ -4329,7 +4454,7 @@ def registrar_compra_insumo(request):
                 DetalleCompra.objects.create(
                     idcompra=compra,
                     idinsumo=insumo,
-                    cantidad=cantidad,
+                    cantidad=cantidad_detalle,
                     costounitario=costo_unitario,
                 )
 
@@ -4342,8 +4467,18 @@ def registrar_compra_insumo(request):
                     descripcion=f"Compra #{compra.idcompra} de {insumo.nombreinsumo}",
                 )
 
-        except Insumo.DoesNotExist:
-            messages.error(request, 'El insumo seleccionado no existe.')
+        except Exception:
+            # Queda el detalle técnico en el log del servidor (Render > Logs)
+            # y la persona ve un aviso en vez de la pantalla de error 500.
+            logger.exception(
+                'Error al registrar la compra del insumo %s (cantidad=%s, total=%s)',
+                insumo_id, cantidad, precio_total,
+            )
+            messages.error(
+                request,
+                'No se pudo registrar la compra por un error interno. '
+                'No se guardó nada; probá de nuevo o avisá al administrador.'
+            )
             return redirect('registrar_compra_insumo')
 
         messages.success(

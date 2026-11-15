@@ -251,11 +251,7 @@
             </span>
 
             <strong>
-                {% if promocion %}
-                    {{ promocion.palabraclave|default:promocion.descripcion_amigable }}
-                {% else %}
-                    {{ pedido.nombrepromocion|default:'Promoción #' }}{% if not pedido.nombrepromocion %}{{ pedido.idpromocion }}{% endif %}
-                {% endif %}
+                {{ promocion_texto }}
             </strong>
 
         </div>

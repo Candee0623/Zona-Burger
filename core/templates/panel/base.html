@@ -60,6 +60,15 @@ content="width=device-width, initial-scale=1.0"
     href="{% static 'css/components/dialogos.css' %}"
 >
 
+<!-- AVISO DE PEDIDOS NUEVOS -->
+
+{% if 'pedidos.ver' in permisos_usuario %}
+<link
+    rel="stylesheet"
+    href="{% static 'css/panel/notificacionPedidos.css' %}"
+>
+{% endif %}
+
 <!-- CSS ESPECÍFICO DE CADA PÁGINA -->
 
 {% block extra_css %}
@@ -538,6 +547,16 @@ content="width=device-width, initial-scale=1.0"
 <script src="{% static 'js/components/dialogos.js' %}"></script>
 <script src="{% static 'js/panel/panel.js' %}"></script>
 <script src="{% static 'js/panel/baseAlertas.js' %}"></script>
+
+{% if 'pedidos.ver' in permisos_usuario %}
+<div
+    id="zb-notif-config"
+    data-url="{% url 'pedidos_nuevos_api' %}"
+    data-panel="{% url 'panel_inicio' %}"
+    hidden
+></div>
+<script src="{% static 'js/panel/notificacionPedidos.js' %}"></script>
+{% endif %}
 
 </body>
 
