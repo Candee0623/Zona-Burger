@@ -74,7 +74,7 @@ background:
         rgba(0, 0, 0, .25) 100%
     ),
 
-    url("https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1800&q=90")
+    url("../../img/hero-burger.jpg")
     center/cover no-repeat;
 
 border-bottom: 1px solid #32110c;
@@ -1189,7 +1189,7 @@ white-space: nowrap;
             rgba(30, 5, 2, .7)
         ),
 
-        url("https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1400&q=90")
+        url("../../img/hero-burger.jpg")
         center/cover no-repeat;
 }
 

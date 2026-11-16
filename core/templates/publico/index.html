@@ -13,8 +13,8 @@
     <meta name="google-site-verification" content="Hkw8mIDh2x0w0PkJ6StfQyqz4eyuM87jeVkWCgpxSAw" />
 
     <!-- SEO -->
-    <title>{{ negocio.nombre|default:"Zona Burger" }} | Hamburguesas artesanales y promos</title>
-    <meta name="description" content="Pedí hamburguesas artesanales en Zona Burger. Mirá el menú, las promociones, los horarios y las zonas de entrega, y hacé tu pedido online.">
+    <title>{{ negocio.nombre|default:"Zona Burger" }} | Hamburguesas con queso y papas fritas</title>
+    <meta name="description" content="Pedí hamburguesas con queso y papas fritas en Zona Burger. Mirá el menú, las promociones, los horarios y las zonas de entrega, y hacé tu pedido online.">
     <link rel="canonical" href="https://zonaburger.com.ar/">
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -43,8 +43,8 @@
         </h1>
 
         <p class="hero-description">
-            Burgers artesanales, ingredientes frescos y todo el sabor
-            que buscás en cada bocado.
+            Hamburguesas con queso derretido y papas fritas,
+            hasta tu puerta.
         </p>
 
         <div class="hero-actions">
@@ -82,73 +82,69 @@
         <div class="about-layout">
 
             <div class="about-copy">
-                <div class="section-label">Nuestra historia</div>
+                <div class="section-label">Quiénes somos</div>
 
                 <h2 class="section-heading">
-                    No hacemos burgers.<br>
-                    Hacemos <span>experiencias.</span>
+                    Hacemos hamburguesas<br>
+                    <span>y las llevamos a tu casa.</span>
                 </h2>
 
                 <p class="section-intro">
-                    En <strong>{{ negocio.nombre|default:"Zona Burger" }}</strong>
-                    nos apasiona hacer las cosas bien.
+                    Somos <strong>{{ negocio.nombre|default:"Zona Burger" }}</strong>.
+                    Preparamos hamburguesas con queso y papas fritas para
+                    que pidas desde donde estés.
                 </p>
 
                 <p>
-                    Nacimos con el propósito de revolucionar el concepto
-                    de la comida rápida artesanal, ofreciendo burgers de
-                    autor preparadas con ingredientes frescos, locales y
-                    de primera calidad.
+                    Los horarios y las zonas de entrega están más abajo.
+                    Si hay promociones vigentes, las vas a ver en su
+                    sección y se aplican con una palabra clave al
+                    confirmar el pedido.
                 </p>
 
-                <p>
-                    Cada blend de carne es seleccionado con dedicación y
-                    nuestros medallones se cocinan al punto justo en la
-                    plancha para lograr esa costra crujiente y jugosa
-                    que tanto te gusta.
-                </p>
+                <p><strong>Pedir es fácil:</strong></p>
 
                 <div class="about-list">
                     <div class="about-item">
                         <div class="about-item-icon">
-                            <i class="fa-solid fa-fire-flame-curved"></i>
+                            <i class="fa-solid fa-burger"></i>
                         </div>
-                        <span>Carne 100% fresca</span>
+                        <span>Elegí del menú</span>
                     </div>
 
                     <div class="about-item">
                         <div class="about-item-icon">
-                            <i class="fa-solid fa-bread-slice"></i>
+                            <i class="fa-solid fa-location-dot"></i>
                         </div>
-                        <span>Panes caseros del día</span>
+                        <span>Ingresá tu dirección</span>
                     </div>
 
                     <div class="about-item">
                         <div class="about-item-icon">
-                            <i class="fa-solid fa-utensils"></i>
+                            <i class="fa-solid fa-money-bill-wave"></i>
                         </div>
-                        <span>Salsas propias</span>
+                        <span>Pagá en efectivo o transferencia</span>
                     </div>
 
                     <div class="about-item">
                         <div class="about-item-icon">
-                            <i class="fa-solid fa-heart"></i>
+                            <i class="fa-solid fa-motorcycle"></i>
                         </div>
-                        <span>Hecho con pasión</span>
+                        <span>Recibilo en tu casa</span>
                     </div>
                 </div>
             </div>
 
             <div class="about-photo">
                 <img
-                    src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1000&q=90"
-                    alt="Nuestras hamburguesas"
+                    src="{% static 'img/pedido-delivery.jpg' %}"
+                    alt="Dos hamburguesas envueltas en papel aluminio con papas fritas, listas para entregar"
                     loading="lazy"
                 >
 
                 <div class="photo-badge">
-                    <strong>100%</strong>
-                    <span>Artesanal</span>
+                    <strong>Pedí online</strong>
+                    <span>y recibilo en tu casa</span>
                 </div>
             </div>
 
@@ -172,8 +168,8 @@
             </div>
 
             <p class="promotion-description">
-                Beneficios exclusivos para que disfrutes tu pedido
-                por menos.
+                Estas son las promociones vigentes. Se aplican con su
+                palabra clave al confirmar tu pedido.
             </p>
         </div>
 
@@ -225,7 +221,7 @@
 
             </article>
             {% empty %}
-            <p class="promotion-empty-initial">
+            <p class="promotion-empty-state">
                 No hay promociones activas en este momento.
             </p>
             {% endfor %}

@@ -1,4 +1,3 @@
-
 'use strict';
 
 (() => {
@@ -99,8 +98,9 @@
             return;
         }
 
+        // La sección siempre se muestra; si no hay promociones se avisa abajo.
         if (seccion) {
-            seccion.hidden = promociones.length === 0;
+            seccion.hidden = false;
         }
 
         const fragmento = document.createDocumentFragment();
@@ -217,6 +217,13 @@
             tarjeta.appendChild(productosContenedor);
             fragmento.appendChild(tarjeta);
         });
+
+        if (promociones.length === 0) {
+            const vacio = document.createElement('p');
+            vacio.className = 'promotion-empty-state';
+            vacio.textContent = 'No hay promociones activas en este momento.';
+            fragmento.appendChild(vacio);
+        }
 
         contenedor.replaceChildren(fragmento);
     }
