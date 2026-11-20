@@ -175,9 +175,16 @@
     </section>
 
     <div class="detalle-historial-pie">
-        <a href="{% url 'historial_pedidos' %}" class="detalle-historial-boton">
-            Volver al historial
+    <a href="{% url 'historial_pedidos' %}" class="detalle-historial-boton">
+        Volver al historial
+    </a>
+    {% if 'pedidos.eliminar' in permisos_usuario %}
+        <a href="{% url 'eliminar_pedido' pedido.idpedido %}"
+           class="detalle-historial-boton"
+           style="color:#dc2626;border-color:rgba(220,38,38,.4);margin-left:8px;">
+            Eliminar pedido
         </a>
-    </div>
+    {% endif %}
+</div>
 </div>
 {% endblock %}

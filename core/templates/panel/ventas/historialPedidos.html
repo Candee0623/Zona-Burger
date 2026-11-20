@@ -156,9 +156,16 @@
                             </td>
                             <td>
                                 <a class="historial-btn-detalle"
-                                   href="{% url 'detalle_historial_pedido' pedido_item.idpedido %}">
+                                href="{% url 'detalle_historial_pedido' pedido_item.idpedido %}">
                                     Ver pedido
                                 </a>
+                                {% if 'pedidos.eliminar' in permisos_usuario %}
+                                    <a class="historial-btn-detalle"
+                                    style="color:#dc2626;border-color:rgba(220,38,38,.4);margin-left:6px;"
+                                    href="{% url 'eliminar_pedido' pedido_item.idpedido %}">
+                                        Eliminar
+                                    </a>
+                                {% endif %}
                             </td>
                         </tr>
                     {% empty %}

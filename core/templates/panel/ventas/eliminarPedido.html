@@ -1,0 +1,187 @@
+{% extends "panel/base.html" %}
+{% load static %}
+
+{% block title %}Eliminar pedido #{{ pedido.idpedido }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pedido-delete-page { width: 100%; max-width: 650px; margin: 0 auto; }
+
+    .pedido-delete-back {
+        display: inline-flex; align-items: center; gap: 8px;
+        margin-bottom: 20px; padding: 7px 11px;
+        border: 1px solid #303030; border-radius: 7px;
+        background: #191919; color: #858585;
+        text-decoration: none; font-size: .84rem;
+        transition: color .2s ease, background .2s ease, border-color .2s ease;
+    }
+    .pedido-delete-back:hover {
+        color: #dc2626; background: rgba(220, 38, 38, .06);
+        border-color: rgba(220, 38, 38, .35);
+    }
+
+    .pedido-delete-card {
+        background: #181818; border: 1px solid #303030;
+        border-radius: 10px; overflow: hidden;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+    }
+    .pedido-delete-header {
+        padding: 22px 24px; border-bottom: 1px solid #303030;
+        background: rgba(220, 38, 38, .06);
+    }
+    .pedido-delete-header h1 { margin: 0 0 4px; font-size: 1.25rem; color: #dc2626; }
+    .pedido-delete-header p  { margin: 0; color: #9a9a9a; font-size: .9rem; }
+
+    .pedido-delete-body { padding: 22px 24px; }
+
+    .pedido-detalles {
+        border: 1px solid #303030; border-radius: 8px;
+        margin-bottom: 18px; overflow: hidden;
+    }
+    .pedido-detalle-fila {
+        display: flex; justify-content: space-between; gap: 12px;
+        padding: 10px 14px; border-bottom: 1px solid #262626;
+        font-size: .9rem; color: #9a9a9a;
+    }
+    .pedido-detalle-fila:last-child { border-bottom: 0; }
+    .pedido-detalle-fila strong { color: #f2f2f2; text-align: right; }
+
+    .pedido-warning {
+        padding: 12px 14px; margin-bottom: 18px;
+        border: 1px solid rgba(220, 38, 38, .35); border-radius: 8px;
+        background: rgba(220, 38, 38, .08);
+        color: #e6b3b3; font-size: .88rem; line-height: 1.45;
+    }
+
+    .pedido-campo { margin-bottom: 18px; }
+    .pedido-campo > label, .pedido-campo > .pedido-campo-titulo {
+        display: block; margin-bottom: 8px; color: #f2f2f2; font-size: .9rem;
+    }
+    .pedido-campo input[type="text"] {
+        width: 100%; box-sizing: border-box; padding: 10px 12px;
+        border: 1px solid #303030; border-radius: 7px;
+        background: #111; color: #f2f2f2; font-size: 1rem;
+    }
+    .pedido-campo input[type="text"]:focus { outline: none; border-color: #dc2626; }
+
+    .pedido-radio {
+        display: flex; gap: 10px; align-items: flex-start;
+        padding: 10px 12px; margin-bottom: 8px;
+        border: 1px solid #303030; border-radius: 7px;
+        color: #cfcfcf; font-size: .88rem; cursor: pointer;
+    }
+    .pedido-radio input { margin-top: 3px; }
+
+    .pedido-delete-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pedido-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: 10px 16px; border-radius: 7px; border: 1px solid transparent;
+        font-size: .9rem; font-weight: 600; cursor: pointer; text-decoration: none;
+    }
+    .pedido-btn-eliminar { background: #dc2626; color: #fff; }
+    .pedido-btn-eliminar:hover { background: #b91c1c; }
+    .pedido-btn-cancelar { background: #191919; color: #cfcfcf; border-color: #303030; }
+    .pedido-btn-cancelar:hover { border-color: #555; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pedido-delete-page">
+
+    <a href="{% url 'detalle_historial_pedido' pedido.idpedido %}" class="pedido-delete-back">
+        <span aria-hidden="true">←</span> Volver al pedido
+    </a>
+
+    <div class="pedido-delete-card">
+
+        <div class="pedido-delete-header">
+            <h1>Eliminar pedido #{{ pedido.idpedido }}</h1>
+            <p>Esta acción borra el pedido de forma definitiva.</p>
+        </div>
+
+        <div class="pedido-delete-body">
+
+            <div class="pedido-detalles">
+                <div class="pedido-detalle-fila">
+                    <span>Pedido</span>
+                    <strong>#{{ pedido.idpedido }}</strong>
+                </div>
+                <div class="pedido-detalle-fila">
+                    <span>Fecha</span>
+                    <strong>
+                        {% if pedido.fecha_creacion %}{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}{% else %}—{% endif %}
+                    </strong>
+                </div>
+                <div class="pedido-detalle-fila">
+                    <span>Cliente</span>
+                    <strong>
+                        {% if pedido.idcliente %}{{ pedido.idcliente.nombre }} {{ pedido.idcliente.apellido }}{% else %}Cliente no registrado{% endif %}
+                    </strong>
+                </div>
+                <div class="pedido-detalle-fila">
+                    <span>Estado</span>
+                    <strong>
+                        {% if pedido.idestadopedido %}{{ pedido.idestadopedido.descripcion }}{% else %}Sin estado{% endif %}
+                    </strong>
+                </div>
+                <div class="pedido-detalle-fila">
+                    <span>Total</span>
+                    <strong>${{ pedido.total|floatformat:2 }}</strong>
+                </div>
+                <div class="pedido-detalle-fila">
+                    <span>Productos / movimientos de stock</span>
+                    <strong>{{ cant_detalles }} / {{ cant_movimientos }}</strong>
+                </div>
+            </div>
+
+            <div class="pedido-warning">
+                Se eliminarán el pedido, sus productos y sus movimientos de stock.
+                No se puede deshacer.
+                {% if es_el_unico %}
+                    <br><strong>Es el único pedido: al borrarlo, el próximo será el #1.</strong>
+                {% endif %}
+            </div>
+
+            <form method="post" autocomplete="off">
+                {% csrf_token %}
+
+                {% if pedido.stock_descontado %}
+                <div class="pedido-campo">
+                    <span class="pedido-campo-titulo">Este pedido descontó stock. ¿Qué hacemos con el stock?</span>
+
+                    <label class="pedido-radio">
+                        <input type="radio" name="devolver_stock" value="si" required
+                               {% if request.POST.devolver_stock == 'si' %}checked{% endif %}>
+                        <span>Devolver el stock (los insumos vuelven al inventario).</span>
+                    </label>
+                    <label class="pedido-radio">
+                        <input type="radio" name="devolver_stock" value="no" required
+                               {% if request.POST.devolver_stock == 'no' %}checked{% endif %}>
+                        <span>No devolverlo (por ejemplo, si el pedido ya se preparó).</span>
+                    </label>
+                </div>
+                {% endif %}
+
+                <div class="pedido-campo">
+                    <label for="confirmacion">
+                        Para confirmar, escribí el número del pedido: <strong>{{ pedido.idpedido }}</strong>
+                    </label>
+                    <input type="text" id="confirmacion" name="confirmacion"
+                           inputmode="numeric" placeholder="{{ pedido.idpedido }}" required>
+                </div>
+
+                <div class="pedido-delete-actions">
+                    <button type="submit" class="pedido-btn pedido-btn-eliminar">
+                        Sí, eliminar pedido
+                    </button>
+                    <a href="{% url 'detalle_historial_pedido' pedido.idpedido %}"
+                       class="pedido-btn pedido-btn-cancelar">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
