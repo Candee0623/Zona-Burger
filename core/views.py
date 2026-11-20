@@ -1603,15 +1603,11 @@ def procesar_checkout(request):
             '(solo números, entre 8 y 13 dígitos).'
         )
 
-    # Validación de la dirección.
-    if not calle:
-        errores['calle'] = 'Ingresá la calle.'
-    elif len(calle) > 150:
+    # La dirección es opcional; solo se controla el largo máximo.
+    if len(calle) > 150:
         errores['calle'] = 'La calle es demasiado larga.'
 
-    if not numero:
-        errores['numero'] = 'Ingresá el número de la calle.'
-    elif len(numero) > 20:
+    if len(numero) > 20:
         errores['numero'] = 'El número de calle es demasiado largo.'
 
     # Validación del comentario.
@@ -1984,7 +1980,7 @@ def procesar_checkout(request):
     E_CHECK = '\u2705'
     LINEA = '\u2501' * 16
 
-    direccion_txt = f'{calle} {numero}'
+    direccion_txt = f'{calle} {numero}'.strip() or 'A coordinar con el cliente'
     if piso:
         direccion_txt += f' (Piso/Depto: {piso})'
 

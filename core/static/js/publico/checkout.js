@@ -1223,18 +1223,6 @@ document.addEventListener('DOMContentLoaded', function () {
             telefonoInput.value = telefono;
         }
 
-        // Calle
-        if (!calleInput.value.trim()) {
-            mostrarErrorCampo(calleInput, 'Ingresá la calle.');
-            errores.push({ campo: calleInput, mensaje: 'Calle' });
-        }
-
-        // Número
-        if (!numeroInput.value.trim()) {
-            mostrarErrorCampo(numeroInput, 'Ingresá el número de la calle.');
-            errores.push({ campo: numeroInput, mensaje: 'Número de la calle' });
-        }
-
         // Dirección: debe existir y estar dentro del país y la provincia de entrega
         if (estadoDireccion.valida === false && calleInput.value.trim()) {
             mostrarErrorCampo(calleInput, estadoDireccion.mensaje);

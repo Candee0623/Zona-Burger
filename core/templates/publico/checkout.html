@@ -219,7 +219,7 @@
                             <div class="form-group">
                                 <label for="calle">
                                     <i class="fa-solid fa-road"></i>
-                                    Calle <span class="required-mark">*</span>
+                                    Calle
                                 </label>
                                 <input
                                     type="text"
@@ -228,7 +228,6 @@
                                     maxlength="150"
                                     value="{{ datos_previos.calle|default:'' }}"
                                     placeholder="Ej: Av. Corrientes"
-                                    required
                                     autocomplete="address-line1"
                                 >
                                 {% if errores.calle %}
@@ -242,7 +241,7 @@
                             <div class="form-group">
                                 <label for="numero">
                                     <i class="fa-solid fa-hashtag"></i>
-                                    Número <span class="required-mark">*</span>
+                                    Número
                                 </label>
                                 <input
                                     type="text"
@@ -251,7 +250,6 @@
                                     maxlength="20"
                                     value="{{ datos_previos.numero|default:'' }}"
                                     placeholder="Ej: 1234"
-                                    required
                                     autocomplete="off"
                                 >
                                 {% if errores.numero %}
