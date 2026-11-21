@@ -21,6 +21,12 @@ PERMISOS_SISTEMA = [
         "descripcion": "Modificar el estado de un pedido (preparación, enviado, cancelado, etc.)",
     },
     {
+        "codigo": "pedidos.editar",
+        "modulo": "Pedidos",
+        "accion": "Editar",
+        "descripcion": "Corregir los productos y el medio de pago (incluido el pago dividido) de un pedido ya cargado",
+    },
+    {
         "codigo": "pedidos.marcar_pagado",
         "modulo": "Pedidos",
         "accion": "Marcar pago",

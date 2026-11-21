@@ -112,11 +112,7 @@
 
             <strong>
 
-                {% if pedido.idmediopago %}
-                    {{ pedido.idmediopago.nombremetodo }}
-                {% else %}
-                    No especificado
-                {% endif %}
+                {{ pedido.medio_pago_texto|default:"No especificado" }}
 
             </strong>
 

@@ -32,6 +32,7 @@ from django.db.models import (
     DecimalField,
     ExpressionWrapper,
     F,
+    Max,
     Prefetch,
     Q,
     Sum,
@@ -91,7 +92,7 @@ from .forms import ExtraForm
 from .models import (
     AjusteStock, CategoriaProducto, Cliente, Compras, DetalleCompra,
     DetallePedido, Direccion, Empleado, EstadoNegocio, EstadoPedido, Extras, GrupoOpcion,
-    Horario, Insumo, Lote, MedioPago, MovimientoStock, Negocio, Opcion, Pedido, Permiso,
+    Horario, Insumo, Lote, MedioPago, MovimientoStock, Negocio, Opcion, PagoPedido, Pedido, Permiso,
     Producto, ProductoExtras, ProductoGrupoOpcion, ProductoPromocion,
     Promocion, Receta, RecetaInsumo, RedesSociales, RegistroAuditoria, Rol, RolPermiso,
     TipoBeneficio, UltimaModificacion, ZonasEntrega,
@@ -166,18 +167,40 @@ def es_peticion_ajax(request):
 
 
 def calcular_ingresos_del_dia(pedidos):
-    """Devuelve (efectivo, transferencia) cobrado, sin pedidos cancelados."""
+    """
+    Devuelve (efectivo, transferencia) cobrado, sin pedidos cancelados.
+    Los pedidos con pago dividido suman cada parte a su medio de pago.
+    """
     validos = pedidos.filter(pagado=True).exclude(
         idestadopedido__descripcion__iexact='Cancelado'
     )
 
-    efectivo = validos.filter(
-        idmediopago__nombremetodo__iexact='efectivo'
-    ).aggregate(suma=Sum('total'))['suma'] or 0
+    sin_division = validos.filter(pagos_desglosados__isnull=True)
+    partes = PagoPedido.objects.filter(
+        pedido__in=validos.filter(
+            pagos_desglosados__isnull=False
+        ).values('pk')
+    )
 
-    transferencia = validos.filter(
-        idmediopago__nombremetodo__icontains='transferencia'
-    ).aggregate(suma=Sum('total'))['suma'] or 0
+    efectivo = (
+        sin_division.filter(
+            idmediopago__nombremetodo__iexact='efectivo'
+        ).aggregate(suma=Sum('total'))['suma'] or 0
+    ) + (
+        partes.filter(
+            medio__nombremetodo__iexact='efectivo'
+        ).aggregate(suma=Sum('importe'))['suma'] or 0
+    )
+
+    transferencia = (
+        sin_division.filter(
+            idmediopago__nombremetodo__icontains='transferencia'
+        ).aggregate(suma=Sum('total'))['suma'] or 0
+    ) + (
+        partes.filter(
+            medio__nombremetodo__icontains='transferencia'
+        ).aggregate(suma=Sum('importe'))['suma'] or 0
+    )
 
     return efectivo, transferencia
 
@@ -2545,6 +2568,31 @@ def menu_panel(request):
     return render(request, 'panel/menu/inicioMenu.html')
 
 
+@panel_login_requerido
+@requiere_permiso('categorias.editar')
+@require_POST
+def categoria_mover(request, idcategoria, direccion):
+    """Sube o baja una categoría: cambia el orden en que aparecen en el menú."""
+    with transaction.atomic():
+        categorias = list(
+            CategoriaProducto.objects.select_for_update().order_by('orden', 'idcategoria')
+        )
+        indice = next(
+            (i for i, c in enumerate(categorias) if c.pk == idcategoria), None
+        )
+        if indice is None:
+            return redirect('categoria_lista')
+
+        otro = indice + (-1 if direccion == 'subir' else 1 if direccion == 'bajar' else 0)
+        if 0 <= otro < len(categorias):
+            categorias[indice], categorias[otro] = categorias[otro], categorias[indice]
+            for i, categoria in enumerate(categorias):
+                categoria.orden = i
+            CategoriaProducto.objects.bulk_update(categorias, ['orden'])
+
+    return redirect('categoria_lista')
+
+
 # Categorías
 
 @panel_login_requerido
@@ -2570,7 +2618,11 @@ def categoria_crear(request):
         elif CategoriaProducto.objects.filter(nombre__iexact=nombre).exists():
             errores.append(f'Ya existe una categoría llamada "{nombre}".')
         else:
-            CategoriaProducto.objects.create(nombre=nombre)
+            ultimo = CategoriaProducto.objects.aggregate(m=Max('orden'))['m']
+            CategoriaProducto.objects.create(
+                nombre=nombre,
+                orden=0 if ultimo is None else ultimo + 1,
+            )
             messages.success(request, 'Categoría creada correctamente.')
             return redirect('categoria_lista')
 
@@ -5533,17 +5585,39 @@ def bi_datos_dinero(inicio, fin):
     )
 
     # --- Por medio de pago ---
-    consulta_medios = list(
-        pedidos.values("idmediopago__nombremetodo")
+    # Los pedidos con pago dividido reparten su importe entre los medios usados.
+    acumulado = {}
+
+    consulta_medios = (
+        pedidos.filter(pagos_desglosados__isnull=True)
+        .values("idmediopago__nombremetodo")
         .annotate(cantidad=Count("idpedido"), importe=Sum("total"))
-        .order_by("-importe")
     )
-    medios_pago = []
     for medio in consulta_medios:
-        importe = bi_cero(medio["importe"])
+        nombre = medio["idmediopago__nombremetodo"] or "Sin medio de pago"
+        dato = acumulado.setdefault(nombre, {"cantidad": 0, "importe": bi_cero(None)})
+        dato["cantidad"] += medio["cantidad"]
+        dato["importe"] += bi_cero(medio["importe"])
+
+    consulta_partes = (
+        PagoPedido.objects.filter(pedido__in=pedidos.values("pk"))
+        .values("medio__nombremetodo")
+        .annotate(cantidad=Count("pedido", distinct=True), importe=Sum("importe"))
+    )
+    for medio in consulta_partes:
+        nombre = medio["medio__nombremetodo"] or "Sin medio de pago"
+        dato = acumulado.setdefault(nombre, {"cantidad": 0, "importe": bi_cero(None)})
+        dato["cantidad"] += medio["cantidad"]
+        dato["importe"] += bi_cero(medio["importe"])
+
+    medios_pago = []
+    for nombre, dato in sorted(
+        acumulado.items(), key=lambda kv: kv[1]["importe"], reverse=True
+    ):
+        importe = dato["importe"]
         medios_pago.append({
-            "nombre": medio["idmediopago__nombremetodo"] or "Sin medio de pago",
-            "cantidad": medio["cantidad"],
+            "nombre": nombre,
+            "cantidad": dato["cantidad"],
             "importe": importe,
             "porcentaje": bi_pct(importe, importe_total),
         })
@@ -7027,7 +7101,7 @@ def historial_pedidos(request):
         'idcliente',
         'idmediopago',
         'idestadopedido',
-    ).all()
+    ).prefetch_related('pagos_desglosados__medio').all()
 
     fecha_desde = request.GET.get('fecha_desde', '').strip()
     fecha_hasta = request.GET.get('fecha_hasta', '').strip()
@@ -7104,6 +7178,281 @@ def historial_pedidos(request):
         'cliente': cliente,
         'estado_seleccionado': estado,
     })
+
+
+def _decimal_formulario(valor, nombre_campo, minimo=Decimal('0')):
+    """Convierte un campo numérico del formulario a Decimal (2 decimales) o lanza ValueError."""
+    texto = str(valor if valor is not None else '').strip().replace(',', '.')
+    try:
+        numero = Decimal(texto)
+    except (InvalidOperation, ValueError):
+        raise ValueError(f'{nombre_campo}: ingresá un número válido.')
+    if not numero.is_finite():
+        raise ValueError(f'{nombre_campo}: ingresá un número válido.')
+    if numero < minimo:
+        raise ValueError(f'{nombre_campo}: no puede ser menor a {minimo}.')
+    if numero > PRECIO_PRODUCTO_MAX:
+        raise ValueError(f'{nombre_campo}: el importe es demasiado alto.')
+    return numero.quantize(Decimal('0.01'))
+
+
+@panel_login_requerido
+@requiere_permiso('pedidos.editar')
+def editar_historial_pedido(request, idpedido):
+    """
+    Corrige un pedido ya cargado: productos (cantidad, precio, observaciones) y medio
+    de pago. El medio de pago puede ser uno solo o dividido (ej. mitad y mitad),
+    indicando cuánto se pagó con cada medio; los importes deben sumar el total.
+    El costo de envío y el descuento de la promoción originales se conservan.
+    """
+    pedido = Pedido.objects.select_related(
+        'idcliente', 'idmediopago', 'idestadopedido'
+    ).filter(idpedido=idpedido).first()
+
+    if pedido is None:
+        return render(
+            request, 'panel/ventas/pedidoNoEncontrado.html',
+            {'idpedido': idpedido}, status=404,
+        )
+
+    estado_desc = (pedido.idestadopedido.descripcion or '') if pedido.idestadopedido_id else ''
+    if estado_desc.strip().lower() == 'cancelado':
+        messages.error(request, 'Un pedido cancelado no se puede editar.')
+        return redirect('detalle_historial_pedido', idpedido=idpedido)
+
+    detalles_actuales = list(
+        DetallePedido.objects.filter(idpedido=pedido)
+        .select_related('idproducto').order_by('iddetallepedido')
+    )
+    medios = list(MedioPago.objects.all().order_by('idmediopago'))
+    productos = list(Producto.objects.all().order_by('nombre'))
+
+    descuento = pedido.descuentopromocion or Decimal('0')
+    subtotal_actual = sum(
+        (d.preciounitario * d.cantidad for d in detalles_actuales), Decimal('0')
+    )
+    # Lo que el total tenía de más respecto de los productos (costo de envío).
+    envio = max(
+        Decimal('0'), (pedido.total or Decimal('0')) - (subtotal_actual - descuento)
+    ).quantize(Decimal('0.01'))
+
+    pagos_actuales = pedido.pagos_lista
+    es_dividido = len(pagos_actuales) > 1
+
+    def contexto_formulario(filas, modo_pago, medio_unico, importes, ajustar_stock=False):
+        return {
+            'pedido': pedido,
+            'productos': productos,
+            'medios': medios,
+            'filas': filas,
+            'modo_pago': modo_pago,
+            'medio_unico': medio_unico,
+            'pagos': [
+                {'medio': m, 'importe': importes.get(m.pk, '')} for m in medios
+            ],
+            'descuento': descuento,
+            'envio': envio,
+            'puede_ajustar_stock': pedido.stock_descontado,
+            'ajustar_stock': ajustar_stock,
+        }
+
+    if request.method != 'POST':
+        filas = [{
+            'producto': d.idproducto_id or '',
+            'nombre': d.nombre_mostrado,
+            'eliminado': d.idproducto_id is None,
+            'cantidad': d.cantidad,
+            'precio': f'{d.preciounitario:.2f}',
+            'observaciones': d.observaciones or '',
+        } for d in detalles_actuales]
+        importes = {p.medio_id: f'{p.importe:.2f}' for p in pagos_actuales}
+        return render(
+            request, 'panel/ventas/editarHistorialPedido.html',
+            contexto_formulario(
+                filas,
+                'dividido' if es_dividido else 'unico',
+                pedido.idmediopago_id or (pagos_actuales[0].medio_id if pagos_actuales else ''),
+                importes,
+            ),
+        )
+
+    # ----- POST: leer y validar -----
+    filas_form, filas_validas, errores = [], [], []
+
+    try:
+        cantidad_filas = min(int(request.POST.get('filas', '0') or 0), 60)
+    except ValueError:
+        cantidad_filas = 0
+
+    for i in range(cantidad_filas):
+        producto_id = (request.POST.get(f'producto_{i}') or '').strip()
+        nombre = (request.POST.get(f'nombre_{i}') or '').strip()[:100]
+        cantidad_raw = (request.POST.get(f'cantidad_{i}') or '').strip()
+        precio_raw = request.POST.get(f'precio_{i}')
+        observaciones = (request.POST.get(f'observaciones_{i}') or '').strip()[:250]
+
+        if not producto_id and not nombre:
+            continue  # fila vacía
+
+        filas_form.append({
+            'producto': producto_id, 'nombre': nombre,
+            'eliminado': not producto_id, 'cantidad': cantidad_raw,
+            'precio': precio_raw or '', 'observaciones': observaciones,
+        })
+
+        producto = None
+        if producto_id:
+            producto = next((p for p in productos if str(p.pk) == producto_id), None)
+            if producto is None:
+                errores.append(f'Fila {i + 1}: el producto elegido no existe.')
+                continue
+
+        try:
+            cantidad = int(cantidad_raw)
+            if not 1 <= cantidad <= 999:
+                raise ValueError
+        except ValueError:
+            errores.append(f'Fila {i + 1}: la cantidad debe ser un entero entre 1 y 999.')
+            continue
+
+        try:
+            precio = _decimal_formulario(precio_raw, f'Fila {i + 1}, precio')
+        except ValueError as exc:
+            errores.append(str(exc))
+            continue
+
+        filas_validas.append((producto, nombre, cantidad, precio, observaciones))
+
+    if not filas_form:
+        errores.append('El pedido tiene que tener al menos un producto.')
+
+    subtotal_nuevo = sum((p * c for _, _, c, p, _ in filas_validas), Decimal('0'))
+    total_nuevo = max(Decimal('0'), subtotal_nuevo - descuento + envio).quantize(Decimal('0.01'))
+
+    modo_pago = request.POST.get('modo_pago', 'unico')
+    medio_unico_id = (request.POST.get('medio_unico') or '').strip()
+    importes_form = {}
+    medio_unico = None
+    pagos_nuevos = []
+
+    if modo_pago == 'dividido':
+        for medio in medios:
+            crudo = (request.POST.get(f'importe_{medio.pk}') or '').strip()
+            importes_form[medio.pk] = crudo
+            if not crudo:
+                continue
+            try:
+                importe = _decimal_formulario(crudo, f'Importe de {medio.nombremetodo}')
+            except ValueError as exc:
+                errores.append(str(exc))
+                continue
+            if importe > 0:
+                pagos_nuevos.append((medio, importe))
+
+        if len(pagos_nuevos) < 2:
+            errores.append('En el pago dividido cargá el importe de al menos dos medios de pago.')
+        elif not errores:
+            suma = sum((i for _, i in pagos_nuevos), Decimal('0'))
+            if suma != total_nuevo:
+                diferencia = total_nuevo - suma
+                errores.append(
+                    f'Los importes suman ${suma:.2f} y el total del pedido es '
+                    f'${total_nuevo:.2f} ({"faltan" if diferencia > 0 else "sobran"} '
+                    f'${abs(diferencia):.2f}).'
+                )
+    else:
+        modo_pago = 'unico'
+        medio_unico = next((m for m in medios if str(m.pk) == medio_unico_id), None)
+        if medio_unico is None:
+            errores.append('Elegí un medio de pago.')
+
+    ajustar_stock = bool(request.POST.get('ajustar_stock')) and pedido.stock_descontado
+
+    if errores:
+        for e in errores:
+            messages.error(request, e)
+        return render(
+            request, 'panel/ventas/editarHistorialPedido.html',
+            contexto_formulario(
+                filas_form, modo_pago, medio_unico_id, importes_form, ajustar_stock
+            ),
+        )
+
+    # ----- Guardar -----
+    firma_vieja = sorted((d.idproducto_id or 0, d.cantidad) for d in detalles_actuales)
+    firma_nueva = sorted((p.pk if p else 0, c) for p, _, c, _, _ in filas_validas)
+    productos_cambiaron = firma_vieja != firma_nueva
+    resumen_pago = (
+        ' + '.join(f'{m.nombremetodo} ${i:.2f}' for m, i in pagos_nuevos)
+        if modo_pago == 'dividido' else medio_unico.nombremetodo
+    )
+
+    try:
+        with transaction.atomic():
+            pedido = Pedido.objects.select_for_update().get(pk=idpedido)
+
+            if ajustar_stock and productos_cambiaron:
+                reintegrar_stock_pedido(pedido, motivo='Edición del pedido')
+
+            DetallePedido.objects.filter(idpedido=pedido).delete()
+            for producto, nombre, cantidad, precio, observaciones in filas_validas:
+                DetallePedido.objects.create(
+                    idpedido=pedido,
+                    idproducto=producto,
+                    nombreproducto=(producto.nombre if producto else nombre)[:100],
+                    cantidad=cantidad,
+                    preciounitario=precio,
+                    observaciones=observaciones or None,
+                )
+
+            PagoPedido.objects.filter(pedido=pedido).delete()
+            if modo_pago == 'dividido':
+                for medio, importe in pagos_nuevos:
+                    PagoPedido.objects.create(pedido=pedido, medio=medio, importe=importe)
+                pedido.idmediopago = None
+            else:
+                pedido.idmediopago = medio_unico
+
+            pedido.total = total_nuevo
+            pedido.save(update_fields=['total', 'idmediopago'])
+
+            if ajustar_stock and productos_cambiaron:
+                carrito = {
+                    str(n): {'producto_id': p.pk, 'cantidad': c}
+                    for n, (p, _, c, _, _) in enumerate(filas_validas) if p
+                }
+                descontar_stock_pedido(pedido, calcular_consumo_carrito(carrito))
+    except StockInsuficienteError as exc:
+        messages.error(
+            request,
+            f'No se guardó el pedido: no hay stock suficiente para los productos nuevos ({exc}). '
+            'Probá de nuevo sin marcar "Ajustar stock" o cargá stock primero.'
+        )
+        return render(
+            request, 'panel/ventas/editarHistorialPedido.html',
+            contexto_formulario(filas_form, modo_pago, medio_unico_id, importes_form, ajustar_stock),
+        )
+    except Exception:
+        logger.exception('No se pudo editar el pedido #%s.', idpedido)
+        messages.error(request, 'No se pudo guardar el pedido. No se hizo ningún cambio.')
+        return render(
+            request, 'panel/ventas/editarHistorialPedido.html',
+            contexto_formulario(filas_form, modo_pago, medio_unico_id, importes_form, ajustar_stock),
+        )
+
+    registrar_auditoria(
+        request, 'PEDIDO_EDITAR',
+        f'Pedido #{idpedido} editado. Total: ${total_nuevo:.2f}. Pago: {resumen_pago}.',
+    )
+
+    aviso = ''
+    if productos_cambiaron and pedido.stock_descontado and not ajustar_stock:
+        aviso = (
+            ' Ojo: el stock descontado originalmente no se modificó '
+            '(si querés recalcularlo, marcá "Ajustar stock" al editar).'
+        )
+    messages.success(request, f'Pedido #{idpedido} actualizado correctamente.{aviso}')
+    return redirect('detalle_historial_pedido', idpedido=idpedido)
 
 
 @panel_login_requerido

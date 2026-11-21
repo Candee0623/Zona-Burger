@@ -1,4 +1,4 @@
-```html
+html
 {% extends "panel/base.html" %}
 {% load static %}
 
@@ -125,11 +125,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if pedido_item.idmediopago %}
-                                    {{ pedido_item.idmediopago.nombremetodo }}
-                                {% else %}
-                                    —
-                                {% endif %}
+                                {{ pedido_item.medio_pago_texto|default:"—" }}
                             </td>
                             <td class="historial-total">
                                 {% if pedido_item.total != None %}
@@ -202,4 +198,3 @@
     </section>
 </div>
 {% endblock %}
-```

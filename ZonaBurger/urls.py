@@ -69,6 +69,7 @@ urlpatterns = [
     # Historial de pedidos
     path('panel/pedidos/historial/',views.historial_pedidos,name='historial_pedidos'),
     path('panel/pedidos/historial/<int:idpedido>/',views.detalle_historial_pedido,name='detalle_historial_pedido'),
+    path('panel/pedidos/historial/<int:idpedido>/editar/', views.editar_historial_pedido, name='editar_historial_pedido'),
     path('panel/pedidos/historial/<int:idpedido>/eliminar/', views.eliminar_pedido, name='eliminar_pedido'),
 
     # Panel - Menú
@@ -76,6 +77,7 @@ urlpatterns = [
 
     # Menú - Categorías
     path('panel/categorias/', views.categoria_lista, name='categoria_lista'),
+    path('panel/categorias/<int:idcategoria>/mover/<str:direccion>/', views.categoria_mover, name='categoria_mover'),
     path('panel/categorias/crear/', views.categoria_crear, name='categoria_crear'),
     path('panel/categorias/<int:idcategoria>/editar/', views.categoria_editar, name='categoria_editar'),
     path('panel/categorias/<int:idcategoria>/eliminar/', views.categoria_eliminar, name='categoria_eliminar'),

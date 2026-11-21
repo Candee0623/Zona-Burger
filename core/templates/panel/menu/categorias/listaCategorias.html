@@ -80,6 +80,17 @@
 
         <article class="categoria-card">
 
+            <div style="display:flex;gap:8px;margin-bottom:10px;">
+                <form method="post" action="{% url 'categoria_mover' categoria.idcategoria 'subir' %}" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-categoria" title="Subir (aparece antes en el menú)" {% if forloop.first %}disabled{% endif %}>↑ Subir</button>
+                </form>
+                <form method="post" action="{% url 'categoria_mover' categoria.idcategoria 'bajar' %}" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-categoria" title="Bajar (aparece después en el menú)" {% if forloop.last %}disabled{% endif %}>↓ Bajar</button>
+                </form>
+            </div>
+
             <div class="categoria-card-top">
 
                 <div class="categoria-icon">

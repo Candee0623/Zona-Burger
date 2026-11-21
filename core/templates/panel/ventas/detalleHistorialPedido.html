@@ -28,6 +28,14 @@
         </div>
     </header>
 
+    {% if 'pedidos.editar' in permisos_usuario %}
+    <p>
+        <a href="{% url 'editar_historial_pedido' pedido.idpedido %}" class="detalle-historial-volver" style="color:#fde047;border-color:#6b5a10;">
+            ✎ Editar productos y medio de pago
+        </a>
+    </p>
+    {% endif %}
+
     <section class="detalle-historial-tarjeta">
         <h2>Información del pedido</h2>
 
@@ -46,11 +54,7 @@
             <div class="detalle-historial-dato">
                 <span>Medio de pago</span>
                 <strong>
-                    {% if pedido.idmediopago %}
-                        {{ pedido.idmediopago.nombremetodo }}
-                    {% else %}
-                        No especificado
-                    {% endif %}
+                    {{ pedido.medio_pago_texto|default:"No especificado" }}
                 </strong>
             </div>
 

@@ -277,12 +277,14 @@ class Horario(models.Model):
 class CategoriaProducto(models.Model):
     idcategoria = models.AutoField(db_column='IdCategoria', primary_key=True)
     nombre = models.CharField(db_column='Nombre', max_length=100)
+    orden = models.PositiveIntegerField(db_column='Orden', default=0)
 
     def __str__(self):
         return self.nombre
 
     class Meta:
         db_table = 'CategoriaProducto'
+        ordering = ['orden', 'idcategoria']
 
 
 class EstadoStock(models.Model):
@@ -633,8 +635,53 @@ class Pedido(models.Model):
     def __str__(self):
         return f"Pedido #{self.idpedido}"
 
+    @property
+    def pagos_lista(self):
+        """Pagos desglosados del pedido (usa prefetch_related si está disponible)."""
+        return list(self.pagos_desglosados.all())
+
+    @property
+    def es_pago_dividido(self):
+        return len(self.pagos_lista) > 1
+
+    @property
+    def medio_pago_texto(self):
+        """Texto del medio de pago: uno solo, o el detalle si se dividió (ej. mitad y mitad)."""
+        pagos = self.pagos_lista
+        if len(pagos) > 1:
+            partes = ' + '.join(
+                f"{p.medio.nombremetodo} ${p.importe:.2f}" for p in pagos
+            )
+            iguales = len({p.importe for p in pagos}) == 1
+            etiqueta = 'Mitad y mitad' if len(pagos) == 2 and iguales else 'Pago dividido'
+            return f"{etiqueta}: {partes}"
+        if pagos:
+            return pagos[0].medio.nombremetodo
+        if self.idmediopago_id and self.idmediopago:
+            return self.idmediopago.nombremetodo
+        return ''
+
     class Meta:
         db_table = 'Pedido'
+
+
+class PagoPedido(models.Model):
+    """
+    Parte del total de un pedido pagada con un medio de pago.
+    Solo se usa cuando el pedido se paga con más de un medio (ej. mitad y mitad):
+    en ese caso Pedido.idmediopago queda vacío y la suma de los importes es el total.
+    """
+    idpago = models.AutoField(db_column='IdPago', primary_key=True)
+    pedido = models.ForeignKey(Pedido, models.CASCADE, db_column='IdPedido', related_name='pagos_desglosados')
+    medio = models.ForeignKey('MedioPago', models.PROTECT, db_column='IdMedioPago', related_name='pagos_pedido')
+    importe = models.DecimalField(db_column='Importe', max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"Pedido #{self.pedido_id}: {self.medio} ${self.importe}"
+
+    class Meta:
+        db_table = 'PagoPedido'
+        ordering = ['idpago']
 
 
 class DetallePedido(models.Model):
