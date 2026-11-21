@@ -1206,12 +1206,6 @@ document.addEventListener('DOMContentLoaded', function () {
             errores.push({ campo: nombre, mensaje: 'Nombre' });
         }
 
-        // Apellido
-        if (!apellido.value.trim()) {
-            mostrarErrorCampo(apellido, 'Ingresá tu apellido.');
-            errores.push({ campo: apellido, mensaje: 'Apellido' });
-        }
-
         // Teléfono
         if (!telefono) {
             mostrarErrorCampo(telefonoInput, 'Ingresá tu teléfono.');

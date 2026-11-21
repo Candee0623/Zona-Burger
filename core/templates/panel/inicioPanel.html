@@ -249,7 +249,7 @@
                                 <polyline points="12 7 12 12 15 15"></polyline>
                             </svg>
 
-                        {% elif item.estado.descripcion == "En preparación" or item.estado.descripcion == "Preparando" %}
+                        {% elif item.estado.descripcion == "En preparación" or item.estado.descripcion == "En proceso" %}
 
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M6 13h12"></path>
@@ -566,7 +566,7 @@
                                                     <polyline points="12 7 12 12 15 15"></polyline>
                                                 </svg>
 
-                                            {% elif pedido.idestadopedido.descripcion == "En preparación" or pedido.idestadopedido.descripcion == "Preparando" %}
+                                            {% elif pedido.idestadopedido.descripcion == "En preparación" or pedido.idestadopedido.descripcion == "En proceso" %}
 
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M6 13h12"></path>

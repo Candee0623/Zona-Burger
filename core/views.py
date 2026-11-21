@@ -1587,9 +1587,8 @@ def procesar_checkout(request):
         )
 
     # Validación del apellido.
-    if not apellido:
-        errores['apellido'] = 'Ingresá tu apellido.'
-    elif not 2 <= len(apellido) <= 100:
+    # El apellido es opcional; si lo escriben, se controla el largo.
+    if apellido and not 2 <= len(apellido) <= 100:
         errores['apellido'] = (
             'El apellido debe tener entre 2 y 100 caracteres.'
         )
@@ -1990,7 +1989,7 @@ def procesar_checkout(request):
         LINEA,
         '',
         f'{E_CLIENTE} *Mis datos*',
-        f'{nombre} {apellido}',
+        f'{nombre} {apellido}'.strip(),
         f'{E_TEL} {telefono}',
         '',
         f'{E_PIN} *Dirección de entrega*',
@@ -2156,7 +2155,6 @@ def panel_inicio(request):
 
     nombres_estados = [
         'Pendiente',
-        'En Preparación',
         'En proceso',
         'Enviado',
         'Entregado',
@@ -2338,9 +2336,8 @@ def pedidos_nuevos_api(request):
 # Transiciones de estado permitidas (RN02). Las claves y valores se comparan
 # normalizados (sin tildes, en minúsculas). "entregado" y "cancelado" son finales.
 TRANSICIONES_ESTADO_PEDIDO = {
-    'pendiente': {'en preparacion', 'en proceso', 'cancelado'},
-    'en preparacion': {'en proceso', 'enviado', 'entregado', 'cancelado'},
-    'en proceso': {'en preparacion', 'enviado', 'entregado', 'cancelado'},
+        'pendiente': {'en proceso', 'cancelado'},
+    'en proceso': {'enviado', 'entregado', 'cancelado'},
     'enviado': {'entregado', 'cancelado'},
     'entregado': set(),
     'cancelado': set(),
@@ -7139,6 +7136,128 @@ def detalle_historial_pedido(request, idpedido):
         'pedido': pedido,
         'detalles': detalles,
     })
+
+
+def _reiniciar_contadores_pedidos():
+    """
+    Deja los contadores de ID de Pedido, DetallePedido y MovimientoStock en
+    MAX(id)+1 (o en 1 si la tabla está vacía). Nunca puede chocar con un ID
+    existente. Devuelve True si se reiniciaron.
+    """
+    from django.core.management.color import no_style
+    from django.db import connection
+
+    try:
+        sentencias = connection.ops.sequence_reset_sql(
+            no_style(), [Pedido, DetallePedido, MovimientoStock]
+        )
+        if not sentencias:
+            return False  # El motor de base de datos no maneja contadores así.
+        with connection.cursor() as cursor:
+            for sql in sentencias:
+                cursor.execute(sql)
+        return True
+    except Exception:
+        logger.exception('No se pudieron reiniciar los contadores de ID de pedidos.')
+        return False
+
+
+@panel_login_requerido
+@requiere_permiso('pedidos.eliminar')
+def eliminar_pedido(request, idpedido):
+    """
+    Borra definitivamente un pedido (con sus productos y movimientos de stock).
+    Pide escribir el número del pedido para confirmar y, si el pedido descontó
+    stock, obliga a elegir si se devuelve o no. Si no queda ningún pedido, los
+    contadores de ID se reinician para que el próximo sea el #1.
+    """
+    pedido = Pedido.objects.select_related(
+        'idcliente', 'idestadopedido'
+    ).filter(idpedido=idpedido).first()
+
+    if pedido is None:
+        return render(
+            request,
+            'panel/ventas/pedidoNoEncontrado.html',
+            {'idpedido': idpedido},
+            status=404,
+        )
+
+    contexto = {
+        'pedido': pedido,
+        'cant_detalles': DetallePedido.objects.filter(idpedido=pedido).count(),
+        'cant_movimientos': MovimientoStock.objects.filter(idpedido=pedido).count(),
+        'es_el_unico': not Pedido.objects.exclude(idpedido=pedido.idpedido).exists(),
+    }
+
+    if request.method != 'POST':
+        return render(request, 'panel/ventas/eliminarPedido.html', contexto)
+
+    numero = pedido.idpedido
+    confirmacion = (request.POST.get('confirmacion') or '').strip().lstrip('#').strip()
+    if confirmacion != str(numero):
+        messages.error(
+            request,
+            f'Para borrar el pedido tenés que escribir su número exacto: {numero}.'
+        )
+        return render(request, 'panel/ventas/eliminarPedido.html', contexto)
+
+    devolver_stock = False
+    if pedido.stock_descontado:
+        eleccion = request.POST.get('devolver_stock')
+        if eleccion not in ('si', 'no'):
+            messages.error(
+                request,
+                'Este pedido descontó stock: elegí si querés devolverlo o no.'
+            )
+            return render(request, 'panel/ventas/eliminarPedido.html', contexto)
+        devolver_stock = eleccion == 'si'
+
+    total = pedido.total
+    cant_detalles = contexto['cant_detalles']
+    descontaba_stock = pedido.stock_descontado
+
+    try:
+        with transaction.atomic():
+            if devolver_stock:
+                reintegrar_stock_pedido(pedido, motivo='Eliminación del pedido')
+            MovimientoStock.objects.filter(idpedido=pedido).delete()
+            DetallePedido.objects.filter(idpedido=pedido).delete()
+            pedido.delete()
+    except Exception:
+        logger.exception('No se pudo eliminar el pedido #%s.', numero)
+        messages.error(
+            request,
+            'No se pudo eliminar el pedido. No se hizo ningún cambio; probá de nuevo.'
+        )
+        return render(request, 'panel/ventas/eliminarPedido.html', contexto)
+
+    # Después de confirmar la transacción: si quedó sin pedidos, el próximo es el #1.
+    contadores_reiniciados = False
+    if not Pedido.objects.exists():
+        contadores_reiniciados = _reiniciar_contadores_pedidos()
+
+    if not descontaba_stock:
+        detalle_stock = 'no había descontado stock'
+    elif devolver_stock:
+        detalle_stock = 'stock devuelto'
+    else:
+        detalle_stock = 'stock NO devuelto'
+
+    registrar_auditoria(
+        request,
+        'PEDIDO_ELIMINAR',
+        f'Pedido #{numero} eliminado definitivamente (total ${total}, '
+        f'{cant_detalles} producto(s), {detalle_stock}).',
+    )
+
+    mensaje = f'Pedido #{numero} eliminado definitivamente.'
+    if contadores_reiniciados:
+        mensaje += ' No quedan pedidos: el próximo será el #1.'
+    messages.success(request, mensaje)
+    return redirect('historial_pedidos')
+
+
 # 11. PANEL - ABRIR / CERRAR EL NEGOCIO
 
 # 11.1 Constantes
@@ -8347,6 +8466,7 @@ ETIQUETAS_AUDITORIA = {
     'INSUMO_ELIMINAR': 'Insumo eliminado',
     'LOTE_BAJA': 'Lote dado de baja',
     'PRODUCTO_ELIMINAR': 'Producto eliminado',
+    'PEDIDO_ELIMINAR': 'Pedido eliminado',
     'NEGOCIO_ABRIR': 'Negocio abierto',
     'NEGOCIO_CERRAR': 'Negocio cerrado',
 }

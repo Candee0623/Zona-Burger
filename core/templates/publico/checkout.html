@@ -158,7 +158,7 @@
                             <div class="form-group">
                                 <label for="apellido">
                                     <i class="fa-solid fa-user"></i>
-                                    Apellido <span class="required-mark">*</span>
+                                    Apellido 
                                 </label>
                                 <input
                                     type="text"
@@ -167,7 +167,6 @@
                                     maxlength="100"
                                     value="{{ datos_previos.apellido|default:'' }}"
                                     placeholder="Tu apellido"
-                                    required
                                     autocomplete="family-name"
                                 >
                                 {% if errores.apellido %}

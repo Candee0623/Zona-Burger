@@ -579,12 +579,11 @@ class MedioPago(models.Model):
 class Cliente(models.Model):
     idcliente = models.AutoField(db_column='IdCliente', primary_key=True)
     nombre = models.CharField(db_column='Nombre', max_length=100)
-    apellido = models.CharField(db_column='Apellido', max_length=100)
+    apellido = models.CharField(db_column='Apellido', max_length=100, blank=True, default='')
     telefono = models.CharField(db_column='Telefono', max_length=30, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.nombre} {self.apellido}"
-
+                return f"{self.nombre} {self.apellido}".strip()
     class Meta:
         db_table = 'Cliente'
 

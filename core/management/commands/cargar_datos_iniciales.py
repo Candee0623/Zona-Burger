@@ -114,7 +114,7 @@ class Command(BaseCommand):
 
     def cargar_estados_pedido(self):
         self.stdout.write("  - Estados de pedido...")
-        for descripcion in ["Pendiente", "En Preparación", "En proceso",
+        for descripcion in ["Pendiente", "En proceso",
                             "Enviado", "Entregado", "Cancelado"]:
             EstadoPedido.objects.get_or_create(descripcion=descripcion)
 

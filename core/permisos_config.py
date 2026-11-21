@@ -33,6 +33,12 @@ PERMISOS_SISTEMA = [
         "descripcion": "Generar e imprimir tickets de pedidos",
     },
     {
+        "codigo": "pedidos.eliminar",
+        "modulo": "Pedidos",
+        "accion": "Eliminar",
+        "descripcion": "Eliminar definitivamente un pedido del historial (opcionalmente devolviendo el stock)",
+    },
+    {
         "codigo": "historial.ver",
         "modulo": "Pedidos",
         "accion": "Ver historial",

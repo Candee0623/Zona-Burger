@@ -69,6 +69,7 @@ urlpatterns = [
     # Historial de pedidos
     path('panel/pedidos/historial/',views.historial_pedidos,name='historial_pedidos'),
     path('panel/pedidos/historial/<int:idpedido>/',views.detalle_historial_pedido,name='detalle_historial_pedido'),
+    path('panel/pedidos/historial/<int:idpedido>/eliminar/', views.eliminar_pedido, name='eliminar_pedido'),
 
     # Panel - Menú
     path('panel/menu/', views.menu_panel, name='menu_panel'),
