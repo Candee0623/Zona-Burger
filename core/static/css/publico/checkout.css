@@ -396,6 +396,46 @@ textarea {
     font-weight: 800;
 }
 
+/* Pago dividido (efectivo + transferencia) */
+
+.split-payment {
+    margin-top: 14px;
+    padding: 16px;
+    border: 2px solid #292929;
+    border-radius: 11px;
+    background: #111111;
+}
+
+.split-payment[hidden] {
+    display: none;
+}
+
+.split-payment-help {
+    margin: 0 0 12px;
+    color: #cfcfcf;
+    font-size: .8rem;
+    line-height: 1.5;
+}
+
+.split-payment-help strong {
+    color: #ffffff;
+}
+
+.split-diff {
+    min-height: 1.2em;
+    margin-top: 10px;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.split-diff.ok {
+    color: #4cd964;
+}
+
+.split-diff.mal {
+    color: #ff5a3c;
+}
+
 .payment-required-message {
     display: flex;
     align-items: flex-start;

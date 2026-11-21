@@ -1433,8 +1433,22 @@ def procesar_checkout(request):
     # Horarios en los que se puede pedir la entrega (según el horario de atención).
     entrega = local_ventanas_entrega(info_estado)
 
+    # Pago dividido: solo disponible si existen los medios Efectivo y Transferencia.
+    medio_efectivo = next(
+        (m for m in medios_pago
+         if (m['nombremetodo'] or '').strip().lower() == 'efectivo'),
+        None,
+    )
+    medio_transferencia = next(
+        (m for m in medios_pago
+         if 'transferencia' in (m['nombremetodo'] or '').lower()),
+        None,
+    )
+    pago_dividido_disponible = bool(medio_efectivo and medio_transferencia)
+
     contexto = {
         'medios_pago': medios_pago,
+        'pago_dividido_disponible': pago_dividido_disponible,
         'zonas_entrega': zonas_entrega,
         'total_carrito': total_carrito,
         'comentario_max': comentario_max,
@@ -1639,11 +1653,34 @@ def procesar_checkout(request):
             f'(escribiste {len(comentario)}).'
         )
 
-    # Validación del método de pago.
+    # Validación del método de pago (un solo medio, o dividido Efectivo + Transferencia).
     medio_pago = None
+    pago_dividido = (id_medio_pago == 'dividido')
+    pagos_divididos = []   # [(MedioPago, importe)]
+    monto_efectivo = monto_transferencia = None
 
     if not id_medio_pago:
         errores['medio_pago'] = 'Seleccioná un método de pago.'
+    elif pago_dividido:
+        if not pago_dividido_disponible:
+            errores['medio_pago'] = 'El pago dividido no está disponible.'
+        else:
+            try:
+                monto_efectivo = _decimal_formulario(
+                    request.POST.get('monto_efectivo'), 'Efectivo'
+                )
+                monto_transferencia = _decimal_formulario(
+                    request.POST.get('monto_transferencia'), 'Transferencia'
+                )
+            except ValueError as exc:
+                errores['medio_pago'] = str(exc)
+            else:
+                if monto_efectivo <= 0 or monto_transferencia <= 0:
+                    errores['medio_pago'] = (
+                        'En el pago dividido, el importe en efectivo y el de '
+                        'transferencia tienen que ser mayores a $0. Si vas a '
+                        'pagar todo con un solo medio, elegilo en la lista.'
+                    )
     else:
         medio_pago = MedioPago.objects.filter(
             pk=id_medio_pago
@@ -1754,6 +1791,28 @@ def procesar_checkout(request):
         if error_promocion:
             errores['codigo_promocion'] = error_promocion
 
+    # Pago dividido: los importes deben sumar el total (envío y descuento incluidos).
+    # Si la promoción tiene error, el total todavía no es el definitivo: se controla después.
+    if pago_dividido and not errores.get('medio_pago') and not error_promocion:
+        total_a_pagar = max(
+            Decimal('0.00'),
+            total_carrito - descuento_promocion + costo_envio,
+        ).quantize(Decimal('0.01'))
+        suma_pagos = monto_efectivo + monto_transferencia
+
+        if suma_pagos != total_a_pagar:
+            diferencia = total_a_pagar - suma_pagos
+            errores['medio_pago'] = (
+                f'Los importes suman ${suma_pagos:.2f} y el total del pedido es '
+                f'${total_a_pagar:.2f} '
+                f'({"faltan" if diferencia > 0 else "sobran"} ${abs(diferencia):.2f}).'
+            )
+        else:
+            pagos_divididos = [
+                (MedioPago.objects.get(pk=medio_efectivo['idmediopago']), monto_efectivo),
+                (MedioPago.objects.get(pk=medio_transferencia['idmediopago']), monto_transferencia),
+            ]
+
     # Si hay errores, mantener los datos en el checkout.
     if any(errores.values()):
         _checkout_liberar(request)
@@ -1848,7 +1907,7 @@ def procesar_checkout(request):
 
             pedido = Pedido.objects.create(
                 idcliente=cliente,
-                idmediopago=medio_pago,
+                idmediopago=None if pago_dividido else medio_pago,
                 idestadopedido=estado_inicial,
                 idpromocion=(
                     objeto_promocion.idpromocion
@@ -1869,6 +1928,12 @@ def procesar_checkout(request):
                     comentario[:comentario_max] if comentario else None
                 ),
             )
+
+            # Pago dividido: una fila por medio (el pedido queda sin medio único).
+            for medio_parte, importe_parte in pagos_divididos:
+                PagoPedido.objects.create(
+                    pedido=pedido, medio=medio_parte, importe=importe_parte,
+                )
 
             # Revalidación completa del carrito justo antes de confirmar.
             for item in carrito.values():
@@ -2062,7 +2127,13 @@ def procesar_checkout(request):
     lineas.append(f'{E_MOTO} Envío: {costo_envio_texto}')
     lineas.append(LINEA)
     lineas.append(f'{E_TOTAL} *Total a pagar: ${total_general:.2f}*')
-    lineas.append(f'{E_PAGO} Pago con: *{medio_pago.nombremetodo}*')
+    if pago_dividido:
+        detalle_pago = ' + '.join(
+            f'{m.nombremetodo} ${i:.2f}' for m, i in pagos_divididos
+        )
+        lineas.append(f'{E_PAGO} Pago dividido: *{detalle_pago}*')
+    else:
+        lineas.append(f'{E_PAGO} Pago con: *{medio_pago.nombremetodo}*')
 
     if comentario:
         lineas += ['', f'{E_NOTA} *Aclaraciones:*', f'_{comentario}_']
@@ -7845,7 +7916,7 @@ def local_calcular_estado():
     }
 
 # Entrega programada
-ENTREGA_MARGEN_CIERRE_MIN = 30   # última entrega: 30 min antes de cerrar
+ENTREGA_MARGEN_CIERRE_MIN = 0    # última entrega: hasta el horario de cierre (sin margen)
 ENTREGA_ANTICIPACION_MIN = 20    # mínimo: dentro de 20 min a partir de ahora
 
 
@@ -7946,10 +8017,13 @@ def error_horario_entrega(hora, info=None):
             return ''
 
     if info['ventanas']:
-        return (
-            f"Elegí un horario dentro de: {info['texto']} hs. "
-            f"Dejamos {info['margen']} minutos antes del cierre para llegar a tiempo."
-        )
+        mensaje = f"Elegí un horario dentro de: {info['texto']} hs."
+        if info['margen']:
+            mensaje += (
+                f" Dejamos {info['margen']} minutos antes del cierre "
+                'para llegar a tiempo.'
+            )
+        return mensaje
 
     return (
         'Hoy ya no hay horarios de entrega disponibles. '

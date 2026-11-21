@@ -465,7 +465,71 @@
                                 <div class="payment-empty">No hay medios de pago disponibles.</div>
                             {% endfor %}
 
+                            {% if pago_dividido_disponible %}
+                                <div class="payment-option">
+                                    <input
+                                        type="radio"
+                                        id="pago-dividido"
+                                        name="medio_pago"
+                                        value="dividido"
+                                        {% if datos_previos.medio_pago == 'dividido' %}checked{% endif %}
+                                        required
+                                    >
+                                    <label for="pago-dividido">
+                                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                                        <span>Dividido: efectivo + transferencia</span>
+                                    </label>
+                                </div>
+                            {% endif %}
+
                         </div>
+
+                        {% if pago_dividido_disponible %}
+                            <div id="pago-dividido-box" class="split-payment" hidden>
+                                <p class="split-payment-help">
+                                    Indicá cuánto vas a pagar con cada medio. Tienen que sumar el
+                                    total del pedido: <strong id="split-total">$0.00</strong>
+                                </p>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="monto_efectivo">
+                                            <i class="fa-solid fa-money-bill-wave"></i>
+                                            Monto en efectivo
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="monto_efectivo"
+                                            name="monto_efectivo"
+                                            inputmode="decimal"
+                                            min="0"
+                                            step="0.01"
+                                            value="{{ datos_previos.monto_efectivo|default:'' }}"
+                                            placeholder="0.00"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="monto_transferencia">
+                                            <i class="fa-solid fa-building-columns"></i>
+                                            Monto en transferencia
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="monto_transferencia"
+                                            name="monto_transferencia"
+                                            inputmode="decimal"
+                                            min="0"
+                                            step="0.01"
+                                            value="{{ datos_previos.monto_transferencia|default:'' }}"
+                                            placeholder="0.00"
+                                        >
+                                    </div>
+                                </div>
+
+                                <div id="split-diff" class="split-diff" aria-live="polite"></div>
+                            </div>
+                        {% endif %}
 
                         <div id="payment-required-message" class="payment-required-message hidden">
                             <i class="fa-solid fa-circle-exclamation"></i>

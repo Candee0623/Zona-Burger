@@ -47,6 +47,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const horarioInput = $('horario_entrega');
     const horarioAyudaTexto = $('horario-ayuda-texto');
 
+    const splitBox = $('pago-dividido-box');
+    const montoEfectivo = $('monto_efectivo');
+    const montoTransferencia = $('monto_transferencia');
+    const splitTotal = $('split-total');
+    const splitDiff = $('split-diff');
+
     /* 2. ESTADO Y CONSTANTES */
 
     let subtotal = parseFloat(window.ZB_CHECKOUT.totalCarrito) || 0;
@@ -251,6 +257,90 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (descuentoValor) descuentoValor.textContent = '-$0.00';
             }
         }
+
+        actualizarPagoDividido();
+    }
+
+    /* 4b. PAGO DIVIDIDO (efectivo + transferencia) */
+
+    let ultimoMontoEditado = null;   // 'efectivo' | 'transferencia'
+
+    function totalAPagar() {
+        return Math.round(Math.max(0, subtotal + costoEnvio - descuento) * 100) / 100;
+    }
+
+    function leerMonto(input) {
+        const n = parseFloat(String((input && input.value) || '').replace(',', '.'));
+        return isNaN(n) ? 0 : Math.round(n * 100) / 100;
+    }
+
+    function pagoDivididoActivo() {
+        const radio = form.querySelector('input[name="medio_pago"]:checked');
+        return !!radio && radio.value === 'dividido';
+    }
+
+    // Al escribir un importe, el otro se completa con lo que falta para llegar al total.
+    function completarOtroMonto(origen) {
+        const desde = origen === 'efectivo' ? montoEfectivo : montoTransferencia;
+        const hacia = origen === 'efectivo' ? montoTransferencia : montoEfectivo;
+        if (!desde || !hacia || !desde.value.trim()) return;
+        hacia.value = Math.max(0, totalAPagar() - leerMonto(desde)).toFixed(2);
+    }
+
+    function mostrarDiferenciaPago() {
+        if (!splitDiff || !montoEfectivo || !montoTransferencia) return;
+
+        if (!montoEfectivo.value.trim() && !montoTransferencia.value.trim()) {
+            splitDiff.textContent = '';
+            splitDiff.className = 'split-diff';
+            return;
+        }
+
+        const suma = leerMonto(montoEfectivo) + leerMonto(montoTransferencia);
+        const dif = Math.round((totalAPagar() - suma) * 100) / 100;
+
+        if (dif === 0) {
+            splitDiff.textContent = 'Los importes coinciden con el total \u2714';
+            splitDiff.className = 'split-diff ok';
+        } else {
+            splitDiff.textContent = (dif > 0 ? 'Faltan $' : 'Sobran $') + Math.abs(dif).toFixed(2);
+            splitDiff.className = 'split-diff mal';
+        }
+    }
+
+    function actualizarPagoDividido() {
+        if (!splitBox) return;
+
+        const activo = pagoDivididoActivo();
+        splitBox.hidden = !activo;
+
+        if (!activo) {
+            ultimoMontoEditado = null;
+            return;
+        }
+
+        if (splitTotal) splitTotal.textContent = '$' + totalAPagar().toFixed(2);
+
+        // Si cambió el total (envío o promoción), se reajusta el importe que no se tocó.
+        if (ultimoMontoEditado) completarOtroMonto(ultimoMontoEditado);
+
+        mostrarDiferenciaPago();
+    }
+
+    if (montoEfectivo && montoTransferencia) {
+        montoEfectivo.addEventListener('input', function () {
+            ultimoMontoEditado = 'efectivo';
+            completarOtroMonto('efectivo');
+            mostrarDiferenciaPago();
+            guardarCheckout();
+        });
+
+        montoTransferencia.addEventListener('input', function () {
+            ultimoMontoEditado = 'transferencia';
+            completarOtroMonto('transferencia');
+            mostrarDiferenciaPago();
+            guardarCheckout();
+        });
     }
 
     /* 5. BANNER DE ESTADO DE ZONA */
@@ -948,7 +1038,8 @@ document.addEventListener('DOMContentLoaded', function () {
         'calle', 'numero', 'piso',
         'input-localidad', 'localidad', 'select-zona',
         'coord_lat', 'coord_lng',
-        'horario_entrega', 'codigo_promocion', 'comentario'
+        'horario_entrega', 'codigo_promocion', 'comentario',
+        'monto_efectivo', 'monto_transferencia'
     ];
 
     function obtenerDatosCheckout() {
@@ -1046,6 +1137,7 @@ document.addEventListener('DOMContentLoaded', function () {
     form.querySelectorAll('input[name="medio_pago"]').forEach(function (radio) {
         radio.addEventListener('change', function () {
             limpiarErrorPago();
+            actualizarPagoDividido();
             guardarCheckout();
         });
     });
@@ -1223,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', function () {
             errores.push({ campo: calleInput, mensaje: 'Dirección dentro de la zona de entrega' });
         }
 
-        // Horario de entrega: dentro del horario de atención (con margen antes del cierre)
+        // Horario de entrega: dentro del horario de atención (hasta el cierre)
         const errorHorario = horarioInput ? errorHorarioEntrega(horarioInput.value) : '';
         if (errorHorario) {
             mostrarErrorCampo(horarioInput, errorHorario);
@@ -1263,6 +1355,25 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             paymentRequiredMessage.classList.remove('hidden');
             errores.push({ campo: null, mensaje: 'Método de pago' });
+        }
+
+        // Pago dividido: los dos importes deben ser mayores a 0 y sumar el total
+        if (pagoDivididoActivo()) {
+            const ef = leerMonto(montoEfectivo);
+            const tr = leerMonto(montoTransferencia);
+            const total = totalAPagar();
+            let mensajePago = '';
+
+            if (ef <= 0 || tr <= 0) {
+                mensajePago = 'Ingresá el importe en efectivo y el de transferencia (mayores a $0).';
+            } else if (Math.round((ef + tr) * 100) !== Math.round(total * 100)) {
+                mensajePago = 'Los importes tienen que sumar $' + total.toFixed(2) + '.';
+            }
+
+            if (mensajePago) {
+                mostrarErrorCampo(montoTransferencia, mensajePago);
+                errores.push({ campo: montoTransferencia, mensaje: 'Importes del pago dividido' });
+            }
         }
 
         // Resumen de errores
