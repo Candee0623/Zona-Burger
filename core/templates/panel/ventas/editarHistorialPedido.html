@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="detalle-historial-contenedor">
+<div class="detalle-historial-contenedor ep-pagina">
     <a href="{% url 'detalle_historial_pedido' pedido.idpedido %}" class="detalle-historial-volver">
         <span aria-hidden="true">←</span> Volver al pedido
     </a>
@@ -18,7 +18,7 @@
         <div class="detalle-historial-icono">✎</div>
         <div>
             <h1>Editar pedido #{{ pedido.idpedido }}</h1>
-            <p>Corregí los productos o el medio de pago. El costo de envío y el descuento originales se mantienen.</p>
+            <p>Corregí los productos, los extras, el medio de pago, el estado o el estado de pago. El costo de envío y el descuento originales se mantienen.</p>
         </div>
     </header>
 
@@ -26,18 +26,65 @@
           data-descuento="{{ descuento|stringformat:'f' }}" data-envio="{{ envio|stringformat:'f' }}">
         {% csrf_token %}
         <input type="hidden" name="filas" id="filas-total" value="0">
+        <input type="hidden" name="estado_esperado" value="{{ estado_actual.pk|default:'' }}">
+
+        <section class="detalle-historial-tarjeta">
+            <h2>Estado y pago</h2>
+            <div class="ep-cuerpo">
+                <label class="ep-campo">
+                    <span>Estado</span>
+                    <select name="estado" id="ep-estado" {% if not puede_cambiar_estado %}disabled{% endif %}>
+                        {% if not estado_actual %}<option value="">— Sin estado —</option>{% endif %}
+                        {% for e in estados %}
+                        <option value="{{ e.id }}" data-cancelado="{% if e.cancelado %}1{% endif %}" {% if estado_sel == e.id|stringformat:'s' %}selected{% endif %}>{{ e.descripcion }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                {% if not puede_estado %}
+                <p class="ep-ayuda">No tenés permiso para cambiar el estado de los pedidos.</p>
+                {% elif not puede_cambiar_estado %}
+                <p class="ep-ayuda">Este pedido está en un estado final, por eso ya no se puede cambiar.</p>
+                {% else %}
+                <p class="ep-ayuda">Solo se muestran los estados a los que el pedido puede pasar desde “{{ estado_actual.descripcion }}”.</p>
+                {% endif %}
+
+                <label class="ep-campo ep-campo-pago">
+                    <span>Estado de pago</span>
+                    <select name="pagado" {% if not puede_pagado %}disabled{% endif %}>
+                        <option value="1" {% if pagado_sel == '1' %}selected{% endif %}>Pagado</option>
+                        <option value="0" {% if pagado_sel != '1' %}selected{% endif %}>Pendiente</option>
+                    </select>
+                </label>
+                {% if not puede_pagado %}
+                <p class="ep-ayuda">No tenés permiso para cambiar el estado de pago.</p>
+                {% endif %}
+
+                <div id="ep-motivo-bloque" class="ep-motivo" hidden>
+                    <label class="ep-campo">
+                        <span>Motivo de la cancelación</span>
+                        <textarea name="justificacioncancelacion" maxlength="250" rows="3" placeholder="Contá por qué se cancela el pedido">{{ motivo }}</textarea>
+                    </label>
+                    <p class="ep-ayuda">Al cancelar se devuelve al stock lo que descontó el pedido. Un pedido cancelado no se puede reabrir ni editar.</p>
+                </div>
+            </div>
+        </section>
 
         <section class="detalle-historial-tarjeta">
             <h2>Productos</h2>
+            <div class="ep-cuerpo">
             <div class="ep-tabla-scroll">
                 <table class="ep-tabla">
+                    <colgroup>
+                        <col class="ep-col-producto"><col class="ep-col-cant"><col class="ep-col-precio">
+                        <col class="ep-col-subtotal"><col class="ep-col-obs"><col class="ep-col-quitar">
+                    </colgroup>
                     <thead>
                         <tr><th>Producto</th><th>Cant.</th><th>Precio unit.</th><th>Subtotal</th><th>Observaciones</th><th></th></tr>
                     </thead>
                     <tbody id="ep-filas">
                         {% for fila in filas %}
                         <tr class="ep-fila">
-                            <td>
+                            <td data-label="Producto">
                                 {% if fila.eliminado %}
                                     <input type="hidden" data-f="producto" value="">
                                     <input type="text" data-f="nombre" value="{{ fila.nombre }}" maxlength="100" title="Producto eliminado del menú">
@@ -48,36 +95,43 @@
                                         <option value="{{ p.idproducto }}" data-precio="{{ p.precio|stringformat:'f' }}" {% if fila.producto == p.idproducto or fila.producto|stringformat:'s' == p.idproducto|stringformat:'s' %}selected{% endif %}>{{ p.nombre }}</option>
                                         {% endfor %}
                                     </select>
+                                    <details class="ep-extras" hidden>
+                                        <summary>Extras <span class="ep-extras-cuenta"></span></summary>
+                                        <div class="ep-extras-lista"></div>
+                                    </details>
+                                    <input type="hidden" data-f="extras" value="{{ fila.extras }}">
                                 {% endif %}
                             </td>
-                            <td><input type="number" data-f="cantidad" min="1" max="999" step="1" value="{{ fila.cantidad }}"></td>
-                            <td><input type="number" data-f="precio" min="0" step="0.01" value="{{ fila.precio }}"></td>
-                            <td class="ep-subtotal">$0.00</td>
-                            <td><input type="text" data-f="observaciones" maxlength="250" value="{{ fila.observaciones }}"></td>
-                            <td><button type="button" class="ep-btn ep-quitar" title="Quitar producto">✕</button></td>
+                            <td data-label="Cantidad"><input type="number" data-f="cantidad" min="1" max="999" step="1" value="{{ fila.cantidad }}"></td>
+                            <td data-label="Precio unit."><input type="number" data-f="precio" min="0" step="0.01" value="{{ fila.precio }}"></td>
+                            <td class="ep-subtotal" data-label="Subtotal">$0.00</td>
+                            <td data-label="Observaciones"><input type="text" data-f="observaciones" maxlength="250" value="{{ fila.observaciones }}"></td>
+                            <td class="ep-celda-quitar"><button type="button" class="ep-btn ep-quitar" title="Quitar producto" aria-label="Quitar producto"><span aria-hidden="true">✕</span><span class="ep-quitar-txt">Quitar producto</span></button></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            <button type="button" class="ep-btn" id="ep-agregar">+ Agregar producto</button>
+            <button type="button" class="ep-btn ep-agregar" id="ep-agregar">+ Agregar producto</button>
 
             <div class="ep-resumen">
                 <div><span>Descuento</span><strong>−${{ descuento|floatformat:2 }}</strong></div>
                 <div><span>Envío</span><strong>${{ envio|floatformat:2 }}</strong></div>
                 <div class="ep-total"><span>Total</span><strong id="ep-total">$0.00</strong></div>
             </div>
+            </div>
         </section>
 
         <section class="detalle-historial-tarjeta">
             <h2>Medio de pago</h2>
+            <div class="ep-cuerpo">
 
             <div class="ep-modos">
                 <label><input type="radio" name="modo_pago" value="unico" {% if modo_pago != 'dividido' %}checked{% endif %}> Un solo medio</label>
                 <label><input type="radio" name="modo_pago" value="dividido" {% if modo_pago == 'dividido' %}checked{% endif %}> Dividido (mitad y mitad u otra proporción)</label>
             </div>
 
-            <div id="pago-unico" class="ep-bloque">
+            <div id="pago-unico" class="ep-bloque ep-pago-unico">
                 <select name="medio_unico">
                     <option value="">— Elegí un medio —</option>
                     {% for m in medios %}
@@ -101,16 +155,19 @@
                     <span id="ep-diferencia" class="ep-diferencia"></span>
                 </div>
             </div>
+            </div>
         </section>
 
         {% if puede_ajustar_stock %}
         <section class="detalle-historial-tarjeta">
             <h2>Stock</h2>
+            <div class="ep-cuerpo">
             <label class="ep-check">
                 <input type="checkbox" name="ajustar_stock" value="1" {% if ajustar_stock %}checked{% endif %}>
                 Ajustar stock si cambian los productos
             </label>
             <p class="ep-ayuda">Devuelve el stock que descontó este pedido y descuenta de nuevo según la receta base de los productos nuevos. Los extras y opciones elegidos por el cliente no se recalculan.</p>
+            </div>
         </section>
         {% endif %}
 
@@ -122,22 +179,29 @@
 
     <template id="ep-plantilla">
         <tr class="ep-fila">
-            <td>
+            <td data-label="Producto">
                 <select data-f="producto">
                     <option value="">— Elegí un producto —</option>
                     {% for p in productos %}
                     <option value="{{ p.idproducto }}" data-precio="{{ p.precio|stringformat:'f' }}">{{ p.nombre }}</option>
                     {% endfor %}
                 </select>
+                <details class="ep-extras" hidden>
+                    <summary>Extras <span class="ep-extras-cuenta"></span></summary>
+                    <div class="ep-extras-lista"></div>
+                </details>
+                <input type="hidden" data-f="extras" value="">
             </td>
-            <td><input type="number" data-f="cantidad" min="1" max="999" step="1" value="1"></td>
-            <td><input type="number" data-f="precio" min="0" step="0.01" value="0.00"></td>
-            <td class="ep-subtotal">$0.00</td>
-            <td><input type="text" data-f="observaciones" maxlength="250" value=""></td>
-            <td><button type="button" class="ep-btn ep-quitar" title="Quitar producto">✕</button></td>
+            <td data-label="Cantidad"><input type="number" data-f="cantidad" min="1" max="999" step="1" value="1"></td>
+            <td data-label="Precio unit."><input type="number" data-f="precio" min="0" step="0.01" value="0.00"></td>
+            <td class="ep-subtotal" data-label="Subtotal">$0.00</td>
+            <td data-label="Observaciones"><input type="text" data-f="observaciones" maxlength="250" value=""></td>
+            <td class="ep-celda-quitar"><button type="button" class="ep-btn ep-quitar" title="Quitar producto" aria-label="Quitar producto"><span aria-hidden="true">✕</span><span class="ep-quitar-txt">Quitar producto</span></button></td>
         </tr>
     </template>
 </div>
+
+{{ extras_json|json_script:"ep-extras-data" }}
 
 <script>
 (function () {
@@ -177,6 +241,123 @@
         }
     }
 
+    /* ---------- Extras ---------- */
+    var datosExtras = JSON.parse(document.getElementById('ep-extras-data').textContent);
+    var catalogo = datosExtras.catalogo;
+    var porProducto = datosExtras.por_producto;
+    var maxExtra = datosExtras.max;
+
+    function leerMapa(tr) {
+        var campo = tr.querySelector('[data-f=extras]');
+        var mapa = {};
+        if (!campo || !campo.value) return mapa;
+        campo.value.split(',').forEach(function (par) {
+            var a = par.split(':');
+            if (a[0] && catalogo[a[0]]) mapa[a[0]] = parseInt(a[1], 10) || 1;
+        });
+        return mapa;
+    }
+    function totalMapa(mapa) {
+        return Object.keys(mapa).reduce(function (suma, id) {
+            return suma + num(catalogo[id].precio) * mapa[id];
+        }, 0);
+    }
+    function mapaACadena(mapa) {
+        return Object.keys(mapa).map(function (id) { return id + ':' + mapa[id]; }).join(',');
+    }
+    function resumenExtras(tr, mapa) {
+        var cuenta = tr.querySelector('.ep-extras-cuenta');
+        var n = Object.keys(mapa).length;
+        if (cuenta) cuenta.textContent = n ? '(' + n + ')' : '';
+    }
+
+    // Arma la lista de extras del producto elegido (más los que la fila ya tenía).
+    function construirExtras(tr) {
+        var detalle = tr.querySelector('.ep-extras');
+        if (!detalle) return;
+        var selector = tr.querySelector('select[data-f=producto]');
+        var mapa = leerMapa(tr);
+        var ids = ((selector && porProducto[selector.value]) || []).map(String);
+        Object.keys(mapa).forEach(function (id) { if (ids.indexOf(id) === -1) ids.push(id); });
+
+        var lista = detalle.querySelector('.ep-extras-lista');
+        lista.innerHTML = '';
+        ids = ids.filter(function (id) { return catalogo[id]; });
+        if (!ids.length) { detalle.hidden = true; resumenExtras(tr, {}); return; }
+
+        ids.forEach(function (id) {
+            var extra = catalogo[id];
+            var etiqueta = document.createElement('label');
+            etiqueta.className = 'ep-extra';
+
+            var check = document.createElement('input');
+            check.type = 'checkbox';
+            check.value = id;
+            check.checked = !!mapa[id];
+
+            var nombre = document.createElement('span');
+            nombre.className = 'ep-extra-nombre';
+            nombre.textContent = extra.nombre + ' ';
+            var precio = document.createElement('small');
+            precio.textContent = '+' + dinero(num(extra.precio));
+            nombre.appendChild(precio);
+
+            var cant = document.createElement('select');
+            cant.className = 'ep-extra-cant';
+            cant.setAttribute('aria-label', 'Cantidad de ' + extra.nombre);
+            for (var i = 1; i <= maxExtra; i++) {
+                var op = document.createElement('option');
+                op.value = i; op.textContent = 'x' + i;
+                cant.appendChild(op);
+            }
+            cant.value = mapa[id] || 1;
+            cant.disabled = !check.checked;
+
+            etiqueta.appendChild(check);
+            etiqueta.appendChild(nombre);
+            etiqueta.appendChild(cant);
+            lista.appendChild(etiqueta);
+        });
+        detalle.hidden = false;
+        detalle.open = Object.keys(mapa).length > 0;
+        resumenExtras(tr, mapa);
+    }
+
+    // Al tildar/destildar un extra, el precio unitario sube o baja lo que cuesta.
+    function aplicarExtras(tr) {
+        var mapa = {};
+        tr.querySelectorAll('.ep-extra').forEach(function (e) {
+            var check = e.querySelector('input[type=checkbox]');
+            var cant = e.querySelector('.ep-extra-cant');
+            cant.disabled = !check.checked;
+            if (check.checked) mapa[check.value] = parseInt(cant.value, 10) || 1;
+        });
+        var nuevo = totalMapa(mapa);
+        var previo = parseFloat(tr.dataset.extrasTotal) || 0;
+        var campoPrecio = tr.querySelector('[data-f=precio]');
+        var precio = Math.max(0, Math.round((num(campoPrecio.value) + nuevo - previo) * 100) / 100);
+        campoPrecio.value = precio.toFixed(2);
+        tr.dataset.extrasTotal = String(nuevo);
+        tr.querySelector('[data-f=extras]').value = mapaACadena(mapa);
+        resumenExtras(tr, mapa);
+        refrescar();
+    }
+
+    function iniciarFila(tr) {
+        tr.dataset.extrasTotal = String(totalMapa(leerMapa(tr)));
+        construirExtras(tr);
+    }
+
+    /* ---------- Estado ---------- */
+    var selEstado = document.getElementById('ep-estado');
+    var bloqueMotivo = document.getElementById('ep-motivo-bloque');
+    function mostrarMotivo() {
+        if (!selEstado || !bloqueMotivo) return;
+        var op = selEstado.selectedOptions[0];
+        bloqueMotivo.hidden = !(op && op.dataset.cancelado === '1');
+    }
+    if (selEstado) selEstado.addEventListener('change', mostrarMotivo);
+
     function modo() { return form.querySelector('[name=modo_pago]:checked').value; }
     function mostrarModo() {
         document.getElementById('pago-unico').style.display = modo() === 'unico' ? '' : 'none';
@@ -188,20 +369,30 @@
     cuerpo.addEventListener('change', function (e) {
         if (e.target.matches('select[data-f=producto]')) {
             var opt = e.target.selectedOptions[0];
+            var fila = e.target.closest('tr');
             if (opt && opt.dataset.precio) {
-                e.target.closest('tr').querySelector('[data-f=precio]').value = opt.dataset.precio;
+                fila.querySelector('[data-f=precio]').value = opt.dataset.precio;
             }
+            // Cambió el producto: los extras del anterior ya no corresponden.
+            fila.dataset.extrasTotal = '0';
+            fila.querySelector('[data-f=extras]').value = '';
+            construirExtras(fila);
+        } else if (e.target.closest('.ep-extra')) {
+            aplicarExtras(e.target.closest('tr'));
+            return;
         }
         refrescar();
     });
     cuerpo.addEventListener('click', function (e) {
-        if (e.target.classList.contains('ep-quitar')) {
-            e.target.closest('tr').remove();
+        var quitar = e.target.closest('.ep-quitar');
+        if (quitar) {
+            quitar.closest('tr').remove();
             refrescar();
         }
     });
     document.getElementById('ep-agregar').addEventListener('click', function () {
         cuerpo.appendChild(plantilla.content.cloneNode(true));
+        iniciarFila(cuerpo.lastElementChild);
         refrescar();
     });
     importes.forEach(function (i) { i.addEventListener('input', refrescar); });
@@ -228,6 +419,8 @@
         document.getElementById('filas-total').value = filas.length;
     });
 
+    cuerpo.querySelectorAll('.ep-fila').forEach(iniciarFila);
+    mostrarMotivo();
     mostrarModo();
 })();
 </script>

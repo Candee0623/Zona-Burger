@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /* CONFIGURACIÓN */
 
-    const MOBILE_BREAKPOINT = 850;
+    const MOBILE_BREAKPOINT = 1100;
 
     function isMobile() {
         return window.innerWidth <= MOBILE_BREAKPOINT;

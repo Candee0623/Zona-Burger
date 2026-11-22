@@ -7267,12 +7267,77 @@ def _decimal_formulario(valor, nombre_campo, minimo=Decimal('0')):
     return numero.quantize(Decimal('0.01'))
 
 
+# Máximo de unidades por extra (el mismo que permite el menú público).
+EXTRA_MAX_CANTIDAD = 5
+
+# Los extras de un pedido se guardan como texto en DetallePedido.observaciones
+# ("Extra: Queso (x2)") y su precio va sumado al precio unitario.
+_RE_EXTRA_EN_TEXTO = re.compile(r'Extra:\s*(.+?)\s*\(x(\d+)\)', re.IGNORECASE)
+
+
+class _PedidoModificado(Exception):
+    """El pedido cambió (o dejó de poder cambiar de estado) mientras se editaba."""
+
+
+def _separar_extras_de_observaciones(texto, extras_por_nombre):
+    """
+    Saca de las observaciones los extras que se pueden reconocer.
+    Devuelve (observaciones_sin_extras, {idextra: cantidad}).
+    """
+    encontrados = {}
+
+    def _reemplazo(m):
+        extra = extras_por_nombre.get(m.group(1).strip().lower())
+        if extra is None:
+            return m.group(0)  # extra que ya no existe: se deja como texto
+        encontrados[extra.pk] = max(1, min(int(m.group(2)), EXTRA_MAX_CANTIDAD))
+        return ''
+
+    limpio = _RE_EXTRA_EN_TEXTO.sub(_reemplazo, texto or '')
+    limpio = re.sub(r'(\s*,\s*){2,}', ', ', limpio).strip(' ,')
+    return limpio, encontrados
+
+
+def _extras_a_texto(extras):
+    """{idextra: cantidad} -> ['Extra: Queso (x2)', ...] (ordenado por id de extra)."""
+    return [
+        f'Extra: {nombre} (x{cantidad})'
+        for _, nombre, cantidad in sorted(extras, key=lambda e: e[0])
+    ]
+
+
+def _extras_a_cadena(extras):
+    """{idextra: cantidad} -> '3:2,5:1' (formato del campo oculto del formulario)."""
+    return ','.join(f'{k}:{v}' for k, v in sorted(extras.items()))
+
+
+def _leer_extras_formulario(crudo):
+    """'3:2,5:1' -> {3: 2, 5: 1}. Lanza ValueError si el texto no es válido."""
+    resultado = {}
+    for parte in (crudo or '').split(','):
+        parte = parte.strip()
+        if not parte:
+            continue
+        id_txt, _, cant_txt = parte.partition(':')
+        try:
+            id_extra, cantidad = int(id_txt), int(cant_txt)
+        except ValueError:
+            raise ValueError('los extras elegidos no son válidos.')
+        if not 1 <= cantidad <= EXTRA_MAX_CANTIDAD:
+            raise ValueError(
+                f'la cantidad de cada extra debe estar entre 1 y {EXTRA_MAX_CANTIDAD}.'
+            )
+        resultado[id_extra] = cantidad
+    return resultado
+
+
 @panel_login_requerido
 @requiere_permiso('pedidos.editar')
 def editar_historial_pedido(request, idpedido):
     """
-    Corrige un pedido ya cargado: productos (cantidad, precio, observaciones) y medio
-    de pago. El medio de pago puede ser uno solo o dividido (ej. mitad y mitad),
+    Corrige un pedido ya cargado: productos (cantidad, precio, extras, observaciones),
+    medio de pago y estado (con las mismas reglas que el cambio de estado del panel).
+    El medio de pago puede ser uno solo o dividido (ej. mitad y mitad),
     indicando cuánto se pagó con cada medio; los importes deben sumar el total.
     El costo de envío y el descuento de la promoción originales se conservan.
     """
@@ -7307,12 +7372,57 @@ def editar_historial_pedido(request, idpedido):
         Decimal('0'), (pedido.total or Decimal('0')) - (subtotal_actual - descuento)
     ).quantize(Decimal('0.01'))
 
+    # ----- Extras disponibles -----
+    extras_catalogo = list(Extras.objects.all().order_by('nombre'))
+    extras_por_nombre = {e.nombre.strip().lower(): e for e in extras_catalogo}
+    extras_por_id = {e.pk: e for e in extras_catalogo}
+    extras_por_producto = {}
+    for rel in ProductoExtras.objects.filter(idextra__isnull=False):
+        extras_por_producto.setdefault(str(rel.idproducto_id), []).append(rel.idextra_id)
+    extras_json = {
+        'catalogo': {
+            str(e.pk): {'nombre': e.nombre, 'precio': f'{e.precio:.2f}'}
+            for e in extras_catalogo
+        },
+        'por_producto': extras_por_producto,
+        'max': EXTRA_MAX_CANTIDAD,
+    }
+
+    # ----- Estado -----
+    puede_estado = bool(
+        getattr(request.user, 'tiene_permiso', lambda codigo: False)('pedidos.cambiar_estado')
+    )
+    puede_pagado = bool(
+        getattr(request.user, 'tiene_permiso', lambda codigo: False)('pedidos.marcar_pagado')
+    )
+    estado_actual = pedido.idestadopedido
+    estados_permitidos = [
+        e for e in EstadoPedido.objects.all().order_by('idestado')
+        if (estado_actual is not None and e.pk == estado_actual.pk)
+        or _transicion_estado_valida(estado_actual, e)[0]
+    ]
+    puede_cambiar_estado = puede_estado and len(estados_permitidos) > 1
+
     pagos_actuales = pedido.pagos_lista
     es_dividido = len(pagos_actuales) > 1
 
-    def contexto_formulario(filas, modo_pago, medio_unico, importes, ajustar_stock=False):
+    def contexto_formulario(filas, modo_pago, medio_unico, importes, ajustar_stock=False,
+                            estado_sel='', motivo='', pagado_sel=''):
         return {
+            'puede_pagado': puede_pagado,
+            'pagado_sel': pagado_sel if pagado_sel in ('0', '1') else ('1' if pedido.pagado else '0'),
             'pedido': pedido,
+            'extras_json': extras_json,
+            'estado_actual': estado_actual,
+            'estados': [
+                {'id': e.pk, 'descripcion': e.descripcion,
+                 'cancelado': _norm_estado(e.descripcion) == 'cancelado'}
+                for e in estados_permitidos
+            ],
+            'estado_sel': str(estado_sel or (estado_actual.pk if estado_actual else '')),
+            'puede_estado': puede_estado,
+            'puede_cambiar_estado': puede_cambiar_estado,
+            'motivo': motivo,
             'productos': productos,
             'medios': medios,
             'filas': filas,
@@ -7328,14 +7438,22 @@ def editar_historial_pedido(request, idpedido):
         }
 
     if request.method != 'POST':
-        filas = [{
-            'producto': d.idproducto_id or '',
-            'nombre': d.nombre_mostrado,
-            'eliminado': d.idproducto_id is None,
-            'cantidad': d.cantidad,
-            'precio': f'{d.preciounitario:.2f}',
-            'observaciones': d.observaciones or '',
-        } for d in detalles_actuales]
+        filas = []
+        for d in detalles_actuales:
+            observaciones, extras_fila = d.observaciones or '', {}
+            if d.idproducto_id:
+                observaciones, extras_fila = _separar_extras_de_observaciones(
+                    observaciones, extras_por_nombre
+                )
+            filas.append({
+                'producto': d.idproducto_id or '',
+                'nombre': d.nombre_mostrado,
+                'eliminado': d.idproducto_id is None,
+                'cantidad': d.cantidad,
+                'precio': f'{d.preciounitario:.2f}',
+                'observaciones': observaciones,
+                'extras': _extras_a_cadena(extras_fila),
+            })
         importes = {p.medio_id: f'{p.importe:.2f}' for p in pagos_actuales}
         return render(
             request, 'panel/ventas/editarHistorialPedido.html',
@@ -7361,6 +7479,7 @@ def editar_historial_pedido(request, idpedido):
         cantidad_raw = (request.POST.get(f'cantidad_{i}') or '').strip()
         precio_raw = request.POST.get(f'precio_{i}')
         observaciones = (request.POST.get(f'observaciones_{i}') or '').strip()[:250]
+        extras_raw = (request.POST.get(f'extras_{i}') or '').strip() if producto_id else ''
 
         if not producto_id and not nombre:
             continue  # fila vacía
@@ -7369,6 +7488,7 @@ def editar_historial_pedido(request, idpedido):
             'producto': producto_id, 'nombre': nombre,
             'eliminado': not producto_id, 'cantidad': cantidad_raw,
             'precio': precio_raw or '', 'observaciones': observaciones,
+            'extras': extras_raw,
         })
 
         producto = None
@@ -7392,7 +7512,28 @@ def editar_historial_pedido(request, idpedido):
             errores.append(str(exc))
             continue
 
-        filas_validas.append((producto, nombre, cantidad, precio, observaciones))
+        try:
+            extras_fila = _leer_extras_formulario(extras_raw)
+        except ValueError as exc:
+            errores.append(f'Fila {i + 1}: {exc}')
+            continue
+
+        extras_con_nombre = []
+        for id_extra, cantidad_extra in extras_fila.items():
+            extra = extras_por_id.get(id_extra)
+            if extra is None:
+                errores.append(f'Fila {i + 1}: uno de los extras elegidos ya no existe.')
+                break
+            extras_con_nombre.append((id_extra, extra.nombre, cantidad_extra))
+        else:
+            partes = ([observaciones] if observaciones else []) + _extras_a_texto(extras_con_nombre)
+            observaciones_final = ', '.join(partes)
+            if len(observaciones_final) > 250:
+                errores.append(
+                    f'Fila {i + 1}: las observaciones y los extras superan los 250 caracteres.'
+                )
+                continue
+            filas_validas.append((producto, nombre, cantidad, precio, observaciones_final))
 
     if not filas_form:
         errores.append('El pedido tiene que tener al menos un producto.')
@@ -7439,13 +7580,43 @@ def editar_historial_pedido(request, idpedido):
 
     ajustar_stock = bool(request.POST.get('ajustar_stock')) and pedido.stock_descontado
 
+    # ----- Estado -----
+    estado_post = (request.POST.get('estado') or '').strip()
+    motivo = (request.POST.get('justificacioncancelacion') or '').strip()
+    estado_esperado = (request.POST.get('estado_esperado') or '').strip()
+    nuevo_estado = None
+    es_cancelado = False
+
+    if puede_cambiar_estado and estado_post and (
+        estado_actual is None or estado_post != str(estado_actual.pk)
+    ):
+        nuevo_estado = next((e for e in estados_permitidos if str(e.pk) == estado_post), None)
+        if nuevo_estado is None:
+            errores.append('El estado elegido no es válido para este pedido.')
+        else:
+            es_cancelado = _norm_estado(nuevo_estado.descripcion) == 'cancelado'
+            if es_cancelado and not motivo:
+                errores.append('Ingresá el motivo de la cancelación.')
+            elif es_cancelado and len(motivo) > MOTIVO_CANCELACION_MAX:
+                errores.append(
+                    f'El motivo no puede superar los {MOTIVO_CANCELACION_MAX} caracteres '
+                    f'(ingresaste {len(motivo)}).'
+                )
+
+    # ----- Estado de pago -----
+    pagado_post = (request.POST.get('pagado') or '').strip()
+    nuevo_pagado = None
+    if puede_pagado and pagado_post in ('0', '1') and (pagado_post == '1') != pedido.pagado:
+        nuevo_pagado = pagado_post == '1'
+
     if errores:
         for e in errores:
             messages.error(request, e)
         return render(
             request, 'panel/ventas/editarHistorialPedido.html',
             contexto_formulario(
-                filas_form, modo_pago, medio_unico_id, importes_form, ajustar_stock
+                filas_form, modo_pago, medio_unico_id, importes_form, ajustar_stock,
+                estado_post, motivo, pagado_post,
             ),
         )
 
@@ -7458,11 +7629,29 @@ def editar_historial_pedido(request, idpedido):
         if modo_pago == 'dividido' else medio_unico.nombremetodo
     )
 
+    # Si el pedido se cancela, el stock se reintegra por la cancelación
+    # y no se vuelve a descontar por los productos nuevos.
+    reajustar_stock = ajustar_stock and productos_cambiaron and not es_cancelado
+
     try:
         with transaction.atomic():
             pedido = Pedido.objects.select_for_update().get(pk=idpedido)
 
-            if ajustar_stock and productos_cambiaron:
+            if nuevo_estado is not None:
+                # Otro empleado pudo cambiar el pedido mientras se editaba.
+                actual_id = str(pedido.idestadopedido_id or '')
+                if estado_esperado and estado_esperado != actual_id:
+                    raise _PedidoModificado(
+                        f'El pedido #{pedido.idpedido} fue modificado por otro empleado. '
+                        'Volvé a abrirlo y repetí los cambios.'
+                    )
+                valido, mensaje_error = _transicion_estado_valida(
+                    pedido.idestadopedido, nuevo_estado
+                )
+                if not valido:
+                    raise _PedidoModificado(mensaje_error)
+
+            if reajustar_stock:
                 reintegrar_stock_pedido(pedido, motivo='Edición del pedido')
 
             DetallePedido.objects.filter(idpedido=pedido).delete()
@@ -7484,15 +7673,32 @@ def editar_historial_pedido(request, idpedido):
             else:
                 pedido.idmediopago = medio_unico
 
+            campos = ['total', 'idmediopago']
             pedido.total = total_nuevo
-            pedido.save(update_fields=['total', 'idmediopago'])
 
-            if ajustar_stock and productos_cambiaron:
+            if nuevo_estado is not None:
+                pedido.idestadopedido = nuevo_estado
+                campos.append('idestadopedido')
+                if es_cancelado:
+                    pedido.justificacioncancelacion = motivo
+                    campos.append('justificacioncancelacion')
+                    reintegrar_stock_pedido(pedido, motivo=motivo)
+
+            if nuevo_pagado is not None:
+                pedido.pagado = nuevo_pagado
+                campos.append('pagado')
+
+            pedido.save(update_fields=campos)
+
+            if reajustar_stock:
                 carrito = {
                     str(n): {'producto_id': p.pk, 'cantidad': c}
                     for n, (p, _, c, _, _) in enumerate(filas_validas) if p
                 }
                 descontar_stock_pedido(pedido, calcular_consumo_carrito(carrito))
+    except _PedidoModificado as exc:
+        messages.error(request, str(exc))
+        return redirect('editar_historial_pedido', idpedido=idpedido)
     except StockInsuficienteError as exc:
         messages.error(
             request,
@@ -7501,23 +7707,44 @@ def editar_historial_pedido(request, idpedido):
         )
         return render(
             request, 'panel/ventas/editarHistorialPedido.html',
-            contexto_formulario(filas_form, modo_pago, medio_unico_id, importes_form, ajustar_stock),
+            contexto_formulario(
+                filas_form, modo_pago, medio_unico_id, importes_form, ajustar_stock,
+                estado_post, motivo, pagado_post,
+            ),
         )
     except Exception:
         logger.exception('No se pudo editar el pedido #%s.', idpedido)
         messages.error(request, 'No se pudo guardar el pedido. No se hizo ningún cambio.')
         return render(
             request, 'panel/ventas/editarHistorialPedido.html',
-            contexto_formulario(filas_form, modo_pago, medio_unico_id, importes_form, ajustar_stock),
+            contexto_formulario(
+                filas_form, modo_pago, medio_unico_id, importes_form, ajustar_stock,
+                estado_post, motivo, pagado_post,
+            ),
+        )
+
+    texto_estado = ''
+    if nuevo_estado is not None:
+        texto_estado = (
+            f' Estado: {estado_actual.descripcion if estado_actual else "sin estado"}'
+            f' → {nuevo_estado.descripcion}.'
+        )
+
+    texto_pagado = ''
+    if nuevo_pagado is not None:
+        texto_pagado = (
+            f' Estado de pago: {"Pendiente" if nuevo_pagado else "Pagado"}'
+            f' → {"Pagado" if nuevo_pagado else "Pendiente"}.'
         )
 
     registrar_auditoria(
         request, 'PEDIDO_EDITAR',
-        f'Pedido #{idpedido} editado. Total: ${total_nuevo:.2f}. Pago: {resumen_pago}.',
+        f'Pedido #{idpedido} editado. Total: ${total_nuevo:.2f}. Pago: {resumen_pago}.'
+        f'{texto_estado}{texto_pagado}',
     )
 
     aviso = ''
-    if productos_cambiaron and pedido.stock_descontado and not ajustar_stock:
+    if productos_cambiaron and pedido.stock_descontado and not ajustar_stock and not es_cancelado:
         aviso = (
             ' Ojo: el stock descontado originalmente no se modificó '
             '(si querés recalcularlo, marcá "Ajustar stock" al editar).'
